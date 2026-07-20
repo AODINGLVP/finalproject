@@ -1,0 +1,32 @@
+# Codex / local workspace
+.agents/
+.codex/
+node_modules/
+contact/
+
+# Godot local/editor generated files
+**/.godot/
+**/android/
+*.tmp
+*.import
+
+# Local Godot editor binaries placed in the project root
+Godot_v*_win64.exe
+Godot_v*_win64_console.exe
+
+# Large reference/source PDFs are kept locally, not in the code repository.
+*.pdf
+
+# Generated verification logs
+*.inspect.ndjson
+*.log
+~$*
+
+# Extracted full source text from downloaded papers.
+research/translated_papers/*_source.md
+translation/*_source.md
+
+# OS/editor noise
+Thumbs.db
+Desktop.ini
+.DS_Store

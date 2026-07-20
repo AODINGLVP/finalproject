@@ -1,0 +1,23 @@
+; Engine configuration file.
+; Best edited using the editor and not directly.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="BehaviorTreeVisualScripting"
+config/features=PackedStringArray("4.6")
+config/icon="res://icon.svg"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/behavior_tree_editor/plugin.cfg")
+
+[rendering]
+
+renderer/rendering_method="forward_plus"
+renderer/rendering_method.mobile="forward_plus"

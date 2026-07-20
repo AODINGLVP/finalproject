@@ -1,0 +1,83 @@
+[gd_resource type="Resource" script_class="BTTreeResource" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://addons/behavior_tree_editor/bt_tree_resource.gd" id="1_tree"]
+[ext_resource type="Script" path="res://addons/behavior_tree_editor/bt_node_resource.gd" id="2_node"]
+
+[sub_resource type="Resource" id="BTNodeResource_root"]
+script = ExtResource("2_node")
+id = 1
+title = "Root"
+node_type = "Root"
+position = Vector2(80, 220)
+parent_id = -1
+description = "Entry point for the NPC behavior tree."
+parameters = {}
+enabled = true
+
+[sub_resource type="Resource" id="BTNodeResource_selector"]
+script = ExtResource("2_node")
+id = 2
+title = "Decide Behavior"
+node_type = "Selector"
+position = Vector2(360, 220)
+parent_id = 1
+description = "Try chase behavior first, then fall back to patrol."
+parameters = {}
+enabled = true
+
+[sub_resource type="Resource" id="BTNodeResource_sequence"]
+script = ExtResource("2_node")
+id = 3
+title = "Chase Branch"
+node_type = "Sequence"
+position = Vector2(640, 120)
+parent_id = 2
+description = "Only chase when a target exists."
+parameters = {}
+enabled = true
+
+[sub_resource type="Resource" id="BTNodeResource_condition"]
+script = ExtResource("2_node")
+id = 4
+title = "Has Target"
+node_type = "Condition"
+position = Vector2(940, 70)
+parent_id = 3
+description = "Checks blackboard.has_target."
+parameters = {
+"blackboard_key": "has_target",
+"expected": true
+}
+enabled = true
+
+[sub_resource type="Resource" id="BTNodeResource_chase"]
+script = ExtResource("2_node")
+id = 5
+title = "Chase Target"
+node_type = "Action"
+position = Vector2(940, 190)
+parent_id = 3
+description = "Calls chase_target on the NPC agent."
+parameters = {
+"action_name": "chase_target"
+}
+enabled = true
+
+[sub_resource type="Resource" id="BTNodeResource_patrol"]
+script = ExtResource("2_node")
+id = 6
+title = "Patrol"
+node_type = "Action"
+position = Vector2(640, 340)
+parent_id = 2
+description = "Calls patrol on the NPC agent."
+parameters = {
+"action_name": "patrol"
+}
+enabled = true
+
+[resource]
+script = ExtResource("1_tree")
+tree_name = "Demo NPC Tree"
+root_node_id = 1
+nodes = Array[ExtResource("2_node")]([SubResource("BTNodeResource_root"), SubResource("BTNodeResource_selector"), SubResource("BTNodeResource_sequence"), SubResource("BTNodeResource_condition"), SubResource("BTNodeResource_chase"), SubResource("BTNodeResource_patrol")])

@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://addons/behavior_tree_editor/runtime/example_agent.gd" id="1_agent"]
+[ext_resource type="Script" path="res://addons/behavior_tree_editor/runtime/behavior_tree_component.gd" id="2_runner"]
+[ext_resource type="Resource" path="res://behavior_trees/demo_npc_tree.tres" id="3_tree"]
+
+[node name="DemoNPC" type="Node2D"]
+script = ExtResource("1_agent")
+
+[node name="Body" type="Polygon2D" parent="."]
+color = Color(0.25, 0.72, 0.46, 1)
+polygon = PackedVector2Array(-18, -14, 18, 0, -18, 14)
+
+[node name="BehaviorTreeComponent" type="Node" parent="."]
+script = ExtResource("2_runner")
+behavior_tree = ExtResource("3_tree")
+blackboard = {
+"has_target": false,
+"target_position": Vector2(640, 240)
+}

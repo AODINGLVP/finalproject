@@ -1,0 +1,160 @@
+[gd_resource type="Resource" script_class="BTTreeResource" format=3 uid="uid://cpdmkhw276hou"]
+
+[ext_resource type="Script" uid="uid://bx4g01fp01uuo" path="res://addons/behavior_tree_editor/bt_tree_resource.gd" id="1_tree"]
+[ext_resource type="Script" uid="uid://b8o5ywdnkpnh8" path="res://addons/behavior_tree_editor/bt_node_resource.gd" id="2_node"]
+
+[sub_resource type="Resource" id="BTNodeResource_root"]
+script = ExtResource("2_node")
+id = 1
+title = "Root"
+node_type = "Root"
+position = Vector2(900, 40)
+description = "Enemy behavior entry."
+
+[sub_resource type="Resource" id="BTNodeResource_repeat"]
+script = ExtResource("2_node")
+id = 2
+title = "Repeat Forever"
+node_type = "Decorator"
+position = Vector2(900, 300)
+parent_id = 1
+description = "Loop the child selector forever."
+parameters = {
+"mode": "repeat_forever"
+}
+
+[sub_resource type="Resource" id="BTNodeResource_selector"]
+script = ExtResource("2_node")
+id = 3
+title = "Combat Selector"
+node_type = "Selector"
+position = Vector2(900, 560)
+parent_id = 2
+description = "Try attacks first, then patrol if no attack branch is valid."
+
+[sub_resource type="Resource" id="BTNodeResource_attack_left"]
+script = ExtResource("2_node")
+id = 4
+title = "Attack Left"
+node_type = "Action"
+position = Vector2(120, 900)
+parent_id = 3
+description = "Runs when player_in_range and player_on_left are true."
+parameters = {
+"action_name": "attack_left"
+}
+
+[sub_resource type="Resource" id="BTNodeResource_attack_left_range"]
+script = ExtResource("2_node")
+id = 5
+title = "Player In Range"
+node_type = "Decorator"
+position = Vector2(-120, 760)
+decorator_parent_id = 4
+description = "Attached blackboard decorator."
+parameters = {
+"blackboard_key": "player_in_range",
+"invert": false,
+"mode": "blackboard",
+"operator": "equals",
+"value": true
+}
+
+[sub_resource type="Resource" id="BTNodeResource_attack_left_side"]
+script = ExtResource("2_node")
+id = 6
+title = "Player On Left"
+node_type = "Decorator"
+position = Vector2(220, 760)
+decorator_parent_id = 4
+description = "Attached blackboard decorator."
+parameters = {
+"blackboard_key": "player_on_left",
+"invert": false,
+"mode": "blackboard",
+"operator": "equals",
+"value": true
+}
+
+[sub_resource type="Resource" id="BTNodeResource_attack_right"]
+script = ExtResource("2_node")
+id = 7
+title = "Attack Right"
+node_type = "Action"
+position = Vector2(900, 900)
+parent_id = 3
+description = "Runs when player_in_range and player_on_right are true."
+parameters = {
+"action_name": "attack_right"
+}
+
+[sub_resource type="Resource" id="BTNodeResource_attack_right_range"]
+script = ExtResource("2_node")
+id = 8
+title = "Player In Range"
+node_type = "Decorator"
+position = Vector2(660, 760)
+decorator_parent_id = 7
+description = "Attached blackboard decorator."
+parameters = {
+"blackboard_key": "player_in_range",
+"invert": false,
+"mode": "blackboard",
+"operator": "equals",
+"value": true
+}
+
+[sub_resource type="Resource" id="BTNodeResource_attack_right_side"]
+script = ExtResource("2_node")
+id = 9
+title = "Player On Right"
+node_type = "Decorator"
+position = Vector2(1000, 760)
+decorator_parent_id = 7
+description = "Attached blackboard decorator."
+parameters = {
+"blackboard_key": "player_on_right",
+"invert": false,
+"mode": "blackboard",
+"operator": "equals",
+"value": true
+}
+
+[sub_resource type="Resource" id="BTNodeResource_patrol"]
+script = ExtResource("2_node")
+id = 10
+title = "Patrol Sequence"
+node_type = "Sequence"
+position = Vector2(1680, 900)
+parent_id = 3
+description = "Fallback patrol branch when attack decorators fail."
+
+[sub_resource type="Resource" id="BTNodeResource_move_left"]
+script = ExtResource("2_node")
+id = 11
+title = "Move Left"
+node_type = "Action"
+position = Vector2(1480, 1240)
+parent_id = 10
+description = "Calls enemy.move_left."
+parameters = {
+"action_name": "move_left"
+}
+
+[sub_resource type="Resource" id="BTNodeResource_move_right"]
+script = ExtResource("2_node")
+id = 12
+title = "Move Right"
+node_type = "Action"
+position = Vector2(1880, 1240)
+parent_id = 10
+description = "Calls enemy.move_right."
+parameters = {
+"action_name": "move_right"
+}
+
+[resource]
+script = ExtResource("1_tree")
+tree_name = "Enemy Patrol Combat"
+root_node_id = 1
+nodes = Array[ExtResource("2_node")]([SubResource("BTNodeResource_root"), SubResource("BTNodeResource_repeat"), SubResource("BTNodeResource_selector"), SubResource("BTNodeResource_attack_left"), SubResource("BTNodeResource_attack_left_range"), SubResource("BTNodeResource_attack_left_side"), SubResource("BTNodeResource_attack_right"), SubResource("BTNodeResource_attack_right_range"), SubResource("BTNodeResource_attack_right_side"), SubResource("BTNodeResource_patrol"), SubResource("BTNodeResource_move_left"), SubResource("BTNodeResource_move_right")])
