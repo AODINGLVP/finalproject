@@ -246,10 +246,39 @@ func _refresh_decorator_badges(decorators: Array) -> void:
 		if decorator == null:
 			continue
 		var badge := Label.new()
-		badge.text = "Decorator: %s" % decorator.title
+		badge.text = _decorator_badge_text(decorator)
 		badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		badge.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		badge.modulate = _type_color(BTNodeResource.TYPE_DECORATOR)
 		decorator_badges.add_child(badge)
+
+
+func _decorator_badge_text(decorator: BTNodeResource) -> String:
+	var parameters := decorator.parameters
+	var mode := str(parameters.get("mode", "blackboard")).to_lower()
+	match mode:
+		"blackboard":
+			return "Decorator: %s [%s %s %s%s]" % [
+				decorator.title,
+				str(parameters.get("blackboard_key", "")),
+				str(parameters.get("operator", "equals")),
+				str(parameters.get("value", true)),
+				", inverted" if bool(parameters.get("invert", false)) else ""
+			]
+		"cooldown":
+			return "Decorator: %s [cooldown %ss]" % [decorator.title, str(parameters.get("duration", 1.0))]
+		"time_limit":
+			return "Decorator: %s [time limit %ss]" % [decorator.title, str(parameters.get("duration", 1.0))]
+		"repeat_forever":
+			return "Decorator: %s [repeat forever]" % decorator.title
+		"invert":
+			return "Decorator: %s [invert result]" % decorator.title
+		"force_success", "always_success", "succeeder":
+			return "Decorator: %s [force success]" % decorator.title
+		"force_failure", "always_failure", "failer":
+			return "Decorator: %s [force failure]" % decorator.title
+		_:
+			return "Decorator: %s [%s]" % [decorator.title, mode]
 
 
 func _type_color(node_type: String) -> Color:

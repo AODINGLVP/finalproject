@@ -480,8 +480,7 @@ func _delete_selected_node() -> void:
 		_set_status("Delete the children first, then delete the root node.")
 		return
 	_push_history()
-	var descendant_ids := _collect_descendant_ids(selected_node_id)
-	descendant_ids.append(selected_node_id)
+	var descendant_ids := _collect_subtree_and_attached_decorator_ids(selected_node_id)
 	var remaining: Array[BTNodeResource] = []
 	for node in current_tree.nodes:
 		if node == null or descendant_ids.has(node.id):
@@ -524,7 +523,7 @@ func _rebuild_graph() -> void:
 	graph_edit.clear_connections()
 
 	for node_resource in current_tree.nodes:
-		if node_resource == null or _is_node_hidden_by_collapsed_ancestor(node_resource):
+		if node_resource == null or _is_attached_decorator(node_resource) or _is_node_hidden_by_collapsed_ancestor(node_resource):
 			continue
 		var graph_node := BTGraphNode.new()
 		graph_edit.add_child(graph_node)
@@ -541,7 +540,7 @@ func _rebuild_graph() -> void:
 		graph_node.position_offset_changed.connect(_on_graph_node_position_changed.bind(graph_node))
 
 	for node_resource in current_tree.nodes:
-		if node_resource == null or node_resource.parent_id == -1 or _is_node_hidden_by_collapsed_ancestor(node_resource):
+		if node_resource == null or _is_attached_decorator(node_resource) or node_resource.parent_id == -1 or _is_node_hidden_by_collapsed_ancestor(node_resource):
 			continue
 		var parent_name := str(node_resource.parent_id)
 		var child_name := str(node_resource.id)
@@ -1119,6 +1118,17 @@ func _collect_descendant_ids(node_id: int) -> Array[int]:
 	return result
 
 
+func _collect_subtree_and_attached_decorator_ids(node_id: int) -> Array[int]:
+	var result := _collect_descendant_ids(node_id)
+	result.append(node_id)
+	for node in current_tree.nodes:
+		if node == null:
+			continue
+		if node.decorator_parent_id == node_id or result.has(node.decorator_parent_id):
+			result.append(node.id)
+	return result
+
+
 func _count_collapsible_descendants(node_id: int) -> int:
 	return _collect_descendant_ids(node_id).size()
 
@@ -1163,6 +1173,10 @@ func _is_node_hidden_by_collapsed_ancestor(node: BTNodeResource) -> bool:
 			return true
 		cursor = current_tree.find_node(cursor.parent_id)
 	return false
+
+
+func _is_attached_decorator(node: BTNodeResource) -> bool:
+	return node != null and node.decorator_parent_id != -1
 
 
 func _node_contains_any_id(node_id: int, values: Array) -> bool:
