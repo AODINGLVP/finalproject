@@ -1,6 +1,7 @@
 # Codex / local workspace
 .agents/
 .codex/
+.codex_tmp/
 node_modules/
 contact/
 

@@ -1,0 +1,114 @@
+\chapter{结果与分析}
+\label{ch:results}
+
+\section{功能正确性}
+
+最终核心回归包含 447 条断言，全部通过（表\ref{tab:coretests}）。180 物理帧竞技场烟雾测试保持三个活动 Runner 和一个存活复杂敌人。活动项目、分发模板和洁净安装项目日志均没有真实失败、脚本错误、泄漏、崩溃或非法内存访问。
+
+\begin{table}[htbp]
+\centering\caption{最终核心自动回归。}\label{tab:coretests}
+\begin{tabular}{lrrp{0.42\textwidth}}
+\toprule 套件 & 通过 & 总数 & 主要覆盖 \\
+\midrule
+资源与运行时 & 153 & 153 & 结构、节点语义、Decorator、Actor、Schema、调试桥和缓存失效\\
+编辑器 GUI & 185 & 185 & 图编辑、历史、类型控件、Schema、实时黑板和 19 项开关\\
+基础游戏 & 13 & 13 & 三个敌人、移动、伤害、巡逻、死亡重启与生命周期\\
+复杂竞技场 & 26 & 26 & 索敌、追击、方向攻击、搜索、撤退、恢复和新复合节点\\
+真实 GPU 视觉 & 70 & 70 & 17 张 1600×900 截图和视觉不变量\\
+\midrule 合计 & 447 & 447 & 核心断言全部通过\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+附加套件单独报告：人体实验固定场景 GPU 测试 21/21，运行时性能和拓扑安全 511/511，发布包 53/53。0.9.0 ZIP 只包含插件目录、MIT 许可证和 SHA-256 清单，并能在空 Godot 4.6 项目启用。
+
+复杂场景证明敌人由树而非平行硬编码控制器选择行为：进入检测范围写入黑板并选择 Chase，进入对应方向攻击范围选择 Attack，隐身导致丢失目标和最后位置搜索，低血量选择 Retreat 与 Heal。Actor 方法负责实际移动和伤害，但分支选择、顺序与中断来自资源。
+
+\section{显示密度与上下文结果}
+
+表\ref{tab:displaymain}列出主要结果。Compact 在保留全部节点时将卡片总面积稳定降低 55.9\%；Semantic Zoom 在低细节把代表字段从六项降到一项，即 83.3\%，但不改变几何。这些结果证明密度变化，不代表任务成绩。
+
+\begin{table}[htbp]
+\centering\caption{固定生成树的主要显示测量。}\label{tab:displaymain}\small
+\begin{tabular}{lrrr}
+\toprule 指标 & 31 节点 & 121 节点 & 364 节点\\
+\midrule
+基线卡片面积（px\textsuperscript{2}） & 1,162,500 & 4,537,500 & 13,650,000\\
+紧凑卡片面积（px\textsuperscript{2}） & 512,864 & 2,001,824 & 6,022,016\\
+紧凑面积降低 & 55.9\% & 55.9\% & 55.9\%\\
+Focus 可见节点 & 7 & 8 & 9\\
+Focus 可见节点降低 & 77.4\% & 93.4\% & 97.5\%\\
+Collapse 可见节点 & 2 & 2 & 2\\
+Collapse 可见节点降低 & 93.5\% & 98.3\% & 99.5\%\\
+Search 淡化节点 & 30 & 120 & 363\\
+鱼眼目标增益 & 1.20x & 1.20x & 1.20x\\
+小地图覆盖 & 100\% & 100\% & 100\%\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Focus 随树变大而更具选择性：分别显示 7/31、8/121 和 9/364 个节点；Collapse 更强，三个场景都只保留两个入口，在大树上分别降低 97.5\% 与 99.5\%。Search 保留布局，只淡化目标外节点，大树为 99.7\%。小地图在所有规模都表示全部节点。
+
+\begin{figure}[htbp]\centering\includegraphics[width=0.9\textwidth]{figures/optimization_ratios.png}\caption{364 节点树上主要方法的几何和显著性效果。}\label{fig:optimization}\end{figure}
+
+鱼眼结果有意保持较小：目标放大 20\%，在不引起强烈位移的前提下增强局部。它不减少节点数，因此在该指标上不能与 Collapse 直接比较。
+
+\section{路径与概览结果}
+
+非活动分支淡化使用活动 alpha 1.0、非活动 0.24，即 4.17:1 对比；三种树淡化比例为 83.9\%、97.5\%、99.2\%。首次应用从 1.902 ms 增长到 45.037 ms，稳态保持在 0.39662--0.43618 ms。说明主要成本是首次向大量卡片应用状态，而无变化更新较低。
+
+\begin{table}[htbp]
+\centering\caption{活动分支淡化与增强小地图。}\label{tab:runtimevisual}
+\begin{tabular}{rrrrrr}
+\toprule 节点 & 淡化 & 首次淡化(ms) & 稳态淡化(ms) & 地图覆盖 & 地图稳态(ms)\\
+\midrule
+31 & 26 & 1.902 & 0.40548 & 100\% & 0.00132\\
+121 & 118 & 6.256 & 0.43618 & 100\% & 0.00140\\
+364 & 361 & 45.037 & 0.39662 & 100\% & 0.00174\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+小地图固定为 230×150，分别表示 31、121、364 个节点。开关周期从 9.3163 ms 增长到 126.79382 ms，稳态状态更新低于 0.002 ms，区分了构建成本和持续观察成本。
+
+\section{视觉回归发现}
+
+视觉测试发现了数字指标无法充分表示的问题。早期鱼眼直接 Transform GraphNode，导致滚轮缩放时全部节点先缩小后放大，关闭后残留 Scale，焦点还偏到鼠标右侧。改为内部尺寸与字体、中心补偿和显式复位后，三个问题全部消失。
+
+Search 曾在 Inspector 中选择远处卡片，却因图坐标和缩放 ScrollOffset 混用而没有居中。按照 \texttt{GraphEdit.zoom} 换算后修复，并加入远距目标必须进入视口的回归。按每层实际最大高度布局也消除了带多个 Decorator 的 36 节点树重叠。
+
+其他视觉结果包括：每个关系只有一条持久线；上下方形端口清楚；运行路径与 Selection 行不重叠；复位后没有残留淡化；Decorator 摘要、Schema Key 和实时黑板类型正确。
+
+\begin{figure}[htbp]
+\centering
+\begin{minipage}{0.32\textwidth}\centering\includegraphics[width=\linewidth]{figures/03_fisheye.png}\\[-1mm]\small (a) 鱼眼\end{minipage}\hfill
+\begin{minipage}{0.32\textwidth}\centering\includegraphics[width=\linewidth]{figures/05_collapsed.png}\\[-1mm]\small (b) 折叠\end{minipage}\hfill
+\begin{minipage}{0.32\textwidth}\centering\includegraphics[width=\linewidth]{figures/06_search.png}\\[-1mm]\small (c) 搜索\end{minipage}
+\caption{焦点+上下文、结构裁剪和显著性导航的实现示例。}\label{fig:displayexamples}
+\end{figure}
+
+\section{运行时缓存结果}
+
+所有缓存和非缓存实验都到达相同 \textsc{success} 状态。安全测试还在节点数不变时分别修改同级顺序、父级、Decorator Owner 和同 ID 资源实例，均能触发失效；整树替换和关闭缓存回退也通过。
+
+表\ref{tab:cache}为七次样本的 Tick 中位值。所有条件下安全缓存都降低成本，且收益随树规模显著增加。31 节点降低 15.98--26.46\%，121 节点降低 52.61--56.02\%，364 节点降低 76.65--78.00\%。
+
+\begin{table}[htbp]
+\centering\caption{按树规模和 Runner 数统计的运行时中位值。}\label{tab:cache}
+\begin{tabular}{rrrrr}
+\toprule 节点 & Runner & 无缓存(\si{\micro\second}/Tick) & 缓存(\si{\micro\second}/Tick) & 降低\\
+\midrule
+31&1&314.834&264.522&15.98\%\\ 31&10&376.313&276.741&26.46\%\\ 31&50&372.556&294.096&21.06\%\\
+121&1&2405.729&1140.190&52.61\%\\ 121&10&2429.358&1068.500&56.02\%\\ 121&50&2687.255&1270.075&52.74\%\\
+364&1&15963.829&3727.207&76.65\%\\ 364&10&15926.812&3635.463&77.17\%\\ 364&50&15318.540&3370.560&78.00\%\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]\centering\includegraphics[width=0.9\textwidth]{figures/performance_scaling.png}\caption{开启与关闭安全拓扑缓存时的 Tick 扩展。}\label{fig:performance}\end{figure}
+
+Runner 数增加时没有清晰单调关系，因为测试固定的是近似总 Tick 工作量，而不是让每个 Actor 在固定墙钟时间内持续运行。有效解释应是同一规模/负载内的缓存与非缓存配对，而不是跨机器生产帧率预测。
+
+\section{对应研究问题的结果}
+
+RQ1 由完整测试矩阵和复杂游戏支持：插件能够编写、序列化、校验、执行和调试非简单智能体。RQ2 在仪器化显示层面得到回答：紧凑、语义、结构、显著性和概览方法产生不同可测效果，并通过真实渲染器复位测试；人的可读性尚未回答。RQ3 在当前工作负载下得到支持：精确签名缓存保持语义，并显著降低大树 Tick 中位成本。

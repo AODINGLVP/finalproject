@@ -4,6 +4,11 @@ extends CharacterBody2D
 @export var gravity := 900.0
 @export var attack_duration := 0.18
 @export var attack_damage := 1
+@export var max_health := 8
+@export var dash_speed := 620.0
+@export var dash_duration := 0.16
+@export var dash_cost := 35.0
+@export var stamina_recovery := 24.0
 @export var idle_texture: Texture2D
 @export var attack_texture: Texture2D
 
@@ -11,23 +16,62 @@ extends CharacterBody2D
 @onready var attack_area: Area2D = $AttackArea
 
 var facing := 1
-var health := 5
+var health := 8
+var stamina := 100.0
+var healing_charges := 2
 var attack_timer := 0.0
+var dash_timer := 0.0
+var invulnerability_timer := 0.0
+var cloak_timer := 0.0
+var cloak_cooldown := 0.0
+var cloaked := false
 var hit_targets: Array[Node] = []
+var spawn_position := Vector2.ZERO
+var damage_flash_remaining := 0.0
 
 
 func _ready() -> void:
 	add_to_group("player")
 	attack_area.monitoring = false
 	sprite.texture = idle_texture
+	health = max_health
+	spawn_position = global_position
 
 
 func _physics_process(delta: float) -> void:
+	invulnerability_timer = maxf(0.0, invulnerability_timer - delta)
+	if damage_flash_remaining > 0.0:
+		damage_flash_remaining = maxf(0.0, damage_flash_remaining - delta)
+		if damage_flash_remaining <= 0.0:
+			modulate = Color.WHITE
+	cloak_cooldown = maxf(0.0, cloak_cooldown - delta)
+	if Input.is_action_just_pressed("stealth") and cloak_cooldown <= 0.0:
+		cloak_timer = 2.0
+		cloak_cooldown = 5.0
+		cloaked = true
+		self_modulate = Color(0.55, 0.85, 1.0, 0.42)
+	if cloak_timer > 0.0:
+		cloak_timer -= delta
+		if cloak_timer <= 0.0:
+			cloaked = false
+			self_modulate = Color.WHITE
+	stamina = minf(100.0, stamina + stamina_recovery * delta)
 	var direction: float = Input.get_axis("move_left", "move_right")
 	if direction != 0.0:
 		facing = -1 if direction < 0.0 else 1
 		sprite.flip_h = facing < 0
-	velocity.x = direction * speed
+	if Input.is_action_just_pressed("dash") and dash_timer <= 0.0 and stamina >= dash_cost:
+		dash_timer = dash_duration
+		stamina -= dash_cost
+		invulnerability_timer = dash_duration
+	if Input.is_action_just_pressed("heal") and healing_charges > 0 and health < max_health:
+		healing_charges -= 1
+		health = mini(max_health, health + 3)
+	if dash_timer > 0.0:
+		dash_timer -= delta
+		velocity.x = float(facing) * dash_speed
+	else:
+		velocity.x = direction * speed
 	velocity.y += gravity * delta
 	move_and_slide()
 
@@ -60,7 +104,21 @@ func _update_attack(delta: float) -> void:
 
 
 func take_damage(amount: int) -> void:
+	if invulnerability_timer > 0.0:
+		return
 	health -= amount
+	invulnerability_timer = 0.35
 	modulate = Color(1.0, 0.65, 0.65)
-	await get_tree().create_timer(0.08).timeout
-	modulate = Color.WHITE
+	if health <= 0:
+		health = max_health
+		stamina = 100.0
+		healing_charges = 2
+		cloaked = false
+		self_modulate = Color.WHITE
+		global_position = spawn_position
+	damage_flash_remaining = 0.08
+
+
+func collect_medkit(amount: int = 3) -> void:
+	health = mini(max_health, health + amount)
+	healing_charges = mini(3, healing_charges + 1)

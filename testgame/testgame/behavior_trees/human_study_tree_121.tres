@@ -1,0 +1,1003 @@
+[gd_resource type="Resource" script_class="BTTreeResource" format=3]
+
+[ext_resource type="Script" path="res://addons/behavior_tree_editor/bt_node_resource.gd" id="1_f5ifs"]
+[ext_resource type="Script" path="res://addons/behavior_tree_editor/bt_tree_resource.gd" id="2_jl22f"]
+
+[sub_resource type="Resource" id="Resource_hqrkq"]
+script = ExtResource("1_f5ifs")
+id = 1
+title = "Root"
+node_type = "Root"
+description = "Human-study benchmark node 1 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_kvg1x"]
+script = ExtResource("1_f5ifs")
+id = 2
+title = "Decision Hub"
+node_type = "Selector"
+parent_id = 1
+description = "Human-study benchmark node 2 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_oo1ej"]
+script = ExtResource("1_f5ifs")
+id = 3
+title = "Branch_003"
+node_type = "Selector"
+parent_id = 2
+description = "Human-study benchmark node 3 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_5qycx"]
+script = ExtResource("1_f5ifs")
+id = 4
+title = "Branch_004"
+node_type = "Selector"
+parent_id = 2
+description = "Human-study benchmark node 4 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_sdnjy"]
+script = ExtResource("1_f5ifs")
+id = 5
+title = "Branch_005"
+node_type = "Selector"
+parent_id = 2
+description = "Human-study benchmark node 5 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_xh4k0"]
+script = ExtResource("1_f5ifs")
+id = 6
+title = "Branch_006"
+node_type = "Selector"
+parent_id = 3
+description = "Human-study benchmark node 6 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_171jv"]
+script = ExtResource("1_f5ifs")
+id = 7
+title = "Branch_007"
+node_type = "Selector"
+parent_id = 3
+description = "Human-study benchmark node 7 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_qxo04"]
+script = ExtResource("1_f5ifs")
+id = 8
+title = "Branch_008"
+node_type = "Selector"
+parent_id = 3
+description = "Human-study benchmark node 8 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_qk4g1"]
+script = ExtResource("1_f5ifs")
+id = 9
+title = "Branch_009"
+node_type = "Selector"
+parent_id = 4
+description = "Human-study benchmark node 9 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_n4qsj"]
+script = ExtResource("1_f5ifs")
+id = 10
+title = "Branch_010"
+node_type = "Selector"
+parent_id = 4
+description = "Human-study benchmark node 10 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_wqjrt"]
+script = ExtResource("1_f5ifs")
+id = 11
+title = "Branch_011"
+node_type = "Selector"
+parent_id = 4
+description = "Human-study benchmark node 11 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_xs8ur"]
+script = ExtResource("1_f5ifs")
+id = 12
+title = "Branch_012"
+node_type = "Selector"
+parent_id = 5
+description = "Human-study benchmark node 12 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_ytodp"]
+script = ExtResource("1_f5ifs")
+id = 13
+title = "Branch_013"
+node_type = "Selector"
+parent_id = 5
+description = "Human-study benchmark node 13 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_dwv7k"]
+script = ExtResource("1_f5ifs")
+id = 14
+title = "Branch_014"
+node_type = "Selector"
+parent_id = 5
+description = "Human-study benchmark node 14 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_m6mua"]
+script = ExtResource("1_f5ifs")
+id = 15
+title = "Branch_015"
+node_type = "Selector"
+parent_id = 6
+description = "Human-study benchmark node 15 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_fenjw"]
+script = ExtResource("1_f5ifs")
+id = 16
+title = "Branch_016"
+node_type = "Selector"
+parent_id = 6
+description = "Human-study benchmark node 16 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_6c310"]
+script = ExtResource("1_f5ifs")
+id = 17
+title = "Branch_017"
+node_type = "Selector"
+parent_id = 6
+description = "Human-study benchmark node 17 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_mmxq8"]
+script = ExtResource("1_f5ifs")
+id = 18
+title = "Branch_018"
+node_type = "Selector"
+parent_id = 7
+description = "Human-study benchmark node 18 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_j40j8"]
+script = ExtResource("1_f5ifs")
+id = 19
+title = "Branch_019"
+node_type = "Selector"
+parent_id = 7
+description = "Human-study benchmark node 19 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_5a035"]
+script = ExtResource("1_f5ifs")
+id = 20
+title = "Branch_020"
+node_type = "Selector"
+parent_id = 7
+description = "Human-study benchmark node 20 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_eq1ay"]
+script = ExtResource("1_f5ifs")
+id = 21
+title = "Branch_021"
+node_type = "Selector"
+parent_id = 8
+description = "Human-study benchmark node 21 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_62cwv"]
+script = ExtResource("1_f5ifs")
+id = 22
+title = "Branch_022"
+node_type = "Selector"
+parent_id = 8
+description = "Human-study benchmark node 22 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_7luis"]
+script = ExtResource("1_f5ifs")
+id = 23
+title = "Branch_023"
+node_type = "Selector"
+parent_id = 8
+description = "Human-study benchmark node 23 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_xvdwb"]
+script = ExtResource("1_f5ifs")
+id = 24
+title = "Branch_024"
+node_type = "Selector"
+parent_id = 9
+description = "Human-study benchmark node 24 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_wubss"]
+script = ExtResource("1_f5ifs")
+id = 25
+title = "Branch_025"
+node_type = "Selector"
+parent_id = 9
+description = "Human-study benchmark node 25 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_rqj5l"]
+script = ExtResource("1_f5ifs")
+id = 26
+title = "Branch_026"
+node_type = "Selector"
+parent_id = 9
+description = "Human-study benchmark node 26 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_g010i"]
+script = ExtResource("1_f5ifs")
+id = 27
+title = "Branch_027"
+node_type = "Selector"
+parent_id = 10
+description = "Human-study benchmark node 27 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_qmgg4"]
+script = ExtResource("1_f5ifs")
+id = 28
+title = "Branch_028"
+node_type = "Selector"
+parent_id = 10
+description = "Human-study benchmark node 28 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_thmaf"]
+script = ExtResource("1_f5ifs")
+id = 29
+title = "Branch_029"
+node_type = "Selector"
+parent_id = 10
+description = "Human-study benchmark node 29 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_i6t48"]
+script = ExtResource("1_f5ifs")
+id = 30
+title = "Branch_030"
+node_type = "Selector"
+parent_id = 11
+description = "Human-study benchmark node 30 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_c8dmi"]
+script = ExtResource("1_f5ifs")
+id = 31
+title = "Branch_031"
+node_type = "Selector"
+parent_id = 11
+description = "Human-study benchmark node 31 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_nk0sj"]
+script = ExtResource("1_f5ifs")
+id = 32
+title = "Branch_032"
+node_type = "Selector"
+parent_id = 11
+description = "Human-study benchmark node 32 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_ru8aa"]
+script = ExtResource("1_f5ifs")
+id = 33
+title = "Branch_033"
+node_type = "Selector"
+parent_id = 12
+description = "Human-study benchmark node 33 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_sco7m"]
+script = ExtResource("1_f5ifs")
+id = 34
+title = "Branch_034"
+node_type = "Selector"
+parent_id = 12
+description = "Human-study benchmark node 34 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_b0b3e"]
+script = ExtResource("1_f5ifs")
+id = 35
+title = "Branch_035"
+node_type = "Selector"
+parent_id = 12
+description = "Human-study benchmark node 35 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_6mb0l"]
+script = ExtResource("1_f5ifs")
+id = 36
+title = "Branch_036"
+node_type = "Selector"
+parent_id = 13
+description = "Human-study benchmark node 36 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_vlcu6"]
+script = ExtResource("1_f5ifs")
+id = 37
+title = "Branch_037"
+node_type = "Selector"
+parent_id = 13
+description = "Human-study benchmark node 37 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_ow8ao"]
+script = ExtResource("1_f5ifs")
+id = 38
+title = "Branch_038"
+node_type = "Selector"
+parent_id = 13
+description = "Human-study benchmark node 38 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_cjeas"]
+script = ExtResource("1_f5ifs")
+id = 39
+title = "Branch_039"
+node_type = "Selector"
+parent_id = 14
+description = "Human-study benchmark node 39 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_dj572"]
+script = ExtResource("1_f5ifs")
+id = 40
+title = "Branch_040"
+node_type = "Selector"
+parent_id = 14
+description = "Human-study benchmark node 40 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_fhvn8"]
+script = ExtResource("1_f5ifs")
+id = 41
+title = "Branch_041"
+node_type = "Selector"
+parent_id = 14
+description = "Human-study benchmark node 41 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_tlqig"]
+script = ExtResource("1_f5ifs")
+id = 42
+title = "Branch_042"
+node_type = "Selector"
+parent_id = 15
+description = "Human-study benchmark node 42 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_5krkn"]
+script = ExtResource("1_f5ifs")
+id = 43
+title = "Branch_043"
+node_type = "Selector"
+parent_id = 15
+description = "Human-study benchmark node 43 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_3sh6j"]
+script = ExtResource("1_f5ifs")
+id = 44
+title = "Branch_044"
+node_type = "Selector"
+parent_id = 15
+description = "Human-study benchmark node 44 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_8f31e"]
+script = ExtResource("1_f5ifs")
+id = 45
+title = "Branch_045"
+node_type = "Selector"
+parent_id = 16
+description = "Human-study benchmark node 45 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_qeutr"]
+script = ExtResource("1_f5ifs")
+id = 46
+title = "Branch_046"
+node_type = "Selector"
+parent_id = 16
+description = "Human-study benchmark node 46 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_7a65g"]
+script = ExtResource("1_f5ifs")
+id = 47
+title = "Branch_047"
+node_type = "Selector"
+parent_id = 16
+description = "Human-study benchmark node 47 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_favos"]
+script = ExtResource("1_f5ifs")
+id = 48
+title = "Branch_048"
+node_type = "Selector"
+parent_id = 17
+description = "Human-study benchmark node 48 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_qofaf"]
+script = ExtResource("1_f5ifs")
+id = 49
+title = "Branch_049"
+node_type = "Selector"
+parent_id = 17
+description = "Human-study benchmark node 49 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_nwkig"]
+script = ExtResource("1_f5ifs")
+id = 50
+title = "Branch_050"
+node_type = "Selector"
+parent_id = 17
+description = "Human-study benchmark node 50 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_8go50"]
+script = ExtResource("1_f5ifs")
+id = 51
+title = "Branch_051"
+node_type = "Selector"
+parent_id = 18
+description = "Human-study benchmark node 51 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_gtfe4"]
+script = ExtResource("1_f5ifs")
+id = 52
+title = "Branch_052"
+node_type = "Selector"
+parent_id = 18
+description = "Human-study benchmark node 52 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_gcrun"]
+script = ExtResource("1_f5ifs")
+id = 53
+title = "Branch_053"
+node_type = "Selector"
+parent_id = 18
+description = "Human-study benchmark node 53 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_7x5t4"]
+script = ExtResource("1_f5ifs")
+id = 54
+title = "Branch_054"
+node_type = "Selector"
+parent_id = 19
+description = "Human-study benchmark node 54 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_fotgf"]
+script = ExtResource("1_f5ifs")
+id = 55
+title = "Branch_055"
+node_type = "Selector"
+parent_id = 19
+description = "Human-study benchmark node 55 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_iijat"]
+script = ExtResource("1_f5ifs")
+id = 56
+title = "Branch_056"
+node_type = "Selector"
+parent_id = 19
+description = "Human-study benchmark node 56 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_cobnv"]
+script = ExtResource("1_f5ifs")
+id = 57
+title = "Branch_057"
+node_type = "Selector"
+parent_id = 20
+description = "Human-study benchmark node 57 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_boy1w"]
+script = ExtResource("1_f5ifs")
+id = 58
+title = "Branch_058"
+node_type = "Selector"
+parent_id = 20
+description = "Human-study benchmark node 58 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_8mi7u"]
+script = ExtResource("1_f5ifs")
+id = 59
+title = "Branch_059"
+node_type = "Selector"
+parent_id = 20
+description = "Human-study benchmark node 59 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_llxcq"]
+script = ExtResource("1_f5ifs")
+id = 60
+title = "Branch_060"
+node_type = "Selector"
+parent_id = 21
+description = "Human-study benchmark node 60 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_8k3si"]
+script = ExtResource("1_f5ifs")
+id = 61
+title = "Branch_061"
+node_type = "Selector"
+parent_id = 21
+description = "Human-study benchmark node 61 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_27c8a"]
+script = ExtResource("1_f5ifs")
+id = 62
+title = "Branch_062"
+node_type = "Selector"
+parent_id = 21
+description = "Human-study benchmark node 62 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_ordow"]
+script = ExtResource("1_f5ifs")
+id = 63
+title = "Branch_063"
+node_type = "Selector"
+parent_id = 22
+description = "Human-study benchmark node 63 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_kyf22"]
+script = ExtResource("1_f5ifs")
+id = 64
+title = "Branch_064"
+node_type = "Selector"
+parent_id = 22
+description = "Human-study benchmark node 64 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_5q82y"]
+script = ExtResource("1_f5ifs")
+id = 65
+title = "Branch_065"
+node_type = "Selector"
+parent_id = 22
+description = "Human-study benchmark node 65 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_8ob2x"]
+script = ExtResource("1_f5ifs")
+id = 66
+title = "Branch_066"
+node_type = "Selector"
+parent_id = 23
+description = "Human-study benchmark node 66 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_sfxmq"]
+script = ExtResource("1_f5ifs")
+id = 67
+title = "Branch_067"
+node_type = "Selector"
+parent_id = 23
+description = "Human-study benchmark node 67 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_c3vu7"]
+script = ExtResource("1_f5ifs")
+id = 68
+title = "Branch_068"
+node_type = "Selector"
+parent_id = 23
+description = "Human-study benchmark node 68 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_wj151"]
+script = ExtResource("1_f5ifs")
+id = 69
+title = "Branch_069"
+node_type = "Selector"
+parent_id = 24
+description = "Human-study benchmark node 69 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_6ycus"]
+script = ExtResource("1_f5ifs")
+id = 70
+title = "Branch_070"
+node_type = "Selector"
+parent_id = 24
+description = "Human-study benchmark node 70 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_d1vx7"]
+script = ExtResource("1_f5ifs")
+id = 71
+title = "Branch_071"
+node_type = "Selector"
+parent_id = 24
+description = "Human-study benchmark node 71 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_pq10u"]
+script = ExtResource("1_f5ifs")
+id = 72
+title = "Branch_072"
+node_type = "Selector"
+parent_id = 25
+description = "Human-study benchmark node 72 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_qy1dy"]
+script = ExtResource("1_f5ifs")
+id = 73
+title = "Branch_073"
+node_type = "Selector"
+parent_id = 25
+description = "Human-study benchmark node 73 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_uc057"]
+script = ExtResource("1_f5ifs")
+id = 74
+title = "Branch_074"
+node_type = "Selector"
+parent_id = 25
+description = "Human-study benchmark node 74 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_sgpcy"]
+script = ExtResource("1_f5ifs")
+id = 75
+title = "Branch_075"
+node_type = "Selector"
+parent_id = 26
+description = "Human-study benchmark node 75 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_lqmqt"]
+script = ExtResource("1_f5ifs")
+id = 76
+title = "Branch_076"
+node_type = "Selector"
+parent_id = 26
+description = "Human-study benchmark node 76 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_2c0o2"]
+script = ExtResource("1_f5ifs")
+id = 77
+title = "Branch_077"
+node_type = "Selector"
+parent_id = 26
+description = "Human-study benchmark node 77 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_ymelm"]
+script = ExtResource("1_f5ifs")
+id = 78
+title = "Branch_078"
+node_type = "Selector"
+parent_id = 27
+description = "Human-study benchmark node 78 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_iceps"]
+script = ExtResource("1_f5ifs")
+id = 79
+title = "Branch_079"
+node_type = "Selector"
+parent_id = 27
+description = "Human-study benchmark node 79 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_2urex"]
+script = ExtResource("1_f5ifs")
+id = 80
+title = "Branch_080"
+node_type = "Selector"
+parent_id = 27
+description = "Human-study benchmark node 80 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_e7yac"]
+script = ExtResource("1_f5ifs")
+id = 81
+title = "Branch_081"
+node_type = "Selector"
+parent_id = 28
+description = "Human-study benchmark node 81 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_jtd8c"]
+script = ExtResource("1_f5ifs")
+id = 82
+title = "Branch_082"
+node_type = "Selector"
+parent_id = 28
+description = "Human-study benchmark node 82 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_i1r47"]
+script = ExtResource("1_f5ifs")
+id = 83
+title = "Branch_083"
+node_type = "Selector"
+parent_id = 28
+description = "Human-study benchmark node 83 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_v1l6v"]
+script = ExtResource("1_f5ifs")
+id = 84
+title = "Branch_084"
+node_type = "Selector"
+parent_id = 29
+description = "Human-study benchmark node 84 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_ihl7a"]
+script = ExtResource("1_f5ifs")
+id = 85
+title = "Branch_085"
+node_type = "Selector"
+parent_id = 29
+description = "Human-study benchmark node 85 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_l5lj2"]
+script = ExtResource("1_f5ifs")
+id = 86
+title = "Branch_086"
+node_type = "Selector"
+parent_id = 29
+description = "Human-study benchmark node 86 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_hqh5v"]
+script = ExtResource("1_f5ifs")
+id = 87
+title = "Branch_087"
+node_type = "Selector"
+parent_id = 30
+description = "Human-study benchmark node 87 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_aq5dw"]
+script = ExtResource("1_f5ifs")
+id = 88
+title = "Branch_088"
+node_type = "Selector"
+parent_id = 30
+description = "Human-study benchmark node 88 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_ascq4"]
+script = ExtResource("1_f5ifs")
+id = 89
+title = "Branch_089"
+node_type = "Selector"
+parent_id = 30
+description = "Human-study benchmark node 89 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_31na6"]
+script = ExtResource("1_f5ifs")
+id = 90
+title = "Branch_090"
+node_type = "Selector"
+parent_id = 31
+description = "Human-study benchmark node 90 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_xdlng"]
+script = ExtResource("1_f5ifs")
+id = 91
+title = "Branch_091"
+node_type = "Selector"
+parent_id = 31
+description = "Human-study benchmark node 91 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_s05ds"]
+script = ExtResource("1_f5ifs")
+id = 92
+title = "Branch_092"
+node_type = "Selector"
+parent_id = 31
+description = "Human-study benchmark node 92 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_mtgrm"]
+script = ExtResource("1_f5ifs")
+id = 93
+title = "Branch_093"
+node_type = "Selector"
+parent_id = 32
+description = "Human-study benchmark node 93 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_4q7av"]
+script = ExtResource("1_f5ifs")
+id = 94
+title = "Branch_094"
+node_type = "Selector"
+parent_id = 32
+description = "Human-study benchmark node 94 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_r8wu2"]
+script = ExtResource("1_f5ifs")
+id = 95
+title = "Branch_095"
+node_type = "Selector"
+parent_id = 32
+description = "Human-study benchmark node 95 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_xwe2m"]
+script = ExtResource("1_f5ifs")
+id = 96
+title = "Branch_096"
+node_type = "Selector"
+parent_id = 33
+description = "Human-study benchmark node 96 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_ygnqv"]
+script = ExtResource("1_f5ifs")
+id = 97
+title = "Branch_097"
+node_type = "Selector"
+parent_id = 33
+description = "Human-study benchmark node 97 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_ff2gm"]
+script = ExtResource("1_f5ifs")
+id = 98
+title = "Branch_098"
+node_type = "Selector"
+parent_id = 33
+description = "Human-study benchmark node 98 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_qqtg0"]
+script = ExtResource("1_f5ifs")
+id = 99
+title = "Branch_099"
+node_type = "Selector"
+parent_id = 34
+description = "Human-study benchmark node 99 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_ysfhk"]
+script = ExtResource("1_f5ifs")
+id = 100
+title = "Branch_100"
+node_type = "Selector"
+parent_id = 34
+description = "Human-study benchmark node 100 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_aa65p"]
+script = ExtResource("1_f5ifs")
+id = 101
+title = "Branch_101"
+node_type = "Selector"
+parent_id = 34
+description = "Human-study benchmark node 101 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_gg3sl"]
+script = ExtResource("1_f5ifs")
+id = 102
+title = "Branch_102"
+node_type = "Selector"
+parent_id = 35
+description = "Human-study benchmark node 102 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_pba0i"]
+script = ExtResource("1_f5ifs")
+id = 103
+title = "Branch_103"
+node_type = "Selector"
+parent_id = 35
+description = "Human-study benchmark node 103 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_anr0d"]
+script = ExtResource("1_f5ifs")
+id = 104
+title = "Branch_104"
+node_type = "Selector"
+parent_id = 35
+description = "Human-study benchmark node 104 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_lp1hi"]
+script = ExtResource("1_f5ifs")
+id = 105
+title = "Branch_105"
+node_type = "Selector"
+parent_id = 36
+description = "Human-study benchmark node 105 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_ifavr"]
+script = ExtResource("1_f5ifs")
+id = 106
+title = "Branch_106"
+node_type = "Selector"
+parent_id = 36
+description = "Human-study benchmark node 106 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_nq8sv"]
+script = ExtResource("1_f5ifs")
+id = 107
+title = "Branch_107"
+node_type = "Selector"
+parent_id = 36
+description = "Human-study benchmark node 107 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_ygcpb"]
+script = ExtResource("1_f5ifs")
+id = 108
+title = "Branch_108"
+node_type = "Selector"
+parent_id = 37
+description = "Human-study benchmark node 108 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_i38ww"]
+script = ExtResource("1_f5ifs")
+id = 109
+title = "Branch_109"
+node_type = "Selector"
+parent_id = 37
+description = "Human-study benchmark node 109 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_b15uf"]
+script = ExtResource("1_f5ifs")
+id = 110
+title = "Branch_110"
+node_type = "Selector"
+parent_id = 37
+description = "Human-study benchmark node 110 for controlled display comparison."
+
+[sub_resource type="Resource" id="Resource_c8xtn"]
+script = ExtResource("1_f5ifs")
+id = 111
+title = "Branch_111"
+parent_id = 38
+description = "Human-study benchmark node 111 for controlled display comparison."
+parameters = {
+"action_name": "study_action_111"
+}
+
+[sub_resource type="Resource" id="Resource_r45i8"]
+script = ExtResource("1_f5ifs")
+id = 112
+title = "Branch_112"
+parent_id = 38
+description = "Human-study benchmark node 112 for controlled display comparison."
+parameters = {
+"action_name": "study_action_112"
+}
+
+[sub_resource type="Resource" id="Resource_rae63"]
+script = ExtResource("1_f5ifs")
+id = 113
+title = "Branch_113"
+parent_id = 38
+description = "Human-study benchmark node 113 for controlled display comparison."
+parameters = {
+"action_name": "study_action_113"
+}
+
+[sub_resource type="Resource" id="Resource_fi810"]
+script = ExtResource("1_f5ifs")
+id = 114
+title = "Branch_114"
+parent_id = 39
+description = "Human-study benchmark node 114 for controlled display comparison."
+parameters = {
+"action_name": "study_action_114"
+}
+
+[sub_resource type="Resource" id="Resource_i1b3r"]
+script = ExtResource("1_f5ifs")
+id = 115
+title = "Branch_115"
+parent_id = 39
+description = "Human-study benchmark node 115 for controlled display comparison."
+parameters = {
+"action_name": "study_action_115"
+}
+
+[sub_resource type="Resource" id="Resource_xmorh"]
+script = ExtResource("1_f5ifs")
+id = 116
+title = "Branch_116"
+parent_id = 39
+description = "Human-study benchmark node 116 for controlled display comparison."
+parameters = {
+"action_name": "study_action_116"
+}
+
+[sub_resource type="Resource" id="Resource_pnybp"]
+script = ExtResource("1_f5ifs")
+id = 117
+title = "Branch_117"
+parent_id = 40
+description = "Human-study benchmark node 117 for controlled display comparison."
+parameters = {
+"action_name": "study_action_117"
+}
+
+[sub_resource type="Resource" id="Resource_xufj1"]
+script = ExtResource("1_f5ifs")
+id = 118
+title = "Branch_118"
+parent_id = 40
+description = "Human-study benchmark node 118 for controlled display comparison."
+parameters = {
+"action_name": "study_action_118"
+}
+
+[sub_resource type="Resource" id="Resource_madoh"]
+script = ExtResource("1_f5ifs")
+id = 119
+title = "Branch_119"
+parent_id = 40
+description = "Human-study benchmark node 119 for controlled display comparison."
+parameters = {
+"action_name": "study_action_119"
+}
+
+[sub_resource type="Resource" id="Resource_sm67l"]
+script = ExtResource("1_f5ifs")
+id = 120
+title = "STUDY_TARGET_ACTION"
+parent_id = 41
+description = "Stable target used by the controlled human comparison study."
+parameters = {
+"action_name": "study_target_action"
+}
+
+[sub_resource type="Resource" id="Resource_0sc5f"]
+script = ExtResource("1_f5ifs")
+id = 121
+title = "STUDY_TARGET_DECORATOR"
+node_type = "Decorator"
+decorator_parent_id = 120
+description = "Edit the comparison value from true to false during the study task."
+parameters = {
+"key": "study_target_visible",
+"mode": "blackboard",
+"operator": "equals",
+"value": true
+}
+
+[resource]
+script = ExtResource("2_jl22f")
+tree_name = "Human Study Tree 121"
+root_node_id = 1
+nodes = Array[ExtResource("1_f5ifs")]([SubResource("Resource_hqrkq"), SubResource("Resource_kvg1x"), SubResource("Resource_oo1ej"), SubResource("Resource_5qycx"), SubResource("Resource_sdnjy"), SubResource("Resource_xh4k0"), SubResource("Resource_171jv"), SubResource("Resource_qxo04"), SubResource("Resource_qk4g1"), SubResource("Resource_n4qsj"), SubResource("Resource_wqjrt"), SubResource("Resource_xs8ur"), SubResource("Resource_ytodp"), SubResource("Resource_dwv7k"), SubResource("Resource_m6mua"), SubResource("Resource_fenjw"), SubResource("Resource_6c310"), SubResource("Resource_mmxq8"), SubResource("Resource_j40j8"), SubResource("Resource_5a035"), SubResource("Resource_eq1ay"), SubResource("Resource_62cwv"), SubResource("Resource_7luis"), SubResource("Resource_xvdwb"), SubResource("Resource_wubss"), SubResource("Resource_rqj5l"), SubResource("Resource_g010i"), SubResource("Resource_qmgg4"), SubResource("Resource_thmaf"), SubResource("Resource_i6t48"), SubResource("Resource_c8dmi"), SubResource("Resource_nk0sj"), SubResource("Resource_ru8aa"), SubResource("Resource_sco7m"), SubResource("Resource_b0b3e"), SubResource("Resource_6mb0l"), SubResource("Resource_vlcu6"), SubResource("Resource_ow8ao"), SubResource("Resource_cjeas"), SubResource("Resource_dj572"), SubResource("Resource_fhvn8"), SubResource("Resource_tlqig"), SubResource("Resource_5krkn"), SubResource("Resource_3sh6j"), SubResource("Resource_8f31e"), SubResource("Resource_qeutr"), SubResource("Resource_7a65g"), SubResource("Resource_favos"), SubResource("Resource_qofaf"), SubResource("Resource_nwkig"), SubResource("Resource_8go50"), SubResource("Resource_gtfe4"), SubResource("Resource_gcrun"), SubResource("Resource_7x5t4"), SubResource("Resource_fotgf"), SubResource("Resource_iijat"), SubResource("Resource_cobnv"), SubResource("Resource_boy1w"), SubResource("Resource_8mi7u"), SubResource("Resource_llxcq"), SubResource("Resource_8k3si"), SubResource("Resource_27c8a"), SubResource("Resource_ordow"), SubResource("Resource_kyf22"), SubResource("Resource_5q82y"), SubResource("Resource_8ob2x"), SubResource("Resource_sfxmq"), SubResource("Resource_c3vu7"), SubResource("Resource_wj151"), SubResource("Resource_6ycus"), SubResource("Resource_d1vx7"), SubResource("Resource_pq10u"), SubResource("Resource_qy1dy"), SubResource("Resource_uc057"), SubResource("Resource_sgpcy"), SubResource("Resource_lqmqt"), SubResource("Resource_2c0o2"), SubResource("Resource_ymelm"), SubResource("Resource_iceps"), SubResource("Resource_2urex"), SubResource("Resource_e7yac"), SubResource("Resource_jtd8c"), SubResource("Resource_i1r47"), SubResource("Resource_v1l6v"), SubResource("Resource_ihl7a"), SubResource("Resource_l5lj2"), SubResource("Resource_hqh5v"), SubResource("Resource_aq5dw"), SubResource("Resource_ascq4"), SubResource("Resource_31na6"), SubResource("Resource_xdlng"), SubResource("Resource_s05ds"), SubResource("Resource_mtgrm"), SubResource("Resource_4q7av"), SubResource("Resource_r8wu2"), SubResource("Resource_xwe2m"), SubResource("Resource_ygnqv"), SubResource("Resource_ff2gm"), SubResource("Resource_qqtg0"), SubResource("Resource_ysfhk"), SubResource("Resource_aa65p"), SubResource("Resource_gg3sl"), SubResource("Resource_pba0i"), SubResource("Resource_anr0d"), SubResource("Resource_lp1hi"), SubResource("Resource_ifavr"), SubResource("Resource_nq8sv"), SubResource("Resource_ygcpb"), SubResource("Resource_i38ww"), SubResource("Resource_b15uf"), SubResource("Resource_c8xtn"), SubResource("Resource_r45i8"), SubResource("Resource_rae63"), SubResource("Resource_fi810"), SubResource("Resource_i1b3r"), SubResource("Resource_xmorh"), SubResource("Resource_pnybp"), SubResource("Resource_xufj1"), SubResource("Resource_madoh"), SubResource("Resource_sm67l"), SubResource("Resource_0sc5f")])

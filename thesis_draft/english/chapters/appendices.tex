@@ -1,0 +1,73 @@
+\chapter{Feature Reference}
+\label{app:features}
+
+\small
+\begin{longtable}{p{0.30\textwidth}p{0.10\textwidth}p{0.45\textwidth}}
+\caption{Independent display features in the final editor.}\\
+\toprule Feature & Default & Purpose \\
+\midrule\endfirsthead
+\toprule Feature & Default & Purpose \\
+\midrule\endhead
+Fisheye / Focus+Context & On & Magnifies the pointer neighbourhood up to 1.20x. \\
+Subtree Collapse / Expand & On & Hides descendants and presents a count plus two-level summary. \\
+Compact Mode & Off & Reduces cards to type encoding and short title. \\
+Active Path Highlight & On & Emphasises the current runtime path. \\
+Non-active Branch Dimming & Off & Reduces inactive branch alpha during live debug. \\
+Multi-column Layout & Off & Balances wide sibling groups while preserving order cues. \\
+Enhanced Minimap & On & Provides a 230 by 150 overview and viewport marker. \\
+Semantic Zoom & Off & Changes information detail without transforming graph geometry. \\
+Path Summary View & On & Displays actor, state, depth and ordered runtime path. \\
+Decorator Condition Badges & On & Summarises decorator conditions on owner cards. \\
+Search + Highlight & On & Searches node and decorator text and dims non-matches. \\
+Orthogonal Edges & Off & Uses right-angle routes. \\
+Edge Bundling & Off & Shares edge trunks in dense regions. \\
+Stable Incremental Layout & Off & Reuses non-conflicting positions during layout. \\
+Breadcrumb Navigation & On & Shows and navigates selected-node ancestry. \\
+Failure Reason Annotation & On & Displays node-level failure labels and summaries. \\
+Shape / Icon Type Encoding & On & Supplements colour with geometry and symbols. \\
+Accessibility Palette & Off & Enables colourblind-safer colours and keyboard navigation. \\
+Single Connection Rendering & On & Displays one custom persistent edge with hit testing. \\
+\bottomrule
+\end{longtable}
+
+\chapter{Reproduction and Evidence Index}
+\label{app:evidence}
+
+All paths below are relative to the project repository root.
+
+\begin{description}
+    \item[Active Godot project:] \path{testgame/testgame/}
+    \item[Distributable plugin source:] \path{visual_scripting/addons/behavior_tree_editor/}
+    \item[Complex tree:] \path{testgame/testgame/behavior_trees/complex_guard_validation_tree.tres}
+    \item[Core test scripts:] \path{testgame/testgame/tests/}
+    \item[Raw display data:] \path{testgame/testgame/test_results/display_optimization_raw.csv}
+    \item[Runtime profile:] \path{testgame/testgame/test_results/runtime_profile.csv}
+    \item[Visual screenshots:] \path{testgame/testgame/test_results/visual/}
+    \item[Human-study protocol:] \path{research/display_optimization/human_comparison_study_protocol.md}
+    \item[Evaluation workbook:] \path{research/display_optimization/behavior_tree_complete_validation_and_display_evaluation.xlsx}
+    \item[Versioned package:] \path{dist/behavior-tree-editor-0.9.0.zip}
+\end{description}
+
+The principal test commands are recorded in \texttt{AGENTS.md} and in the generated project report. Real visual regression must use \texttt{--rendering-method gl\_compatibility} rather than headless dummy rendering, because the dummy renderer cannot provide the required viewport textures.
+
+\chapter{Planned Participant Study}
+\label{app:study}
+
+The prepared study contains six display conditions and three tasks per condition. A participant first completes a standardised practice task, then performs 18 counterbalanced trials. The software records condition, tree size, target, completion time, incorrect selections, zoom count, pan count and success. After each condition, the participant gives seven-point readability and cognitive-load ratings. The workbook supports up to 15 participants and 270 rows.
+
+No participant rows have been collected. Before use, the author must obtain any required ethics approval, confirm the protocol with the supervisor, replace prototype instructions with participant-facing wording, and verify that consent and withdrawal procedures meet University requirements.
+
+\chapter{Draft Completion Checklist}
+\label{app:checklist}
+
+Before final submission, the author should:
+\begin{enumerate}
+    \item replace all identity and supervisor placeholders;
+    \item revise the declaration to match University policy, including permitted AI assistance;
+    \item verify the current submission deadline and exact word-count rules on Tabula;
+    \item conduct or formally remove the planned participant study and update Abstract, Results, Discussion and Conclusion consistently;
+    \item have the supervisor review the literature claims, research questions and evidential limits;
+    \item run the final text through Turnitin according to departmental guidance;
+    \item compile with the supplied Warwick template and inspect every page, reference and figure;
+    \item include the final word count and any required project repository/archive information.
+\end{enumerate}

@@ -1,0 +1,65 @@
+\chapter{Introduction}
+\label{ch:introduction}
+
+\section{Background and context}
+
+Modern game agents must choose between actions such as patrolling, pursuing a target, attacking, retreating and recovering. Hard-coding these decisions as a single procedural script can work for a small prototype, but increasing the number of states and interruptions makes control flow difficult to inspect and modify. A behaviour tree (BT) represents decision logic as a hierarchy of control-flow and leaf nodes. Composite nodes determine how children are selected, while conditions and actions connect the abstract decision structure to game state and actor code. The resulting separation is attractive for game development because an agent's high-level policy can be edited without rewriting every action implementation \parencite{colledanchise2018bt}.
+
+Commercial engines demonstrate the practical value of visual behaviour authoring. Unreal Engine combines a node--link tree, decorators and a blackboard, and displays execution state in the editor \parencite{unrealbt}. Godot 4.6 provides general editor-extension and graph controls, notably \texttt{EditorPlugin}, \texttt{GraphEdit} and \texttt{GraphNode}, but does not prescribe a complete visual behaviour-tree workflow \parencite{godoteditorplugin,godotgraphedit}. This creates an engineering opportunity and a research problem. A plugin must first execute trees correctly and integrate with arbitrary actors; once the tree is useful, its visual representation must remain understandable as the number of nodes and runtime annotations increases.
+
+Conventional node--link trees communicate parent--child topology directly, but their use of space deteriorates with breadth and depth. A behaviour node may also display parameters, descriptions, decorators, blackboard keys and execution state, making each card larger than a label-only hierarchy. When dozens or hundreds of cards are placed on a finite editor canvas, developers must repeatedly zoom, pan and search. The active execution path can be visually lost among inactive branches. This is not only an aesthetic issue: the representation is the primary instrument through which designers locate tasks, understand ordering, edit conditions and diagnose failure.
+
+The project therefore treats a functional Godot behaviour-tree plugin as the experimental platform for studying large-tree presentation. The implementation follows a recognisable top-to-bottom visual language with ordered children executing from left to right, while adding switchable focus+context, complexity-management, navigation and runtime-explanation techniques. Each technique can be disabled independently so that a visual fault cannot permanently destabilise the editor and so that baseline comparisons remain possible.
+
+\section{Problem statement and research gap}
+
+Research has produced many techniques for tree and graph visualisation. Fisheye and focus+context views allocate more display space to items near a focus \parencite{furnas1986fisheye,lamping1995hyperbolic}; overview+detail preserves a global reference view \parencite{cockburn2008review}; multi-column presentation assists browsing in trees with large fan-outs \parencite{song2010largefanout}; and incremental expand--collapse operations reduce graph complexity while attempting to preserve the mental map \parencite{dogrusoz2018complexity,misue1995mentalmap}. Large layered-graph research further shows that path-following performance depends on representation and task \parencite{bae2011quilts}.
+
+However, these findings do not directly answer how a game-development behaviour-tree editor should combine such mechanisms. Behaviour trees differ from generic file hierarchies because sibling order has execution semantics, leaf nodes invoke code, decorators can prevent execution, and the graph changes state every runtime tick. A useful solution must preserve semantic order, support editing and undo, expose blackboard state, and explain failures without adding a debugging overlay to the game itself. It must also distinguish measurable geometric improvements from claims about human comprehension. Existing studies motivate individual techniques, but an integrated and reproducibly evaluated Godot implementation is still needed.
+
+\section{Research aim and questions}
+
+The aim of this dissertation is to design, implement and evaluate a Godot 4.6 visual behaviour-tree plugin that supports real non-player character (NPC) execution while providing robust, switchable mechanisms for inspecting large trees.
+
+The study addresses three research questions:
+
+\begin{description}
+    \item[RQ1:] Can a Godot editor plugin provide the core authoring, runtime, blackboard, decorator and live-debug capabilities required to control a non-trivial 2D game agent?
+    \item[RQ2:] How do independently switchable visualisation techniques affect measurable properties of 31-, 121- and 364-node behaviour trees, including visible-node ratio, card area, information fields, target dimming, overview coverage and update cost?
+    \item[RQ3:] Can topology caching reduce behaviour-tree tick cost across tree sizes and actor counts without changing execution results or becoming unsafe when a resource is mutated in place?
+\end{description}
+
+RQ2 deliberately asks about measurable display properties rather than claiming improved usability. Whether the techniques reduce user completion time, error rate or cognitive load requires participant data. The corresponding study is designed in this dissertation, but no participant outcomes are fabricated.
+
+\section{Objectives and success criteria}
+
+The project objectives are to:
+
+\begin{enumerate}
+    \item implement serialisable tree, node, decorator and typed-blackboard resources;
+    \item implement correct \textsc{success}, \textsc{failure} and \textsc{running} semantics for root, sequence, selector, reactive selector, random selector, parallel, repeat, wait, action and condition behaviour;
+    \item allow a reusable component to assign a tree and actor to an NPC, with leaf nodes calling actor methods;
+    \item provide visual creation, connection, disconnection, drag movement, typed editing, validation, save/load, undo and redo;
+    \item show the current path, node status, blackboard and failure reason only inside the Godot editor;
+    \item implement large-tree presentation methods behind independent persisted switches and safe reset paths;
+    \item create deterministic trees and a sufficiently complex 2D scenario to test real decision changes;
+    \item evaluate correctness, visual geometry, visual regressions, runtime performance and clean installation with reproducible evidence.
+\end{enumerate}
+
+Success requires more than launching the plugin. Every runtime node must have focused semantic tests; editor operations must survive save/reload and history operations; the game scenario must demonstrate detection, pursuit, attack, search, retreat and recovery; visual features must be checked with a real renderer; and cached and uncached execution must return identical terminal states. Logs are treated as failed if they contain script errors, leaks, native crashes or illegal memory access, even if an assertion counter reports success.
+
+\section{Contributions}
+
+The main contributions of this work are:
+
+\begin{itemize}
+    \item a distributable Godot 4.6 behaviour-tree plugin with executable composite, leaf and decorator semantics, actor-method integration and a typed blackboard;
+    \item an editor-only live-debug bridge that reports active paths, blackboard values and failure causes without coupling debugging presentation to the running game;
+    \item an integrated set of 19 independently switchable display features, including compact and semantic representations, focus+context, subtree reduction, navigation, path emphasis, accessibility encodings and alternative edge rendering;
+    \item a reproducible evaluation corpus containing deterministic 31-, 121- and 364-node resources, GPU screenshots, raw CSV measurements, formula workbooks and a participant-study protocol;
+    \item a topology cache whose exact signature detects same-size reordering, reparenting, decorator reassignment and resource-instance replacement, together with measurements over nine size/load combinations.
+\end{itemize}
+
+\section{Dissertation structure}
+
+\Cref{ch:literature} critically reviews behaviour trees and scalable hierarchy visualisation. \Cref{ch:methodology} defines the design-science and experimental methodology. \Cref{ch:method} describes the resource model, runtime, editor, display mechanisms, game scenario and test infrastructure. \Cref{ch:results} reports correctness, geometric, visual and runtime results. \Cref{ch:discussion} interprets those results against the research questions and literature, including limitations. \Cref{ch:conclusion} summarises contributions and future work. Appendices provide feature, test and reproduction references.

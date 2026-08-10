@@ -31,6 +31,7 @@ node_type = "Selector"
 position = Vector2(900, 560)
 parent_id = 2
 description = "Try attacks first, then patrol if no attack branch is valid."
+parameters = {"reactive": true}
 
 [sub_resource type="Resource" id="BTNodeResource_attack_left"]
 script = ExtResource("2_node")
@@ -125,7 +126,7 @@ script = ExtResource("2_node")
 id = 10
 title = "Patrol Sequence"
 node_type = "Sequence"
-position = Vector2(1680, 900)
+position = Vector2(2100, 900)
 parent_id = 3
 description = "Fallback patrol branch when attack decorators fail."
 
@@ -134,7 +135,7 @@ script = ExtResource("2_node")
 id = 11
 title = "Move Left"
 node_type = "Action"
-position = Vector2(1480, 1240)
+position = Vector2(1900, 1240)
 parent_id = 10
 description = "Calls enemy.move_left."
 parameters = {
@@ -146,15 +147,57 @@ script = ExtResource("2_node")
 id = 12
 title = "Move Right"
 node_type = "Action"
-position = Vector2(1880, 1240)
+position = Vector2(2300, 1240)
 parent_id = 10
 description = "Calls enemy.move_right."
 parameters = {
 "action_name": "move_right"
 }
 
+[sub_resource type="Resource" id="BTNodeResource_chase"]
+script = ExtResource("2_node")
+id = 13
+title = "Chase Player"
+node_type = "Action"
+position = Vector2(1500, 900)
+parent_id = 3
+description = "Approaches a detected player outside attack range."
+parameters = {
+"action_name": "chase_player"
+}
+
+[sub_resource type="Resource" id="BTNodeResource_chase_detected"]
+script = ExtResource("2_node")
+id = 14
+title = "Player Detected"
+node_type = "Decorator"
+position = Vector2(1400, 760)
+decorator_parent_id = 13
+description = "Requires a currently detected player."
+parameters = {
+"blackboard_key": "player_detected",
+"mode": "blackboard",
+"operator": "equals",
+"value": true
+}
+
+[sub_resource type="Resource" id="BTNodeResource_chase_not_range"]
+script = ExtResource("2_node")
+id = 15
+title = "Outside Attack Range"
+node_type = "Decorator"
+position = Vector2(1600, 760)
+decorator_parent_id = 13
+description = "Stops chasing when the player can be attacked."
+parameters = {
+"blackboard_key": "player_in_range",
+"mode": "blackboard",
+"operator": "equals",
+"value": false
+}
+
 [resource]
 script = ExtResource("1_tree")
 tree_name = "Enemy Patrol Combat"
 root_node_id = 1
-nodes = Array[ExtResource("2_node")]([SubResource("BTNodeResource_root"), SubResource("BTNodeResource_repeat"), SubResource("BTNodeResource_selector"), SubResource("BTNodeResource_attack_left"), SubResource("BTNodeResource_attack_left_range"), SubResource("BTNodeResource_attack_left_side"), SubResource("BTNodeResource_attack_right"), SubResource("BTNodeResource_attack_right_range"), SubResource("BTNodeResource_attack_right_side"), SubResource("BTNodeResource_patrol"), SubResource("BTNodeResource_move_left"), SubResource("BTNodeResource_move_right")])
+nodes = Array[ExtResource("2_node")]([SubResource("BTNodeResource_root"), SubResource("BTNodeResource_repeat"), SubResource("BTNodeResource_selector"), SubResource("BTNodeResource_attack_left"), SubResource("BTNodeResource_attack_left_range"), SubResource("BTNodeResource_attack_left_side"), SubResource("BTNodeResource_attack_right"), SubResource("BTNodeResource_attack_right_range"), SubResource("BTNodeResource_attack_right_side"), SubResource("BTNodeResource_chase"), SubResource("BTNodeResource_chase_detected"), SubResource("BTNodeResource_chase_not_range"), SubResource("BTNodeResource_patrol"), SubResource("BTNodeResource_move_left"), SubResource("BTNodeResource_move_right")])

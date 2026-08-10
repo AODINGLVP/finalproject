@@ -1,0 +1,102 @@
+\chapter{系统设计与实现}
+\label{ch:method}
+
+\section{架构与项目边界}
+
+系统分为编辑器层、资源层、运行时层和验证层（图\ref{fig:architecture}）。活动演示项目与内容同步的分发插件模板相互分离。游戏场景只依赖序列化资源和运行组件；编辑器控件与 Live Debug 表示不进入游戏 GUI。这一边界避免导出后的智能体行为隐式依赖编写工具。
+
+\begin{figure}[htbp]
+\centering\includegraphics[width=\textwidth]{figures/architecture.png}
+\caption{Godot 编辑器、行为树资源、Runner 与 Actor 之间的插件架构和数据流。}
+\label{fig:architecture}
+\end{figure}
+
+\texttt{BTTreeResource} 保存 Root ID、节点数组和可选黑板 Schema；\texttt{BTNodeResource} 保存类型、标题、描述、参数、图位置、普通父级和 Decorator 所属者；\texttt{BehaviorTreeRunner} 针对 Actor 与字典黑板执行树；\texttt{BehaviorTreeComponent} 把树、ActorPath、Tick 模式和生命周期暴露为可复用场景组件。编辑器中，\texttt{BTEditorView} 管理 Palette、Toolbar、Graph、Inspector、Schema Editor、历史和 Live Debug，另外两个控件负责画布输入、连线和卡片显示。
+
+\section{资源模型与校验}
+
+普通层级使用 \texttt{parent\_id}；Decorator 使用 \texttt{decorator\_parent\_id}，因此不会成为普通控制流子节点。子节点按 X 坐标排序，X 相同时按 Y 排序，使画面从左到右与执行顺序一致。移动同级卡片可以有意改变优先级，序列化则保存布局。
+
+校验拒绝缺失 Root、重复 ID、无效父级、非法 Decorator 归属和节点专属结构错误。Root 不得有父级，叶节点不得拥有普通子节点，Decorator 必须依附有效普通节点，必需参数也必须存在。保存和测试使用同一校验入口。
+
+黑板 Schema 支持 Bool、Int、Float、String 和 \texttt{Vector2} 类型、默认值和动态键策略。严格模式报告空引用和未声明键。Inspector 同时提供带类型的键选择器和自由输入；反向索引可以列出每个键的引用节点和未使用声明。Schema 修改通过深拷贝节点与条目进入树级撤销重做。
+
+\section{运行时语义}
+
+每次 Tick 返回 \textsc{success}、\textsc{failure} 或 \textsc{running}。节点记忆按 ID 保存，并在重启、换树或分支中断时清理。表\ref{tab:nodes}概括节点语义。
+
+\begin{table}[htbp]
+\centering
+\caption{已实现的运行时节点语义。}\label{tab:nodes}
+\begin{tabular}{p{0.22\textwidth}p{0.68\textwidth}}
+\toprule 节点 & 行为 \\
+\midrule
+Root & 执行唯一普通子节点。\\
+Sequence & 按序执行，遇失败或运行停止，并记忆运行索引。\\
+Selector & 按序执行，遇成功或运行停止，并记忆运行索引。\\
+Reactive Selector & 每 Tick 从高优先级重新检查，可中断低优先级分支。\\
+Random Selector & 使用可设种子的随机选择，运行期间保持同一子节点。\\
+Parallel & Tick 多个子节点并应用成功/失败阈值。\\
+Repeat & 固定次数或无限重复，跨 Tick 保存计数。\\
+Wait & 累积 delta，到达时间后成功。\\
+Condition & 调用 Actor 判断或比较黑板值。\\
+Action & 调用 Actor 方法，把 Bool 或状态转成树状态。\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Action 和 Actor 模式 Condition 统一调用 \texttt{method(blackboard, delta, node)}。缺失方法会安全失败并生成调试原因，而不是触发致命脚本错误。黑板条件支持存在、不存在、真假、相等、不等和数值大小比较。
+
+Decorator 在所属节点前或周围执行，支持黑板比较、Cooldown、Time Limit、Invert、Force Result 和 Repeat。Cooldown 防止立即重入，Time Limit 在超时后使运行子节点失败，Invert 交换成功与失败，强制结果只覆盖终态而保留运行态。子树复位同时清理 Decorator 和子节点记忆。
+
+\section{编辑器编写工作流}
+
+插件注册为底部面板。Palette 支持点击和拖拽创建；节点可以移动、从底部方形端口连接到顶部方形端口、断开、复制和删除；复合节点支持多个子节点；右键菜单提供常用操作和子树显示命令。所有数据改动都推入树快照，因此撤销重做覆盖创建、删除、移动、连线、参数、Schema 和折叠状态。
+
+Inspector 为常见字段提供类型化控件，不要求手写 JSON。Action 编辑方法名；Condition 编辑 Actor/Blackboard 模式、Key、Operator 与值；Random、Parallel、Repeat、Wait 和 Decorator 暴露对应策略。Advanced JSON 仍作为兼容入口，无效 JSON 不会持续输出红色错误，并在修复前保留旧有效参数。
+
+连线需要特殊处理：Godot 原生 GraphEdit 曲线使用侧面 Slot，而本项目采用上下端口。单连接模式隐藏原生持久层并绘制自定义上下边，拖拽预览期间临时恢复原生层。自定义线段命中保留右键断开和撤销重做；关闭该功能则恢复原生线，形成安全回退。
+
+\section{Live Debug 与黑板检查}
+
+Runner 把 Actor、树路径、活动节点、有序路径、节点状态、失败原因、黑板值和 Schema 信息写入进程专属临时文件，再原子发布到 \path{res://.godot/behavior_tree_runtime_debug.json}，避免编辑器读取半个 JSON。若快照截断，编辑器保留上一完整状态并在下一帧恢复。
+
+编辑器按当前树过滤快照，显示路径、叶节点、路径摘要、失败菜单和实时黑板。卡片使用状态边框与标注；非活动分支可淡化到 0.24，活动路径保持 1.0。长路径和当前选择使用独立可滚动行，避免 1600×900 下重叠。游戏中没有相应覆盖 UI。
+
+\begin{figure}[htbp]
+\centering\includegraphics[width=0.92\textwidth]{figures/07_runtime_failure.png}
+\caption{仅位于编辑器中的活动路径和失败原因显示。}\label{fig:livedebug}
+\end{figure}
+
+\section{大型树显示机制}
+
+19 项功能通过统一开关系统登记，状态保存在 Godot \texttt{ConfigFile}。组合测试会启用功能、重建、全部关闭，并检查残留。
+
+\subsection{信息密度控制}
+Compact 减少卡片宽高，保留类型编码和短标题；Semantic Zoom 不改变几何，而是按缩放层级决定字段可见性；形状/图标补充颜色，可选色盲安全配色提供冗余编码。
+
+\begin{figure}[htbp]
+\centering
+\begin{minipage}{0.48\textwidth}\centering\includegraphics[width=\linewidth]{figures/01_baseline.png}\\[-1mm]\small (a) 基线\end{minipage}\hfill
+\begin{minipage}{0.48\textwidth}\centering\includegraphics[width=\linewidth]{figures/02_compact.png}\\[-1mm]\small (b) 紧凑卡片\end{minipage}
+\caption{同一行为树的完整细节基线和紧凑显示。}\label{fig:compact}
+\end{figure}
+
+\subsection{焦点与结构裁剪}
+Fisheye 最多把鼠标所在及附近卡片放大 1.20 倍，保留远处上下文。实现不再修改 \texttt{GraphNode.scale}，而是改变内部尺寸与字体，并围绕中心补偿；关闭时恢复所有值。Collapse 隐藏后代并显示数量与下两层摘要，Focus 隔离所选分支；Stable Layout 尽量复用无冲突位置。
+
+\subsection{导航与概览}
+Search 匹配标题、类型、描述、方法和 Decorator 参数，并用 F3/Shift+F3 导航；Breadcrumb 显示祖先；Fit 计算完整树缩放，大树最低支持 0.10；230×150 小地图表示全部节点和当前视口；Multi-column 平衡宽分支，并用顺序提示保持执行优先级可见。
+
+\subsection{连线与运行表示}
+Orthogonal 使用直角边，Bundling 让同方向连线共享主干。Active Path、Branch Dimming、Decorator Badge、Path Summary 和 Failure Annotation 提供运行解释，但不修改行为树资源。它们保持可选，因为不同密度和任务对高亮与连线的偏好不同。
+
+\section{运行时拓扑缓存}
+
+无缓存时，Runner 会反复线性扫描数组以按 ID 找节点、查父级子节点和查所属 Decorator。可选缓存建立 ID 到节点、父 ID 到有序子节点、Owner ID 到有序 Decorator 三种索引，Condition、Action 和黑板动态结果从不缓存。
+
+只比较资源实例和节点数不安全，因为树可以在节点数不变时原地修改。最终实现每个外部 Tick 计算一次精确签名，包括 Root ID、节点数、每个节点资源实例、节点 ID、父级、Decorator Owner 和 X/Y 排序位置。变化后重建索引，递归执行在该 Tick 内复用已验证缓存。这以一次 \(O(n)\) 扫描换取正确性。
+
+\section{演示游戏}
+
+复杂二维竞技场提供合成树之外的行为证据。玩家可以移动、近战、冲刺、治疗和短暂隐身；三个守卫运行行为树组件。低血量时守卫撤退并治疗；否则左右攻击分支检查范围、方向、冷却和时限；追击分支接近可见玩家；玩家隐身后 Search 前往最后位置；巡逻使用 Random Selector、Parallel、Repeat 和 Wait。检测采用滞回：330 像素内获得可见目标，超过 460 像素才释放，避免边界抖动。游戏使用简单生成图形和贴图切换，把重点保留在决策逻辑并提高自动测试稳定性。

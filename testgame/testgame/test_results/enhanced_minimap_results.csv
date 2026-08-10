@@ -1,0 +1,4 @@
+tree_size,overview_nodes,coverage_ratio,minimap_width_px,minimap_height_px,minimap_area_px2,nodes_per_1000_px2,toggle_cycle_ms,steady_status_update_ms
+31,31,1.0,230.0,150.0,34500.0,0.89855072463768,9.3163,0.00132
+121,121,1.0,230.0,150.0,34500.0,3.50724637681159,38.103,0.0014
+364,364,1.0,230.0,150.0,34500.0,10.5507246376812,126.79382,0.00174

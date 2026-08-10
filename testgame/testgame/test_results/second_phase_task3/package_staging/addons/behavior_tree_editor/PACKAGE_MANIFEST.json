@@ -1,0 +1,164 @@
+{
+  "package": "behavior-tree-editor",
+  "version": "0.9.0",
+  "godot": "4.6",
+  "entry_point": "addons/behavior_tree_editor/plugin.cfg",
+  "generated_utc": "2026-08-09T13:21:56.6561722Z",
+  "files": [
+    {
+      "path": "bt_blackboard_entry.gd",
+      "size": 1378,
+      "sha256": "d09810c6e51c990fb1b481d00599580f0f2a8b447dba10beff6e0db67d1c2d2f"
+    },
+    {
+      "path": "bt_blackboard_entry.gd.uid",
+      "size": 19,
+      "sha256": "2fb9cab066f02edceb279d17fb0765adc8ece05ef73c1ba355349af95d03e559"
+    },
+    {
+      "path": "bt_blackboard_schema.gd",
+      "size": 2182,
+      "sha256": "fb1c980c69380b842b5ec83abcf783f56b298ea0d1f544cdff8cbe46f74f09ff"
+    },
+    {
+      "path": "bt_blackboard_schema.gd.uid",
+      "size": 20,
+      "sha256": "d3dea55469d615be4cb78fb395df88fdd23450aa04f55cd316b1debfc9055b90"
+    },
+    {
+      "path": "bt_editor_view.gd",
+      "size": 117972,
+      "sha256": "36907c7d370614f5895086ae248efa3d75090a7cf800e9fd6b37daf1911c4e4b"
+    },
+    {
+      "path": "bt_editor_view.gd.uid",
+      "size": 20,
+      "sha256": "5b15ec7023070d4dd71f57a931e8220af79a8438a9459ff27a2781acbe43b70f"
+    },
+    {
+      "path": "bt_graph_edit.gd",
+      "size": 8212,
+      "sha256": "aa732dd0d1d05b69a8fa5f355650f4bed6e18bcd1ad17cf09936c2df1820ae88"
+    },
+    {
+      "path": "bt_graph_edit.gd.uid",
+      "size": 20,
+      "sha256": "61f74ecee9a7700dbe4ae2a59b019db223253965eb4b1213a8e9a01479bb823f"
+    },
+    {
+      "path": "bt_graph_node.gd",
+      "size": 20341,
+      "sha256": "8ec9cb53edfff7dd8b9ddb59f3a6ce4212ee17656fdb543d8e4036ee2104b4e0"
+    },
+    {
+      "path": "bt_graph_node.gd.uid",
+      "size": 20,
+      "sha256": "d533e84b3a2841f0efca647355da4f19d9d9b2a5d15e6cd33ced5dde3096bdae"
+    },
+    {
+      "path": "bt_node_resource.gd",
+      "size": 764,
+      "sha256": "afa4c4a9221267c3bb4baa6c72ad10e56d77c5c7e193deb1a965b1f847c05c01"
+    },
+    {
+      "path": "bt_node_resource.gd.uid",
+      "size": 20,
+      "sha256": "ecf38a17b64d56fe331d85a323ef8b968f2f544fccf360ed7ccca17ab33380f3"
+    },
+    {
+      "path": "bt_palette_item.gd",
+      "size": 317,
+      "sha256": "b177a4bd0ca340be33f51a388546c482c2ac358a4690d17f5520c8d058283dae"
+    },
+    {
+      "path": "bt_palette_item.gd.uid",
+      "size": 19,
+      "sha256": "48c86564ce3e1d34499fe30a183e43e57be1a26c5e8a4588eb7329e20e939bed"
+    },
+    {
+      "path": "bt_tree_resource.gd",
+      "size": 7440,
+      "sha256": "18ec8cdd89c15c71112cbc1cb2a064c68bae377d30857655a1d6fc98ccb7bcb8"
+    },
+    {
+      "path": "bt_tree_resource.gd.uid",
+      "size": 20,
+      "sha256": "092626f6593faef3c5c82312259f849d18412fb6ae480cea8bf52c5df3005a6e"
+    },
+    {
+      "path": "bt_type_icon.gd",
+      "size": 3911,
+      "sha256": "fd3f52958bf37130d0b282384d00e782dc284a335bfe3f1180b98625f739e367"
+    },
+    {
+      "path": "bt_type_icon.gd.uid",
+      "size": 19,
+      "sha256": "9d4bdc87f80cb48c52ecfc129e1c174b3c65d53dfab1d66215edf8d5323c43cf"
+    },
+    {
+      "path": "LICENSE.txt",
+      "size": 1065,
+      "sha256": "2c54f804b871086dd766684323c907d69f075bfd790c93d1ca970ba2d7f8da65"
+    },
+    {
+      "path": "plugin.cfg",
+      "size": 215,
+      "sha256": "66e2d9675cf66734f316b83b0e3c6e1447a187d56a06378c1e20fa592d99722a"
+    },
+    {
+      "path": "plugin.gd",
+      "size": 433,
+      "sha256": "9ca54b8025a854f68d89323015ec3c6efba0a0d66a371219faf54095b4345577"
+    },
+    {
+      "path": "plugin.gd.uid",
+      "size": 20,
+      "sha256": "b1de59f389c8c75410169d81a6d8184022760301d6cba9bc9d9fd706f764433a"
+    },
+    {
+      "path": "README.md",
+      "size": 1059,
+      "sha256": "94d752066a47c1ff5ae6eacae78edd9feafb7d75d6f026f17529cc35a0f054f2"
+    },
+    {
+      "path": "runtime/behavior_tree_component.gd",
+      "size": 109,
+      "sha256": "9b12dcfa7f9ce9a7b0dc3b02382b1b374980e04cae4c9462c72183b1307e730f"
+    },
+    {
+      "path": "runtime/behavior_tree_component.gd.uid",
+      "size": 20,
+      "sha256": "f44c42254a96252f7b5a26f54e030b3dbce9e11e36ee4da834139b04439c02c6"
+    },
+    {
+      "path": "runtime/behavior_tree_runner.gd",
+      "size": 27765,
+      "sha256": "fcbbb7cd03b744ecec121c348b3745472f4db9556fea4e95bda02b8b9fd47961"
+    },
+    {
+      "path": "runtime/behavior_tree_runner.gd.uid",
+      "size": 20,
+      "sha256": "a873866e1a3c26d4560107ac2cabf55f515741650d4171e965aadbcc257bcc4f"
+    },
+    {
+      "path": "runtime/bt_status.gd",
+      "size": 544,
+      "sha256": "892d06c2c9a39ade932c3d8fa733b7f749ae0f3664d1b9bba17af08b9cd3b50b"
+    },
+    {
+      "path": "runtime/bt_status.gd.uid",
+      "size": 20,
+      "sha256": "72f61879416b85f2d3a505fa49d0a1b81f7e67457317c8c6c2891d761f0e5c47"
+    },
+    {
+      "path": "runtime/example_agent.gd",
+      "size": 1241,
+      "sha256": "2e7dc77e1e7d020ec9267af4e35232056c2f96a8d1919cdd0ef8ab8bf31f0f1f"
+    },
+    {
+      "path": "runtime/example_agent.gd.uid",
+      "size": 20,
+      "sha256": "858e0eb533b7d4102c3f57b12c5b7e2807d923a03b19b1fb5407aae6b59d211d"
+    }
+  ]
+}

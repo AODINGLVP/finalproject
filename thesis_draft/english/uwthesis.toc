@@ -1,0 +1,73 @@
+\changetocdepth {50}
+\acswitchoff 
+\contentsline {chapter}{Contents}{ii}{section*.1}%
+\contentsline {chapter}{List of figures}{v}{section*.2}%
+\contentsline {chapter}{List of tables}{vi}{section*.3}%
+\contentsline {chapter}{Acknowledgements}{vii}{chapter*.4}%
+\contentsline {chapter}{Declaration}{viii}{chapter*.5}%
+\contentsline {chapter}{Abstract}{ix}{chapter*.6}%
+\contentsline {chapter}{Abbreviations}{x}{chapter*.7}%
+\contentsline {chapter}{\chapternumberline {1}Introduction}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Background and context}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Problem statement and research gap}{2}{section.1.2}%
+\contentsline {section}{\numberline {1.3}Research aim and questions}{2}{section.1.3}%
+\contentsline {section}{\numberline {1.4}Objectives and success criteria}{3}{section.1.4}%
+\contentsline {section}{\numberline {1.5}Contributions}{3}{section.1.5}%
+\contentsline {section}{\numberline {1.6}Dissertation structure}{4}{section.1.6}%
+\contentsline {chapter}{\chapternumberline {2}Literature Review}{5}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Behaviour trees as executable hierarchies}{5}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Node--link trees and scalability}{5}{section.2.2}%
+\contentsline {section}{\numberline {2.3}Focus, context and overview}{6}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Complexity management and mental-map preservation}{7}{section.2.4}%
+\contentsline {section}{\numberline {2.5}Runtime explanation and failure localisation}{7}{section.2.5}%
+\contentsline {section}{\numberline {2.6}Research gap and design implications}{8}{section.2.6}%
+\contentsline {chapter}{\chapternumberline {3}Research Methodology}{9}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Research strategy}{9}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Experimental factors and datasets}{9}{section.3.2}%
+\contentsline {section}{\numberline {3.3}Software correctness and integration evaluation}{10}{section.3.3}%
+\contentsline {section}{\numberline {3.4}Visual validation}{10}{section.3.4}%
+\contentsline {section}{\numberline {3.5}Human-study design}{11}{section.3.5}%
+\contentsline {section}{\numberline {3.6}Validity and reproducibility}{11}{section.3.6}%
+\contentsline {chapter}{\chapternumberline {4}System Design and Implementation}{12}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Architecture and project boundary}{12}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Resource model and validation}{13}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Runtime semantics}{13}{section.4.3}%
+\contentsline {section}{\numberline {4.4}Editor authoring workflow}{13}{section.4.4}%
+\contentsline {section}{\numberline {4.5}Live debugging and blackboard inspection}{15}{section.4.5}%
+\contentsline {section}{\numberline {4.6}Large-tree display mechanisms}{15}{section.4.6}%
+\contentsline {subsection}{\numberline {4.6.1}Information-density control}{15}{subsection.4.6.1}%
+\contentsline {subsection}{\numberline {4.6.2}Focus and structural reduction}{16}{subsection.4.6.2}%
+\contentsline {subsection}{\numberline {4.6.3}Navigation and overview}{16}{subsection.4.6.3}%
+\contentsline {subsection}{\numberline {4.6.4}Edge and execution representations}{16}{subsection.4.6.4}%
+\contentsline {section}{\numberline {4.7}Runtime topology cache}{17}{section.4.7}%
+\contentsline {section}{\numberline {4.8}Demonstration game}{17}{section.4.8}%
+\contentsline {chapter}{\chapternumberline {5}Results and Analysis}{18}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Functional correctness}{18}{section.5.1}%
+\contentsline {section}{\numberline {5.2}Display-density and context results}{19}{section.5.2}%
+\contentsline {section}{\numberline {5.3}Runtime-path and overview results}{19}{section.5.3}%
+\contentsline {section}{\numberline {5.4}Visual-regression findings}{20}{section.5.4}%
+\contentsline {section}{\numberline {5.5}Runtime-cache results}{21}{section.5.5}%
+\contentsline {section}{\numberline {5.6}Summary against research questions}{22}{section.5.6}%
+\contentsline {chapter}{\chapternumberline {6}Discussion}{23}{chapter.6}%
+\contentsline {section}{\numberline {6.1}A complete system as a research instrument}{23}{section.6.1}%
+\contentsline {section}{\numberline {6.2}Interpreting the visualisation results}{23}{section.6.2}%
+\contentsline {section}{\numberline {6.3}Live debugging as a readability mechanism}{24}{section.6.3}%
+\contentsline {section}{\numberline {6.4}Runtime-cache trade-offs}{25}{section.6.4}%
+\contentsline {section}{\numberline {6.5}Reliability and packaging}{25}{section.6.5}%
+\contentsline {section}{\numberline {6.6}Threats to validity}{25}{section.6.6}%
+\contentsline {subsection}{\numberline {6.6.1}Construct validity}{25}{subsection.6.6.1}%
+\contentsline {subsection}{\numberline {6.6.2}Internal validity}{26}{subsection.6.6.2}%
+\contentsline {subsection}{\numberline {6.6.3}External validity}{26}{subsection.6.6.3}%
+\contentsline {subsection}{\numberline {6.6.4}Researcher and participant validity}{26}{subsection.6.6.4}%
+\contentsline {section}{\numberline {6.7}Practical implications}{26}{section.6.7}%
+\contentsline {chapter}{\chapternumberline {7}Conclusions}{27}{chapter.7}%
+\contentsline {section}{\numberline {7.1}Summary}{27}{section.7.1}%
+\contentsline {section}{\numberline {7.2}Contributions}{27}{section.7.2}%
+\contentsline {section}{\numberline {7.3}Limitations}{28}{section.7.3}%
+\contentsline {section}{\numberline {7.4}Future work}{28}{section.7.4}%
+\contentsline {section}{\numberline {7.5}Final statement}{28}{section.7.5}%
+\contentsline {chapter}{Bibliography}{29}{chapter*.8}%
+\contentsline {appendix}{\chapternumberline {A}Feature Reference}{31}{appendix.A}%
+\contentsline {appendix}{\chapternumberline {B}Reproduction and Evidence Index}{33}{appendix.B}%
+\contentsline {appendix}{\chapternumberline {C}Planned Participant Study}{34}{appendix.C}%
+\contentsline {appendix}{\chapternumberline {D}Draft Completion Checklist}{35}{appendix.D}%

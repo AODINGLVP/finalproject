@@ -1,16 +1,15 @@
 # Behavior Tree Visual Scripting
 
-Godot 4.6 editor plugin for building behavior trees with a visual 2D GUI.
+Godot 4.6 editor plugin for authoring, debugging, and running behavior trees.
 
 ## Current features
 
-- Dockable editor plugin inside the Godot editor
-- Behavior tree resource format based on custom `Resource` scripts
-- Visual node graph using `GraphEdit` and `GraphNode`
-- Create root and child nodes from a node palette
-- Connect and disconnect parent-child relations visually
-- Edit node title, type, status text, and parameters in a side panel
-- Save and load `.tres` behavior tree resources
+- Visual graph editing with drag creation, context menus, undo, and redo
+- Root, Sequence, Selector, Random Selector, Parallel, Repeat, Action, Condition, Wait, and Decorator nodes
+- Actor method execution, typed blackboard schema, validation, and runtime component
+- Editor-only Live Debug with active paths, failure reasons, and blackboard values
+- Independent large-tree display tools including compact cards, semantic zoom, fisheye, collapse, search, minimap, and branch dimming
+- `.tres` resource save/load and left-to-right child execution order
 
 ## Open in Godot
 
@@ -21,10 +20,14 @@ Godot 4.6 editor plugin for building behavior trees with a visual 2D GUI.
 
 The plugin appears in the bottom panel as `Behavior Tree`.
 
-## Suggested next steps for your graduation project
+## Build a distributable package
 
-- Add runtime execution for sequence, selector, and decorator nodes
-- Add blackboard variable definitions and typed ports
-- Add right-click canvas menus and drag creation
-- Add undo/redo integration with `EditorUndoRedoManager`
-- Add validation, minimap, and subtree resources
+From the repository root, run:
+
+```powershell
+.\tools\package_behavior_tree_plugin.ps1
+```
+
+The script creates `dist/behavior-tree-editor-0.9.0.zip`, verifies every
+packaged file against a SHA-256 manifest, installs it into an empty Godot
+project, enables the plugin, and checks the editor startup log.

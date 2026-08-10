@@ -1,0 +1,64 @@
+\chapter{Discussion}
+\label{ch:discussion}
+
+\section{A complete system as a research instrument}
+
+The first research question concerned feasibility. The completed plugin demonstrates that Godot's general graph and editor APIs are sufficient for a behaviour-tree workflow approaching the functional baseline expected from established tools: serialisable resources, reusable actor components, ordered composites, conditions, actions, decorators, blackboards and live execution inspection. The complex arena is important evidence because a graph that only renders correctly could still be disconnected from agent behaviour. Detection, chase, directional attack, search and recovery were selected by the resource at runtime, while actor methods provided physical effects.
+
+Functional breadth also exposed why a behaviour-tree editor is more than a generic tree visualiser. Moving a sibling changes priority; hiding a decorator can conceal the reason a task did not run; changing tree resources must clear execution memory; and live state is updated while the graph is being inspected. The architecture's separation of resource, runner and editor reduced coupling, but the integration surface remained large. The 447 core assertions should therefore be interpreted as evidence over specified cases, not proof of absence of all defects.
+
+The decision to exclude service nodes was appropriate to the project's scope. Parallel, random, repeat and wait behaviour, typed blackboards and decorators already permit a sufficiently complex demonstration. Implementing another Unreal-inspired abstraction would have added runtime and editor combinations without directly addressing the main research question. A graduation project benefits more from a defensible, tested boundary than from an incomplete attempt to reproduce a commercial engine.
+
+\section{Interpreting the visualisation results}
+
+The display techniques address different tasks and their percentages are not a common utility scale. Collapse's 99.5\% visible-node reduction is valuable when a developer knows which subtrees can be abstracted, but it also removes topology and can hide an unexpected runtime branch. Fisheye's 20\% magnification seems numerically smaller, yet it preserves the entire graph and may better support local reading during navigation. Search's 99.7\% dimming is powerful for a known textual target but provides little help when the developer does not know a node's name. Minimap's 100\% coverage provides orientation but not readable details.
+
+This task dependence agrees with the literature. Focus+context techniques balance local detail and global structure \parencite{furnas1986fisheye,lamping1995hyperbolic}, whereas overview+detail offers a stable global reference at the cost of divided attention \parencite{cockburn2008review}. Song et al.'s multi-column advantage applies specifically to large fan-out browsing \parencite{song2010largefanout}; it does not establish that every behaviour tree should be reflowed. Quilts improved particular path tasks in large layered graphs \parencite{bae2011quilts}, motivating the plugin's path summary rather than wholesale replacement of the editable node--link view.
+
+The strongest design outcome is therefore not one winning technique but controlled composition. A developer can use compact cards to increase density, minimap to retain overview, search to locate a target and semantic detail to inspect it. During runtime, branch dimming and a textual path can replace search. Independent switches also made fault isolation practical: when fisheye caused stale transforms, it could be disabled without affecting collapse or live debugging.
+
+Mental-map preservation remains only partially addressed. Stable incremental layout and centre-compensated fisheye reduce unnecessary movement, and collapse retains a visible owner and summary. Nevertheless, automatic layout can still move cards when a previously invalid position conflicts with a new subtree. Dogrusoz et al. and Misue et al. emphasise that spatial continuity is a central property of interactive graph management \parencite{dogrusoz2018complexity,misue1995mentalmap}. A future evaluation should measure whether users can revisit a node after repeated collapse/expand cycles rather than relying only on overlap counts.
+
+\section{Live debugging as a readability mechanism}
+
+Runtime inspection changes the large-tree problem from general topology reading to temporal explanation. The path-summary view, active edges, inactive dimming, failure annotation and live blackboard provide redundant evidence: graph colour communicates location, text communicates order, and the blackboard communicates decision inputs. This is especially useful for decorators because the visible failure can be attached to the owner rather than inferred from a child that never ran.
+
+The use of an atomically published snapshot was an engineering response to the editor and game running as separate processes. It is simple and inspectable, but file polling is not ideal for high-frequency traces or remote targets. It can also report only the most recent merged state rather than a complete time series. A socket or Godot debugger protocol extension could support event history and multiple remote actors, but would increase complexity and require stronger synchronisation. For this project, robust latest-state inspection was the more appropriate trade-off.
+
+\section{Runtime-cache trade-offs}
+
+The performance experiment answers RQ3 positively for the fixed workloads. Improvement grows with tree size because indexed lookup replaces repeated linear scans inside recursive execution. The exact topology signature avoids a common optimisation error: assuming that resource identity and node count imply unchanged structure. Tests demonstrate correct invalidation for changes that preserve count but alter execution.
+
+The cache is not free. Every external tick computes an \(O(n)\) signature, reducing the potential gain on a 31-node tree. This explains why the small-tree range is 15.98--26.46\%, much lower than the 364-node range. An event-driven generation counter could make validation \(O(1)\), but only if every mutating path reliably increments it. Godot resources may be edited directly, so a generation counter alone would weaken safety. A hybrid strategy could use editor change signals during authoring and periodic exact validation at runtime.
+
+The benchmark must also be interpreted carefully. Mean tick microseconds include GDScript execution and test-harness overhead on one Windows laptop. Runner-count conditions use bounded total work, so they do not estimate the exact frame cost of 50 production agents all ticking continuously. The results establish a relative effect under controlled pairs, not a universal throughput guarantee.
+
+\section{Reliability and packaging}
+
+The strict log policy found issues that assertion-only testing could have missed, including asynchronous timer objects surviving scene shutdown and a native console crash triggered by piping Godot output through a PowerShell native pipeline. Replacing scene-tree timers with node-local state machines removed lifecycle leakage; invoking Godot directly with an absolute \texttt{--log-file} avoided the console-pipeline failure. These are relevant outcomes because a plugin used for debugging must not itself introduce misleading shutdown errors.
+
+The clean-install package test strengthens reproducibility. It verifies not only that source files exist but that the ZIP boundary is correct, manifest hashes match and Godot can import and enable the plugin in an empty project. The remaining release work is social and compatibility-oriented: a final icon, Asset Library description and testing against explicitly selected Godot versions.
+
+\section{Threats to validity}
+
+\subsection{Construct validity}
+
+Card area, visible ratio, field count and dimmed count measure presentation properties, not comprehension. A smaller view may omit information needed for a task; stronger dimming may reduce awareness of alternatives. The dissertation therefore does not claim that a 55.9\% area reduction equals a 55.9\% readability improvement. The planned participant measures are required to test the usability hypothesis.
+
+\subsection{Internal validity}
+
+Generated trees share a deterministic pattern, which improves comparability but can make search and layout easier than irregular authored trees. Timing samples can be affected by OS scheduling and GPU/editor warm-up. Seven runtime samples and median aggregation reduce but do not eliminate this variability. Visual screenshots validate stable fixtures, not every possible feature combination.
+
+\subsection{External validity}
+
+The system was tested on Godot 4.6, Windows and one NVIDIA GPU. Godot's internal \texttt{GraphEdit} layers can change between versions, especially because single-connection rendering hides a native child layer. Results may not transfer directly to mobile editors, different DPI scales or trees with thousands of nodes. The demonstration focuses on 2D combat AI; non-game robotics uses may require different tick and safety policies.
+
+\subsection{Researcher and participant validity}
+
+The developer designed both artefact and automated metrics, creating a risk that tests favour implemented mechanisms. Raw data and explicit limits improve auditability, but independent participant evaluation is still needed. No participant data have yet been collected, so there is no risk of overstating a small or biased sample in the current results; equally, there is no empirical basis for a human-usability conclusion.
+
+\section{Practical implications}
+
+For small trees, full-detail node--link presentation remains reasonable and has the lowest learning cost. For medium and large trees, the results support offering techniques by task rather than forcing a single adaptive mode: compact/semantic detail for overview, collapse/focus for subsystem editing, search for known targets, minimap for orientation, and active-path/failure tools for runtime diagnosis. Safe defaults should favour stable geometry; more distorting techniques should be opt-in and easily reset.
+
+For plugin authors, the work demonstrates that display innovation must be tested together with authoring semantics. A visually elegant edge is insufficient if it cannot be clicked to disconnect; a collapse function is incomplete if new children attach invisibly without a summary; and a runtime highlight is unsafe if a partial debug message clears valid state. The integration tests are therefore part of the contribution, not merely post-implementation quality assurance.

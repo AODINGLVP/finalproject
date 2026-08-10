@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=19 format=3]
 
 [ext_resource type="Script" path="res://scripts/player_controller.gd" id="1_player_script"]
 [ext_resource type="Script" path="res://scripts/enemy_actor.gd" id="2_enemy_script"]
@@ -8,6 +8,10 @@
 [ext_resource type="Texture2D" path="res://assets/player_attack.svg" id="6_player_attack"]
 [ext_resource type="Texture2D" path="res://assets/enemy_idle.svg" id="7_enemy_idle"]
 [ext_resource type="Texture2D" path="res://assets/enemy_attack.svg" id="8_enemy_attack"]
+[ext_resource type="Script" path="res://scripts/arena_controller.gd" id="9_arena_script"]
+[ext_resource type="Resource" path="res://behavior_trees/complex_guard_validation_tree.tres" id="10_complex_tree"]
+[ext_resource type="Script" path="res://scripts/medkit_pickup.gd" id="11_medkit_script"]
+[ext_resource type="Script" path="res://scripts/damage_zone.gd" id="12_damage_script"]
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
 size = Vector2(34, 54)
 
@@ -20,12 +24,31 @@ size = Vector2(36, 54)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
 size = Vector2(1280, 64)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_medkit"]
+size = Vector2(30, 30)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_damage"]
+size = Vector2(160, 80)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_top"]
+bg_color = Color(0.035, 0.075, 0.105, 0.94)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.15, 0.55, 0.62, 0.8)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
 [node name="TestGame" type="Node2D"]
+script = ExtResource("9_arena_script")
 
 [node name="WorldBackground" type="ColorRect" parent="."]
 offset_right = 1280.0
 offset_bottom = 720.0
-color = Color(0.12, 0.15, 0.18, 1)
+color = Color(0.035, 0.075, 0.1, 1)
 
 [node name="Ground" type="StaticBody2D" parent="."]
 position = Vector2(640, 610)
@@ -94,7 +117,7 @@ shape = SubResource("RectangleShape2D_enemy")
 
 [node name="BehaviorTreeComponent" type="Node" parent="EnemyB"]
 script = ExtResource("3_bt_component")
-behavior_tree = ExtResource("4_enemy_tree")
+behavior_tree = ExtResource("10_complex_tree")
 tick_on_process = false
 tick_on_physics = true
 
@@ -112,15 +135,57 @@ shape = SubResource("RectangleShape2D_enemy")
 
 [node name="BehaviorTreeComponent" type="Node" parent="EnemyC"]
 script = ExtResource("3_bt_component")
-behavior_tree = ExtResource("4_enemy_tree")
+behavior_tree = ExtResource("10_complex_tree")
 tick_on_process = false
 tick_on_physics = true
 
+[node name="Medkit" type="Area2D" parent="."]
+position = Vector2(710, 555)
+script = ExtResource("11_medkit_script")
+
+[node name="Visual" type="Polygon2D" parent="Medkit"]
+polygon = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+color = Color(0.2, 0.9, 0.55, 1)
+
+[node name="Horizontal" type="Polygon2D" parent="Medkit"]
+polygon = PackedVector2Array(-11, -3, 11, -3, 11, 3, -11, 3)
+color = Color(0.95, 1, 0.97, 1)
+
+[node name="Vertical" type="Polygon2D" parent="Medkit"]
+polygon = PackedVector2Array(-3, -11, 3, -11, 3, 11, -3, 11)
+color = Color(0.95, 1, 0.97, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Medkit"]
+shape = SubResource("RectangleShape2D_medkit")
+
+[node name="DamageZone" type="Area2D" parent="."]
+position = Vector2(925, 550)
+script = ExtResource("12_damage_script")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DamageZone"]
+shape = SubResource("RectangleShape2D_damage")
+
 [node name="UI" type="CanvasLayer" parent="."]
 
-[node name="Help" type="Label" parent="UI"]
+[node name="TopPanel" type="PanelContainer" parent="UI"]
 offset_left = 20.0
-offset_top = 18.0
-offset_right = 700.0
-offset_bottom = 64.0
-text = "A/D or Arrow Keys: Move    J or Left Mouse: Melee Attack    Enemies are driven by BehaviorTreeComponent"
+offset_top = 16.0
+offset_right = 980.0
+offset_bottom = 86.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_top")
+
+[node name="TopContent" type="VBoxContainer" parent="UI/TopPanel"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="Help" type="Label" parent="UI/TopPanel/TopContent"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.66, 0.92, 0.95, 1)
+theme_override_font_sizes/font_size = 15
+text = "A/D Move   J/Mouse Attack   Space Dash   H Heal   C Cloak   T Pause AI   R Reset"
+
+[node name="PlayerStatus" type="Label" parent="UI/TopPanel/TopContent"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.8, 0.3, 1)
+theme_override_font_sizes/font_size = 17
+text = "PLAYER"

@@ -1,0 +1,72 @@
+\changetocdepth {50}
+\acswitchoff 
+\contentsline {chapter}{目录}{ii}{section*.1}%
+\contentsline {chapter}{插图}{v}{section*.2}%
+\contentsline {chapter}{表格}{vi}{section*.3}%
+\contentsline {chapter}{致谢}{vii}{chapter*.4}%
+\contentsline {chapter}{声明}{viii}{chapter*.5}%
+\contentsline {chapter}{摘要}{ix}{chapter*.6}%
+\contentsline {chapter}{\chapternumberline {1}引言}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}研究背景}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}问题定义与研究空白}{1}{section.1.2}%
+\contentsline {section}{\numberline {1.3}研究目标与问题}{2}{section.1.3}%
+\contentsline {section}{\numberline {1.4}研究目标与成功标准}{2}{section.1.4}%
+\contentsline {section}{\numberline {1.5}主要贡献}{3}{section.1.5}%
+\contentsline {section}{\numberline {1.6}论文结构}{3}{section.1.6}%
+\contentsline {chapter}{\chapternumberline {2}文献综述}{4}{chapter.2}%
+\contentsline {section}{\numberline {2.1}作为可执行层级的行为树}{4}{section.2.1}%
+\contentsline {section}{\numberline {2.2}节点--连线树与扩展性}{4}{section.2.2}%
+\contentsline {section}{\numberline {2.3}焦点、上下文与概览}{5}{section.2.3}%
+\contentsline {section}{\numberline {2.4}复杂度管理与心理地图}{5}{section.2.4}%
+\contentsline {section}{\numberline {2.5}运行时解释与失败定位}{6}{section.2.5}%
+\contentsline {section}{\numberline {2.6}研究空白与设计启示}{6}{section.2.6}%
+\contentsline {chapter}{\chapternumberline {3}研究方法}{7}{chapter.3}%
+\contentsline {section}{\numberline {3.1}研究策略}{7}{section.3.1}%
+\contentsline {section}{\numberline {3.2}实验因素与数据集}{7}{section.3.2}%
+\contentsline {section}{\numberline {3.3}正确性与集成评估}{8}{section.3.3}%
+\contentsline {section}{\numberline {3.4}视觉验证}{8}{section.3.4}%
+\contentsline {section}{\numberline {3.5}人体实验设计}{8}{section.3.5}%
+\contentsline {section}{\numberline {3.6}有效性与可复现性}{9}{section.3.6}%
+\contentsline {chapter}{\chapternumberline {4}系统设计与实现}{10}{chapter.4}%
+\contentsline {section}{\numberline {4.1}架构与项目边界}{10}{section.4.1}%
+\contentsline {section}{\numberline {4.2}资源模型与校验}{10}{section.4.2}%
+\contentsline {section}{\numberline {4.3}运行时语义}{11}{section.4.3}%
+\contentsline {section}{\numberline {4.4}编辑器编写工作流}{11}{section.4.4}%
+\contentsline {section}{\numberline {4.5}Live Debug 与黑板检查}{12}{section.4.5}%
+\contentsline {section}{\numberline {4.6}大型树显示机制}{13}{section.4.6}%
+\contentsline {subsection}{\numberline {4.6.1}信息密度控制}{13}{subsection.4.6.1}%
+\contentsline {subsection}{\numberline {4.6.2}焦点与结构裁剪}{13}{subsection.4.6.2}%
+\contentsline {subsection}{\numberline {4.6.3}导航与概览}{13}{subsection.4.6.3}%
+\contentsline {subsection}{\numberline {4.6.4}连线与运行表示}{13}{subsection.4.6.4}%
+\contentsline {section}{\numberline {4.7}运行时拓扑缓存}{14}{section.4.7}%
+\contentsline {section}{\numberline {4.8}演示游戏}{14}{section.4.8}%
+\contentsline {chapter}{\chapternumberline {5}结果与分析}{15}{chapter.5}%
+\contentsline {section}{\numberline {5.1}功能正确性}{15}{section.5.1}%
+\contentsline {section}{\numberline {5.2}显示密度与上下文结果}{15}{section.5.2}%
+\contentsline {section}{\numberline {5.3}路径与概览结果}{16}{section.5.3}%
+\contentsline {section}{\numberline {5.4}视觉回归发现}{17}{section.5.4}%
+\contentsline {section}{\numberline {5.5}运行时缓存结果}{17}{section.5.5}%
+\contentsline {section}{\numberline {5.6}对应研究问题的结果}{18}{section.5.6}%
+\contentsline {chapter}{\chapternumberline {6}讨论}{19}{chapter.6}%
+\contentsline {section}{\numberline {6.1}完整系统作为研究工具}{19}{section.6.1}%
+\contentsline {section}{\numberline {6.2}显示结果的解释}{19}{section.6.2}%
+\contentsline {section}{\numberline {6.3}Live Debug 作为可读性机制}{20}{section.6.3}%
+\contentsline {section}{\numberline {6.4}缓存权衡}{20}{section.6.4}%
+\contentsline {section}{\numberline {6.5}可靠性与发布}{20}{section.6.5}%
+\contentsline {section}{\numberline {6.6}有效性威胁}{21}{section.6.6}%
+\contentsline {subsection}{\numberline {6.6.1}构念有效性}{21}{subsection.6.6.1}%
+\contentsline {subsection}{\numberline {6.6.2}内部有效性}{21}{subsection.6.6.2}%
+\contentsline {subsection}{\numberline {6.6.3}外部有效性}{21}{subsection.6.6.3}%
+\contentsline {subsection}{\numberline {6.6.4}研究者与参与者有效性}{21}{subsection.6.6.4}%
+\contentsline {section}{\numberline {6.7}实践启示}{21}{section.6.7}%
+\contentsline {chapter}{\chapternumberline {7}结论}{22}{chapter.7}%
+\contentsline {section}{\numberline {7.1}总结}{22}{section.7.1}%
+\contentsline {section}{\numberline {7.2}贡献}{22}{section.7.2}%
+\contentsline {section}{\numberline {7.3}局限}{22}{section.7.3}%
+\contentsline {section}{\numberline {7.4}未来工作}{23}{section.7.4}%
+\contentsline {section}{\numberline {7.5}最终结论}{23}{section.7.5}%
+\contentsline {chapter}{参考文献}{24}{chapter*.7}%
+\contentsline {appendix}{\chapternumberline {A}功能参考}{26}{appendix.A}%
+\contentsline {appendix}{\chapternumberline {B}复现与证据索引}{27}{appendix.B}%
+\contentsline {appendix}{\chapternumberline {C}计划中的参与者实验}{28}{appendix.C}%
+\contentsline {appendix}{\chapternumberline {D}初稿完成清单}{29}{appendix.D}%

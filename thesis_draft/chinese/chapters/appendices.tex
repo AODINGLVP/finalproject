@@ -1,0 +1,56 @@
+\chapter{功能参考}
+\label{app:features}
+
+\small
+\begin{longtable}{p{0.30\textwidth}p{0.10\textwidth}p{0.45\textwidth}}
+\caption{最终编辑器的独立显示功能。}\\
+\toprule 功能 & 默认 & 作用\\ \midrule\endfirsthead
+\toprule 功能 & 默认 & 作用\\ \midrule\endhead
+Fisheye / Focus+Context & 开 & 鼠标邻域最多放大 1.20x。\\
+Subtree Collapse / Expand & 开 & 隐藏后代并显示数量与两层摘要。\\
+Compact Mode & 关 & 仅保留类型编码和短标题。\\
+Active Path Highlight & 开 & 强调当前运行路径。\\
+Non-active Branch Dimming & 关 & Live Debug 时降低非活动分支 Alpha。\\
+Multi-column Layout & 关 & 平衡宽同级分支并保持顺序提示。\\
+Enhanced Minimap & 开 & 230×150 概览和视口标记。\\
+Semantic Zoom & 关 & 不改变图几何地切换信息细节。\\
+Path Summary View & 开 & 显示 Actor、状态、深度和有序路径。\\
+Decorator Condition Badges & 开 & 在 Owner 卡片总结条件。\\
+Search + Highlight & 开 & 搜索节点/Decorator 并淡化不匹配项。\\
+Orthogonal Edges & 关 & 使用直角连线。\\
+Edge Bundling & 关 & 密集区域共享主干。\\
+Stable Incremental Layout & 关 & 布局时复用无冲突位置。\\
+Breadcrumb Navigation & 开 & 显示并导航祖先。\\
+Failure Reason Annotation & 开 & 显示节点失败标签与摘要。\\
+Shape / Icon Type Encoding & 开 & 使用形状和图标补充颜色。\\
+Accessibility Palette & 关 & 色盲安全配色与键盘导航。\\
+Single Connection Rendering & 开 & 显示一条可命中的自定义持久线。\\
+\bottomrule
+\end{longtable}
+
+\chapter{复现与证据索引}
+\label{app:evidence}
+
+以下路径均相对于仓库根目录：
+\begin{description}
+    \item[活动项目：] \path{testgame/testgame/}
+    \item[分发插件：] \path{visual_scripting/addons/behavior_tree_editor/}
+    \item[复杂树：] \path{testgame/testgame/behavior_trees/complex_guard_validation_tree.tres}
+    \item[测试脚本：] \path{testgame/testgame/tests/}
+    \item[显示数据：] \path{testgame/testgame/test_results/display_optimization_raw.csv}
+    \item[性能数据：] \path{testgame/testgame/test_results/runtime_profile.csv}
+    \item[视觉截图：] \path{testgame/testgame/test_results/visual/}
+    \item[人体实验协议：] \path{research/display_optimization/human_comparison_study_protocol.md}
+    \item[发布包：] \path{dist/behavior-tree-editor-0.9.0.zip}
+\end{description}
+
+真实视觉回归必须使用 \texttt{--rendering-method gl\_compatibility}，不能使用 Dummy Headless，因为 Dummy 无法提供所需 SubViewport 纹理。
+
+\chapter{计划中的参与者实验}
+\label{app:study}
+
+协议包含六种显示条件，每种三个任务。参与者先完成统一练习，再进行 18 个平衡顺序试验。软件记录条件、树规模、目标、时间、误选、Zoom、Pan 和成功率；每种条件后给出七点可读性与认知负荷评分。工作簿支持 15 人、270 行。当前没有参与者数据。使用前必须获得所需伦理许可，与导师确认流程，并保证同意和退出程序符合学校要求。
+
+\chapter{初稿完成清单}
+
+正式提交前，作者应：替换身份与导师占位符；按学校政策修改声明并如实说明 AI 协助；在 Tabula 核实截止时间和词数规则；完成或正式移除人体实验并同步更新摘要、结果、讨论和结论；请导师审阅文献、研究问题和证据边界；按院系要求执行 Turnitin；用模板编译并逐页检查；加入最终词数和要求的仓库/归档信息。

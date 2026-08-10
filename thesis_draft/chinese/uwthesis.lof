@@ -1,0 +1,21 @@
+\acswitchoff 
+\addvspace {10pt}
+\addvspace {10pt}
+\addvspace {10pt}
+\addvspace {10pt}
+\addvspace {10pt}
+\addvspace {10pt}
+\addvspace {10pt}
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Godot 编辑器、行为树资源、Runner 与 Actor 之间的插件架构和数据流。}}{10}{figure.4.1}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces 仅位于编辑器中的活动路径和失败原因显示。}}{12}{figure.4.2}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces 同一行为树的完整细节基线和紧凑显示。}}{13}{figure.4.3}%
+\addvspace {10pt}
+\contentsline {figure}{\numberline {5.1}{\ignorespaces 364 节点树上主要方法的几何和显著性效果。}}{16}{figure.5.1}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces 焦点+上下文、结构裁剪和显著性导航的实现示例。}}{17}{figure.5.2}%
+\contentsline {figure}{\numberline {5.3}{\ignorespaces 开启与关闭安全拓扑缓存时的 Tick 扩展。}}{18}{figure.5.3}%
+\addvspace {10pt}
+\addvspace {10pt}
+\addvspace {10pt}
+\addvspace {10pt}
+\addvspace {10pt}
+\addvspace {10pt}

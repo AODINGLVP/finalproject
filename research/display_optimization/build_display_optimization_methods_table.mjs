@@ -6,22 +6,22 @@ const outputPath = `${outputDir}/behavior_tree_display_optimization_methods.xlsx
 const previewPath = `${outputDir}/behavior_tree_display_optimization_methods_preview.png`;
 
 const rows = [
-  ["Fisheye / Focus+Context", "鼠标附近看不清，但又不想整体放大", "鼠标附近节点放大，远处节点保持上下文；当前插件已实现第一版", "Medium", "High", "Done / Improve Later", "Good for large behavior trees because it preserves global context while enlarging local detail.", "Focus+context visualization, fisheye view"],
-  ["Subtree Collapse / Expand", "节点太多，整棵树铺满屏幕", "给每个节点加折叠按钮，把子树压缩成 summary node，并显示子节点数量", "Medium", "Very High", "Recommended Next", "Directly addresses behavior tree readability and matches large-network complexity management research.", "Expand-collapse, hide-show, mental map preservation"],
-  ["Compact Mode", "节点卡片太大，同屏显示节点太少", "节点只显示标题、类型、状态；详细参数放到 Inspector 或悬浮详情", "Low", "Very High", "Recommended Next", "Fast to implement and easy to explain in the graduation project as a readability improvement.", "Compact display, semantic zoom"],
-  ["Active Path Highlight", "Live Debug 时不知道 NPC 正在执行哪条链", "高亮 Root 到当前执行节点的整条链，其他分支变暗", "Low", "Very High", "Recommended Next", "Strongly supports behavior tree debugging and makes the plugin feel closer to UE behavior tree debugging.", "Path finding, live debugging"],
-  ["Non-active Branch Dimming", "调试时视觉噪声太多", "运行时降低非当前分支透明度，只突出当前链条和失败条件", "Low", "High", "Recommended Next", "Pairs well with active path highlight and is simple to validate visually.", "Focus+context, visual filtering"],
-  ["Multi-column Layout", "一个 Selector 或 Sequence 有很多子节点时横向太长", "同一父节点下超过 N 个子节点时自动分成多列，同时用编号保留从左到右执行顺序", "Medium", "High", "Recommended", "Supported by large fan-out tree visualization research; useful when selectors have many actions.", "Large fan-outs, multi-column interface"],
-  ["Overview + Detail / Enhanced Minimap", "用户在大树中迷路", "强化 GraphEdit minimap，支持点击定位、显示当前视口和当前执行节点", "Medium", "Medium", "Optional", "Useful for navigation, but less central than collapse or active path highlighting.", "Overview+detail, navigation"],
-  ["Semantic Zoom", "缩小时文字看不清，放大后信息又太多", "缩小时只显示类型颜色和短标题，放大后显示参数、描述、Decorator 条件", "Medium", "High", "Recommended", "Works naturally with GraphEdit zoom and can be described as multi-scale visualization.", "Semantic zoom, multi-scale visualization"],
-  ["Path Summary View", "大树里只想快速知道当前执行链", "顶部显示 Root > Selector > Attack Left，点击路径项可跳转节点", "Low", "High", "Recommended Next", "Simple and very useful for live debugging; complements visual highlighting.", "Path summary, breadcrumb"],
-  ["Decorator Condition Badges", "判断条件藏在 JSON 参数里，不直观", "在节点顶部显示 IF player_in_range == true、Cooldown 1.5s 等标签", "Low", "Very High", "Recommended Next", "Makes behavior tree logic readable without opening the inspector.", "Visual encoding, condition labels"],
-  ["Search + Highlight", "大树中找节点、Action 或 blackboard key 困难", "搜索节点标题、Action 方法名、blackboard key，并高亮/跳转结果", "Low", "High", "Recommended", "High usability gain with low implementation cost.", "Interactive search, highlighting"],
-  ["Orthogonal Edges", "曲线连接太多时上下关系不清楚", "使用 UE 蓝图风格的直角折线连接，减少线条歧义", "Medium", "Medium", "Optional", "Improves UE-like appearance, but may require custom connection drawing.", "Graph drawing aesthetics, edge bends"],
-  ["Edge Bundling", "大量连线互相遮挡", "同方向、同父节点或同类型连线进行捆绑/合并显示", "High", "Medium", "Research Extension", "More useful for dense graphs than pure trees; good as an advanced discussion point.", "Edge bundling, visual clutter reduction"],
-  ["Stable Incremental Layout", "每次自动排列后节点大幅跳动，用户失去空间记忆", "自动布局时尽量保持已有节点位置，只调整新增节点或重叠节点", "Medium", "High", "Recommended", "Important for preserving the user's mental map when editing large trees.", "Incremental layout, mental map"],
-  ["Breadcrumb Navigation", "选中深层节点后不知道它属于哪个分支", "显示当前选择节点路径：Root / Patrol / Move Left", "Low", "Medium", "Optional", "Simple navigation aid, especially useful after subtree collapse is added.", "Breadcrumb, hierarchy navigation"],
-  ["Failure Reason Annotation", "Decorator 失败后不知道为什么", "Live Debug 显示 player_in_range failed、cooldown active 等失败原因", "Medium", "Very High", "Recommended Next", "Directly improves runtime debugging and demonstrates behavior tree execution transparency.", "Runtime explanation, debug visualization"],
+  ["Fisheye / Focus+Context", "鼠标附近看不清，但又不想整体放大", "鼠标附近节点放大，远处节点保持上下文；当前最大倍率 1.20x", "Medium", "High", "Completed", "Good for large behavior trees because it preserves global context while enlarging local detail.", "Focus+context visualization, fisheye view"],
+  ["Subtree Collapse / Expand", "节点太多，整棵树铺满屏幕", "折叠子树并显示隐藏节点数量与两层摘要", "Medium", "Very High", "Completed", "Directly addresses behavior tree readability and matches large-network complexity management research.", "Expand-collapse, hide-show, mental map preservation"],
+  ["Compact Mode", "节点卡片太大，同屏显示节点太少", "节点只显示短标题和类型颜色；详细参数保留在 Inspector", "Low", "Very High", "Completed", "Fast to implement and easy to explain in the graduation project as a readability improvement.", "Compact display, semantic zoom"],
+  ["Active Path Highlight", "Live Debug 时不知道 NPC 正在执行哪条链", "高亮 Root 到当前执行节点的整条链并显示叶节点状态", "Low", "Very High", "Completed", "Strongly supports behavior tree debugging and makes the plugin feel closer to UE behavior tree debugging.", "Path finding, live debugging"],
+  ["Non-active Branch Dimming", "调试时视觉噪声太多", "运行时降低非当前分支透明度，只突出当前链条和失败条件", "Low", "High", "Completed", "Pairs well with active path highlight and is simple to validate visually.", "Focus+context, visual filtering"],
+  ["Multi-column Layout", "一个 Selector 或 Sequence 有很多子节点时横向太长", "宽扇出分支自动分列，同时保留从左到右执行顺序", "Medium", "High", "Completed", "Supported by large fan-out tree visualization research; useful when selectors have many actions.", "Large fan-outs, multi-column interface"],
+  ["Overview + Detail / Enhanced Minimap", "用户在大树中迷路", "230x150 小地图显示全部节点、当前视口和运行状态", "Medium", "Medium", "Completed", "Useful for navigation, but less central than collapse or active path highlighting.", "Overview+detail, navigation"],
+  ["Semantic Zoom", "缩小时文字看不清，放大后信息又太多", "缩小时逐级隐藏次要字段，放大后显示参数、描述和 Decorator", "Medium", "High", "Completed", "Works naturally with GraphEdit zoom and can be described as multi-scale visualization.", "Semantic zoom, multi-scale visualization"],
+  ["Path Summary View", "大树里只想快速知道当前执行链", "顶部显示可点击的运行链并跳转节点", "Low", "High", "Completed", "Simple and very useful for live debugging; complements visual highlighting.", "Path summary, breadcrumb"],
+  ["Decorator Condition Badges", "判断条件藏在 JSON 参数里，不直观", "在节点卡片显示黑板条件、Cooldown 和 Time Limit 摘要", "Low", "Very High", "Completed", "Makes behavior tree logic readable without opening the inspector.", "Visual encoding, condition labels"],
+  ["Search + Highlight", "大树中找节点、Action 或 blackboard key 困难", "搜索标题、类型、描述、方法和参数，并高亮/跳转结果", "Low", "High", "Completed", "High usability gain with low implementation cost.", "Interactive search, highlighting"],
+  ["Orthogonal Edges", "曲线连接太多时上下关系不清楚", "使用直角折线连接降低层次关系歧义", "Medium", "Medium", "Completed", "Improves UE-like appearance, but may require custom connection drawing.", "Graph drawing aesthetics, edge bends"],
+  ["Edge Bundling", "大量连线互相遮挡", "同父同向连线共享主干以降低视觉噪声", "High", "Medium", "Completed", "More useful for dense graphs than pure trees; good as an advanced discussion point.", "Edge bundling, visual clutter reduction"],
+  ["Stable Incremental Layout", "每次自动排列后节点大幅跳动，用户失去空间记忆", "自动布局尽量保留已有节点位置，只处理冲突节点", "Medium", "High", "Completed", "Important for preserving the user's mental map when editing large trees.", "Incremental layout, mental map"],
+  ["Breadcrumb Navigation", "选中深层节点后不知道它属于哪个分支", "显示选中节点祖先路径并支持点击跳转", "Low", "Medium", "Completed", "Simple navigation aid, especially useful after subtree collapse is added.", "Breadcrumb, hierarchy navigation"],
+  ["Failure Reason Annotation", "Decorator 失败后不知道为什么", "Live Debug 标注 FAILURE 节点和具体失败原因", "Medium", "Very High", "Completed", "Directly improves runtime debugging and demonstrates behavior tree execution transparency.", "Runtime explanation, debug visualization"],
 ];
 
 const sources = [
@@ -89,7 +89,7 @@ sheet.freezePanes.freezeRows(3);
 
 sheet.getRange("D4:D19").dataValidation = { rule: { type: "list", values: ["Low", "Medium", "High"] } };
 sheet.getRange("E4:E19").dataValidation = { rule: { type: "list", values: ["Medium", "High", "Very High"] } };
-sheet.getRange("F4:F19").dataValidation = { rule: { type: "list", values: ["Done / Improve Later", "Recommended Next", "Recommended", "Optional", "Research Extension"] } };
+sheet.getRange("F4:F19").dataValidation = { rule: { type: "list", values: ["Completed", "Improve Later", "Optional", "Research Extension"] } };
 
 sourceSheet.getRange("A1:D1").merge();
 sourceSheet.getRange("A1").values = [["Reference Papers and Sources"]];

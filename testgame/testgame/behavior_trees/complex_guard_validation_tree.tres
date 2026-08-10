@@ -1,0 +1,340 @@
+[gd_resource type="Resource" script_class="BTTreeResource" load_steps=38 format=3]
+
+[ext_resource type="Script" path="res://addons/behavior_tree_editor/bt_tree_resource.gd" id="1_tree"]
+[ext_resource type="Script" path="res://addons/behavior_tree_editor/bt_node_resource.gd" id="2_node"]
+[ext_resource type="Resource" path="res://behavior_trees/complex_guard_blackboard_schema.tres" id="3_schema"]
+
+[sub_resource type="Resource" id="Node_1"]
+script = ExtResource("2_node")
+id = 1
+title = "Root"
+node_type = "Root"
+position = Vector2(1450, 40)
+description = "Entry point for the complete validation guard."
+
+[sub_resource type="Resource" id="Node_2"]
+script = ExtResource("2_node")
+id = 2
+title = "Repeat Decisions"
+node_type = "Repeat"
+position = Vector2(1450, 280)
+parent_id = 1
+description = "Continuously reevaluate guard priorities."
+parameters = {"repeat_count": -1}
+
+[sub_resource type="Resource" id="Node_3"]
+script = ExtResource("2_node")
+id = 3
+title = "Priority Selector"
+node_type = "Selector"
+position = Vector2(1450, 540)
+parent_id = 2
+description = "Emergency, attacks, chase, search, then patrol."
+parameters = {"reactive": true}
+
+[sub_resource type="Resource" id="Node_4"]
+script = ExtResource("2_node")
+id = 4
+title = "Emergency Recovery"
+node_type = "Sequence"
+position = Vector2(100, 850)
+parent_id = 3
+description = "Retreat and heal when critically wounded near the player."
+
+[sub_resource type="Resource" id="Node_5"]
+script = ExtResource("2_node")
+id = 5
+title = "Critical and Threatened?"
+node_type = "Condition"
+position = Vector2(-100, 1160)
+parent_id = 4
+description = "Actor condition using current health and perception."
+parameters = {"condition_name": "is_critical_and_threatened"}
+
+[sub_resource type="Resource" id="Node_6"]
+script = ExtResource("2_node")
+id = 6
+title = "Retreat From Player"
+node_type = "Action"
+position = Vector2(100, 1160)
+parent_id = 4
+description = "Move away before healing."
+parameters = {"action_name": "retreat_from_player"}
+
+[sub_resource type="Resource" id="Node_7"]
+script = ExtResource("2_node")
+id = 7
+title = "Heal Self"
+node_type = "Action"
+position = Vector2(300, 1160)
+parent_id = 4
+description = "A RUNNING action that restores health after a delay."
+parameters = {"action_name": "heal_self"}
+
+[sub_resource type="Resource" id="Node_8"]
+script = ExtResource("2_node")
+id = 8
+title = "Critical Health Blackboard"
+node_type = "Decorator"
+position = Vector2(-100, 710)
+decorator_parent_id = 4
+description = "Attached Blackboard decorator for critical_health."
+parameters = {"blackboard_key": "critical_health", "mode": "blackboard", "operator": "equals", "value": true}
+
+[sub_resource type="Resource" id="Node_9"]
+script = ExtResource("2_node")
+id = 9
+title = "Healing Cooldown"
+node_type = "Decorator"
+position = Vector2(260, 1030)
+decorator_parent_id = 7
+description = "Prevents immediate repeated healing."
+parameters = {"duration": 2.5, "mode": "cooldown"}
+
+[sub_resource type="Resource" id="Node_10"]
+script = ExtResource("2_node")
+id = 10
+title = "Attack Left Sequence"
+node_type = "Sequence"
+position = Vector2(650, 850)
+parent_id = 3
+description = "Check direction and attack with cooldown."
+
+[sub_resource type="Resource" id="Node_11"]
+script = ExtResource("2_node")
+id = 11
+title = "Can Attack Left?"
+node_type = "Condition"
+position = Vector2(540, 1160)
+parent_id = 10
+parameters = {"condition_name": "can_attack_left"}
+
+[sub_resource type="Resource" id="Node_12"]
+script = ExtResource("2_node")
+id = 12
+title = "Attack Left"
+node_type = "Action"
+position = Vector2(760, 1160)
+parent_id = 10
+parameters = {"action_name": "attack_left"}
+
+[sub_resource type="Resource" id="Node_13"]
+script = ExtResource("2_node")
+id = 13
+title = "Attack Cooldown Left"
+node_type = "Decorator"
+position = Vector2(650, 1030)
+decorator_parent_id = 12
+parameters = {"duration": 0.7, "mode": "cooldown"}
+
+[sub_resource type="Resource" id="Node_14"]
+script = ExtResource("2_node")
+id = 14
+title = "Attack Time Limit Left"
+node_type = "Decorator"
+position = Vector2(850, 1030)
+decorator_parent_id = 12
+parameters = {"duration": 0.55, "mode": "time_limit"}
+
+[sub_resource type="Resource" id="Node_15"]
+script = ExtResource("2_node")
+id = 15
+title = "Attack Right Sequence"
+node_type = "Sequence"
+position = Vector2(1200, 850)
+parent_id = 3
+
+[sub_resource type="Resource" id="Node_16"]
+script = ExtResource("2_node")
+id = 16
+title = "Can Attack Right?"
+node_type = "Condition"
+position = Vector2(1090, 1160)
+parent_id = 15
+parameters = {"condition_name": "can_attack_right"}
+
+[sub_resource type="Resource" id="Node_17"]
+script = ExtResource("2_node")
+id = 17
+title = "Attack Right"
+node_type = "Action"
+position = Vector2(1310, 1160)
+parent_id = 15
+parameters = {"action_name": "attack_right"}
+
+[sub_resource type="Resource" id="Node_18"]
+script = ExtResource("2_node")
+id = 18
+title = "Attack Cooldown Right"
+node_type = "Decorator"
+position = Vector2(1200, 1030)
+decorator_parent_id = 17
+parameters = {"duration": 0.7, "mode": "cooldown"}
+
+[sub_resource type="Resource" id="Node_19"]
+script = ExtResource("2_node")
+id = 19
+title = "Attack Time Limit Right"
+node_type = "Decorator"
+position = Vector2(1400, 1030)
+decorator_parent_id = 17
+parameters = {"duration": 0.55, "mode": "time_limit"}
+
+[sub_resource type="Resource" id="Node_20"]
+script = ExtResource("2_node")
+id = 20
+title = "Chase Sequence"
+node_type = "Sequence"
+position = Vector2(1750, 850)
+parent_id = 3
+
+[sub_resource type="Resource" id="Node_21"]
+script = ExtResource("2_node")
+id = 21
+title = "Should Chase?"
+node_type = "Condition"
+position = Vector2(1640, 1160)
+parent_id = 20
+parameters = {"condition_name": "should_chase"}
+
+[sub_resource type="Resource" id="Node_22"]
+script = ExtResource("2_node")
+id = 22
+title = "Chase Player"
+node_type = "Action"
+position = Vector2(1860, 1160)
+parent_id = 20
+parameters = {"action_name": "chase_player"}
+
+[sub_resource type="Resource" id="Node_23"]
+script = ExtResource("2_node")
+id = 23
+title = "Chase Time Limit"
+node_type = "Decorator"
+position = Vector2(1860, 1030)
+decorator_parent_id = 22
+parameters = {"duration": 1.1, "mode": "time_limit"}
+
+[sub_resource type="Resource" id="Node_24"]
+script = ExtResource("2_node")
+id = 24
+title = "Search Sequence"
+node_type = "Sequence"
+position = Vector2(2300, 850)
+parent_id = 3
+
+[sub_resource type="Resource" id="Node_25"]
+script = ExtResource("2_node")
+id = 25
+title = "Has Last Position?"
+node_type = "Condition"
+position = Vector2(2190, 1160)
+parent_id = 24
+parameters = {"condition_name": "has_last_known_position"}
+
+[sub_resource type="Resource" id="Node_26"]
+script = ExtResource("2_node")
+id = 26
+title = "Search Last Known"
+node_type = "Action"
+position = Vector2(2410, 1160)
+parent_id = 24
+parameters = {"action_name": "search_last_known"}
+
+[sub_resource type="Resource" id="Node_27"]
+script = ExtResource("2_node")
+id = 27
+title = "Patrol Sequence"
+node_type = "Sequence"
+position = Vector2(2850, 850)
+parent_id = 3
+description = "Fallback patrol guarded by an inverted perception condition."
+
+[sub_resource type="Resource" id="Node_28"]
+script = ExtResource("2_node")
+id = 28
+title = "Invert Player Detected"
+node_type = "Decorator"
+position = Vector2(2630, 1160)
+parent_id = 27
+parameters = {"mode": "invert"}
+
+[sub_resource type="Resource" id="Node_29"]
+script = ExtResource("2_node")
+id = 29
+title = "Player Detected?"
+node_type = "Condition"
+position = Vector2(2630, 1450)
+parent_id = 28
+parameters = {"condition_name": "is_player_detected"}
+
+[sub_resource type="Resource" id="Node_30"]
+script = ExtResource("2_node")
+id = 30
+title = "Random Patrol Direction"
+node_type = "Random Selector"
+position = Vector2(2850, 1160)
+parent_id = 27
+description = "Choose a reproducible random patrol direction for the demo."
+parameters = {"seed": 17}
+
+[sub_resource type="Resource" id="Node_31"]
+script = ExtResource("2_node")
+id = 31
+title = "Parallel Left Patrol"
+node_type = "Parallel"
+position = Vector2(2700, 1450)
+parent_id = 30
+parameters = {"failure_policy": "any", "success_policy": "all"}
+
+[sub_resource type="Resource" id="Node_32"]
+script = ExtResource("2_node")
+id = 32
+title = "Move Left"
+node_type = "Action"
+position = Vector2(2580, 1740)
+parent_id = 31
+parameters = {"action_name": "move_left"}
+
+[sub_resource type="Resource" id="Node_33"]
+script = ExtResource("2_node")
+id = 33
+title = "Patrol Pause Left"
+node_type = "Wait"
+position = Vector2(2820, 1740)
+parent_id = 31
+parameters = {"duration": 0.25}
+
+[sub_resource type="Resource" id="Node_34"]
+script = ExtResource("2_node")
+id = 34
+title = "Parallel Right Patrol"
+node_type = "Parallel"
+position = Vector2(3200, 1450)
+parent_id = 30
+parameters = {"failure_policy": "any", "success_policy": "all"}
+
+[sub_resource type="Resource" id="Node_35"]
+script = ExtResource("2_node")
+id = 35
+title = "Move Right"
+node_type = "Action"
+position = Vector2(3080, 1740)
+parent_id = 34
+parameters = {"action_name": "move_right"}
+
+[sub_resource type="Resource" id="Node_36"]
+script = ExtResource("2_node")
+id = 36
+title = "Patrol Pause Right"
+node_type = "Wait"
+position = Vector2(3320, 1740)
+parent_id = 34
+parameters = {"duration": 0.25}
+
+[resource]
+script = ExtResource("1_tree")
+tree_name = "Complex Guard Validation Tree"
+root_node_id = 1
+blackboard_schema = ExtResource("3_schema")
+nodes = Array[ExtResource("2_node")]([SubResource("Node_1"), SubResource("Node_2"), SubResource("Node_3"), SubResource("Node_4"), SubResource("Node_5"), SubResource("Node_6"), SubResource("Node_7"), SubResource("Node_8"), SubResource("Node_9"), SubResource("Node_10"), SubResource("Node_11"), SubResource("Node_12"), SubResource("Node_13"), SubResource("Node_14"), SubResource("Node_15"), SubResource("Node_16"), SubResource("Node_17"), SubResource("Node_18"), SubResource("Node_19"), SubResource("Node_20"), SubResource("Node_21"), SubResource("Node_22"), SubResource("Node_23"), SubResource("Node_24"), SubResource("Node_25"), SubResource("Node_26"), SubResource("Node_27"), SubResource("Node_28"), SubResource("Node_29"), SubResource("Node_30"), SubResource("Node_31"), SubResource("Node_32"), SubResource("Node_33"), SubResource("Node_34"), SubResource("Node_35"), SubResource("Node_36")])

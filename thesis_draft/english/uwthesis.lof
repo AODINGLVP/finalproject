@@ -1,0 +1,22 @@
+\acswitchoff 
+\addvspace {10pt}
+\addvspace {10pt}
+\addvspace {10pt}
+\addvspace {10pt}
+\addvspace {10pt}
+\addvspace {10pt}
+\addvspace {10pt}
+\addvspace {10pt}
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Implemented plugin architecture and data flow between the Godot editor, behaviour-tree resource, runtime runner and actor.}}{12}{figure.4.1}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces Editor-only live debugging with the active path and a failure explanation attached to the relevant branch.}}{15}{figure.4.2}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces Full-detail baseline and compact-card presentation of the same behaviour tree.}}{16}{figure.4.3}%
+\addvspace {10pt}
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Measured geometric and salience effects for principal methods on the 364-node fixture.}}{20}{figure.5.1}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Examples of focus+context, structural reduction and salience-based navigation in the implemented editor.}}{21}{figure.5.2}%
+\contentsline {figure}{\numberline {5.3}{\ignorespaces Runtime tick scaling with the safe topology cache enabled and disabled.}}{21}{figure.5.3}%
+\addvspace {10pt}
+\addvspace {10pt}
+\addvspace {10pt}
+\addvspace {10pt}
+\addvspace {10pt}
+\addvspace {10pt}

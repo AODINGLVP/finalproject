@@ -1,0 +1,85 @@
+tree_size,method,visible_nodes,visible_ratio,card_area_px2,information_fields,dimmed_nodes,focus_scale_gain,rebuild_ms
+31,Baseline,31,1.0,1162500.0,6,0,1.0,0.026
+31,Compact Cards,31,1.0,512864.0,2,0,1.0,0.025
+31,Semantic Zoom,31,1.0,1162500.0,1,0,1.0,0.02
+31,Search Highlight,31,1.0,1162500.0,6,30,1.0,0.015
+31,Subtree Focus,7,0.2258064516129,262500.0,6,0,1.0,37.279
+31,Subtree Collapse,2,0.06451612903226,75000.0,4,0,1.0,37.526
+31,Fisheye,31,1.0,1179000.0,6,0,1.2,0.03
+31,Minimap,31,1.0,1162500.0,6,0,1.0,0.014
+31,Fit to View,31,1.0,1162500.0,6,0,1.0,0.013
+31,Switch Cycle: Fisheye / Focus+Context,31,1.0,1162500.0,6,0,1.0,255.52
+31,Switch Cycle: Subtree Collapse / Expand,31,1.0,1162500.0,6,0,1.0,306.498
+31,Switch Cycle: Compact Mode,31,1.0,1162500.0,6,0,1.0,168.88
+31,Switch Cycle: Shape / Icon Type Encoding,31,1.0,1162500.0,6,0,1.0,178.297
+31,Switch Cycle: Accessibility / Colorblind Palette,31,1.0,1162500.0,6,0,1.0,215.702
+31,Switch Cycle: Single Connection Rendering,31,1.0,1162500.0,6,0,1.0,169.744
+31,Switch Cycle: Active Path Highlight,31,1.0,1162500.0,6,0,1.0,144.723
+31,Switch Cycle: Non-active Branch Dimming,31,1.0,1162500.0,6,0,1.0,147.999
+31,Switch Cycle: Multi-column Layout,31,1.0,1162500.0,6,0,1.0,144.63
+31,Switch Cycle: Overview + Detail / Enhanced Minimap,31,1.0,1162500.0,6,0,1.0,139.654
+31,Switch Cycle: Semantic Zoom,31,1.0,1162500.0,6,0,1.0,145.704
+31,Switch Cycle: Path Summary View,31,1.0,1162500.0,6,0,1.0,134.945
+31,Switch Cycle: Decorator Condition Badges,31,1.0,1162500.0,6,0,1.0,144.491
+31,Switch Cycle: Search + Highlight,31,1.0,1162500.0,6,0,1.0,184.584
+31,Switch Cycle: Orthogonal Edges,31,1.0,1162500.0,6,0,1.0,208.114
+31,Switch Cycle: Edge Bundling,31,1.0,1162500.0,6,0,1.0,170.603
+31,Switch Cycle: Stable Incremental Layout,31,1.0,1162500.0,6,0,1.0,165.826
+31,Switch Cycle: Breadcrumb Navigation,31,1.0,1162500.0,6,0,1.0,163.204
+31,Switch Cycle: Failure Reason Annotation,31,1.0,1162500.0,6,0,1.0,196.122
+121,Baseline,121,1.0,4537500.0,6,0,1.0,0.05
+121,Compact Cards,121,1.0,2001824.0,2,0,1.0,0.071
+121,Semantic Zoom,121,1.0,4537500.0,1,0,1.0,0.085
+121,Search Highlight,121,1.0,4537500.0,6,120,1.0,0.049
+121,Subtree Focus,8,0.06611570247934,300000.0,6,0,1.0,74.837
+121,Subtree Collapse,2,0.01652892561983,75000.0,4,0,1.0,49.112
+121,Fisheye,121,1.0,4554000.0,6,0,1.2,0.046
+121,Minimap,121,1.0,4537500.0,6,0,1.0,0.056
+121,Fit to View,121,1.0,4537500.0,6,0,1.0,0.067
+121,Switch Cycle: Fisheye / Focus+Context,121,1.0,4537500.0,6,0,1.0,1069.39
+121,Switch Cycle: Subtree Collapse / Expand,121,1.0,4537500.0,6,0,1.0,1376.705
+121,Switch Cycle: Compact Mode,121,1.0,4537500.0,6,0,1.0,771.963
+121,Switch Cycle: Shape / Icon Type Encoding,121,1.0,4537500.0,6,0,1.0,787.324
+121,Switch Cycle: Accessibility / Colorblind Palette,121,1.0,4537500.0,6,0,1.0,769.098
+121,Switch Cycle: Single Connection Rendering,121,1.0,4537500.0,6,0,1.0,828.482
+121,Switch Cycle: Active Path Highlight,121,1.0,4537500.0,6,0,1.0,809.207
+121,Switch Cycle: Non-active Branch Dimming,121,1.0,4537500.0,6,0,1.0,760.137
+121,Switch Cycle: Multi-column Layout,121,1.0,4537500.0,6,0,1.0,746.361
+121,Switch Cycle: Overview + Detail / Enhanced Minimap,121,1.0,4537500.0,6,0,1.0,760.616
+121,Switch Cycle: Semantic Zoom,121,1.0,4537500.0,6,0,1.0,802.339
+121,Switch Cycle: Path Summary View,121,1.0,4537500.0,6,0,1.0,800.414
+121,Switch Cycle: Decorator Condition Badges,121,1.0,4537500.0,6,0,1.0,898.173
+121,Switch Cycle: Search + Highlight,121,1.0,4537500.0,6,0,1.0,788.661
+121,Switch Cycle: Orthogonal Edges,121,1.0,4537500.0,6,0,1.0,765.774
+121,Switch Cycle: Edge Bundling,121,1.0,4537500.0,6,0,1.0,751.693
+121,Switch Cycle: Stable Incremental Layout,121,1.0,4537500.0,6,0,1.0,822.018
+121,Switch Cycle: Breadcrumb Navigation,121,1.0,4537500.0,6,0,1.0,787.215
+121,Switch Cycle: Failure Reason Annotation,121,1.0,4537500.0,6,0,1.0,788.036
+364,Baseline,364,1.0,13650000.0,6,0,1.0,0.23
+364,Compact Cards,364,1.0,6022016.0,2,0,1.0,0.269
+364,Semantic Zoom,364,1.0,13650000.0,1,0,1.0,0.285
+364,Search Highlight,364,1.0,13650000.0,6,363,1.0,0.165
+364,Subtree Focus,9,0.02472527472527,337500.0,6,0,1.0,285.824
+364,Subtree Collapse,2,0.00549450549451,75000.0,4,0,1.0,199.873
+364,Fisheye,364,1.0,13666500.0,6,0,1.2,0.256
+364,Minimap,364,1.0,13650000.0,6,0,1.0,0.215
+364,Fit to View,364,1.0,13650000.0,6,0,1.0,0.196
+364,Switch Cycle: Fisheye / Focus+Context,364,1.0,13650000.0,6,0,1.0,5006.719
+364,Switch Cycle: Subtree Collapse / Expand,364,1.0,13650000.0,6,0,1.0,6042.117
+364,Switch Cycle: Compact Mode,364,1.0,13650000.0,6,0,1.0,3643.452
+364,Switch Cycle: Shape / Icon Type Encoding,364,1.0,13650000.0,6,0,1.0,3571.334
+364,Switch Cycle: Accessibility / Colorblind Palette,364,1.0,13650000.0,6,0,1.0,3608.572
+364,Switch Cycle: Single Connection Rendering,364,1.0,13650000.0,6,0,1.0,3631.263
+364,Switch Cycle: Active Path Highlight,364,1.0,13650000.0,6,0,1.0,3564.971
+364,Switch Cycle: Non-active Branch Dimming,364,1.0,13650000.0,6,0,1.0,3662.049
+364,Switch Cycle: Multi-column Layout,364,1.0,13650000.0,6,0,1.0,3946.228
+364,Switch Cycle: Overview + Detail / Enhanced Minimap,364,1.0,13650000.0,6,0,1.0,3694.336
+364,Switch Cycle: Semantic Zoom,364,1.0,13650000.0,6,0,1.0,4288.964
+364,Switch Cycle: Path Summary View,364,1.0,13650000.0,6,0,1.0,4473.213
+364,Switch Cycle: Decorator Condition Badges,364,1.0,13650000.0,6,0,1.0,3909.333
+364,Switch Cycle: Search + Highlight,364,1.0,13650000.0,6,0,1.0,3773.365
+364,Switch Cycle: Orthogonal Edges,364,1.0,13650000.0,6,0,1.0,3973.093
+364,Switch Cycle: Edge Bundling,364,1.0,13650000.0,6,0,1.0,4138.473
+364,Switch Cycle: Stable Incremental Layout,364,1.0,13650000.0,6,0,1.0,3574.603
+364,Switch Cycle: Breadcrumb Navigation,364,1.0,13650000.0,6,0,1.0,4721.467
+364,Switch Cycle: Failure Reason Annotation,364,1.0,13650000.0,6,0,1.0,4398.96

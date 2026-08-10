@@ -1,0 +1,77 @@
+[gd_resource type="Resource" script_class="BTBlackboardSchema" load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://addons/behavior_tree_editor/bt_blackboard_schema.gd" id="1_schema"]
+[ext_resource type="Script" path="res://addons/behavior_tree_editor/bt_blackboard_entry.gd" id="2_entry"]
+
+[sub_resource type="Resource" id="Entry_player_detected"]
+script = ExtResource("2_entry")
+key = "player_detected"
+value_type = "Bool"
+default_value = false
+description = "Whether perception currently has a valid player target."
+
+[sub_resource type="Resource" id="Entry_player_in_range"]
+script = ExtResource("2_entry")
+key = "player_in_range"
+value_type = "Bool"
+default_value = false
+description = "Whether the player is inside melee range."
+
+[sub_resource type="Resource" id="Entry_player_on_left"]
+script = ExtResource("2_entry")
+key = "player_on_left"
+value_type = "Bool"
+default_value = false
+
+[sub_resource type="Resource" id="Entry_player_on_right"]
+script = ExtResource("2_entry")
+key = "player_on_right"
+value_type = "Bool"
+default_value = false
+
+[sub_resource type="Resource" id="Entry_player_x"]
+script = ExtResource("2_entry")
+key = "player_x"
+value_type = "Float"
+default_value = 0.0
+
+[sub_resource type="Resource" id="Entry_health"]
+script = ExtResource("2_entry")
+key = "health"
+value_type = "Int"
+default_value = 0
+
+[sub_resource type="Resource" id="Entry_health_ratio"]
+script = ExtResource("2_entry")
+key = "health_ratio"
+value_type = "Float"
+default_value = 1.0
+
+[sub_resource type="Resource" id="Entry_low_health"]
+script = ExtResource("2_entry")
+key = "low_health"
+value_type = "Bool"
+default_value = false
+
+[sub_resource type="Resource" id="Entry_critical_health"]
+script = ExtResource("2_entry")
+key = "critical_health"
+value_type = "Bool"
+default_value = false
+
+[sub_resource type="Resource" id="Entry_last_known_player_x"]
+script = ExtResource("2_entry")
+key = "last_known_player_x"
+value_type = "Float"
+default_value = 0.0
+
+[sub_resource type="Resource" id="Entry_has_last_known_position"]
+script = ExtResource("2_entry")
+key = "has_last_known_position"
+value_type = "Bool"
+default_value = false
+
+[resource]
+script = ExtResource("1_schema")
+entries = Array[ExtResource("2_entry")]([SubResource("Entry_player_detected"), SubResource("Entry_player_in_range"), SubResource("Entry_player_on_left"), SubResource("Entry_player_on_right"), SubResource("Entry_player_x"), SubResource("Entry_health"), SubResource("Entry_health_ratio"), SubResource("Entry_low_health"), SubResource("Entry_critical_health"), SubResource("Entry_last_known_player_x"), SubResource("Entry_has_last_known_position")])
+allow_dynamic_keys = true

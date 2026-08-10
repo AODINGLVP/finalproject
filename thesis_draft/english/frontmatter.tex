@@ -1,0 +1,28 @@
+\frontmatter
+\titlepage[crests/officialmono]
+\tableofcontents
+\clearforchapter\listoffigures
+\clearforchapter\listoftables
+
+\frontchapter{Acknowledgements}
+This draft reserves space to acknowledge the project supervisor, participants in the planned user study, and anyone who reviewed the software or dissertation. The final wording should be completed by the author before submission.
+
+\frontchapter{Declaration}
+This thesis is submitted to the University of Warwick in support of my application for the degree of \thequalification. It has been composed by myself and has not been submitted in any previous application for any degree. The software, test data and analysis presented in this dissertation were produced as part of the project unless a source is explicitly cited. No participant results are reported: the human-comparison protocol is prepared, but recruitment and data collection remain future work. This statement must be reviewed and personalised by the author before submission, including any required declaration concerning the use of generative artificial intelligence.
+
+\frontchapter{Abstract}
+Visual behaviour trees are widely used to author game-agent decisions, but conventional node--link editors become difficult to inspect as trees grow and as runtime state changes. This dissertation presents the design and evaluation of a Godot 4.6 editor plugin that combines a complete executable behaviour-tree system with independently switchable techniques for large-tree readability and live debugging. The runtime supports ordered, reactive, random, parallel, repeating and timed control flow; actor method invocation; typed blackboard data; decorators; and editor-only execution inspection. The editor implements compact cards, semantic zoom, fisheye focus+context, subtree collapse and focus, search highlighting, overview+detail, stable layout, alternative edge routing, active-path emphasis and failure annotation.
+
+Evaluation used deterministic 31-, 121- and 364-node trees, a complex 2D guard scenario, automated semantic and GUI tests, and real-GPU visual regression. All 447 core assertions passed, alongside 21 controlled-study visual assertions, 511 runtime-profile assertions and 53 clean-package checks. On the 364-node tree, compact cards reduced measured card area by 55.9\%, subtree focus reduced visible nodes by 97.5\%, collapse by 99.5\%, search dimmed 99.7\% of non-target nodes, and the minimap retained 100\% node coverage. A safe topology cache reduced median tick cost by 15.98--26.46\% for 31 nodes, 52.61--56.02\% for 121 nodes and 76.65--78.00\% for 364 nodes. These results establish implementation correctness and geometric effects, but do not by themselves prove improved human readability. A counterbalanced participant study is therefore specified as the principal next step.
+
+\frontchapter{Abbreviations}
+\begin{description}
+    \item[AI] Artificial intelligence
+    \item[BT] Behaviour tree
+    \item[DOI] Degree of interest
+    \item[GPU] Graphics processing unit
+    \item[GUI] Graphical user interface
+    \item[NPC] Non-player character
+    \item[RQ] Research question
+    \item[UE] Unreal Engine
+\end{description}

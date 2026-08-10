@@ -1,0 +1,10 @@
+$ENV{'TZ'}='Europe/London';
+ensure_path( 'TEXINPUTS', 'figures//', 'chapters//', 'texmf/tex//' );
+ensure_path( 'OPENTYPEFONTS', 'texmf/fonts/{opentype,truetype}//' );
+ensure_path( 'T1FONTS', 'texmf/fonts/type1//' );
+ensure_path( 'AFMFONTS', 'texmf/fonts/afm//' );
+ensure_path( 'TEXFONTMAPS', 'texmf/fonts/map//' );
+ensure_path( 'TFMFONTS', 'texmf/fonts/tfm//' );
+ensure_path( 'TTFONTS', 'texmf/fonts/truetype//' );
+ensure_path( 'VFFONTS', 'texmf/fonts/vf//' );
+ensure_path( 'ENCFONTS', 'texmf/fonts/enc//' );
