@@ -9,6 +9,11 @@
 - Right-click a node to disconnect, delete, or enable/disable it.
 - Use `Undo` and `Redo` in the toolbar while editing.
 
+## Display Tools
+
+- Enable `Semantic Zoom` and `Zoom-Aware Auto Spacing` to keep low-detail trees dense while temporarily separating expanded cards.
+- Right-click the graph and choose `Arrange for Overview` to save a compact low-detail layout. Zooming out restores these saved coordinates; the expanded spacing is visual only.
+
 ## Runtime
 
 Add a `BehaviorTreeComponent` node under your NPC and assign a `BTTreeResource`.

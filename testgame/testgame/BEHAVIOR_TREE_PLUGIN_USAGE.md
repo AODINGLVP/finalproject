@@ -17,6 +17,8 @@
 - `Fisheye`: locally enlarges nodes near the pointer without changing the graph zoom.
 - `Compact`: reduces card size and keeps only the essential node identity.
 - `Semantic Zoom`: hides secondary information at low zoom while keeping card geometry stable.
+- `Zoom-Aware Auto Spacing`: temporarily separates expanded cards at medium or full detail without changing saved node coordinates.
+- `Arrange for Overview`: right-click the canvas and choose this command to save a compact low-detail layout; zooming in then demonstrates Auto Spacing, while zooming out restores the dense arrangement.
 - `Collapse All` / `Expand All`: summarizes or restores child subtrees.
 - `Focus`: keeps the selected subtree and its ancestor path; `Show All` restores the full tree.
 - `Find Node`: highlights matches in titles, types, descriptions, action names, condition names, and decorators.
@@ -28,6 +30,8 @@
 - `Orthogonal Edges` and `Edge Bundling` provide alternative connection routing for dense trees.
 
 Display options are saved in `user://behavior_tree_editor_view.cfg`. Experimental or potentially expensive options such as Compact, Semantic Zoom, branch dimming, multi-column layout, orthogonal edges, edge bundling, and stable layout are disabled by default. Disabling a feature restores its baseline visual state without changing behavior-tree execution data.
+
+`complex_guard_validation_tree.tres` uses the compact overview arrangement by default. Enable both `Semantic Zoom` and `Zoom-Aware Auto Spacing` to compare its dense overview coordinates with the temporary expanded detail layout.
 
 ## Runtime
 

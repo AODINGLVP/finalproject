@@ -9,7 +9,7 @@ script = ExtResource("2_node")
 id = 1
 title = "Root"
 node_type = "Root"
-position = Vector2(1450, 40)
+position = Vector2(1935, 100)
 description = "Entry point for the complete validation guard."
 
 [sub_resource type="Resource" id="Node_2"]
@@ -17,7 +17,7 @@ script = ExtResource("2_node")
 id = 2
 title = "Repeat Decisions"
 node_type = "Repeat"
-position = Vector2(1450, 280)
+position = Vector2(1935, 274)
 parent_id = 1
 description = "Continuously reevaluate guard priorities."
 parameters = {"repeat_count": -1}
@@ -27,7 +27,7 @@ script = ExtResource("2_node")
 id = 3
 title = "Priority Selector"
 node_type = "Selector"
-position = Vector2(1450, 540)
+position = Vector2(1935, 448)
 parent_id = 2
 description = "Emergency, attacks, chase, search, then patrol."
 parameters = {"reactive": true}
@@ -37,7 +37,7 @@ script = ExtResource("2_node")
 id = 4
 title = "Emergency Recovery"
 node_type = "Sequence"
-position = Vector2(100, 850)
+position = Vector2(394, 622)
 parent_id = 3
 description = "Retreat and heal when critically wounded near the player."
 
@@ -46,7 +46,7 @@ script = ExtResource("2_node")
 id = 5
 title = "Critical and Threatened?"
 node_type = "Condition"
-position = Vector2(-100, 1160)
+position = Vector2(120, 796)
 parent_id = 4
 description = "Actor condition using current health and perception."
 parameters = {"condition_name": "is_critical_and_threatened"}
@@ -56,7 +56,7 @@ script = ExtResource("2_node")
 id = 6
 title = "Retreat From Player"
 node_type = "Action"
-position = Vector2(100, 1160)
+position = Vector2(394, 796)
 parent_id = 4
 description = "Move away before healing."
 parameters = {"action_name": "retreat_from_player"}
@@ -66,7 +66,7 @@ script = ExtResource("2_node")
 id = 7
 title = "Heal Self"
 node_type = "Action"
-position = Vector2(300, 1160)
+position = Vector2(668, 796)
 parent_id = 4
 description = "A RUNNING action that restores health after a delay."
 parameters = {"action_name": "heal_self"}
@@ -96,7 +96,7 @@ script = ExtResource("2_node")
 id = 10
 title = "Attack Left Sequence"
 node_type = "Sequence"
-position = Vector2(650, 850)
+position = Vector2(1079, 622)
 parent_id = 3
 description = "Check direction and attack with cooldown."
 
@@ -105,7 +105,7 @@ script = ExtResource("2_node")
 id = 11
 title = "Can Attack Left?"
 node_type = "Condition"
-position = Vector2(540, 1160)
+position = Vector2(942, 796)
 parent_id = 10
 parameters = {"condition_name": "can_attack_left"}
 
@@ -114,7 +114,7 @@ script = ExtResource("2_node")
 id = 12
 title = "Attack Left"
 node_type = "Action"
-position = Vector2(760, 1160)
+position = Vector2(1216, 796)
 parent_id = 10
 parameters = {"action_name": "attack_left"}
 
@@ -141,7 +141,7 @@ script = ExtResource("2_node")
 id = 15
 title = "Attack Right Sequence"
 node_type = "Sequence"
-position = Vector2(1200, 850)
+position = Vector2(1627, 622)
 parent_id = 3
 
 [sub_resource type="Resource" id="Node_16"]
@@ -149,7 +149,7 @@ script = ExtResource("2_node")
 id = 16
 title = "Can Attack Right?"
 node_type = "Condition"
-position = Vector2(1090, 1160)
+position = Vector2(1490, 796)
 parent_id = 15
 parameters = {"condition_name": "can_attack_right"}
 
@@ -158,7 +158,7 @@ script = ExtResource("2_node")
 id = 17
 title = "Attack Right"
 node_type = "Action"
-position = Vector2(1310, 1160)
+position = Vector2(1764, 796)
 parent_id = 15
 parameters = {"action_name": "attack_right"}
 
@@ -185,7 +185,7 @@ script = ExtResource("2_node")
 id = 20
 title = "Chase Sequence"
 node_type = "Sequence"
-position = Vector2(1750, 850)
+position = Vector2(2175, 622)
 parent_id = 3
 
 [sub_resource type="Resource" id="Node_21"]
@@ -193,7 +193,7 @@ script = ExtResource("2_node")
 id = 21
 title = "Should Chase?"
 node_type = "Condition"
-position = Vector2(1640, 1160)
+position = Vector2(2038, 796)
 parent_id = 20
 parameters = {"condition_name": "should_chase"}
 
@@ -202,7 +202,7 @@ script = ExtResource("2_node")
 id = 22
 title = "Chase Player"
 node_type = "Action"
-position = Vector2(1860, 1160)
+position = Vector2(2312, 796)
 parent_id = 20
 parameters = {"action_name": "chase_player"}
 
@@ -220,7 +220,7 @@ script = ExtResource("2_node")
 id = 24
 title = "Search Sequence"
 node_type = "Sequence"
-position = Vector2(2300, 850)
+position = Vector2(2723, 622)
 parent_id = 3
 
 [sub_resource type="Resource" id="Node_25"]
@@ -228,7 +228,7 @@ script = ExtResource("2_node")
 id = 25
 title = "Has Last Position?"
 node_type = "Condition"
-position = Vector2(2190, 1160)
+position = Vector2(2586, 796)
 parent_id = 24
 parameters = {"condition_name": "has_last_known_position"}
 
@@ -237,7 +237,7 @@ script = ExtResource("2_node")
 id = 26
 title = "Search Last Known"
 node_type = "Action"
-position = Vector2(2410, 1160)
+position = Vector2(2860, 796)
 parent_id = 24
 parameters = {"action_name": "search_last_known"}
 
@@ -246,7 +246,7 @@ script = ExtResource("2_node")
 id = 27
 title = "Patrol Sequence"
 node_type = "Sequence"
-position = Vector2(2850, 850)
+position = Vector2(3477, 622)
 parent_id = 3
 description = "Fallback patrol guarded by an inverted perception condition."
 
@@ -255,7 +255,7 @@ script = ExtResource("2_node")
 id = 28
 title = "Invert Player Detected"
 node_type = "Decorator"
-position = Vector2(2630, 1160)
+position = Vector2(3134, 796)
 parent_id = 27
 parameters = {"mode": "invert"}
 
@@ -264,7 +264,7 @@ script = ExtResource("2_node")
 id = 29
 title = "Player Detected?"
 node_type = "Condition"
-position = Vector2(2630, 1450)
+position = Vector2(3134, 970)
 parent_id = 28
 parameters = {"condition_name": "is_player_detected"}
 
@@ -273,7 +273,7 @@ script = ExtResource("2_node")
 id = 30
 title = "Random Patrol Direction"
 node_type = "Random Selector"
-position = Vector2(2850, 1160)
+position = Vector2(3819, 796)
 parent_id = 27
 description = "Choose a reproducible random patrol direction for the demo."
 parameters = {"seed": 17}
@@ -283,7 +283,7 @@ script = ExtResource("2_node")
 id = 31
 title = "Parallel Left Patrol"
 node_type = "Parallel"
-position = Vector2(2700, 1450)
+position = Vector2(3545, 970)
 parent_id = 30
 parameters = {"failure_policy": "any", "success_policy": "all"}
 
@@ -292,7 +292,7 @@ script = ExtResource("2_node")
 id = 32
 title = "Move Left"
 node_type = "Action"
-position = Vector2(2580, 1740)
+position = Vector2(3408, 1144)
 parent_id = 31
 parameters = {"action_name": "move_left"}
 
@@ -301,7 +301,7 @@ script = ExtResource("2_node")
 id = 33
 title = "Patrol Pause Left"
 node_type = "Wait"
-position = Vector2(2820, 1740)
+position = Vector2(3682, 1144)
 parent_id = 31
 parameters = {"duration": 0.25}
 
@@ -310,7 +310,7 @@ script = ExtResource("2_node")
 id = 34
 title = "Parallel Right Patrol"
 node_type = "Parallel"
-position = Vector2(3200, 1450)
+position = Vector2(4093, 970)
 parent_id = 30
 parameters = {"failure_policy": "any", "success_policy": "all"}
 
@@ -319,7 +319,7 @@ script = ExtResource("2_node")
 id = 35
 title = "Move Right"
 node_type = "Action"
-position = Vector2(3080, 1740)
+position = Vector2(3956, 1144)
 parent_id = 34
 parameters = {"action_name": "move_right"}
 
@@ -328,7 +328,7 @@ script = ExtResource("2_node")
 id = 36
 title = "Patrol Pause Right"
 node_type = "Wait"
-position = Vector2(3320, 1740)
+position = Vector2(4230, 1144)
 parent_id = 34
 parameters = {"duration": 0.25}
 

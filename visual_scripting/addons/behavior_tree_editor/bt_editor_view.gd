@@ -35,6 +35,12 @@ const LAYOUT_START := Vector2(120.0, 100.0)
 const LAYOUT_HORIZONTAL_GAP := 330.0
 const LAYOUT_VERTICAL_GAP := 310.0
 const LAYOUT_MIN_VERTICAL_CLEARANCE := 60.0
+const OVERVIEW_LAYOUT_HORIZONTAL_GAP := BTGraphNode.NORMAL_CARD_SIZE.x + 24.0
+const OVERVIEW_LAYOUT_VERTICAL_GAP := BTGraphNode.NORMAL_CARD_SIZE.y + 24.0
+const AUTO_SPACING_GAP := 24.0
+const AUTO_SPACING_ITERATIONS := 24
+const AUTO_SPACING_LERP_SPEED := 14.0
+const AUTO_SPACING_EPSILON := 0.1
 const FEATURE_DEFINITIONS := [
 	["fisheye", "Fisheye / Focus+Context", true],
 	["subtree_collapse", "Subtree Collapse / Expand", true],
@@ -47,6 +53,7 @@ const FEATURE_DEFINITIONS := [
 	["multi_column", "Multi-column Layout", false],
 	["enhanced_minimap", "Overview + Detail / Enhanced Minimap", true],
 	["semantic_zoom", "Semantic Zoom", false],
+	["auto_spacing", "Zoom-Aware Auto Spacing", true],
 	["path_summary", "Path Summary View", true],
 	["decorator_badges", "Decorator Condition Badges", true],
 	["search", "Search + Highlight", true],
@@ -156,6 +163,8 @@ var minimap_status_signature := ""
 var minimap_visible_node_count := 0
 var minimap_total_node_count := 0
 var visible_failure_annotations: Array[Dictionary] = []
+var auto_spacing_targets: Dictionary = {}
+var auto_spacing_signature := ""
 
 
 func _ready() -> void:
@@ -173,6 +182,7 @@ func _process(delta: float) -> void:
 	_poll_runtime_debug(delta)
 	_update_fisheye(delta)
 	_update_semantic_zoom()
+	_update_auto_spacing(delta)
 	_update_minimap_status()
 
 
@@ -391,7 +401,7 @@ func _build_ui() -> void:
 
 	semantic_zoom_toggle = CheckBox.new()
 	semantic_zoom_toggle.text = "Semantic Zoom"
-	semantic_zoom_toggle.tooltip_text = "Hide secondary information when zoomed out without resizing nodes."
+	semantic_zoom_toggle.tooltip_text = "Reduce card information when zoomed out; Zoom-Aware Auto Spacing prevents expanded cards from overlapping."
 	semantic_zoom_toggle.toggled.connect(_on_semantic_zoom_toggled)
 	view_row.add_child(semantic_zoom_toggle)
 
@@ -613,6 +623,7 @@ func _build_ui() -> void:
 	context_menu.add_item("Collapse / Expand Selected", 23)
 	context_menu.add_separator()
 	context_menu.add_item("Auto Arrange Tree", 30)
+	context_menu.add_item("Arrange for Overview", 34)
 	context_menu.add_item("Attach Blackboard Decorator", 31)
 	context_menu.add_item("Attach Cooldown Decorator", 32)
 	context_menu.add_item("Attach Time Limit Decorator", 33)
@@ -770,6 +781,10 @@ func _set_feature_enabled(key: String, enabled: bool, persist := true) -> void:
 			semantic_zoom_enabled = enabled
 			if not enabled:
 				semantic_detail_level = 2
+				_reset_auto_spacing()
+		"auto_spacing":
+			if not enabled:
+				_reset_auto_spacing()
 		"enhanced_minimap":
 			if is_instance_valid(graph_edit):
 				graph_edit.set_enhanced_minimap(enabled)
@@ -1206,6 +1221,7 @@ func _rebuild_graph() -> void:
 		if graph_edit.get_node_or_null(NodePath(parent_name)) != null and graph_edit.get_node_or_null(NodePath(child_name)) != null:
 			graph_edit.connect_node(parent_name, 0, child_name, 0)
 	_apply_feature_states()
+	_refresh_auto_spacing_deferred.call_deferred()
 	_refresh_minimap_node_counts()
 	_update_minimap_status(true)
 
@@ -1786,6 +1802,114 @@ func _apply_semantic_detail_level() -> void:
 	for child in graph_edit.get_children():
 		if child is BTGraphNode:
 			child.set_semantic_detail_level(semantic_detail_level)
+	_refresh_auto_spacing_deferred.call_deferred()
+
+
+func _refresh_auto_spacing_deferred() -> void:
+	if not is_instance_valid(graph_edit):
+		return
+	_update_auto_spacing(0.0, true)
+
+
+func _update_auto_spacing(delta: float, immediate := false) -> void:
+	if not is_instance_valid(graph_edit):
+		return
+	for child in graph_edit.get_children():
+		if child is BTGraphNode and child.manual_dragging:
+			return
+	var enabled := _feature_enabled("auto_spacing") and _feature_enabled("semantic_zoom") and semantic_detail_level > 0
+	var signature := _auto_spacing_layout_signature() if enabled else "disabled"
+	if signature != auto_spacing_signature:
+		auto_spacing_signature = signature
+		auto_spacing_targets = _solve_auto_spacing_offsets() if enabled else {}
+	var blend := 1.0 if immediate or delta <= 0.0 else clampf(delta * AUTO_SPACING_LERP_SPEED, 0.0, 1.0)
+	var changed := false
+	for child in graph_edit.get_children():
+		if not (child is BTGraphNode):
+			continue
+		var graph_node: BTGraphNode = child
+		var target: Vector2 = auto_spacing_targets.get(graph_node.node_resource.id, Vector2.ZERO)
+		var next_offset := graph_node.visual_offset.lerp(target, blend)
+		if next_offset.distance_squared_to(target) <= AUTO_SPACING_EPSILON * AUTO_SPACING_EPSILON:
+			next_offset = target
+		if not graph_node.visual_offset.is_equal_approx(next_offset):
+			graph_node.set_visual_offset(next_offset)
+			changed = true
+	if changed:
+		graph_edit.queue_redraw()
+
+
+func _auto_spacing_layout_signature() -> String:
+	var values: Array[String] = [str(semantic_detail_level)]
+	for child in graph_edit.get_children():
+		if child is BTGraphNode and child.node_resource != null:
+			values.append("%d:%.3f:%.3f:%.3f:%.3f" % [
+				child.node_resource.id,
+				child.node_resource.position.x,
+				child.node_resource.position.y,
+				child.size.x,
+				child.size.y,
+			])
+	values.sort()
+	return "|".join(values)
+
+
+func _solve_auto_spacing_offsets() -> Dictionary:
+	var nodes: Array[BTGraphNode] = []
+	for child in graph_edit.get_children():
+		if child is BTGraphNode and child.node_resource != null:
+			nodes.append(child)
+	nodes.sort_custom(func(left: BTGraphNode, right: BTGraphNode) -> bool:
+		if not is_equal_approx(left.node_resource.position.y, right.node_resource.position.y):
+			return left.node_resource.position.y < right.node_resource.position.y
+		if not is_equal_approx(left.node_resource.position.x, right.node_resource.position.x):
+			return left.node_resource.position.x < right.node_resource.position.x
+		return left.node_resource.id < right.node_resource.id
+	)
+	var offsets: Dictionary = {}
+	for graph_node in nodes:
+		offsets[graph_node.node_resource.id] = Vector2.ZERO
+	for _iteration in range(AUTO_SPACING_ITERATIONS):
+		var collision_found := false
+		for left_index in range(nodes.size()):
+			var left := nodes[left_index]
+			for right_index in range(left_index + 1, nodes.size()):
+				var right := nodes[right_index]
+				var left_offset: Vector2 = offsets[left.node_resource.id]
+				var right_offset: Vector2 = offsets[right.node_resource.id]
+				var left_base := left.position_offset - left.visual_offset
+				var right_base := right.position_offset - right.visual_offset
+				var left_rect := Rect2(left_base + left_offset, left.size).grow(AUTO_SPACING_GAP * 0.5)
+				var right_rect := Rect2(right_base + right_offset, right.size).grow(AUTO_SPACING_GAP * 0.5)
+				if not left_rect.intersects(right_rect):
+					continue
+				collision_found = true
+				var overlap_x := minf(left_rect.end.x, right_rect.end.x) - maxf(left_rect.position.x, right_rect.position.x)
+				var overlap_y := minf(left_rect.end.y, right_rect.end.y) - maxf(left_rect.position.y, right_rect.position.y)
+				if overlap_x <= overlap_y:
+					var direction_x := -1.0 if left_rect.get_center().x <= right_rect.get_center().x else 1.0
+					var shift_x := (overlap_x + 0.01) * 0.5
+					offsets[left.node_resource.id] = left_offset + Vector2(direction_x * shift_x, 0.0)
+					offsets[right.node_resource.id] = right_offset - Vector2(direction_x * shift_x, 0.0)
+				else:
+					var direction_y := -1.0 if left_rect.get_center().y <= right_rect.get_center().y else 1.0
+					var shift_y := (overlap_y + 0.01) * 0.5
+					offsets[left.node_resource.id] = left_offset + Vector2(0.0, direction_y * shift_y)
+					offsets[right.node_resource.id] = right_offset - Vector2(0.0, direction_y * shift_y)
+		if not collision_found:
+			break
+	return offsets
+
+
+func _reset_auto_spacing() -> void:
+	if not is_instance_valid(graph_edit):
+		return
+	auto_spacing_targets.clear()
+	auto_spacing_signature = ""
+	for child in graph_edit.get_children():
+		if child is BTGraphNode:
+			child.set_visual_offset(Vector2.ZERO)
+	graph_edit.queue_redraw()
 
 
 func _on_search_changed(text: String) -> void:
@@ -2605,6 +2729,8 @@ func _on_context_menu_id_pressed(id: int) -> void:
 			_toggle_selected_collapsed()
 		30:
 			_auto_arrange_tree()
+		34:
+			_auto_arrange_tree(true)
 		31:
 			_attach_decorator_to_selected("Blackboard", {
 				"mode": "blackboard",
@@ -2717,7 +2843,7 @@ func _toggle_selected_collapsed() -> void:
 	_on_graph_node_collapse_toggled(node.id)
 
 
-func _auto_arrange_tree() -> void:
+func _auto_arrange_tree(overview_dense := false) -> void:
 	if current_tree == null or current_tree.root_node_id == -1:
 		_set_status("Create or load a tree before arranging.")
 		return
@@ -2731,49 +2857,49 @@ func _auto_arrange_tree() -> void:
 		if node != null and not _is_attached_decorator(node):
 			original_positions[node.id] = node.position
 	var depth_heights: Dictionary = {}
-	_collect_layout_depth_heights(root, 0, depth_heights)
-	var depth_positions := _build_layout_depth_positions(depth_heights)
+	_collect_layout_depth_heights(root, 0, depth_heights, overview_dense)
+	var depth_positions := _build_layout_depth_positions(depth_heights, overview_dense)
 	var cursor := {"x": LAYOUT_START.x}
-	_arrange_subtree(root, 0, cursor, depth_positions)
-	if _feature_enabled("multi_column"):
+	_arrange_subtree(root, 0, cursor, depth_positions, OVERVIEW_LAYOUT_HORIZONTAL_GAP if overview_dense else LAYOUT_HORIZONTAL_GAP)
+	if _feature_enabled("multi_column") and not overview_dense:
 		_apply_multi_column_layout()
-	if _feature_enabled("stable_layout"):
+	if _feature_enabled("stable_layout") and not overview_dense:
 		_apply_stable_incremental_layout(original_positions)
 	_refresh_entire_ui()
-	_set_status("Auto arranged tree in behavior-tree layout.")
+	_set_status("Auto arranged tree for dense overview." if overview_dense else "Auto arranged tree in behavior-tree layout.")
 
 
-func _collect_layout_depth_heights(node: BTNodeResource, depth: int, depth_heights: Dictionary) -> void:
+func _collect_layout_depth_heights(node: BTNodeResource, depth: int, depth_heights: Dictionary, overview_dense := false) -> void:
 	var graph_node := graph_edit.get_node_or_null(NodePath(str(node.id))) as BTGraphNode
-	var node_height := graph_node.size.y if graph_node != null else LAYOUT_VERTICAL_GAP - LAYOUT_MIN_VERTICAL_CLEARANCE
+	var node_height := BTGraphNode.NORMAL_CARD_SIZE.y if overview_dense else (graph_node.size.y if graph_node != null else LAYOUT_VERTICAL_GAP - LAYOUT_MIN_VERTICAL_CLEARANCE)
 	depth_heights[depth] = maxf(float(depth_heights.get(depth, 0.0)), node_height)
 	for child in current_tree.get_children_of(node.id):
-		_collect_layout_depth_heights(child, depth + 1, depth_heights)
+		_collect_layout_depth_heights(child, depth + 1, depth_heights, overview_dense)
 
 
-func _build_layout_depth_positions(depth_heights: Dictionary) -> Dictionary:
+func _build_layout_depth_positions(depth_heights: Dictionary, overview_dense := false) -> Dictionary:
 	var positions := {0: LAYOUT_START.y}
 	var max_depth := 0
 	for depth in depth_heights:
 		max_depth = maxi(max_depth, int(depth))
 	for depth in range(max_depth):
-		var layer_step := maxf(LAYOUT_VERTICAL_GAP, float(depth_heights.get(depth, 0.0)) + LAYOUT_MIN_VERTICAL_CLEARANCE)
+		var layer_step := OVERVIEW_LAYOUT_VERTICAL_GAP if overview_dense else maxf(LAYOUT_VERTICAL_GAP, float(depth_heights.get(depth, 0.0)) + LAYOUT_MIN_VERTICAL_CLEARANCE)
 		positions[depth + 1] = float(positions[depth]) + layer_step
 	return positions
 
 
-func _arrange_subtree(node: BTNodeResource, depth: int, cursor: Dictionary, depth_positions: Dictionary) -> float:
+func _arrange_subtree(node: BTNodeResource, depth: int, cursor: Dictionary, depth_positions: Dictionary, horizontal_gap := LAYOUT_HORIZONTAL_GAP) -> float:
 	var children := current_tree.get_children_of(node.id)
 	var y := float(depth_positions.get(depth, LAYOUT_START.y + float(depth) * LAYOUT_VERTICAL_GAP))
 	if children.is_empty():
 		var leaf_x: float = cursor["x"]
 		node.position = Vector2(leaf_x, y)
-		cursor["x"] = leaf_x + LAYOUT_HORIZONTAL_GAP
+		cursor["x"] = leaf_x + horizontal_gap
 		return leaf_x
 
 	var child_positions: Array[float] = []
 	for child in children:
-		child_positions.append(_arrange_subtree(child, depth + 1, cursor, depth_positions))
+		child_positions.append(_arrange_subtree(child, depth + 1, cursor, depth_positions, horizontal_gap))
 	var first_x := child_positions[0]
 	var last_x := child_positions[child_positions.size() - 1]
 	node.position = Vector2((first_x + last_x) * 0.5, y)

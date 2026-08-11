@@ -694,6 +694,19 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	view._set_feature_enabled("multi_column", false, false)
 	view._auto_arrange_tree()
 	_expect(_distinct_child_rows(view.current_tree, 2) == 1, "disabling multi-column restores one-row layout")
+	var regular_layout_width := _resource_layout_bounds(view.current_tree).size.x
+	view._auto_arrange_tree(true)
+	var overview_layout_width := _resource_layout_bounds(view.current_tree).size.x
+	view._set_feature_enabled("semantic_zoom", true, false)
+	view.semantic_detail_level = 0
+	view._apply_semantic_detail_level()
+	view._update_auto_spacing(0.0, true)
+	_expect(overview_layout_width < regular_layout_width, "overview arrange stores a denser default tree layout")
+	_expect(_rendered_overlaps(view).is_empty(), "overview arrange keeps low-detail cards readable without temporary offsets")
+	_expect(is_equal_approx(view.current_tree.find_node(4).position.x - view.current_tree.find_node(3).position.x, view.OVERVIEW_LAYOUT_HORIZONTAL_GAP), "overview arrange uses the low-detail card width plus a compact gap")
+	view._undo()
+	_expect(is_equal_approx(_resource_layout_bounds(view.current_tree).size.x, regular_layout_width), "overview arrange is undoable")
+	view._set_feature_enabled("semantic_zoom", false, false)
 
 	view._set_feature_enabled("enhanced_minimap", false, false)
 	_expect(not view.graph_edit.minimap_enabled and not view.minimap_status_label.visible, "minimap switch disables overview")
@@ -713,6 +726,34 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	_expect(view.semantic_detail_level == 0, "semantic zoom switch selects overview detail")
 	view._set_feature_enabled("semantic_zoom", false, false)
 	_expect(view.semantic_detail_level == 2, "disabling semantic zoom restores full detail")
+
+	view.current_tree = _make_dense_zoom_tree()
+	view._rebuild_graph()
+	var dense_positions := _resource_positions(view.current_tree)
+	view._set_feature_enabled("semantic_zoom", true, false)
+	view._set_feature_enabled("auto_spacing", true, false)
+	view.semantic_detail_level = 0
+	view._apply_semantic_detail_level()
+	view._update_auto_spacing(0.0, true)
+	_expect(_rendered_overlaps(view).is_empty(), "dense overview is readable without expanding logical spacing")
+	view.semantic_detail_level = 2
+	view._apply_semantic_detail_level()
+	view._update_auto_spacing(0.0, true)
+	_expect(not _all_visual_offsets_zero(view), "zoom-aware auto spacing separates dense cards at full detail")
+	_expect(_rendered_overlaps(view).is_empty(), "zoom-aware auto spacing resolves every dense-card overlap")
+	_expect(_resource_positions_equal(view.current_tree, dense_positions), "auto spacing never changes behavior-tree resource coordinates")
+	_graph_node(view, 2).sync_to_resource()
+	_expect(_resource_positions_equal(view.current_tree, dense_positions), "position synchronization excludes temporary visual offsets")
+	view.semantic_detail_level = 0
+	view._apply_semantic_detail_level()
+	view._update_auto_spacing(0.0, true)
+	_expect(_all_visual_offsets_zero(view) and _render_positions_match_resources(view), "zooming out restores the exact dense logical layout")
+	view.semantic_detail_level = 2
+	view._apply_semantic_detail_level()
+	view._update_auto_spacing(0.0, true)
+	view._set_feature_enabled("auto_spacing", false, false)
+	_expect(_all_visual_offsets_zero(view) and _render_positions_match_resources(view), "disabling auto spacing clears all temporary layout residue")
+	view._set_feature_enabled("semantic_zoom", false, false)
 
 	view.current_tree = _make_view_tree()
 	view.selected_node_id = 4
@@ -860,6 +901,72 @@ func _make_fanout_tree() -> BTTreeResource:
 		child.parameters = {"action_name": "action_%d" % index}
 		tree.nodes.append(child)
 	return tree
+
+
+func _make_dense_zoom_tree() -> BTTreeResource:
+	var tree := BTTreeResource.new()
+	tree.tree_name = "Dense Zoom Test"
+	tree.root_node_id = 1
+	tree.nodes = [
+		_node(1, BTNodeResource.TYPE_ROOT, -1, "Dense Root", 540.0, 80.0),
+		_node(2, BTNodeResource.TYPE_ACTION, 1, "Dense Left", 400.0, 245.0),
+		_node(3, BTNodeResource.TYPE_ACTION, 1, "Dense Right", 680.0, 245.0),
+	]
+	return tree
+
+
+func _resource_positions(tree: BTTreeResource) -> Dictionary:
+	var positions := {}
+	for node in tree.nodes:
+		if node != null:
+			positions[node.id] = node.position
+	return positions
+
+
+func _resource_layout_bounds(tree: BTTreeResource) -> Rect2:
+	var initialized := false
+	var bounds := Rect2()
+	for node in tree.nodes:
+		if node == null or node.decorator_parent_id != -1:
+			continue
+		var rect := Rect2(node.position, BTGraphNode.NORMAL_CARD_SIZE)
+		bounds = bounds.merge(rect) if initialized else rect
+		initialized = true
+	return bounds
+
+
+func _resource_positions_equal(tree: BTTreeResource, expected: Dictionary) -> bool:
+	for node in tree.nodes:
+		if node != null and not node.position.is_equal_approx(expected.get(node.id, Vector2.INF)):
+			return false
+	return true
+
+
+func _all_visual_offsets_zero(view: BTEditorView) -> bool:
+	for child in view.graph_edit.get_children():
+		if child is BTGraphNode and not child.visual_offset.is_zero_approx():
+			return false
+	return true
+
+
+func _render_positions_match_resources(view: BTEditorView) -> bool:
+	for child in view.graph_edit.get_children():
+		if child is BTGraphNode and not child.position_offset.is_equal_approx(child.node_resource.position):
+			return false
+	return true
+
+
+func _rendered_overlaps(view: BTEditorView) -> Array[String]:
+	var nodes: Array[BTGraphNode] = []
+	for child in view.graph_edit.get_children():
+		if child is BTGraphNode:
+			nodes.append(child)
+	var overlaps: Array[String] = []
+	for left_index in range(nodes.size()):
+		for right_index in range(left_index + 1, nodes.size()):
+			if Rect2(nodes[left_index].position_offset, nodes[left_index].size).intersects(Rect2(nodes[right_index].position_offset, nodes[right_index].size)):
+				overlaps.append("%s:%s" % [nodes[left_index].name, nodes[right_index].name])
+	return overlaps
 
 
 func _all_node_scales_reset(view: BTEditorView) -> bool:

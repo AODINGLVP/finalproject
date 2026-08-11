@@ -117,6 +117,51 @@ func _run() -> void:
 	_expect(_overlapping_node_pairs().is_empty(), "compact mode keeps cards separated")
 	view._set_feature_enabled("compact", false, false)
 
+	view.current_tree = _make_dense_zoom_tree()
+	view.current_tree_path = "res://behavior_trees/dense_zoom_visual_tree.tres"
+	view._rebuild_graph()
+	view._set_feature_enabled("semantic_zoom", true, false)
+	view._set_feature_enabled("auto_spacing", true, false)
+	view.semantic_detail_level = 0
+	view._apply_semantic_detail_level()
+	view._update_auto_spacing(0.0, true)
+	await _settle()
+	var dense_overview := await _capture_case("02b_dense_overview")
+	_assert_image_valid(dense_overview, "dense semantic overview renders")
+	_expect(_all_visual_offsets_zero() and _overlapping_node_pairs().is_empty(), "dense overview retains readable compact logical positions")
+	var dense_positions := _resource_positions(view.current_tree)
+	view._set_feature_enabled("auto_spacing", false, false)
+	view.semantic_detail_level = 2
+	view._apply_semantic_detail_level()
+	await _settle()
+	var overlap_before := _overlapping_node_pairs().size()
+	var dense_detail_overlap := await _capture_case("02c_dense_detail_overlap")
+	_assert_image_valid(dense_detail_overlap, "dense detail overlap baseline renders")
+	_expect(overlap_before > 0, "dense detail baseline reproduces expansion overlap")
+	view._set_feature_enabled("auto_spacing", true, false)
+	view._update_auto_spacing(0.0, true)
+	await _settle()
+	var dense_detail := await _capture_case("02d_dense_detail_auto_spacing")
+	_assert_image_valid(dense_detail, "dense detail auto-spacing renders")
+	var overlap_after := _overlapping_node_pairs().size()
+	print("VISUAL_METRIC auto_spacing_overlap_before=%d auto_spacing_overlap_after=%d" % [overlap_before, overlap_after])
+	_expect(overlap_after == 0, "dense detail auto-spacing removes visible overlap")
+	_expect(_resource_positions_equal(view.current_tree, dense_positions), "dense detail auto-spacing preserves resource coordinates")
+	view.semantic_detail_level = 0
+	view._apply_semantic_detail_level()
+	view._update_auto_spacing(0.0, true)
+	await _settle()
+	var dense_restored := await _capture_case("02e_dense_overview_restored")
+	_assert_image_valid(dense_restored, "dense overview restoration renders")
+	_expect(_all_visual_offsets_zero() and _render_positions_match_resources(), "zooming out restores exact dense positions without residue")
+	view._set_feature_enabled("auto_spacing", false, false)
+	view._set_feature_enabled("semantic_zoom", false, false)
+	view.current_tree = _make_visual_tree()
+	view.current_tree_path = "res://behavior_trees/visual_regression_tree.tres"
+	view._rebuild_graph()
+	_restore_overview()
+	await _settle()
+
 	view._set_feature_enabled("fisheye", true, false)
 	var focused := _graph_node(view, 4)
 	view._apply_node_fisheye_scale(focused, 1.2, 1.0, 1.0)
@@ -242,20 +287,37 @@ func _run() -> void:
 	view.file_path_edit.text = view.current_tree_path
 	view.selected_node_id = view.current_tree.root_node_id
 	view._refresh_entire_ui()
-	view._auto_arrange_tree()
+	var complex_positions := _resource_positions(view.current_tree)
+	view._set_feature_enabled("semantic_zoom", true, false)
+	view._set_feature_enabled("auto_spacing", true, false)
+	view.semantic_detail_level = 0
+	view._apply_semantic_detail_level()
+	view._update_auto_spacing(0.0, true)
 	view._fit_visible_tree()
 	await _settle()
-	var complex_tree := await _capture_case("10_complex_tree")
-	_assert_image_valid(complex_tree, "complex 36-node tree renders")
+	var complex_overview := await _capture_case("10_complex_overview_default")
+	_assert_image_valid(complex_overview, "complex 36-node overview-default tree renders")
 	_expect(view.current_tree.nodes.size() == 36 and _graph_node_count() == _non_decorator_node_count(), "complex tree renders every graph node")
-	var complex_overlaps := _overlapping_node_pairs()
-	var complex_gap_failures := _parent_child_gap_failures(45.0)
-	if not complex_overlaps.is_empty():
-		printerr("VISUAL_DIAGNOSTIC overlaps=%s" % str(complex_overlaps))
-	if not complex_gap_failures.is_empty():
-		printerr("VISUAL_DIAGNOSTIC parent_child_gaps=%s" % str(complex_gap_failures))
-	_expect(complex_overlaps.is_empty(), "complex tree auto layout has no overlapping cards")
-	_expect(complex_gap_failures.is_empty(), "complex tree keeps readable parent-child spacing")
+	var complex_overview_overlap_count := _overlapping_node_pairs().size()
+	_expect(complex_overview_overlap_count == 0 and _all_visual_offsets_zero(), "complex tree default coordinates are compact and overlap-free at overview detail")
+	view._set_feature_enabled("auto_spacing", false, false)
+	view.semantic_detail_level = 2
+	view._apply_semantic_detail_level()
+	await _settle()
+	var complex_detail_overlap_count := _overlapping_node_pairs().size()
+	var complex_overlap := await _capture_case("10b_complex_detail_overlap")
+	_assert_image_valid(complex_overlap, "complex detail overlap baseline renders")
+	_expect(complex_detail_overlap_count > 0, "complex overview-default coordinates reproduce overlap at full detail")
+	view._set_feature_enabled("auto_spacing", true, false)
+	view._update_auto_spacing(0.0, true)
+	view._fit_visible_tree()
+	await _settle()
+	var complex_corrected_overlap_count := _overlapping_node_pairs().size()
+	var complex_corrected := await _capture_case("10c_complex_detail_auto_spacing")
+	_assert_image_valid(complex_corrected, "complex detail auto-spacing renders")
+	print("VISUAL_METRIC complex_overview_overlaps=%d complex_detail_overlaps=%d complex_corrected_overlaps=%d" % [complex_overview_overlap_count, complex_detail_overlap_count, complex_corrected_overlap_count])
+	_expect(complex_corrected_overlap_count == 0, "complex detail auto-spacing removes every visible overlap")
+	_expect(_resource_positions_equal(view.current_tree, complex_positions), "complex auto-spacing preserves every saved overview coordinate")
 
 	print("BT_VISUAL_TEST_SUMMARY passed=%d failed=%d output=%s" % [passed, failed, OUTPUT_DIR])
 	view.free()
@@ -442,6 +504,47 @@ func _make_visual_tree() -> BTTreeResource:
 	decorator.parameters = {"mode": "blackboard", "blackboard_key": "target_in_range", "operator": "equals", "value": true}
 	tree.nodes = [root_node, selector, sequence, attack, chase, patrol, left, right, decorator]
 	return tree
+
+
+func _make_dense_zoom_tree() -> BTTreeResource:
+	var tree := BTTreeResource.new()
+	tree.tree_name = "Dense Zoom Visual Tree"
+	tree.root_node_id = 1
+	tree.nodes = [
+		_node(1, BTNodeResource.TYPE_ROOT, -1, "Dense Root", 640.0, 190.0),
+		_node(2, BTNodeResource.TYPE_ACTION, 1, "Dense Left", 500.0, 355.0),
+		_node(3, BTNodeResource.TYPE_ACTION, 1, "Dense Right", 780.0, 355.0),
+	]
+	return tree
+
+
+func _resource_positions(tree: BTTreeResource) -> Dictionary:
+	var positions := {}
+	for node in tree.nodes:
+		if node != null:
+			positions[node.id] = node.position
+	return positions
+
+
+func _resource_positions_equal(tree: BTTreeResource, expected: Dictionary) -> bool:
+	for node in tree.nodes:
+		if node != null and not node.position.is_equal_approx(expected.get(node.id, Vector2.INF)):
+			return false
+	return true
+
+
+func _all_visual_offsets_zero() -> bool:
+	for child in view.graph_edit.get_children():
+		if child is BTGraphNode and not child.visual_offset.is_zero_approx():
+			return false
+	return true
+
+
+func _render_positions_match_resources() -> bool:
+	for child in view.graph_edit.get_children():
+		if child is BTGraphNode and not child.position_offset.is_equal_approx(child.node_resource.position):
+			return false
+	return true
 
 
 func _test_real_pointer_connection() -> void:

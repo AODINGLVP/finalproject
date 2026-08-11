@@ -58,6 +58,7 @@ var runtime_reason := ""
 var runtime_snapshot_active := false
 var fisheye_magnification := 1.0
 var manual_connection_dragging := false
+var visual_offset := Vector2.ZERO
 
 
 func _ready() -> void:
@@ -201,7 +202,7 @@ func _gui_input(event: InputEvent) -> void:
 			zoom = max(0.01, parent.zoom)
 		position_offset += event.relative / zoom
 		if node_resource != null:
-			node_resource.position = position_offset + _fisheye_position_compensation()
+			node_resource.position = get_logical_position()
 		accept_event()
 
 
@@ -242,8 +243,21 @@ func _make_children_ignore_mouse(root: Control) -> void:
 func sync_to_resource() -> void:
 	if node_resource == null:
 		return
-	node_resource.position = position_offset + _fisheye_position_compensation()
-	_update_view()
+	node_resource.position = get_logical_position()
+
+
+func get_logical_position() -> Vector2:
+	return position_offset - visual_offset + _fisheye_position_compensation()
+
+
+func set_visual_offset(value: Vector2) -> void:
+	visual_offset = value
+	_apply_render_position()
+
+
+func _apply_render_position() -> void:
+	if node_resource != null:
+		position_offset = node_resource.position + visual_offset - _fisheye_position_compensation()
 
 
 func _update_view(decorators: Array = []) -> void:
@@ -369,7 +383,7 @@ func _apply_information_density() -> void:
 	else:
 		remove_theme_font_size_override("font_size")
 	if node_resource != null:
-		position_offset = node_resource.position - _fisheye_position_compensation()
+		_apply_render_position()
 		_refresh_connection_slots(_type_color(node_resource.node_type))
 	# GraphNode keeps its previous expanded size unless explicitly reset after rows
 	# are hidden. This is most visible when switching to Compact Mode.
@@ -382,7 +396,7 @@ func _reset_size_after_layout() -> void:
 		return
 	reset_size()
 	if node_resource != null:
-		position_offset = node_resource.position - _fisheye_position_compensation()
+		_apply_render_position()
 		_refresh_connection_slots(_type_color(node_resource.node_type))
 
 
