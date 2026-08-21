@@ -1,0 +1,2521 @@
+[gd_resource type="Resource" script_class="BTTreeResource" format=3]
+
+[ext_resource type="Script" path="res://addons/behavior_tree_editor/bt_node_resource.gd" id="1_fknkr"]
+[ext_resource type="Script" path="res://addons/behavior_tree_editor/bt_tree_resource.gd" id="2_ucf5r"]
+
+[sub_resource type="Resource" id="Resource_55k3c"]
+script = ExtResource("1_fknkr")
+id = 1
+title = "Root"
+node_type = "Root"
+description = "Entry point for the complete NPC decision model."
+
+[sub_resource type="Resource" id="Resource_aa8mv"]
+script = ExtResource("1_fknkr")
+id = 2
+title = "Continuous Decision Loop"
+node_type = "Repeat"
+parent_id = 1
+description = "Reevaluate priorities while the NPC is active."
+parameters = {
+"repeat_count": -1
+}
+
+[sub_resource type="Resource" id="Resource_myrdc"]
+script = ExtResource("1_fknkr")
+id = 3
+title = "NPC Priority Selector"
+node_type = "Selector"
+parent_id = 2
+description = "Emergency, combat, pursuit, investigation, support, resources, then patrol."
+parameters = {
+"reactive": true
+}
+
+[sub_resource type="Resource" id="Resource_tlhoy"]
+script = ExtResource("1_fknkr")
+id = 4
+title = "Emergency Recovery"
+node_type = "Sequence"
+parent_id = 3
+description = "A complete decision domain with sensing, concurrent preparation, choice, and recovery."
+
+[sub_resource type="Resource" id="Resource_k5q40"]
+script = ExtResource("1_fknkr")
+id = 5
+title = "Check Emergency Recovery"
+node_type = "Condition"
+parent_id = 4
+description = "Actor condition gating this priority branch."
+parameters = {
+"condition_name": "is_critically_wounded"
+}
+
+[sub_resource type="Resource" id="Resource_uqn34"]
+script = ExtResource("1_fknkr")
+id = 6
+title = "Emergency Recovery Preparation"
+node_type = "Parallel"
+parent_id = 4
+description = "Run sensing, movement preparation, and communication concurrently."
+parameters = {
+"failure_policy": "one",
+"success_policy": "all"
+}
+
+[sub_resource type="Resource" id="Resource_6ced6"]
+script = ExtResource("1_fknkr")
+id = 7
+title = "Emergency Recovery Sense Lane"
+node_type = "Sequence"
+parent_id = 6
+description = "Ordered work for the sense lane."
+
+[sub_resource type="Resource" id="Resource_x20re"]
+script = ExtResource("1_fknkr")
+id = 8
+title = "Sense Emergency Recovery"
+parent_id = 7
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "retreat_sense_0"
+}
+
+[sub_resource type="Resource" id="Resource_p4n5l"]
+script = ExtResource("1_fknkr")
+id = 9
+title = "Sense Response Window"
+node_type = "Wait"
+parent_id = 7
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.05
+}
+
+[sub_resource type="Resource" id="Resource_if44m"]
+script = ExtResource("1_fknkr")
+id = 10
+title = "Emergency Recovery Sense Choice"
+node_type = "Random Selector"
+parent_id = 7
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4100
+}
+
+[sub_resource type="Resource" id="Resource_lt4yw"]
+script = ExtResource("1_fknkr")
+id = 11
+title = "Sense Conservative"
+parent_id = 10
+description = "Low-risk response."
+parameters = {
+"action_name": "recover_conservative_0"
+}
+
+[sub_resource type="Resource" id="Resource_bcuf6"]
+script = ExtResource("1_fknkr")
+id = 12
+title = "Sense Assertive"
+parent_id = 10
+description = "High-priority response."
+parameters = {
+"action_name": "recover_assertive_0"
+}
+
+[sub_resource type="Resource" id="Resource_dlb0v"]
+script = ExtResource("1_fknkr")
+id = 13
+title = "Emergency Recovery Position Lane"
+node_type = "Sequence"
+parent_id = 6
+description = "Ordered work for the position lane."
+
+[sub_resource type="Resource" id="Resource_d6p2s"]
+script = ExtResource("1_fknkr")
+id = 14
+title = "Position Emergency Recovery"
+parent_id = 13
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "retreat_position_0"
+}
+
+[sub_resource type="Resource" id="Resource_w8ghc"]
+script = ExtResource("1_fknkr")
+id = 15
+title = "Position Response Window"
+node_type = "Wait"
+parent_id = 13
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.1
+}
+
+[sub_resource type="Resource" id="Resource_o5tug"]
+script = ExtResource("1_fknkr")
+id = 16
+title = "Emergency Recovery Position Choice"
+node_type = "Random Selector"
+parent_id = 13
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4101
+}
+
+[sub_resource type="Resource" id="Resource_flpri"]
+script = ExtResource("1_fknkr")
+id = 17
+title = "Position Conservative"
+parent_id = 16
+description = "Low-risk response."
+parameters = {
+"action_name": "recover_conservative_1"
+}
+
+[sub_resource type="Resource" id="Resource_jllg7"]
+script = ExtResource("1_fknkr")
+id = 18
+title = "Position Assertive"
+parent_id = 16
+description = "High-priority response."
+parameters = {
+"action_name": "recover_assertive_1"
+}
+
+[sub_resource type="Resource" id="Resource_to3dt"]
+script = ExtResource("1_fknkr")
+id = 19
+title = "Emergency Recovery Coordinate Lane"
+node_type = "Sequence"
+parent_id = 6
+description = "Ordered work for the coordinate lane."
+
+[sub_resource type="Resource" id="Resource_gnij7"]
+script = ExtResource("1_fknkr")
+id = 20
+title = "Coordinate Emergency Recovery"
+parent_id = 19
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "retreat_coordinate_0"
+}
+
+[sub_resource type="Resource" id="Resource_g47w7"]
+script = ExtResource("1_fknkr")
+id = 21
+title = "Coordinate Response Window"
+node_type = "Wait"
+parent_id = 19
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.15000000000000002
+}
+
+[sub_resource type="Resource" id="Resource_26f5s"]
+script = ExtResource("1_fknkr")
+id = 22
+title = "Emergency Recovery Coordinate Choice"
+node_type = "Random Selector"
+parent_id = 19
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4102
+}
+
+[sub_resource type="Resource" id="Resource_d8ehq"]
+script = ExtResource("1_fknkr")
+id = 23
+title = "Coordinate Conservative"
+parent_id = 22
+description = "Low-risk response."
+parameters = {
+"action_name": "recover_conservative_2"
+}
+
+[sub_resource type="Resource" id="Resource_b4wvq"]
+script = ExtResource("1_fknkr")
+id = 24
+title = "Coordinate Assertive"
+parent_id = 22
+description = "High-priority response."
+parameters = {
+"action_name": "recover_assertive_2"
+}
+
+[sub_resource type="Resource" id="Resource_5wwjp"]
+script = ExtResource("1_fknkr")
+id = 25
+title = "Emergency Recovery Retry"
+node_type = "Repeat"
+parent_id = 4
+description = "Retry the domain action twice before yielding to the next priority."
+parameters = {
+"repeat_count": 2
+}
+
+[sub_resource type="Resource" id="Resource_k86aq"]
+script = ExtResource("1_fknkr")
+id = 26
+title = "Execute Emergency Recovery"
+parent_id = 25
+description = "Primary actor method for this decision domain."
+parameters = {
+"action_name": "recover"
+}
+
+[sub_resource type="Resource" id="Resource_lj2w1"]
+script = ExtResource("1_fknkr")
+id = 27
+title = "Close Combat"
+node_type = "Sequence"
+parent_id = 3
+description = "A complete decision domain with sensing, concurrent preparation, choice, and recovery."
+
+[sub_resource type="Resource" id="Resource_vkw1y"]
+script = ExtResource("1_fknkr")
+id = 28
+title = "Check Close Combat"
+node_type = "Condition"
+parent_id = 27
+description = "Actor condition gating this priority branch."
+parameters = {
+"condition_name": "enemy_in_melee_range"
+}
+
+[sub_resource type="Resource" id="Resource_4k6x7"]
+script = ExtResource("1_fknkr")
+id = 29
+title = "Close Combat Preparation"
+node_type = "Parallel"
+parent_id = 27
+description = "Run sensing, movement preparation, and communication concurrently."
+parameters = {
+"failure_policy": "one",
+"success_policy": "all"
+}
+
+[sub_resource type="Resource" id="Resource_2j5wx"]
+script = ExtResource("1_fknkr")
+id = 30
+title = "Close Combat Sense Lane"
+node_type = "Sequence"
+parent_id = 29
+description = "Ordered work for the sense lane."
+
+[sub_resource type="Resource" id="Resource_hmtcu"]
+script = ExtResource("1_fknkr")
+id = 31
+title = "Sense Close Combat"
+parent_id = 30
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "face_enemy_sense_1"
+}
+
+[sub_resource type="Resource" id="Resource_17nw5"]
+script = ExtResource("1_fknkr")
+id = 32
+title = "Sense Response Window"
+node_type = "Wait"
+parent_id = 30
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.05
+}
+
+[sub_resource type="Resource" id="Resource_6tpgr"]
+script = ExtResource("1_fknkr")
+id = 33
+title = "Close Combat Sense Choice"
+node_type = "Random Selector"
+parent_id = 30
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4110
+}
+
+[sub_resource type="Resource" id="Resource_v45kx"]
+script = ExtResource("1_fknkr")
+id = 34
+title = "Sense Conservative"
+parent_id = 33
+description = "Low-risk response."
+parameters = {
+"action_name": "melee_attack_conservative_0"
+}
+
+[sub_resource type="Resource" id="Resource_yyh31"]
+script = ExtResource("1_fknkr")
+id = 35
+title = "Sense Assertive"
+parent_id = 33
+description = "High-priority response."
+parameters = {
+"action_name": "melee_attack_assertive_0"
+}
+
+[sub_resource type="Resource" id="Resource_y6rq1"]
+script = ExtResource("1_fknkr")
+id = 36
+title = "Close Combat Position Lane"
+node_type = "Sequence"
+parent_id = 29
+description = "Ordered work for the position lane."
+
+[sub_resource type="Resource" id="Resource_dexeb"]
+script = ExtResource("1_fknkr")
+id = 37
+title = "Position Close Combat"
+parent_id = 36
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "face_enemy_position_1"
+}
+
+[sub_resource type="Resource" id="Resource_ews73"]
+script = ExtResource("1_fknkr")
+id = 38
+title = "Position Response Window"
+node_type = "Wait"
+parent_id = 36
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.1
+}
+
+[sub_resource type="Resource" id="Resource_rqlss"]
+script = ExtResource("1_fknkr")
+id = 39
+title = "Close Combat Position Choice"
+node_type = "Random Selector"
+parent_id = 36
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4111
+}
+
+[sub_resource type="Resource" id="Resource_xmfbp"]
+script = ExtResource("1_fknkr")
+id = 40
+title = "Position Conservative"
+parent_id = 39
+description = "Low-risk response."
+parameters = {
+"action_name": "melee_attack_conservative_1"
+}
+
+[sub_resource type="Resource" id="Resource_xg4h5"]
+script = ExtResource("1_fknkr")
+id = 41
+title = "Position Assertive"
+parent_id = 39
+description = "High-priority response."
+parameters = {
+"action_name": "melee_attack_assertive_1"
+}
+
+[sub_resource type="Resource" id="Resource_3i4q2"]
+script = ExtResource("1_fknkr")
+id = 42
+title = "Close Combat Coordinate Lane"
+node_type = "Sequence"
+parent_id = 29
+description = "Ordered work for the coordinate lane."
+
+[sub_resource type="Resource" id="Resource_7f21u"]
+script = ExtResource("1_fknkr")
+id = 43
+title = "Coordinate Close Combat"
+parent_id = 42
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "face_enemy_coordinate_1"
+}
+
+[sub_resource type="Resource" id="Resource_lmqga"]
+script = ExtResource("1_fknkr")
+id = 44
+title = "Coordinate Response Window"
+node_type = "Wait"
+parent_id = 42
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.15000000000000002
+}
+
+[sub_resource type="Resource" id="Resource_pheok"]
+script = ExtResource("1_fknkr")
+id = 45
+title = "Close Combat Coordinate Choice"
+node_type = "Random Selector"
+parent_id = 42
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4112
+}
+
+[sub_resource type="Resource" id="Resource_o07d0"]
+script = ExtResource("1_fknkr")
+id = 46
+title = "Coordinate Conservative"
+parent_id = 45
+description = "Low-risk response."
+parameters = {
+"action_name": "melee_attack_conservative_2"
+}
+
+[sub_resource type="Resource" id="Resource_7vh4w"]
+script = ExtResource("1_fknkr")
+id = 47
+title = "Coordinate Assertive"
+parent_id = 45
+description = "High-priority response."
+parameters = {
+"action_name": "melee_attack_assertive_2"
+}
+
+[sub_resource type="Resource" id="Resource_x6v3v"]
+script = ExtResource("1_fknkr")
+id = 48
+title = "Close Combat Retry"
+node_type = "Repeat"
+parent_id = 27
+description = "Retry the domain action twice before yielding to the next priority."
+parameters = {
+"repeat_count": 2
+}
+
+[sub_resource type="Resource" id="Resource_me7cj"]
+script = ExtResource("1_fknkr")
+id = 49
+title = "Execute Close Combat"
+parent_id = 48
+description = "Primary actor method for this decision domain."
+parameters = {
+"action_name": "melee_attack"
+}
+
+[sub_resource type="Resource" id="Resource_3a72t"]
+script = ExtResource("1_fknkr")
+id = 50
+title = "Ranged Combat"
+node_type = "Sequence"
+parent_id = 3
+description = "A complete decision domain with sensing, concurrent preparation, choice, and recovery."
+
+[sub_resource type="Resource" id="Resource_hcbpd"]
+script = ExtResource("1_fknkr")
+id = 51
+title = "Check Ranged Combat"
+node_type = "Condition"
+parent_id = 50
+description = "Actor condition gating this priority branch."
+parameters = {
+"condition_name": "enemy_in_ranged_range"
+}
+
+[sub_resource type="Resource" id="Resource_r87yc"]
+script = ExtResource("1_fknkr")
+id = 52
+title = "Ranged Combat Preparation"
+node_type = "Parallel"
+parent_id = 50
+description = "Run sensing, movement preparation, and communication concurrently."
+parameters = {
+"failure_policy": "one",
+"success_policy": "all"
+}
+
+[sub_resource type="Resource" id="Resource_d5b4u"]
+script = ExtResource("1_fknkr")
+id = 53
+title = "Ranged Combat Sense Lane"
+node_type = "Sequence"
+parent_id = 52
+description = "Ordered work for the sense lane."
+
+[sub_resource type="Resource" id="Resource_xxgu5"]
+script = ExtResource("1_fknkr")
+id = 54
+title = "Sense Ranged Combat"
+parent_id = 53
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "take_aim_sense_2"
+}
+
+[sub_resource type="Resource" id="Resource_k645c"]
+script = ExtResource("1_fknkr")
+id = 55
+title = "Sense Response Window"
+node_type = "Wait"
+parent_id = 53
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.05
+}
+
+[sub_resource type="Resource" id="Resource_50qy3"]
+script = ExtResource("1_fknkr")
+id = 56
+title = "Ranged Combat Sense Choice"
+node_type = "Random Selector"
+parent_id = 53
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4120
+}
+
+[sub_resource type="Resource" id="Resource_gehha"]
+script = ExtResource("1_fknkr")
+id = 57
+title = "Sense Conservative"
+parent_id = 56
+description = "Low-risk response."
+parameters = {
+"action_name": "ranged_attack_conservative_0"
+}
+
+[sub_resource type="Resource" id="Resource_6g566"]
+script = ExtResource("1_fknkr")
+id = 58
+title = "Sense Assertive"
+parent_id = 56
+description = "High-priority response."
+parameters = {
+"action_name": "ranged_attack_assertive_0"
+}
+
+[sub_resource type="Resource" id="Resource_tw18p"]
+script = ExtResource("1_fknkr")
+id = 59
+title = "Ranged Combat Position Lane"
+node_type = "Sequence"
+parent_id = 52
+description = "Ordered work for the position lane."
+
+[sub_resource type="Resource" id="Resource_wi8o0"]
+script = ExtResource("1_fknkr")
+id = 60
+title = "Position Ranged Combat"
+parent_id = 59
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "take_aim_position_2"
+}
+
+[sub_resource type="Resource" id="Resource_4qu4a"]
+script = ExtResource("1_fknkr")
+id = 61
+title = "Position Response Window"
+node_type = "Wait"
+parent_id = 59
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.1
+}
+
+[sub_resource type="Resource" id="Resource_ffsyp"]
+script = ExtResource("1_fknkr")
+id = 62
+title = "Ranged Combat Position Choice"
+node_type = "Random Selector"
+parent_id = 59
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4121
+}
+
+[sub_resource type="Resource" id="Resource_2ig8i"]
+script = ExtResource("1_fknkr")
+id = 63
+title = "Position Conservative"
+parent_id = 62
+description = "Low-risk response."
+parameters = {
+"action_name": "ranged_attack_conservative_1"
+}
+
+[sub_resource type="Resource" id="Resource_w4brb"]
+script = ExtResource("1_fknkr")
+id = 64
+title = "Position Assertive"
+parent_id = 62
+description = "High-priority response."
+parameters = {
+"action_name": "ranged_attack_assertive_1"
+}
+
+[sub_resource type="Resource" id="Resource_ccthe"]
+script = ExtResource("1_fknkr")
+id = 65
+title = "Ranged Combat Coordinate Lane"
+node_type = "Sequence"
+parent_id = 52
+description = "Ordered work for the coordinate lane."
+
+[sub_resource type="Resource" id="Resource_pvbbc"]
+script = ExtResource("1_fknkr")
+id = 66
+title = "Coordinate Ranged Combat"
+parent_id = 65
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "take_aim_coordinate_2"
+}
+
+[sub_resource type="Resource" id="Resource_rla0y"]
+script = ExtResource("1_fknkr")
+id = 67
+title = "Coordinate Response Window"
+node_type = "Wait"
+parent_id = 65
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.15000000000000002
+}
+
+[sub_resource type="Resource" id="Resource_dlk8d"]
+script = ExtResource("1_fknkr")
+id = 68
+title = "Ranged Combat Coordinate Choice"
+node_type = "Random Selector"
+parent_id = 65
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4122
+}
+
+[sub_resource type="Resource" id="Resource_6ehkk"]
+script = ExtResource("1_fknkr")
+id = 69
+title = "Coordinate Conservative"
+parent_id = 68
+description = "Low-risk response."
+parameters = {
+"action_name": "ranged_attack_conservative_2"
+}
+
+[sub_resource type="Resource" id="Resource_axq6a"]
+script = ExtResource("1_fknkr")
+id = 70
+title = "Coordinate Assertive"
+parent_id = 68
+description = "High-priority response."
+parameters = {
+"action_name": "ranged_attack_assertive_2"
+}
+
+[sub_resource type="Resource" id="Resource_ijg7k"]
+script = ExtResource("1_fknkr")
+id = 71
+title = "Ranged Combat Retry"
+node_type = "Repeat"
+parent_id = 50
+description = "Retry the domain action twice before yielding to the next priority."
+parameters = {
+"repeat_count": 2
+}
+
+[sub_resource type="Resource" id="Resource_kiogl"]
+script = ExtResource("1_fknkr")
+id = 72
+title = "Execute Ranged Combat"
+parent_id = 71
+description = "Primary actor method for this decision domain."
+parameters = {
+"action_name": "ranged_attack"
+}
+
+[sub_resource type="Resource" id="Resource_7r1f7"]
+script = ExtResource("1_fknkr")
+id = 73
+title = "Chase Target"
+node_type = "Sequence"
+parent_id = 3
+description = "A complete decision domain with sensing, concurrent preparation, choice, and recovery."
+
+[sub_resource type="Resource" id="Resource_mvl5m"]
+script = ExtResource("1_fknkr")
+id = 74
+title = "Check Chase Target"
+node_type = "Condition"
+parent_id = 73
+description = "Actor condition gating this priority branch."
+parameters = {
+"condition_name": "has_visible_target"
+}
+
+[sub_resource type="Resource" id="Resource_gfc4o"]
+script = ExtResource("1_fknkr")
+id = 75
+title = "Chase Target Preparation"
+node_type = "Parallel"
+parent_id = 73
+description = "Run sensing, movement preparation, and communication concurrently."
+parameters = {
+"failure_policy": "one",
+"success_policy": "all"
+}
+
+[sub_resource type="Resource" id="Resource_rttel"]
+script = ExtResource("1_fknkr")
+id = 76
+title = "Chase Target Sense Lane"
+node_type = "Sequence"
+parent_id = 75
+description = "Ordered work for the sense lane."
+
+[sub_resource type="Resource" id="Resource_7e0rf"]
+script = ExtResource("1_fknkr")
+id = 77
+title = "Sense Chase Target"
+parent_id = 76
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "update_target_sense_3"
+}
+
+[sub_resource type="Resource" id="Resource_5c280"]
+script = ExtResource("1_fknkr")
+id = 78
+title = "Sense Response Window"
+node_type = "Wait"
+parent_id = 76
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.05
+}
+
+[sub_resource type="Resource" id="Resource_xbs5q"]
+script = ExtResource("1_fknkr")
+id = 79
+title = "Chase Target Sense Choice"
+node_type = "Random Selector"
+parent_id = 76
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4130
+}
+
+[sub_resource type="Resource" id="Resource_q38qp"]
+script = ExtResource("1_fknkr")
+id = 80
+title = "Sense Conservative"
+parent_id = 79
+description = "Low-risk response."
+parameters = {
+"action_name": "chase_target_conservative_0"
+}
+
+[sub_resource type="Resource" id="Resource_5cm1g"]
+script = ExtResource("1_fknkr")
+id = 81
+title = "Sense Assertive"
+parent_id = 79
+description = "High-priority response."
+parameters = {
+"action_name": "chase_target_assertive_0"
+}
+
+[sub_resource type="Resource" id="Resource_wgtul"]
+script = ExtResource("1_fknkr")
+id = 82
+title = "Chase Target Position Lane"
+node_type = "Sequence"
+parent_id = 75
+description = "Ordered work for the position lane."
+
+[sub_resource type="Resource" id="Resource_73kvf"]
+script = ExtResource("1_fknkr")
+id = 83
+title = "Position Chase Target"
+parent_id = 82
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "update_target_position_3"
+}
+
+[sub_resource type="Resource" id="Resource_jf7ki"]
+script = ExtResource("1_fknkr")
+id = 84
+title = "Position Response Window"
+node_type = "Wait"
+parent_id = 82
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.1
+}
+
+[sub_resource type="Resource" id="Resource_bqq3h"]
+script = ExtResource("1_fknkr")
+id = 85
+title = "Chase Target Position Choice"
+node_type = "Random Selector"
+parent_id = 82
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4131
+}
+
+[sub_resource type="Resource" id="Resource_jgrkn"]
+script = ExtResource("1_fknkr")
+id = 86
+title = "Position Conservative"
+parent_id = 85
+description = "Low-risk response."
+parameters = {
+"action_name": "chase_target_conservative_1"
+}
+
+[sub_resource type="Resource" id="Resource_8ig8p"]
+script = ExtResource("1_fknkr")
+id = 87
+title = "Position Assertive"
+parent_id = 85
+description = "High-priority response."
+parameters = {
+"action_name": "chase_target_assertive_1"
+}
+
+[sub_resource type="Resource" id="Resource_tmwft"]
+script = ExtResource("1_fknkr")
+id = 88
+title = "Chase Target Coordinate Lane"
+node_type = "Sequence"
+parent_id = 75
+description = "Ordered work for the coordinate lane."
+
+[sub_resource type="Resource" id="Resource_wm33u"]
+script = ExtResource("1_fknkr")
+id = 89
+title = "Coordinate Chase Target"
+parent_id = 88
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "update_target_coordinate_3"
+}
+
+[sub_resource type="Resource" id="Resource_wleoe"]
+script = ExtResource("1_fknkr")
+id = 90
+title = "Coordinate Response Window"
+node_type = "Wait"
+parent_id = 88
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.15000000000000002
+}
+
+[sub_resource type="Resource" id="Resource_4jgp5"]
+script = ExtResource("1_fknkr")
+id = 91
+title = "Chase Target Coordinate Choice"
+node_type = "Random Selector"
+parent_id = 88
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4132
+}
+
+[sub_resource type="Resource" id="Resource_a2dbh"]
+script = ExtResource("1_fknkr")
+id = 92
+title = "Coordinate Conservative"
+parent_id = 91
+description = "Low-risk response."
+parameters = {
+"action_name": "chase_target_conservative_2"
+}
+
+[sub_resource type="Resource" id="Resource_euuwl"]
+script = ExtResource("1_fknkr")
+id = 93
+title = "Coordinate Assertive"
+parent_id = 91
+description = "High-priority response."
+parameters = {
+"action_name": "chase_target_assertive_2"
+}
+
+[sub_resource type="Resource" id="Resource_eql5f"]
+script = ExtResource("1_fknkr")
+id = 94
+title = "Chase Target Retry"
+node_type = "Repeat"
+parent_id = 73
+description = "Retry the domain action twice before yielding to the next priority."
+parameters = {
+"repeat_count": 2
+}
+
+[sub_resource type="Resource" id="Resource_f6gv6"]
+script = ExtResource("1_fknkr")
+id = 95
+title = "Execute Chase Target"
+parent_id = 94
+description = "Primary actor method for this decision domain."
+parameters = {
+"action_name": "chase_target"
+}
+
+[sub_resource type="Resource" id="Resource_8n526"]
+script = ExtResource("1_fknkr")
+id = 96
+title = "Search Last Position"
+node_type = "Sequence"
+parent_id = 3
+description = "A complete decision domain with sensing, concurrent preparation, choice, and recovery."
+
+[sub_resource type="Resource" id="Resource_6bccu"]
+script = ExtResource("1_fknkr")
+id = 97
+title = "Check Search Last Position"
+node_type = "Condition"
+parent_id = 96
+description = "Actor condition gating this priority branch."
+parameters = {
+"condition_name": "has_last_known_position"
+}
+
+[sub_resource type="Resource" id="Resource_7eda0"]
+script = ExtResource("1_fknkr")
+id = 98
+title = "Search Last Position Preparation"
+node_type = "Parallel"
+parent_id = 96
+description = "Run sensing, movement preparation, and communication concurrently."
+parameters = {
+"failure_policy": "one",
+"success_policy": "all"
+}
+
+[sub_resource type="Resource" id="Resource_whnkj"]
+script = ExtResource("1_fknkr")
+id = 99
+title = "Search Last Position Sense Lane"
+node_type = "Sequence"
+parent_id = 98
+description = "Ordered work for the sense lane."
+
+[sub_resource type="Resource" id="Resource_mxloo"]
+script = ExtResource("1_fknkr")
+id = 100
+title = "Sense Search Last Position"
+parent_id = 99
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "plan_search_sense_4"
+}
+
+[sub_resource type="Resource" id="Resource_5n86m"]
+script = ExtResource("1_fknkr")
+id = 101
+title = "Sense Response Window"
+node_type = "Wait"
+parent_id = 99
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.05
+}
+
+[sub_resource type="Resource" id="Resource_wtdvj"]
+script = ExtResource("1_fknkr")
+id = 102
+title = "Search Last Position Sense Choice"
+node_type = "Random Selector"
+parent_id = 99
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4140
+}
+
+[sub_resource type="Resource" id="Resource_n38cm"]
+script = ExtResource("1_fknkr")
+id = 103
+title = "Sense Conservative"
+parent_id = 102
+description = "Low-risk response."
+parameters = {
+"action_name": "search_area_conservative_0"
+}
+
+[sub_resource type="Resource" id="Resource_tkk4f"]
+script = ExtResource("1_fknkr")
+id = 104
+title = "Sense Assertive"
+parent_id = 102
+description = "High-priority response."
+parameters = {
+"action_name": "search_area_assertive_0"
+}
+
+[sub_resource type="Resource" id="Resource_wly1c"]
+script = ExtResource("1_fknkr")
+id = 105
+title = "Search Last Position Position Lane"
+node_type = "Sequence"
+parent_id = 98
+description = "Ordered work for the position lane."
+
+[sub_resource type="Resource" id="Resource_eus4t"]
+script = ExtResource("1_fknkr")
+id = 106
+title = "Position Search Last Position"
+parent_id = 105
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "plan_search_position_4"
+}
+
+[sub_resource type="Resource" id="Resource_iuhai"]
+script = ExtResource("1_fknkr")
+id = 107
+title = "Position Response Window"
+node_type = "Wait"
+parent_id = 105
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.1
+}
+
+[sub_resource type="Resource" id="Resource_73i63"]
+script = ExtResource("1_fknkr")
+id = 108
+title = "Search Last Position Position Choice"
+node_type = "Random Selector"
+parent_id = 105
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4141
+}
+
+[sub_resource type="Resource" id="Resource_n1ge6"]
+script = ExtResource("1_fknkr")
+id = 109
+title = "Position Conservative"
+parent_id = 108
+description = "Low-risk response."
+parameters = {
+"action_name": "search_area_conservative_1"
+}
+
+[sub_resource type="Resource" id="Resource_33p2e"]
+script = ExtResource("1_fknkr")
+id = 110
+title = "Position Assertive"
+parent_id = 108
+description = "High-priority response."
+parameters = {
+"action_name": "search_area_assertive_1"
+}
+
+[sub_resource type="Resource" id="Resource_j4pgl"]
+script = ExtResource("1_fknkr")
+id = 111
+title = "Search Last Position Coordinate Lane"
+node_type = "Sequence"
+parent_id = 98
+description = "Ordered work for the coordinate lane."
+
+[sub_resource type="Resource" id="Resource_ym7vl"]
+script = ExtResource("1_fknkr")
+id = 112
+title = "Coordinate Search Last Position"
+parent_id = 111
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "plan_search_coordinate_4"
+}
+
+[sub_resource type="Resource" id="Resource_7hcxi"]
+script = ExtResource("1_fknkr")
+id = 113
+title = "Coordinate Response Window"
+node_type = "Wait"
+parent_id = 111
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.15000000000000002
+}
+
+[sub_resource type="Resource" id="Resource_suqbo"]
+script = ExtResource("1_fknkr")
+id = 114
+title = "Search Last Position Coordinate Choice"
+node_type = "Random Selector"
+parent_id = 111
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4142
+}
+
+[sub_resource type="Resource" id="Resource_2wafk"]
+script = ExtResource("1_fknkr")
+id = 115
+title = "Coordinate Conservative"
+parent_id = 114
+description = "Low-risk response."
+parameters = {
+"action_name": "search_area_conservative_2"
+}
+
+[sub_resource type="Resource" id="Resource_manyi"]
+script = ExtResource("1_fknkr")
+id = 116
+title = "Coordinate Assertive"
+parent_id = 114
+description = "High-priority response."
+parameters = {
+"action_name": "search_area_assertive_2"
+}
+
+[sub_resource type="Resource" id="Resource_2p3tf"]
+script = ExtResource("1_fknkr")
+id = 117
+title = "Search Last Position Retry"
+node_type = "Repeat"
+parent_id = 96
+description = "Retry the domain action twice before yielding to the next priority."
+parameters = {
+"repeat_count": 2
+}
+
+[sub_resource type="Resource" id="Resource_drc54"]
+script = ExtResource("1_fknkr")
+id = 118
+title = "Execute Search Last Position"
+parent_id = 117
+description = "Primary actor method for this decision domain."
+parameters = {
+"action_name": "search_area"
+}
+
+[sub_resource type="Resource" id="Resource_tmput"]
+script = ExtResource("1_fknkr")
+id = 119
+title = "Investigate Sound"
+node_type = "Sequence"
+parent_id = 3
+description = "A complete decision domain with sensing, concurrent preparation, choice, and recovery."
+
+[sub_resource type="Resource" id="Resource_jchxo"]
+script = ExtResource("1_fknkr")
+id = 120
+title = "Check Investigate Sound"
+node_type = "Condition"
+parent_id = 119
+description = "Actor condition gating this priority branch."
+parameters = {
+"condition_name": "heard_suspicious_sound"
+}
+
+[sub_resource type="Resource" id="Resource_e5vub"]
+script = ExtResource("1_fknkr")
+id = 121
+title = "Investigate Sound Preparation"
+node_type = "Parallel"
+parent_id = 119
+description = "Run sensing, movement preparation, and communication concurrently."
+parameters = {
+"failure_policy": "one",
+"success_policy": "all"
+}
+
+[sub_resource type="Resource" id="Resource_400bo"]
+script = ExtResource("1_fknkr")
+id = 122
+title = "Investigate Sound Sense Lane"
+node_type = "Sequence"
+parent_id = 121
+description = "Ordered work for the sense lane."
+
+[sub_resource type="Resource" id="Resource_n5cye"]
+script = ExtResource("1_fknkr")
+id = 123
+title = "Sense Investigate Sound"
+parent_id = 122
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "locate_sound_sense_5"
+}
+
+[sub_resource type="Resource" id="Resource_5msbh"]
+script = ExtResource("1_fknkr")
+id = 124
+title = "Sense Response Window"
+node_type = "Wait"
+parent_id = 122
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.05
+}
+
+[sub_resource type="Resource" id="Resource_f41ur"]
+script = ExtResource("1_fknkr")
+id = 125
+title = "Investigate Sound Sense Choice"
+node_type = "Random Selector"
+parent_id = 122
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4150
+}
+
+[sub_resource type="Resource" id="Resource_idvxw"]
+script = ExtResource("1_fknkr")
+id = 126
+title = "Sense Conservative"
+parent_id = 125
+description = "Low-risk response."
+parameters = {
+"action_name": "investigate_sound_conservative_0"
+}
+
+[sub_resource type="Resource" id="Resource_qlvkj"]
+script = ExtResource("1_fknkr")
+id = 127
+title = "Sense Assertive"
+parent_id = 125
+description = "High-priority response."
+parameters = {
+"action_name": "investigate_sound_assertive_0"
+}
+
+[sub_resource type="Resource" id="Resource_rmln1"]
+script = ExtResource("1_fknkr")
+id = 128
+title = "Investigate Sound Position Lane"
+node_type = "Sequence"
+parent_id = 121
+description = "Ordered work for the position lane."
+
+[sub_resource type="Resource" id="Resource_clkca"]
+script = ExtResource("1_fknkr")
+id = 129
+title = "Position Investigate Sound"
+parent_id = 128
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "locate_sound_position_5"
+}
+
+[sub_resource type="Resource" id="Resource_xq2u1"]
+script = ExtResource("1_fknkr")
+id = 130
+title = "Position Response Window"
+node_type = "Wait"
+parent_id = 128
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.1
+}
+
+[sub_resource type="Resource" id="Resource_7xthm"]
+script = ExtResource("1_fknkr")
+id = 131
+title = "Investigate Sound Position Choice"
+node_type = "Random Selector"
+parent_id = 128
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4151
+}
+
+[sub_resource type="Resource" id="Resource_ytx6x"]
+script = ExtResource("1_fknkr")
+id = 132
+title = "Position Conservative"
+parent_id = 131
+description = "Low-risk response."
+parameters = {
+"action_name": "investigate_sound_conservative_1"
+}
+
+[sub_resource type="Resource" id="Resource_b351g"]
+script = ExtResource("1_fknkr")
+id = 133
+title = "Position Assertive"
+parent_id = 131
+description = "High-priority response."
+parameters = {
+"action_name": "investigate_sound_assertive_1"
+}
+
+[sub_resource type="Resource" id="Resource_vfo85"]
+script = ExtResource("1_fknkr")
+id = 134
+title = "Investigate Sound Coordinate Lane"
+node_type = "Sequence"
+parent_id = 121
+description = "Ordered work for the coordinate lane."
+
+[sub_resource type="Resource" id="Resource_s3m1g"]
+script = ExtResource("1_fknkr")
+id = 135
+title = "Coordinate Investigate Sound"
+parent_id = 134
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "locate_sound_coordinate_5"
+}
+
+[sub_resource type="Resource" id="Resource_wbi7f"]
+script = ExtResource("1_fknkr")
+id = 136
+title = "Coordinate Response Window"
+node_type = "Wait"
+parent_id = 134
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.15000000000000002
+}
+
+[sub_resource type="Resource" id="Resource_kt2yc"]
+script = ExtResource("1_fknkr")
+id = 137
+title = "Investigate Sound Coordinate Choice"
+node_type = "Random Selector"
+parent_id = 134
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4152
+}
+
+[sub_resource type="Resource" id="Resource_sui4y"]
+script = ExtResource("1_fknkr")
+id = 138
+title = "Coordinate Conservative"
+parent_id = 137
+description = "Low-risk response."
+parameters = {
+"action_name": "investigate_sound_conservative_2"
+}
+
+[sub_resource type="Resource" id="Resource_ibdxv"]
+script = ExtResource("1_fknkr")
+id = 139
+title = "Coordinate Assertive"
+parent_id = 137
+description = "High-priority response."
+parameters = {
+"action_name": "investigate_sound_assertive_2"
+}
+
+[sub_resource type="Resource" id="Resource_mkf2g"]
+script = ExtResource("1_fknkr")
+id = 140
+title = "Investigate Sound Retry"
+node_type = "Repeat"
+parent_id = 119
+description = "Retry the domain action twice before yielding to the next priority."
+parameters = {
+"repeat_count": 2
+}
+
+[sub_resource type="Resource" id="Resource_s3vhx"]
+script = ExtResource("1_fknkr")
+id = 141
+title = "Execute Investigate Sound"
+parent_id = 140
+description = "Primary actor method for this decision domain."
+parameters = {
+"action_name": "investigate_sound"
+}
+
+[sub_resource type="Resource" id="Resource_owf3f"]
+script = ExtResource("1_fknkr")
+id = 142
+title = "Squad Coordination"
+node_type = "Sequence"
+parent_id = 3
+description = "A complete decision domain with sensing, concurrent preparation, choice, and recovery."
+
+[sub_resource type="Resource" id="Resource_ejryx"]
+script = ExtResource("1_fknkr")
+id = 143
+title = "Check Squad Coordination"
+node_type = "Condition"
+parent_id = 142
+description = "Actor condition gating this priority branch."
+parameters = {
+"condition_name": "has_squad_orders"
+}
+
+[sub_resource type="Resource" id="Resource_mpb6v"]
+script = ExtResource("1_fknkr")
+id = 144
+title = "Squad Coordination Preparation"
+node_type = "Parallel"
+parent_id = 142
+description = "Run sensing, movement preparation, and communication concurrently."
+parameters = {
+"failure_policy": "one",
+"success_policy": "all"
+}
+
+[sub_resource type="Resource" id="Resource_50d2b"]
+script = ExtResource("1_fknkr")
+id = 145
+title = "Squad Coordination Sense Lane"
+node_type = "Sequence"
+parent_id = 144
+description = "Ordered work for the sense lane."
+
+[sub_resource type="Resource" id="Resource_i42pd"]
+script = ExtResource("1_fknkr")
+id = 146
+title = "Sense Squad Coordination"
+parent_id = 145
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "share_contact_sense_6"
+}
+
+[sub_resource type="Resource" id="Resource_5n0c4"]
+script = ExtResource("1_fknkr")
+id = 147
+title = "Sense Response Window"
+node_type = "Wait"
+parent_id = 145
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.05
+}
+
+[sub_resource type="Resource" id="Resource_pkvfr"]
+script = ExtResource("1_fknkr")
+id = 148
+title = "Squad Coordination Sense Choice"
+node_type = "Random Selector"
+parent_id = 145
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4160
+}
+
+[sub_resource type="Resource" id="Resource_ggl3g"]
+script = ExtResource("1_fknkr")
+id = 149
+title = "Sense Conservative"
+parent_id = 148
+description = "Low-risk response."
+parameters = {
+"action_name": "follow_orders_conservative_0"
+}
+
+[sub_resource type="Resource" id="Resource_67bor"]
+script = ExtResource("1_fknkr")
+id = 150
+title = "Sense Assertive"
+parent_id = 148
+description = "High-priority response."
+parameters = {
+"action_name": "follow_orders_assertive_0"
+}
+
+[sub_resource type="Resource" id="Resource_lcfrv"]
+script = ExtResource("1_fknkr")
+id = 151
+title = "Squad Coordination Position Lane"
+node_type = "Sequence"
+parent_id = 144
+description = "Ordered work for the position lane."
+
+[sub_resource type="Resource" id="Resource_tbgpl"]
+script = ExtResource("1_fknkr")
+id = 152
+title = "Position Squad Coordination"
+parent_id = 151
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "share_contact_position_6"
+}
+
+[sub_resource type="Resource" id="Resource_ttjdj"]
+script = ExtResource("1_fknkr")
+id = 153
+title = "Position Response Window"
+node_type = "Wait"
+parent_id = 151
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.1
+}
+
+[sub_resource type="Resource" id="Resource_kbejm"]
+script = ExtResource("1_fknkr")
+id = 154
+title = "Squad Coordination Position Choice"
+node_type = "Random Selector"
+parent_id = 151
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4161
+}
+
+[sub_resource type="Resource" id="Resource_n4vqh"]
+script = ExtResource("1_fknkr")
+id = 155
+title = "Position Conservative"
+parent_id = 154
+description = "Low-risk response."
+parameters = {
+"action_name": "follow_orders_conservative_1"
+}
+
+[sub_resource type="Resource" id="Resource_ft1ub"]
+script = ExtResource("1_fknkr")
+id = 156
+title = "Position Assertive"
+parent_id = 154
+description = "High-priority response."
+parameters = {
+"action_name": "follow_orders_assertive_1"
+}
+
+[sub_resource type="Resource" id="Resource_cwm14"]
+script = ExtResource("1_fknkr")
+id = 157
+title = "Squad Coordination Coordinate Lane"
+node_type = "Sequence"
+parent_id = 144
+description = "Ordered work for the coordinate lane."
+
+[sub_resource type="Resource" id="Resource_k65hc"]
+script = ExtResource("1_fknkr")
+id = 158
+title = "Coordinate Squad Coordination"
+parent_id = 157
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "share_contact_coordinate_6"
+}
+
+[sub_resource type="Resource" id="Resource_gssec"]
+script = ExtResource("1_fknkr")
+id = 159
+title = "Coordinate Response Window"
+node_type = "Wait"
+parent_id = 157
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.15000000000000002
+}
+
+[sub_resource type="Resource" id="Resource_kn3gc"]
+script = ExtResource("1_fknkr")
+id = 160
+title = "Squad Coordination Coordinate Choice"
+node_type = "Random Selector"
+parent_id = 157
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4162
+}
+
+[sub_resource type="Resource" id="Resource_31db5"]
+script = ExtResource("1_fknkr")
+id = 161
+title = "Coordinate Conservative"
+parent_id = 160
+description = "Low-risk response."
+parameters = {
+"action_name": "follow_orders_conservative_2"
+}
+
+[sub_resource type="Resource" id="Resource_vlnhu"]
+script = ExtResource("1_fknkr")
+id = 162
+title = "Coordinate Assertive"
+parent_id = 160
+description = "High-priority response."
+parameters = {
+"action_name": "follow_orders_assertive_2"
+}
+
+[sub_resource type="Resource" id="Resource_8cq88"]
+script = ExtResource("1_fknkr")
+id = 163
+title = "Squad Coordination Retry"
+node_type = "Repeat"
+parent_id = 142
+description = "Retry the domain action twice before yielding to the next priority."
+parameters = {
+"repeat_count": 2
+}
+
+[sub_resource type="Resource" id="Resource_0mjp8"]
+script = ExtResource("1_fknkr")
+id = 164
+title = "Execute Squad Coordination"
+parent_id = 163
+description = "Primary actor method for this decision domain."
+parameters = {
+"action_name": "follow_orders"
+}
+
+[sub_resource type="Resource" id="Resource_koqoh"]
+script = ExtResource("1_fknkr")
+id = 165
+title = "Resource Collection"
+node_type = "Sequence"
+parent_id = 3
+description = "A complete decision domain with sensing, concurrent preparation, choice, and recovery."
+
+[sub_resource type="Resource" id="Resource_mboq6"]
+script = ExtResource("1_fknkr")
+id = 166
+title = "Check Resource Collection"
+node_type = "Condition"
+parent_id = 165
+description = "Actor condition gating this priority branch."
+parameters = {
+"condition_name": "needs_supplies"
+}
+
+[sub_resource type="Resource" id="Resource_6s07y"]
+script = ExtResource("1_fknkr")
+id = 167
+title = "Resource Collection Preparation"
+node_type = "Parallel"
+parent_id = 165
+description = "Run sensing, movement preparation, and communication concurrently."
+parameters = {
+"failure_policy": "one",
+"success_policy": "all"
+}
+
+[sub_resource type="Resource" id="Resource_6thoo"]
+script = ExtResource("1_fknkr")
+id = 168
+title = "Resource Collection Sense Lane"
+node_type = "Sequence"
+parent_id = 167
+description = "Ordered work for the sense lane."
+
+[sub_resource type="Resource" id="Resource_wirad"]
+script = ExtResource("1_fknkr")
+id = 169
+title = "Sense Resource Collection"
+parent_id = 168
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "select_pickup_sense_7"
+}
+
+[sub_resource type="Resource" id="Resource_83a26"]
+script = ExtResource("1_fknkr")
+id = 170
+title = "Sense Response Window"
+node_type = "Wait"
+parent_id = 168
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.05
+}
+
+[sub_resource type="Resource" id="Resource_rfwrv"]
+script = ExtResource("1_fknkr")
+id = 171
+title = "Resource Collection Sense Choice"
+node_type = "Random Selector"
+parent_id = 168
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4170
+}
+
+[sub_resource type="Resource" id="Resource_rhcix"]
+script = ExtResource("1_fknkr")
+id = 172
+title = "Sense Conservative"
+parent_id = 171
+description = "Low-risk response."
+parameters = {
+"action_name": "collect_supply_conservative_0"
+}
+
+[sub_resource type="Resource" id="Resource_jmfvu"]
+script = ExtResource("1_fknkr")
+id = 173
+title = "Sense Assertive"
+parent_id = 171
+description = "High-priority response."
+parameters = {
+"action_name": "collect_supply_assertive_0"
+}
+
+[sub_resource type="Resource" id="Resource_jbx36"]
+script = ExtResource("1_fknkr")
+id = 174
+title = "Resource Collection Position Lane"
+node_type = "Sequence"
+parent_id = 167
+description = "Ordered work for the position lane."
+
+[sub_resource type="Resource" id="Resource_oo40f"]
+script = ExtResource("1_fknkr")
+id = 175
+title = "Position Resource Collection"
+parent_id = 174
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "select_pickup_position_7"
+}
+
+[sub_resource type="Resource" id="Resource_wgdje"]
+script = ExtResource("1_fknkr")
+id = 176
+title = "Position Response Window"
+node_type = "Wait"
+parent_id = 174
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.1
+}
+
+[sub_resource type="Resource" id="Resource_06gd0"]
+script = ExtResource("1_fknkr")
+id = 177
+title = "Resource Collection Position Choice"
+node_type = "Random Selector"
+parent_id = 174
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4171
+}
+
+[sub_resource type="Resource" id="Resource_cffoh"]
+script = ExtResource("1_fknkr")
+id = 178
+title = "Position Conservative"
+parent_id = 177
+description = "Low-risk response."
+parameters = {
+"action_name": "collect_supply_conservative_1"
+}
+
+[sub_resource type="Resource" id="Resource_2fktx"]
+script = ExtResource("1_fknkr")
+id = 179
+title = "Position Assertive"
+parent_id = 177
+description = "High-priority response."
+parameters = {
+"action_name": "collect_supply_assertive_1"
+}
+
+[sub_resource type="Resource" id="Resource_8ysf7"]
+script = ExtResource("1_fknkr")
+id = 180
+title = "Resource Collection Coordinate Lane"
+node_type = "Sequence"
+parent_id = 167
+description = "Ordered work for the coordinate lane."
+
+[sub_resource type="Resource" id="Resource_mah4i"]
+script = ExtResource("1_fknkr")
+id = 181
+title = "Coordinate Resource Collection"
+parent_id = 180
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "select_pickup_coordinate_7"
+}
+
+[sub_resource type="Resource" id="Resource_l0qd6"]
+script = ExtResource("1_fknkr")
+id = 182
+title = "Coordinate Response Window"
+node_type = "Wait"
+parent_id = 180
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.15000000000000002
+}
+
+[sub_resource type="Resource" id="Resource_o8tjx"]
+script = ExtResource("1_fknkr")
+id = 183
+title = "Resource Collection Coordinate Choice"
+node_type = "Random Selector"
+parent_id = 180
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4172
+}
+
+[sub_resource type="Resource" id="Resource_v6jif"]
+script = ExtResource("1_fknkr")
+id = 184
+title = "Coordinate Conservative"
+parent_id = 183
+description = "Low-risk response."
+parameters = {
+"action_name": "collect_supply_conservative_2"
+}
+
+[sub_resource type="Resource" id="Resource_kiuw6"]
+script = ExtResource("1_fknkr")
+id = 185
+title = "Coordinate Assertive"
+parent_id = 183
+description = "High-priority response."
+parameters = {
+"action_name": "collect_supply_assertive_2"
+}
+
+[sub_resource type="Resource" id="Resource_l0x71"]
+script = ExtResource("1_fknkr")
+id = 186
+title = "Resource Collection Retry"
+node_type = "Repeat"
+parent_id = 165
+description = "Retry the domain action twice before yielding to the next priority."
+parameters = {
+"repeat_count": 2
+}
+
+[sub_resource type="Resource" id="Resource_bajec"]
+script = ExtResource("1_fknkr")
+id = 187
+title = "Execute Resource Collection"
+parent_id = 186
+description = "Primary actor method for this decision domain."
+parameters = {
+"action_name": "collect_supply"
+}
+
+[sub_resource type="Resource" id="Resource_vwg4n"]
+script = ExtResource("1_fknkr")
+id = 188
+title = "Patrol and Idle"
+node_type = "Sequence"
+parent_id = 3
+description = "A complete decision domain with sensing, concurrent preparation, choice, and recovery."
+
+[sub_resource type="Resource" id="Resource_it4bm"]
+script = ExtResource("1_fknkr")
+id = 189
+title = "Check Patrol and Idle"
+node_type = "Condition"
+parent_id = 188
+description = "Actor condition gating this priority branch."
+parameters = {
+"condition_name": "patrol_enabled"
+}
+
+[sub_resource type="Resource" id="Resource_quyor"]
+script = ExtResource("1_fknkr")
+id = 190
+title = "Patrol and Idle Preparation"
+node_type = "Parallel"
+parent_id = 188
+description = "Run sensing, movement preparation, and communication concurrently."
+parameters = {
+"failure_policy": "one",
+"success_policy": "all"
+}
+
+[sub_resource type="Resource" id="Resource_bm1xe"]
+script = ExtResource("1_fknkr")
+id = 191
+title = "Patrol and Idle Sense Lane"
+node_type = "Sequence"
+parent_id = 190
+description = "Ordered work for the sense lane."
+
+[sub_resource type="Resource" id="Resource_jgdrp"]
+script = ExtResource("1_fknkr")
+id = 192
+title = "Sense Patrol and Idle"
+parent_id = 191
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "choose_waypoint_sense_8"
+}
+
+[sub_resource type="Resource" id="Resource_dv2h4"]
+script = ExtResource("1_fknkr")
+id = 193
+title = "Sense Response Window"
+node_type = "Wait"
+parent_id = 191
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.05
+}
+
+[sub_resource type="Resource" id="Resource_3g1ts"]
+script = ExtResource("1_fknkr")
+id = 194
+title = "Patrol and Idle Sense Choice"
+node_type = "Random Selector"
+parent_id = 191
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4180
+}
+
+[sub_resource type="Resource" id="Resource_0aha5"]
+script = ExtResource("1_fknkr")
+id = 195
+title = "Sense Conservative"
+parent_id = 194
+description = "Low-risk response."
+parameters = {
+"action_name": "patrol_route_conservative_0"
+}
+
+[sub_resource type="Resource" id="Resource_kf35h"]
+script = ExtResource("1_fknkr")
+id = 196
+title = "Sense Assertive"
+parent_id = 194
+description = "High-priority response."
+parameters = {
+"action_name": "patrol_route_assertive_0"
+}
+
+[sub_resource type="Resource" id="Resource_cipv4"]
+script = ExtResource("1_fknkr")
+id = 197
+title = "Patrol and Idle Position Lane"
+node_type = "Sequence"
+parent_id = 190
+description = "Ordered work for the position lane."
+
+[sub_resource type="Resource" id="Resource_ndmkm"]
+script = ExtResource("1_fknkr")
+id = 198
+title = "Position Patrol and Idle"
+parent_id = 197
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "choose_waypoint_position_8"
+}
+
+[sub_resource type="Resource" id="Resource_nh7nu"]
+script = ExtResource("1_fknkr")
+id = 199
+title = "Position Response Window"
+node_type = "Wait"
+parent_id = 197
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.1
+}
+
+[sub_resource type="Resource" id="Resource_c82hs"]
+script = ExtResource("1_fknkr")
+id = 200
+title = "Patrol and Idle Position Choice"
+node_type = "Random Selector"
+parent_id = 197
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4181
+}
+
+[sub_resource type="Resource" id="Resource_af6il"]
+script = ExtResource("1_fknkr")
+id = 201
+title = "Position Conservative"
+parent_id = 200
+description = "Low-risk response."
+parameters = {
+"action_name": "patrol_route_conservative_1"
+}
+
+[sub_resource type="Resource" id="Resource_16rkf"]
+script = ExtResource("1_fknkr")
+id = 202
+title = "Position Assertive"
+parent_id = 200
+description = "High-priority response."
+parameters = {
+"action_name": "patrol_route_assertive_1"
+}
+
+[sub_resource type="Resource" id="Resource_xonni"]
+script = ExtResource("1_fknkr")
+id = 203
+title = "Patrol and Idle Coordinate Lane"
+node_type = "Sequence"
+parent_id = 190
+description = "Ordered work for the coordinate lane."
+
+[sub_resource type="Resource" id="Resource_f4w7p"]
+script = ExtResource("1_fknkr")
+id = 204
+title = "Coordinate Patrol and Idle"
+parent_id = 203
+description = "Prepare this decision lane."
+parameters = {
+"action_name": "choose_waypoint_coordinate_8"
+}
+
+[sub_resource type="Resource" id="Resource_0a6ia"]
+script = ExtResource("1_fknkr")
+id = 205
+title = "Coordinate Response Window"
+node_type = "Wait"
+parent_id = 203
+description = "Small asynchronous window that exposes RUNNING state."
+parameters = {
+"duration": 0.15000000000000002
+}
+
+[sub_resource type="Resource" id="Resource_ipfkp"]
+script = ExtResource("1_fknkr")
+id = 206
+title = "Patrol and Idle Coordinate Choice"
+node_type = "Random Selector"
+parent_id = 203
+description = "Seeded alternative keeps the fixture deterministic while exercising random choice."
+parameters = {
+"seed": 4182
+}
+
+[sub_resource type="Resource" id="Resource_r48st"]
+script = ExtResource("1_fknkr")
+id = 207
+title = "Coordinate Conservative"
+parent_id = 206
+description = "Low-risk response."
+parameters = {
+"action_name": "patrol_route_conservative_2"
+}
+
+[sub_resource type="Resource" id="Resource_il167"]
+script = ExtResource("1_fknkr")
+id = 208
+title = "Coordinate Assertive"
+parent_id = 206
+description = "High-priority response."
+parameters = {
+"action_name": "patrol_route_assertive_2"
+}
+
+[sub_resource type="Resource" id="Resource_sqrde"]
+script = ExtResource("1_fknkr")
+id = 209
+title = "Patrol and Idle Retry"
+node_type = "Repeat"
+parent_id = 188
+description = "Retry the domain action twice before yielding to the next priority."
+parameters = {
+"repeat_count": 2
+}
+
+[sub_resource type="Resource" id="Resource_fqnip"]
+script = ExtResource("1_fknkr")
+id = 210
+title = "Execute Patrol and Idle"
+parent_id = 209
+description = "Primary actor method for this decision domain."
+parameters = {
+"action_name": "patrol_route"
+}
+
+[sub_resource type="Resource" id="Resource_tlueh"]
+script = ExtResource("1_fknkr")
+id = 211
+title = "Context Gate 01"
+node_type = "Decorator"
+decorator_parent_id = 5
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"blackboard_key": "context_ready_01",
+"mode": "blackboard",
+"operator": "equals",
+"value": true
+}
+
+[sub_resource type="Resource" id="Resource_mjd5k"]
+script = ExtResource("1_fknkr")
+id = 212
+title = "Cooldown 02"
+node_type = "Decorator"
+decorator_parent_id = 8
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"duration": 0.6,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_cu11b"]
+script = ExtResource("1_fknkr")
+id = 213
+title = "Time Limit 03"
+node_type = "Decorator"
+decorator_parent_id = 14
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"duration": 1.2,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_erkoq"]
+script = ExtResource("1_fknkr")
+id = 214
+title = "Context Gate 04"
+node_type = "Decorator"
+decorator_parent_id = 20
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"blackboard_key": "context_ready_04",
+"mode": "blackboard",
+"operator": "equals",
+"value": true
+}
+
+[sub_resource type="Resource" id="Resource_ib7us"]
+script = ExtResource("1_fknkr")
+id = 215
+title = "Cooldown 05"
+node_type = "Decorator"
+decorator_parent_id = 26
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"duration": 0.9,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_p75ir"]
+script = ExtResource("1_fknkr")
+id = 216
+title = "Time Limit 06"
+node_type = "Decorator"
+decorator_parent_id = 28
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"duration": 1.5,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_kxjyp"]
+script = ExtResource("1_fknkr")
+id = 217
+title = "Context Gate 07"
+node_type = "Decorator"
+decorator_parent_id = 31
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"blackboard_key": "context_ready_07",
+"mode": "blackboard",
+"operator": "equals",
+"value": true
+}
+
+[sub_resource type="Resource" id="Resource_l1gky"]
+script = ExtResource("1_fknkr")
+id = 218
+title = "Cooldown 08"
+node_type = "Decorator"
+decorator_parent_id = 37
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"duration": 1.2000000000000002,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_g5xeg"]
+script = ExtResource("1_fknkr")
+id = 219
+title = "Time Limit 09"
+node_type = "Decorator"
+decorator_parent_id = 43
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"duration": 1.8,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_fq5ac"]
+script = ExtResource("1_fknkr")
+id = 220
+title = "Context Gate 10"
+node_type = "Decorator"
+decorator_parent_id = 49
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"blackboard_key": "context_ready_10",
+"mode": "blackboard",
+"operator": "equals",
+"value": true
+}
+
+[sub_resource type="Resource" id="Resource_rconh"]
+script = ExtResource("1_fknkr")
+id = 221
+title = "Cooldown 11"
+node_type = "Decorator"
+decorator_parent_id = 51
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"duration": 1.5,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_0l2my"]
+script = ExtResource("1_fknkr")
+id = 222
+title = "Time Limit 12"
+node_type = "Decorator"
+decorator_parent_id = 54
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"duration": 2.1,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_7fakd"]
+script = ExtResource("1_fknkr")
+id = 223
+title = "Context Gate 13"
+node_type = "Decorator"
+decorator_parent_id = 60
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"blackboard_key": "context_ready_13",
+"mode": "blackboard",
+"operator": "equals",
+"value": true
+}
+
+[sub_resource type="Resource" id="Resource_vs8tx"]
+script = ExtResource("1_fknkr")
+id = 224
+title = "Cooldown 14"
+node_type = "Decorator"
+decorator_parent_id = 66
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"duration": 1.8,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_boen6"]
+script = ExtResource("1_fknkr")
+id = 225
+title = "Time Limit 15"
+node_type = "Decorator"
+decorator_parent_id = 72
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"duration": 2.4000000000000004,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_vwcpe"]
+script = ExtResource("1_fknkr")
+id = 226
+title = "Context Gate 16"
+node_type = "Decorator"
+decorator_parent_id = 74
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"blackboard_key": "context_ready_16",
+"mode": "blackboard",
+"operator": "equals",
+"value": true
+}
+
+[sub_resource type="Resource" id="Resource_7ovoa"]
+script = ExtResource("1_fknkr")
+id = 227
+title = "Cooldown 17"
+node_type = "Decorator"
+decorator_parent_id = 77
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"duration": 2.1,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_jy2qx"]
+script = ExtResource("1_fknkr")
+id = 228
+title = "Time Limit 18"
+node_type = "Decorator"
+decorator_parent_id = 83
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"duration": 2.7,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_fdajs"]
+script = ExtResource("1_fknkr")
+id = 229
+title = "Context Gate 19"
+node_type = "Decorator"
+decorator_parent_id = 89
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"blackboard_key": "context_ready_19",
+"mode": "blackboard",
+"operator": "equals",
+"value": true
+}
+
+[sub_resource type="Resource" id="Resource_con1o"]
+script = ExtResource("1_fknkr")
+id = 230
+title = "Cooldown 20"
+node_type = "Decorator"
+decorator_parent_id = 95
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"duration": 2.4000000000000004,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_saqrh"]
+script = ExtResource("1_fknkr")
+id = 231
+title = "Time Limit 21"
+node_type = "Decorator"
+decorator_parent_id = 97
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"duration": 3.0,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_1xpvq"]
+script = ExtResource("1_fknkr")
+id = 232
+title = "Context Gate 22"
+node_type = "Decorator"
+decorator_parent_id = 100
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"blackboard_key": "context_ready_22",
+"mode": "blackboard",
+"operator": "equals",
+"value": true
+}
+
+[sub_resource type="Resource" id="Resource_fvw6b"]
+script = ExtResource("1_fknkr")
+id = 233
+title = "Cooldown 23"
+node_type = "Decorator"
+decorator_parent_id = 106
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"duration": 2.7,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_lkoya"]
+script = ExtResource("1_fknkr")
+id = 234
+title = "Time Limit 24"
+node_type = "Decorator"
+decorator_parent_id = 112
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"duration": 3.3000000000000003,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_ybba5"]
+script = ExtResource("1_fknkr")
+id = 235
+title = "Context Gate 25"
+node_type = "Decorator"
+decorator_parent_id = 118
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"blackboard_key": "context_ready_25",
+"mode": "blackboard",
+"operator": "equals",
+"value": true
+}
+
+[sub_resource type="Resource" id="Resource_iie32"]
+script = ExtResource("1_fknkr")
+id = 236
+title = "Cooldown 26"
+node_type = "Decorator"
+decorator_parent_id = 120
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"duration": 3.0,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_euwbj"]
+script = ExtResource("1_fknkr")
+id = 237
+title = "Time Limit 27"
+node_type = "Decorator"
+decorator_parent_id = 123
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"duration": 3.6,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_1as6p"]
+script = ExtResource("1_fknkr")
+id = 238
+title = "Context Gate 28"
+node_type = "Decorator"
+decorator_parent_id = 129
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"blackboard_key": "context_ready_28",
+"mode": "blackboard",
+"operator": "equals",
+"value": true
+}
+
+[sub_resource type="Resource" id="Resource_8ehep"]
+script = ExtResource("1_fknkr")
+id = 239
+title = "Cooldown 29"
+node_type = "Decorator"
+decorator_parent_id = 135
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"duration": 3.3000000000000003,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_twj1j"]
+script = ExtResource("1_fknkr")
+id = 240
+title = "Time Limit 30"
+node_type = "Decorator"
+decorator_parent_id = 141
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"duration": 3.9000000000000004,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_2pgxj"]
+script = ExtResource("1_fknkr")
+id = 241
+title = "Context Gate 31"
+node_type = "Decorator"
+decorator_parent_id = 143
+description = "Attached constraint used by the large-tree display evaluation."
+parameters = {
+"blackboard_key": "context_ready_31",
+"mode": "blackboard",
+"operator": "equals",
+"value": true
+}
+
+[resource]
+script = ExtResource("2_ucf5r")
+tree_name = "Complex Multi-System NPC (241 Nodes)"
+root_node_id = 1
+nodes = Array[ExtResource("1_fknkr")]([SubResource("Resource_55k3c"), SubResource("Resource_aa8mv"), SubResource("Resource_myrdc"), SubResource("Resource_tlhoy"), SubResource("Resource_k5q40"), SubResource("Resource_uqn34"), SubResource("Resource_6ced6"), SubResource("Resource_x20re"), SubResource("Resource_p4n5l"), SubResource("Resource_if44m"), SubResource("Resource_lt4yw"), SubResource("Resource_bcuf6"), SubResource("Resource_dlb0v"), SubResource("Resource_d6p2s"), SubResource("Resource_w8ghc"), SubResource("Resource_o5tug"), SubResource("Resource_flpri"), SubResource("Resource_jllg7"), SubResource("Resource_to3dt"), SubResource("Resource_gnij7"), SubResource("Resource_g47w7"), SubResource("Resource_26f5s"), SubResource("Resource_d8ehq"), SubResource("Resource_b4wvq"), SubResource("Resource_5wwjp"), SubResource("Resource_k86aq"), SubResource("Resource_lj2w1"), SubResource("Resource_vkw1y"), SubResource("Resource_4k6x7"), SubResource("Resource_2j5wx"), SubResource("Resource_hmtcu"), SubResource("Resource_17nw5"), SubResource("Resource_6tpgr"), SubResource("Resource_v45kx"), SubResource("Resource_yyh31"), SubResource("Resource_y6rq1"), SubResource("Resource_dexeb"), SubResource("Resource_ews73"), SubResource("Resource_rqlss"), SubResource("Resource_xmfbp"), SubResource("Resource_xg4h5"), SubResource("Resource_3i4q2"), SubResource("Resource_7f21u"), SubResource("Resource_lmqga"), SubResource("Resource_pheok"), SubResource("Resource_o07d0"), SubResource("Resource_7vh4w"), SubResource("Resource_x6v3v"), SubResource("Resource_me7cj"), SubResource("Resource_3a72t"), SubResource("Resource_hcbpd"), SubResource("Resource_r87yc"), SubResource("Resource_d5b4u"), SubResource("Resource_xxgu5"), SubResource("Resource_k645c"), SubResource("Resource_50qy3"), SubResource("Resource_gehha"), SubResource("Resource_6g566"), SubResource("Resource_tw18p"), SubResource("Resource_wi8o0"), SubResource("Resource_4qu4a"), SubResource("Resource_ffsyp"), SubResource("Resource_2ig8i"), SubResource("Resource_w4brb"), SubResource("Resource_ccthe"), SubResource("Resource_pvbbc"), SubResource("Resource_rla0y"), SubResource("Resource_dlk8d"), SubResource("Resource_6ehkk"), SubResource("Resource_axq6a"), SubResource("Resource_ijg7k"), SubResource("Resource_kiogl"), SubResource("Resource_7r1f7"), SubResource("Resource_mvl5m"), SubResource("Resource_gfc4o"), SubResource("Resource_rttel"), SubResource("Resource_7e0rf"), SubResource("Resource_5c280"), SubResource("Resource_xbs5q"), SubResource("Resource_q38qp"), SubResource("Resource_5cm1g"), SubResource("Resource_wgtul"), SubResource("Resource_73kvf"), SubResource("Resource_jf7ki"), SubResource("Resource_bqq3h"), SubResource("Resource_jgrkn"), SubResource("Resource_8ig8p"), SubResource("Resource_tmwft"), SubResource("Resource_wm33u"), SubResource("Resource_wleoe"), SubResource("Resource_4jgp5"), SubResource("Resource_a2dbh"), SubResource("Resource_euuwl"), SubResource("Resource_eql5f"), SubResource("Resource_f6gv6"), SubResource("Resource_8n526"), SubResource("Resource_6bccu"), SubResource("Resource_7eda0"), SubResource("Resource_whnkj"), SubResource("Resource_mxloo"), SubResource("Resource_5n86m"), SubResource("Resource_wtdvj"), SubResource("Resource_n38cm"), SubResource("Resource_tkk4f"), SubResource("Resource_wly1c"), SubResource("Resource_eus4t"), SubResource("Resource_iuhai"), SubResource("Resource_73i63"), SubResource("Resource_n1ge6"), SubResource("Resource_33p2e"), SubResource("Resource_j4pgl"), SubResource("Resource_ym7vl"), SubResource("Resource_7hcxi"), SubResource("Resource_suqbo"), SubResource("Resource_2wafk"), SubResource("Resource_manyi"), SubResource("Resource_2p3tf"), SubResource("Resource_drc54"), SubResource("Resource_tmput"), SubResource("Resource_jchxo"), SubResource("Resource_e5vub"), SubResource("Resource_400bo"), SubResource("Resource_n5cye"), SubResource("Resource_5msbh"), SubResource("Resource_f41ur"), SubResource("Resource_idvxw"), SubResource("Resource_qlvkj"), SubResource("Resource_rmln1"), SubResource("Resource_clkca"), SubResource("Resource_xq2u1"), SubResource("Resource_7xthm"), SubResource("Resource_ytx6x"), SubResource("Resource_b351g"), SubResource("Resource_vfo85"), SubResource("Resource_s3m1g"), SubResource("Resource_wbi7f"), SubResource("Resource_kt2yc"), SubResource("Resource_sui4y"), SubResource("Resource_ibdxv"), SubResource("Resource_mkf2g"), SubResource("Resource_s3vhx"), SubResource("Resource_owf3f"), SubResource("Resource_ejryx"), SubResource("Resource_mpb6v"), SubResource("Resource_50d2b"), SubResource("Resource_i42pd"), SubResource("Resource_5n0c4"), SubResource("Resource_pkvfr"), SubResource("Resource_ggl3g"), SubResource("Resource_67bor"), SubResource("Resource_lcfrv"), SubResource("Resource_tbgpl"), SubResource("Resource_ttjdj"), SubResource("Resource_kbejm"), SubResource("Resource_n4vqh"), SubResource("Resource_ft1ub"), SubResource("Resource_cwm14"), SubResource("Resource_k65hc"), SubResource("Resource_gssec"), SubResource("Resource_kn3gc"), SubResource("Resource_31db5"), SubResource("Resource_vlnhu"), SubResource("Resource_8cq88"), SubResource("Resource_0mjp8"), SubResource("Resource_koqoh"), SubResource("Resource_mboq6"), SubResource("Resource_6s07y"), SubResource("Resource_6thoo"), SubResource("Resource_wirad"), SubResource("Resource_83a26"), SubResource("Resource_rfwrv"), SubResource("Resource_rhcix"), SubResource("Resource_jmfvu"), SubResource("Resource_jbx36"), SubResource("Resource_oo40f"), SubResource("Resource_wgdje"), SubResource("Resource_06gd0"), SubResource("Resource_cffoh"), SubResource("Resource_2fktx"), SubResource("Resource_8ysf7"), SubResource("Resource_mah4i"), SubResource("Resource_l0qd6"), SubResource("Resource_o8tjx"), SubResource("Resource_v6jif"), SubResource("Resource_kiuw6"), SubResource("Resource_l0x71"), SubResource("Resource_bajec"), SubResource("Resource_vwg4n"), SubResource("Resource_it4bm"), SubResource("Resource_quyor"), SubResource("Resource_bm1xe"), SubResource("Resource_jgdrp"), SubResource("Resource_dv2h4"), SubResource("Resource_3g1ts"), SubResource("Resource_0aha5"), SubResource("Resource_kf35h"), SubResource("Resource_cipv4"), SubResource("Resource_ndmkm"), SubResource("Resource_nh7nu"), SubResource("Resource_c82hs"), SubResource("Resource_af6il"), SubResource("Resource_16rkf"), SubResource("Resource_xonni"), SubResource("Resource_f4w7p"), SubResource("Resource_0a6ia"), SubResource("Resource_ipfkp"), SubResource("Resource_r48st"), SubResource("Resource_il167"), SubResource("Resource_sqrde"), SubResource("Resource_fqnip"), SubResource("Resource_tlueh"), SubResource("Resource_mjd5k"), SubResource("Resource_cu11b"), SubResource("Resource_erkoq"), SubResource("Resource_ib7us"), SubResource("Resource_p75ir"), SubResource("Resource_kxjyp"), SubResource("Resource_l1gky"), SubResource("Resource_g5xeg"), SubResource("Resource_fq5ac"), SubResource("Resource_rconh"), SubResource("Resource_0l2my"), SubResource("Resource_7fakd"), SubResource("Resource_vs8tx"), SubResource("Resource_boen6"), SubResource("Resource_vwcpe"), SubResource("Resource_7ovoa"), SubResource("Resource_jy2qx"), SubResource("Resource_fdajs"), SubResource("Resource_con1o"), SubResource("Resource_saqrh"), SubResource("Resource_1xpvq"), SubResource("Resource_fvw6b"), SubResource("Resource_lkoya"), SubResource("Resource_ybba5"), SubResource("Resource_iie32"), SubResource("Resource_euwbj"), SubResource("Resource_1as6p"), SubResource("Resource_8ehep"), SubResource("Resource_twj1j"), SubResource("Resource_2pgxj")])
