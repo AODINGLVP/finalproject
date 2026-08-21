@@ -24,21 +24,14 @@ func _run() -> void:
 	await process_frame
 	_expect(view.graph_edit != null and view.search_edit != null and view.search_toggle != null and view.branch_dimming_toggle != null and view.failure_reason_toggle != null, "editor view builds controls")
 	_test_compact_display_toolbar(view)
-	_expect(view.palette_scroll != null and view.palette_scroll.vertical_scroll_mode == ScrollContainer.SCROLL_MODE_AUTO and view.palette_scroll.horizontal_scroll_mode == ScrollContainer.SCROLL_MODE_DISABLED, "node palette uses vertical scrolling instead of clipping overflow")
-	_expect(view.palette_content != null and view.palette_content.get_child_count() == 15, "scrollable node palette contains every group label and node type")
-	var original_view_size := view.size
-	view.size = Vector2(1400.0, 560.0)
-	await process_frame
-	await process_frame
-	var palette_scrollbar := view.palette_scroll.get_v_scroll_bar()
-	_expect(palette_scrollbar.max_value > palette_scrollbar.page, "short editor panels expose a real node-palette scroll range")
-	view.palette_scroll.scroll_vertical = int(palette_scrollbar.max_value - palette_scrollbar.page)
-	await process_frame
-	var final_palette_item := view.palette_content.get_child(view.palette_content.get_child_count() - 1) as Control
-	_expect(view.palette_scroll.get_global_rect().intersects(final_palette_item.get_global_rect()), "scrolling reaches the final Root palette item")
-	view.palette_scroll.scroll_vertical = 0
-	view.size = original_view_size
-	await process_frame
+	var node_palette := view.find_child("NodePalette", true, false) as VBoxContainer
+	_expect(node_palette != null and not node_palette.visible and node_palette.custom_minimum_size == Vector2.ZERO, "node creation palette is removed from the visible editor")
+	var all_context_types_present := true
+	for creation_id in range(10):
+		if view.context_menu.get_item_index(creation_id) < 0:
+			all_context_types_present = false
+			break
+	_expect(all_context_types_present, "right-click menu contains every supported node type")
 	_expect(view.path_navigation_row is VBoxContainer and view.runtime_path_scroll != null and view.selection_path_scroll != null, "runtime and selection paths use independent overflow-safe rows")
 	_expect(view.runtime_debug_label.clip_text and view.runtime_debug_label.text_overrun_behavior == TextServer.OVERRUN_TRIM_ELLIPSIS, "long Live Debug text is clipped with an ellipsis instead of expanding the editor")
 	view.current_tree = _make_view_tree()
@@ -123,6 +116,7 @@ func _run() -> void:
 	_expect(is_equal_approx(view.graph_edit.zoom, zoom_before_fisheye_disable) and view.graph_edit.scroll_offset.is_equal_approx(scroll_before_fisheye_disable), "fisheye cleanup preserves viewport")
 
 	await _test_display_feature_switches(view)
+	_test_right_click_node_creation(view)
 	await _test_editor_mutations(view)
 	_test_typed_parameter_inspector(view)
 	_test_blackboard_schema_editor(view)
@@ -132,6 +126,35 @@ func _run() -> void:
 	print("BT_EDITOR_TEST_SUMMARY passed=%d failed=%d" % [passed, failed])
 	view.free()
 	quit(0 if failed == 0 else 1)
+
+
+func _test_right_click_node_creation(view: BTEditorView) -> void:
+	view.current_tree = BTTreeResource.new()
+	view.current_tree.tree_name = "Context Creation Test"
+	view.current_tree.root_node_id = -1
+	view.current_tree.nodes = []
+	view.selected_node_id = -1
+	view.next_node_id = 1
+	view.graph_edit.zoom = 1.0
+	view.graph_edit.scroll_offset = Vector2.ZERO
+	view._on_canvas_context_requested(Vector2(180.0, 120.0))
+	view.context_menu.hide()
+	view._on_context_menu_id_pressed(0)
+	_expect(view.current_tree.root_node_id == 1 and view.current_tree.find_node(1).position == Vector2(180.0, 120.0), "right-click creates Root at the pointer position")
+	var definitions := [
+		[1, BTNodeResource.TYPE_SEQUENCE], [2, BTNodeResource.TYPE_SELECTOR],
+		[7, BTNodeResource.TYPE_RANDOM_SELECTOR], [6, BTNodeResource.TYPE_PARALLEL],
+		[8, BTNodeResource.TYPE_REPEAT], [3, BTNodeResource.TYPE_ACTION],
+		[4, BTNodeResource.TYPE_CONDITION], [9, BTNodeResource.TYPE_WAIT],
+		[5, BTNodeResource.TYPE_DECORATOR],
+	]
+	for index in range(definitions.size()):
+		view.selected_node_id = 1
+		view.pending_context_position = Vector2(240.0 + index * 35.0, 300.0)
+		view._on_context_menu_id_pressed(int(definitions[index][0]))
+		var created := view.current_tree.find_node(index + 2)
+		_expect(created != null and created.node_type == str(definitions[index][1]) and created.position == view.pending_context_position, "right-click creates %s at the requested graph position" % definitions[index][1])
+	_expect(view.current_tree.nodes.size() == 10, "right-click workflow creates all ten node types without palette buttons")
 
 
 func _test_editor_mutations(view: BTEditorView) -> void:
@@ -973,7 +996,7 @@ func _test_compact_display_toolbar(view: BTEditorView) -> void:
 			break
 	_expect(picker_labels_hide_paths, "tree picker shows readable names without resource paths")
 	_expect(view.new_tree_dialog != null and view.new_tree_name_edit != null, "New opens a name-based workflow instead of requiring a path")
-	_expect(legacy_creation != null and not legacy_creation.visible, "duplicate node creation toolbar stays hidden in favor of palette and context menu")
+	_expect(legacy_creation != null and not legacy_creation.visible, "duplicate node creation toolbar stays hidden in favor of the canvas context menu")
 	_expect(layout_popup.item_count == 9 and layout_popup.get_item_index(view.LAYOUT_MENU_FIT_ID) >= 0, "layout actions are consolidated into one menu")
 	_expect(view.feature_menu_button.text == "Display", "display options use a compact menu label")
 	_expect(popup.item_count == 10 and view.advanced_display_menu.item_count == 14 and grid_index >= 0, "Display shows common options and moves low-frequency switches into Advanced Display")

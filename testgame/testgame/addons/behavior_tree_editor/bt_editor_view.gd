@@ -608,7 +608,9 @@ func _build_ui() -> void:
 	add_child(content)
 
 	var palette := VBoxContainer.new()
-	palette.custom_minimum_size = Vector2(150.0, 0.0)
+	palette.name = "NodePalette"
+	palette.visible = false
+	palette.custom_minimum_size = Vector2.ZERO
 	palette.size_flags_vertical = SIZE_EXPAND_FILL
 	content.add_child(palette)
 
@@ -627,12 +629,6 @@ func _build_ui() -> void:
 	palette_content.size_flags_horizontal = SIZE_EXPAND_FILL
 	palette_scroll.add_child(palette_content)
 
-	_add_palette_group(palette_content, "Composite", [BTNodeResource.TYPE_SEQUENCE, BTNodeResource.TYPE_SELECTOR, BTNodeResource.TYPE_RANDOM_SELECTOR, BTNodeResource.TYPE_PARALLEL])
-	_add_palette_group(palette_content, "Flow", [BTNodeResource.TYPE_REPEAT])
-	_add_palette_group(palette_content, "Task", [BTNodeResource.TYPE_ACTION, BTNodeResource.TYPE_CONDITION, BTNodeResource.TYPE_WAIT])
-	_add_palette_group(palette_content, "Decorator", [BTNodeResource.TYPE_DECORATOR])
-	_add_palette_group(palette_content, "Entry", [BTNodeResource.TYPE_ROOT])
-
 	graph_edit = BTGraphEdit.new()
 	graph_edit.size_flags_horizontal = SIZE_EXPAND_FILL
 	graph_edit.size_flags_vertical = SIZE_EXPAND_FILL
@@ -646,17 +642,18 @@ func _build_ui() -> void:
 	content.add_child(graph_edit)
 
 	context_menu = PopupMenu.new()
-	context_menu.add_item("Add Root", 0)
+	context_menu.add_item("Create Root", 0)
 	context_menu.add_separator()
-	context_menu.add_item("Add Sequence", 1)
-	context_menu.add_item("Add Selector", 2)
-	context_menu.add_item("Add Action", 3)
-	context_menu.add_item("Add Condition", 4)
-	context_menu.add_item("Add Decorator Node", 5)
-	context_menu.add_item("Add Parallel", 6)
-	context_menu.add_item("Add Random Selector", 7)
-	context_menu.add_item("Add Repeat", 8)
-	context_menu.add_item("Add Wait", 9)
+	context_menu.add_item("Create Sequence", 1)
+	context_menu.add_item("Create Selector", 2)
+	context_menu.add_item("Create Random Selector", 7)
+	context_menu.add_item("Create Parallel", 6)
+	context_menu.add_item("Create Repeat", 8)
+	context_menu.add_separator()
+	context_menu.add_item("Create Action", 3)
+	context_menu.add_item("Create Condition", 4)
+	context_menu.add_item("Create Wait", 9)
+	context_menu.add_item("Create Decorator", 5)
 	context_menu.add_separator()
 	context_menu.add_item("Disconnect From Parent", 20)
 	context_menu.add_item("Delete Selected", 21)
