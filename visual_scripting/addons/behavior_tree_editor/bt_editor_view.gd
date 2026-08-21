@@ -53,6 +53,13 @@ const DEBUG_MENU_DIM_ID := 1
 const DEBUG_MENU_FAILURE_ID := 2
 const DEBUG_MENU_BLACKBOARD_ID := 3
 const DEBUG_MENU_SCHEMA_ID := 4
+const LAYOUT_MENU_AUTO_ARRANGE_ID := 0
+const LAYOUT_MENU_OVERVIEW_ID := 1
+const LAYOUT_MENU_COLLAPSE_ID := 2
+const LAYOUT_MENU_EXPAND_ID := 3
+const LAYOUT_MENU_FOCUS_ID := 4
+const LAYOUT_MENU_SHOW_ALL_ID := 5
+const LAYOUT_MENU_FIT_ID := 6
 const FEATURE_DEFINITIONS := [
 	["fisheye", "Fisheye / Focus+Context", true],
 	["subtree_collapse", "Subtree Collapse / Expand", true],
@@ -134,6 +141,9 @@ var minimap_toggle: CheckBox
 var minimap_status_label: Label
 var feature_menu_button: MenuButton
 var debug_menu_button: MenuButton
+var layout_menu_button: MenuButton
+var new_tree_dialog: ConfirmationDialog
+var new_tree_name_edit: LineEdit
 var path_navigation_row: VBoxContainer
 var runtime_path_label: Label
 var runtime_path_scroll: ScrollContainer
@@ -235,12 +245,30 @@ func _gui_input(event: InputEvent) -> void:
 
 func _build_ui() -> void:
 	var toolbar := HBoxContainer.new()
+	toolbar.name = "MainToolbar"
 	toolbar.size_flags_horizontal = SIZE_EXPAND_FILL
 	add_child(toolbar)
+	var tree_label := Label.new()
+	tree_label.text = "Tree"
+	toolbar.add_child(tree_label)
+
+	tree_path_picker = OptionButton.new()
+	tree_path_picker.custom_minimum_size = Vector2(260.0, 0.0)
+	tree_path_picker.size_flags_horizontal = SIZE_EXPAND_FILL
+	tree_path_picker.tooltip_text = "Choose a behavior tree from this project."
+	tree_path_picker.item_selected.connect(_on_tree_path_selected)
+	toolbar.add_child(tree_path_picker)
+
+	var refresh_paths_button := Button.new()
+	refresh_paths_button.text = "↻"
+	refresh_paths_button.tooltip_text = "Refresh the behavior tree list."
+	refresh_paths_button.pressed.connect(_refresh_tree_path_picker)
+	toolbar.add_child(refresh_paths_button)
 
 	var new_button := Button.new()
-	new_button.text = "New Tree"
-	new_button.pressed.connect(_new_tree)
+	new_button.text = "New"
+	new_button.tooltip_text = "Create a named behavior tree."
+	new_button.pressed.connect(_show_new_tree_dialog)
 	toolbar.add_child(new_button)
 
 	undo_button = Button.new()
@@ -254,69 +282,55 @@ func _build_ui() -> void:
 	toolbar.add_child(redo_button)
 
 	var save_button := Button.new()
-	save_button.text = "Save Tree"
+	save_button.text = "Save"
 	save_button.pressed.connect(_save_tree)
 	toolbar.add_child(save_button)
 
-	var load_button := Button.new()
-	load_button.text = "Load Tree"
-	load_button.pressed.connect(_load_tree)
-	toolbar.add_child(load_button)
-
-	var arrange_button := Button.new()
-	arrange_button.text = "Auto Arrange"
-	arrange_button.pressed.connect(_auto_arrange_tree)
-	toolbar.add_child(arrange_button)
-
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = SIZE_EXPAND_FILL
-	toolbar.add_child(spacer)
-
-	var tree_name_label := Label.new()
-	tree_name_label.text = "Tree Name"
-	toolbar.add_child(tree_name_label)
-
+	# Compatibility mirrors retain the existing save/load implementation without
+	# exposing internal resource paths or duplicate tree-name fields to users.
 	tree_name_edit = LineEdit.new()
-	tree_name_edit.custom_minimum_size = Vector2(220.0, 0.0)
 	tree_name_edit.text_submitted.connect(_on_tree_name_submitted)
 	tree_name_edit.focus_exited.connect(_on_tree_name_focus_exited)
+	tree_name_edit.visible = false
 	toolbar.add_child(tree_name_edit)
 
-	var path_row := HBoxContainer.new()
-	path_row.size_flags_horizontal = SIZE_EXPAND_FILL
-	add_child(path_row)
-
-	var path_label := Label.new()
-	path_label.text = "Resource Path"
-	path_row.add_child(path_label)
-
 	file_path_edit = LineEdit.new()
-	file_path_edit.size_flags_horizontal = SIZE_EXPAND_FILL
 	file_path_edit.text = current_tree_path
-	path_row.add_child(file_path_edit)
+	file_path_edit.visible = false
+	toolbar.add_child(file_path_edit)
 
-	tree_path_picker = OptionButton.new()
-	tree_path_picker.custom_minimum_size = Vector2(280.0, 0.0)
-	tree_path_picker.tooltip_text = "Select a behavior tree found in this project."
-	tree_path_picker.item_selected.connect(_on_tree_path_selected)
-	path_row.add_child(tree_path_picker)
+	layout_menu_button = MenuButton.new()
+	layout_menu_button.text = "Layout"
+	layout_menu_button.tooltip_text = "Arrange, focus, collapse, or fit the graph."
+	toolbar.add_child(layout_menu_button)
+	_build_layout_menu()
 
-	var refresh_paths_button := Button.new()
-	refresh_paths_button.text = "Refresh"
-	refresh_paths_button.tooltip_text = "Scan the project for behavior tree resources."
-	refresh_paths_button.pressed.connect(_refresh_tree_path_picker)
-	path_row.add_child(refresh_paths_button)
+	feature_menu_button = MenuButton.new()
+	feature_menu_button.text = "Display"
+	feature_menu_button.tooltip_text = "Graph readability and appearance options."
+	toolbar.add_child(feature_menu_button)
+	_build_feature_menu()
+
+	debug_menu_button = MenuButton.new()
+	debug_menu_button.text = "Debug"
+	debug_menu_button.tooltip_text = "Live Debug, failures, Blackboard values, and schema authoring."
+	toolbar.add_child(debug_menu_button)
+	_build_debug_menu()
+
+	new_tree_dialog = ConfirmationDialog.new()
+	new_tree_dialog.title = "New Behavior Tree"
+	new_tree_dialog.ok_button_text = "Create"
+	new_tree_dialog.confirmed.connect(_create_named_tree)
+	add_child(new_tree_dialog)
+	new_tree_name_edit = LineEdit.new()
+	new_tree_name_edit.placeholder_text = "Behavior tree name"
+	new_tree_name_edit.custom_minimum_size = Vector2(360.0, 0.0)
+	new_tree_dialog.add_child(new_tree_name_edit)
 
 	var runtime_row := HBoxContainer.new()
 	runtime_row.name = "RuntimeToolbar"
 	runtime_row.size_flags_horizontal = SIZE_EXPAND_FILL
 	add_child(runtime_row)
-
-	debug_menu_button = MenuButton.new()
-	debug_menu_button.text = "Debug"
-	debug_menu_button.tooltip_text = "Live Debug, runtime annotations, Blackboard values, and schema authoring."
-	runtime_row.add_child(debug_menu_button)
-	_build_debug_menu()
 
 	# Keep compatibility controls as hidden state mirrors for existing projects and tests.
 	live_debug_toggle = CheckBox.new()
@@ -427,12 +441,6 @@ func _build_ui() -> void:
 	view_row.size_flags_horizontal = SIZE_EXPAND_FILL
 	add_child(view_row)
 
-	feature_menu_button = MenuButton.new()
-	feature_menu_button.text = "Display"
-	feature_menu_button.tooltip_text = "Display optimizations and graph appearance. Each option can be toggled independently."
-	view_row.add_child(feature_menu_button)
-	_build_feature_menu()
-
 	# Retain these controls as compatibility state mirrors without duplicating the menu in the toolbar.
 	fisheye_toggle = CheckBox.new()
 	fisheye_toggle.text = "Fisheye"
@@ -480,41 +488,12 @@ func _build_ui() -> void:
 	minimap_status_label.visible = false
 	view_row.add_child(minimap_status_label)
 
-	var collapse_all_button := Button.new()
-	collapse_all_button.text = "Collapse"
-	collapse_all_button.tooltip_text = "Collapse every subtree."
-	collapse_all_button.pressed.connect(_set_all_subtrees_collapsed.bind(true))
-	view_row.add_child(collapse_all_button)
-
-	var expand_all_button := Button.new()
-	expand_all_button.text = "Expand"
-	expand_all_button.tooltip_text = "Expand every subtree."
-	expand_all_button.pressed.connect(_set_all_subtrees_collapsed.bind(false))
-	view_row.add_child(expand_all_button)
-
-	var focus_button := Button.new()
-	focus_button.text = "Focus"
-	focus_button.tooltip_text = "Show only the selected node, its descendants, and its ancestor path."
-	focus_button.pressed.connect(_focus_selected_subtree)
-	view_row.add_child(focus_button)
-
-	var clear_focus_button := Button.new()
-	clear_focus_button.text = "All"
-	clear_focus_button.tooltip_text = "Clear subtree focus and show the complete tree."
-	clear_focus_button.pressed.connect(_clear_subtree_focus)
-	view_row.add_child(clear_focus_button)
-
-	var fit_button := Button.new()
-	fit_button.text = "Fit"
-	fit_button.pressed.connect(_fit_visible_tree)
-	view_row.add_child(fit_button)
+	view_row.visible = false
 
 	var search_row := HBoxContainer.new()
+	search_row.name = "SearchToolbar"
 	search_row.size_flags_horizontal = SIZE_EXPAND_FILL
 	add_child(search_row)
-	var search_label := Label.new()
-	search_label.text = "Find Node"
-	search_row.add_child(search_label)
 	search_toggle = CheckBox.new()
 	search_toggle.text = "Search"
 	search_toggle.tooltip_text = "Search and highlight nodes across the complete tree."
@@ -522,9 +501,10 @@ func _build_ui() -> void:
 	search_toggle.visible = false
 	search_row.add_child(search_toggle)
 	search_edit = LineEdit.new()
-	search_edit.placeholder_text = "Title, type, description, action, condition, or decorator parameter"
+	search_edit.placeholder_text = "Find a node..."
 	search_edit.tooltip_text = "Search all nodes. Accessibility shortcuts: Ctrl+F focuses search; F3/Shift+F3 moves through results."
 	search_edit.size_flags_horizontal = SIZE_EXPAND_FILL
+	search_edit.clear_button_enabled = true
 	search_edit.text_changed.connect(_on_search_changed)
 	search_edit.text_submitted.connect(_on_search_submitted)
 	search_row.add_child(search_edit)
@@ -532,19 +512,15 @@ func _build_ui() -> void:
 	search_result_label.text = "0 results"
 	search_row.add_child(search_result_label)
 	search_previous_button = Button.new()
-	search_previous_button.text = "Previous"
+	search_previous_button.text = "‹"
 	search_previous_button.tooltip_text = "Previous result (Shift+F3 when Accessibility is enabled)."
 	search_previous_button.pressed.connect(_navigate_search_result.bind(-1))
 	search_row.add_child(search_previous_button)
 	search_next_button = Button.new()
-	search_next_button.text = "Next"
+	search_next_button.text = "›"
 	search_next_button.tooltip_text = "Next result (F3 when Accessibility is enabled)."
 	search_next_button.pressed.connect(_navigate_search_result.bind(1))
 	search_row.add_child(search_next_button)
-	var clear_search_button := Button.new()
-	clear_search_button.text = "Clear"
-	clear_search_button.pressed.connect(func(): search_edit.text = "")
-	search_row.add_child(clear_search_button)
 
 	path_navigation_row = VBoxContainer.new()
 	path_navigation_row.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -587,7 +563,9 @@ func _build_ui() -> void:
 	selection_path_scroll.add_child(selection_path_container)
 
 	var creation_row := HBoxContainer.new()
+	creation_row.name = "LegacyCreationToolbar"
 	creation_row.size_flags_horizontal = SIZE_EXPAND_FILL
+	creation_row.visible = false
 	add_child(creation_row)
 
 	var node_type_label := Label.new()
@@ -617,7 +595,9 @@ func _build_ui() -> void:
 	status_label = Label.new()
 	status_label.size_flags_horizontal = SIZE_EXPAND_FILL
 	status_label.text = "Create a root node to start building the behavior tree."
-	creation_row.add_child(status_label)
+	status_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	status_label.clip_text = true
+	add_child(status_label)
 
 	var content := HSplitContainer.new()
 	content.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -807,6 +787,38 @@ func _build_feature_menu() -> void:
 	popup.add_separator()
 	popup.add_check_item("Grid", DISPLAY_MENU_GRID_ID)
 	popup.id_pressed.connect(_on_feature_menu_pressed)
+
+
+func _build_layout_menu() -> void:
+	var popup := layout_menu_button.get_popup()
+	popup.add_item("Auto Arrange", LAYOUT_MENU_AUTO_ARRANGE_ID)
+	popup.add_item("Arrange for Overview", LAYOUT_MENU_OVERVIEW_ID)
+	popup.add_separator()
+	popup.add_item("Collapse All", LAYOUT_MENU_COLLAPSE_ID)
+	popup.add_item("Expand All", LAYOUT_MENU_EXPAND_ID)
+	popup.add_item("Focus Selected Subtree", LAYOUT_MENU_FOCUS_ID)
+	popup.add_item("Show Complete Tree", LAYOUT_MENU_SHOW_ALL_ID)
+	popup.add_separator()
+	popup.add_item("Fit to View", LAYOUT_MENU_FIT_ID)
+	popup.id_pressed.connect(_on_layout_menu_pressed)
+
+
+func _on_layout_menu_pressed(index: int) -> void:
+	match index:
+		LAYOUT_MENU_AUTO_ARRANGE_ID:
+			_auto_arrange_tree()
+		LAYOUT_MENU_OVERVIEW_ID:
+			_auto_arrange_tree(true)
+		LAYOUT_MENU_COLLAPSE_ID:
+			_set_all_subtrees_collapsed(true)
+		LAYOUT_MENU_EXPAND_ID:
+			_set_all_subtrees_collapsed(false)
+		LAYOUT_MENU_FOCUS_ID:
+			_focus_selected_subtree()
+		LAYOUT_MENU_SHOW_ALL_ID:
+			_clear_subtree_focus()
+		LAYOUT_MENU_FIT_ID:
+			_fit_visible_tree()
 
 
 func _build_debug_menu() -> void:
@@ -1093,8 +1105,15 @@ func _refresh_tree_path_picker() -> void:
 	var paths: Array[String] = []
 	_collect_behavior_tree_paths("res://", paths)
 	paths.sort()
+	var name_counts := {}
 	for path in paths:
-		var label := "%s  (%s)" % [path.get_file().get_basename(), path.get_base_dir()]
+		var resource_name := path.get_file().get_basename()
+		name_counts[resource_name] = int(name_counts.get(resource_name, 0)) + 1
+	for path in paths:
+		var resource_name := path.get_file().get_basename()
+		var label := resource_name
+		if int(name_counts.get(resource_name, 0)) > 1:
+			label = "%s — %s" % [resource_name, path.get_base_dir().get_file()]
 		var index := tree_path_picker.item_count
 		tree_path_picker.add_item(label)
 		tree_path_picker.set_item_metadata(index, path)
@@ -1143,6 +1162,32 @@ func _on_tree_path_selected(index: int) -> void:
 	_load_tree()
 
 
+func _show_new_tree_dialog() -> void:
+	new_tree_name_edit.text = ""
+	new_tree_dialog.popup_centered()
+	new_tree_name_edit.grab_focus()
+
+
+func _create_named_tree() -> void:
+	var requested_name := new_tree_name_edit.text.strip_edges()
+	if requested_name.is_empty():
+		requested_name = "New Behavior Tree"
+	_new_tree()
+	current_tree.tree_name = requested_name
+	tree_name_edit.text = requested_name
+	var safe_name := requested_name.to_snake_case()
+	if safe_name.is_empty():
+		safe_name = "behavior_tree"
+	var candidate := "res://behavior_trees/%s.tres" % safe_name
+	var suffix := 2
+	while ResourceLoader.exists(candidate):
+		candidate = "res://behavior_trees/%s_%d.tres" % [safe_name, suffix]
+		suffix += 1
+	current_tree_path = candidate
+	file_path_edit.text = candidate
+	_set_status("Created %s. Add a Root node to begin." % requested_name)
+
+
 func _new_tree() -> void:
 	if current_tree != null:
 		_push_history()
@@ -1179,7 +1224,7 @@ func _load_tree() -> void:
 	undo_stack.clear()
 	redo_stack.clear()
 	_refresh_entire_ui()
-	_set_status("Loaded behavior tree from %s" % path)
+	_set_status("Loaded %s." % current_tree.tree_name)
 
 
 func _save_tree() -> void:
@@ -1209,7 +1254,7 @@ func _save_tree() -> void:
 	current_tree_path = path
 	_refresh_tree_path_picker()
 	_select_tree_path_in_picker(current_tree_path)
-	_set_status("Saved behavior tree to %s" % path)
+	_set_status("Saved %s." % current_tree.tree_name)
 
 
 func _on_add_root_pressed() -> void:

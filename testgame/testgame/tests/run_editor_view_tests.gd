@@ -959,12 +959,27 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 func _test_compact_display_toolbar(view: BTEditorView) -> void:
 	var popup := view.feature_menu_button.get_popup()
 	var debug_popup := view.debug_menu_button.get_popup()
+	var layout_popup := view.layout_menu_button.get_popup()
 	var grid_index := popup.get_item_index(view.DISPLAY_MENU_GRID_ID)
+	var main_toolbar := view.get_node_or_null("MainToolbar") as HBoxContainer
+	var legacy_creation := view.get_node_or_null("LegacyCreationToolbar") as HBoxContainer
+	_expect(main_toolbar != null and main_toolbar.visible, "one primary toolbar contains tree and common actions")
+	_expect(not view.file_path_edit.visible and not view.tree_name_edit.visible, "internal resource path and duplicate tree-name fields stay hidden")
+	var picker_labels_hide_paths := true
+	for index in range(1, view.tree_path_picker.item_count):
+		var picker_label := view.tree_path_picker.get_item_text(index)
+		if "res://" in picker_label or "/" in picker_label or "\\" in picker_label:
+			picker_labels_hide_paths = false
+			break
+	_expect(picker_labels_hide_paths, "tree picker shows readable names without resource paths")
+	_expect(view.new_tree_dialog != null and view.new_tree_name_edit != null, "New opens a name-based workflow instead of requiring a path")
+	_expect(legacy_creation != null and not legacy_creation.visible, "duplicate node creation toolbar stays hidden in favor of palette and context menu")
+	_expect(layout_popup.item_count == 9 and layout_popup.get_item_index(view.LAYOUT_MENU_FIT_ID) >= 0, "layout actions are consolidated into one menu")
 	_expect(view.feature_menu_button.text == "Display", "display options use a compact menu label")
 	_expect(popup.item_count == view.FEATURE_DEFINITIONS.size() + 2 and grid_index >= 0, "display menu contains every feature plus Grid")
 	_expect(not view.fisheye_toggle.visible and not view.compact_toggle.visible and not view.semantic_zoom_toggle.visible and not view.path_summary_toggle.visible and not view.grid_toggle.visible and not view.minimap_toggle.visible, "redundant display checkboxes stay hidden from the toolbar")
 	var toolbar := view.get_node_or_null("ViewToolbar") as HBoxContainer
-	_expect(toolbar != null and toolbar.get_combined_minimum_size().x < 450.0, "compact view toolbar fits narrow editor panels")
+	_expect(toolbar != null and not toolbar.visible, "legacy view toolbar no longer consumes a separate row")
 	var original_grid := view.graph_edit.show_grid
 	view._on_feature_menu_pressed(view.DISPLAY_MENU_GRID_ID)
 	_expect(view.graph_edit.show_grid != original_grid and popup.is_item_checked(grid_index) == view.graph_edit.show_grid, "Grid toggles and check mark synchronize through Display menu")
