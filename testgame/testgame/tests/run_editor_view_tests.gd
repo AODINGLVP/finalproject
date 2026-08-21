@@ -976,7 +976,7 @@ func _test_compact_display_toolbar(view: BTEditorView) -> void:
 	_expect(legacy_creation != null and not legacy_creation.visible, "duplicate node creation toolbar stays hidden in favor of palette and context menu")
 	_expect(layout_popup.item_count == 9 and layout_popup.get_item_index(view.LAYOUT_MENU_FIT_ID) >= 0, "layout actions are consolidated into one menu")
 	_expect(view.feature_menu_button.text == "Display", "display options use a compact menu label")
-	_expect(popup.item_count == view.FEATURE_DEFINITIONS.size() + 2 and grid_index >= 0, "display menu contains every feature plus Grid")
+	_expect(popup.item_count == 10 and view.advanced_display_menu.item_count == 14 and grid_index >= 0, "Display shows common options and moves low-frequency switches into Advanced Display")
 	_expect(not view.fisheye_toggle.visible and not view.compact_toggle.visible and not view.semantic_zoom_toggle.visible and not view.path_summary_toggle.visible and not view.grid_toggle.visible and not view.minimap_toggle.visible, "redundant display checkboxes stay hidden from the toolbar")
 	var toolbar := view.get_node_or_null("ViewToolbar") as HBoxContainer
 	_expect(toolbar != null and not toolbar.visible, "legacy view toolbar no longer consumes a separate row")

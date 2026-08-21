@@ -74,13 +74,13 @@ const FEATURE_DEFINITIONS := [
 	["semantic_zoom", "Semantic Zoom", false],
 	["auto_spacing", "Zoom-Aware Auto Spacing", true],
 	["zoom_anchor", "Zoom View Anchor", true],
-	["path_summary", "Path Summary View", true],
+	["path_summary", "Path Summary View", false],
 	["decorator_badges", "Decorator Condition Badges", true],
 	["search", "Search + Highlight", true],
 	["orthogonal_edges", "Orthogonal Edges", false],
 	["edge_bundling", "Edge Bundling", false],
 	["stable_layout", "Stable Incremental Layout", false],
-	["breadcrumb", "Breadcrumb Navigation", true],
+	["breadcrumb", "Breadcrumb Navigation", false],
 	["failure_reason", "Failure Reason Annotation", true],
 ]
 
@@ -140,6 +140,7 @@ var grid_toggle: CheckBox
 var minimap_toggle: CheckBox
 var minimap_status_label: Label
 var feature_menu_button: MenuButton
+var advanced_display_menu: PopupMenu
 var debug_menu_button: MenuButton
 var layout_menu_button: MenuButton
 var new_tree_dialog: ConfirmationDialog
@@ -781,12 +782,20 @@ func _build_feature_menu() -> void:
 		return
 	var popup := feature_menu_button.get_popup()
 	popup.clear()
+	advanced_display_menu = PopupMenu.new()
+	advanced_display_menu.name = "AdvancedDisplayMenu"
+	var common_features := ["fisheye", "subtree_collapse", "compact", "type_encoding", "enhanced_minimap", "semantic_zoom", "search"]
 	for index in range(FEATURE_DEFINITIONS.size()):
 		var definition: Array = FEATURE_DEFINITIONS[index]
-		popup.add_check_item(str(definition[1]), index)
+		if common_features.has(str(definition[0])):
+			popup.add_check_item(str(definition[1]), index)
+		else:
+			advanced_display_menu.add_check_item(str(definition[1]), index)
+	popup.add_submenu_node_item("Advanced Display", advanced_display_menu)
 	popup.add_separator()
 	popup.add_check_item("Grid", DISPLAY_MENU_GRID_ID)
 	popup.id_pressed.connect(_on_feature_menu_pressed)
+	advanced_display_menu.id_pressed.connect(_on_feature_menu_pressed)
 
 
 func _build_layout_menu() -> void:
@@ -1088,7 +1097,13 @@ func _update_feature_menu_checks() -> void:
 		return
 	var popup := feature_menu_button.get_popup()
 	for index in range(FEATURE_DEFINITIONS.size()):
-		popup.set_item_checked(index, _feature_enabled(str(FEATURE_DEFINITIONS[index][0])))
+		var item_index := popup.get_item_index(index)
+		if item_index >= 0:
+			popup.set_item_checked(item_index, _feature_enabled(str(FEATURE_DEFINITIONS[index][0])))
+		elif is_instance_valid(advanced_display_menu):
+			item_index = advanced_display_menu.get_item_index(index)
+			if item_index >= 0:
+				advanced_display_menu.set_item_checked(item_index, _feature_enabled(str(FEATURE_DEFINITIONS[index][0])))
 	var grid_index := popup.get_item_index(DISPLAY_MENU_GRID_ID)
 	if grid_index >= 0:
 		popup.set_item_checked(grid_index, graph_edit.show_grid if is_instance_valid(graph_edit) else true)
@@ -2785,7 +2800,7 @@ func _refresh_failure_summary() -> void:
 	if not is_instance_valid(failure_summary_button):
 		return
 	var enabled := _feature_enabled("failure_reason")
-	failure_summary_button.visible = enabled
+	failure_summary_button.visible = enabled and not visible_failure_annotations.is_empty()
 	failure_summary_button.text = "Failures: %d" % visible_failure_annotations.size()
 	var popup := failure_summary_button.get_popup()
 	popup.clear()
