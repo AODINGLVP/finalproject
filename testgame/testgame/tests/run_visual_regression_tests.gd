@@ -24,6 +24,7 @@ func _run() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUTPUT_DIR))
 	viewport = SubViewport.new()
 	viewport.size = VIEWPORT_SIZE
+	viewport.gui_embed_subwindows = true
 	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	viewport.transparent_bg = false
 	root.add_child(viewport)
@@ -64,6 +65,25 @@ func _run() -> void:
 	_expect(_count_near_color(baseline, Color("facc15"), 0.12) > 2, "baseline contains Wait type color")
 	_expect(_overlapping_node_pairs().is_empty(), "baseline node cards do not overlap")
 	_expect(_all_parent_child_gaps_at_least(45.0), "baseline keeps a clear parent-child vertical gap")
+
+	var display_popup := view.feature_menu_button.get_popup()
+	display_popup.position = Vector2i(40, 135)
+	display_popup.popup()
+	await _settle()
+	var display_menu := await _capture_case("01a_display_menu")
+	_assert_image_valid(display_menu, "compact Display menu renders")
+	_expect(display_popup.visible and display_popup.item_count == view.FEATURE_DEFINITIONS.size() + 2, "Display popup exposes all independent options without expanding the toolbar")
+	display_popup.hide()
+	await _settle()
+	var debug_popup := view.debug_menu_button.get_popup()
+	debug_popup.position = Vector2i(40, 95)
+	debug_popup.popup()
+	await _settle()
+	var debug_menu := await _capture_case("01aa_debug_menu")
+	_assert_image_valid(debug_menu, "compact Debug menu renders")
+	_expect(debug_popup.visible and debug_popup.item_count == 6 and not view.live_debug_toggle.visible and not view.blackboard_toggle.visible, "Debug popup exposes runtime options without expanding the toolbar")
+	debug_popup.hide()
+	await _settle()
 
 	view._set_feature_enabled("type_encoding", true, false)
 	view._set_feature_enabled("compact", true, false)
@@ -146,6 +166,9 @@ func _run() -> void:
 	var overlap_after := _overlapping_node_pairs().size()
 	print("VISUAL_METRIC auto_spacing_overlap_before=%d auto_spacing_overlap_after=%d" % [overlap_before, overlap_after])
 	_expect(overlap_after == 0, "dense detail auto-spacing removes visible overlap")
+	_expect(_all_visual_offsets_nonnegative_y(), "dense detail auto-spacing never pulls lower nodes upward")
+	_expect(_all_parent_child_gaps_at_least(view.AUTO_SPACING_CONNECTION_GAP), "dense detail auto-spacing preserves clear connection channels")
+	_expect(_connection_node_intersections().is_empty(), "dense detail connections remain visible outside unrelated cards")
 	_expect(_resource_positions_equal(view.current_tree, dense_positions), "dense detail auto-spacing preserves resource coordinates")
 	view.semantic_detail_level = 0
 	view._apply_semantic_detail_level()
@@ -163,14 +186,22 @@ func _run() -> void:
 	await _settle()
 
 	view._set_feature_enabled("fisheye", true, false)
-	var focused := _graph_node(view, 4)
-	view._apply_node_fisheye_scale(focused, 1.2, 1.0, 1.0)
-	view.graph_edit.fisheye_focus_position = focused.position_offset + focused.size * 0.5
+	var focused := _graph_node(view, 3)
+	var fisheye_positions := _resource_positions(view.current_tree)
+	var expected_focused_center := focused.position_offset + focused.size * 0.5
+	var focused_local_point := (focused.position_offset + focused.size * 0.5) * view.graph_edit.zoom - view.graph_edit.scroll_offset
+	var focused_pointer := view.graph_edit.get_global_transform_with_canvas() * focused_local_point
+	_expect(view._fisheye_node_at(focused_pointer) == focused, "fisheye visual fixture resolves the node directly under the pointer")
+	view._apply_fisheye_focus(focused, 1.0)
+	view._update_auto_spacing(0.0, true)
 	await _settle()
 	var fisheye := await _capture_case("03_fisheye")
 	_assert_image_valid(fisheye, "fisheye focus renders")
-	_expect(_graph_node(view, 4).fisheye_magnification >= 1.19, "fisheye screenshot magnifies focused node")
-	_expect(_overlapping_node_pairs().is_empty(), "fisheye magnification does not overlap nearby cards")
+	_expect(_count_magnified_nodes() == 1 and _graph_node(view, 3).fisheye_magnification >= 1.24, "fisheye screenshot magnifies only the focused node")
+	_expect((_graph_node(view, 3).position_offset + _graph_node(view, 3).size * 0.5).distance_to(expected_focused_center) < 6.0, "fisheye keeps the focused card centered while resizing")
+	_expect(_all_unfocused_nodes_shrunk(3), "fisheye screenshot shrinks every surrounding node")
+	_expect(_overlapping_node_pairs().is_empty(), "fisheye focus-and-context layout does not overlap cards")
+	_expect(_rendered_tree_order_is_valid() and _resource_positions_equal(view.current_tree, fisheye_positions), "fisheye preserves topology and saved positions")
 	view._set_feature_enabled("fisheye", false, false)
 	await _settle()
 	var recovered := await _capture_case("04_fisheye_disabled")
@@ -300,24 +331,42 @@ func _run() -> void:
 	_expect(view.current_tree.nodes.size() == 36 and _graph_node_count() == _non_decorator_node_count(), "complex tree renders every graph node")
 	var complex_overview_overlap_count := _overlapping_node_pairs().size()
 	_expect(complex_overview_overlap_count == 0 and _all_visual_offsets_zero(), "complex tree default coordinates are compact and overlap-free at overview detail")
-	view._set_feature_enabled("auto_spacing", false, false)
-	view.semantic_detail_level = 2
-	view._apply_semantic_detail_level()
-	await _settle()
+	var complex_anchor := _graph_node(view, 24)
+	var real_zoom_metrics := await _real_wheel_zoom_session(MOUSE_BUTTON_WHEEL_UP, 16, 0.95)
+	print("VISUAL_METRIC real_wheel_final_zoom=%.3f detail_level=%d center_relation_drift=%.3f screen_formula_error=%.3f" % [float(real_zoom_metrics.get("final_zoom", 0.0)), view.semantic_detail_level, float(real_zoom_metrics.get("max_relation_drift", INF)), float(real_zoom_metrics.get("max_screen_formula_error", INF))])
+	_expect(int(real_zoom_metrics.get("anchor_id", -1)) != -1, "real wheel zoom captures a valid viewport-center neighborhood")
+	_expect(bool(real_zoom_metrics.get("sample_set_stable", false)), "real wheel zoom keeps one viewport-center neighborhood snapshot for the complete input burst")
+	_expect(float(real_zoom_metrics.get("max_relation_drift", INF)) <= 1.0, "real wheel zoom preserves the viewport center's relative position within nearby nodes")
+	_expect(float(real_zoom_metrics.get("max_screen_formula_error", INF)) <= 1.0, "zoom compensation matches GraphEdit's rendered node positions")
+	_expect(float(real_zoom_metrics.get("final_zoom", 0.0)) >= 0.95 and view.semantic_detail_level == 2, "real wheel zoom crosses into full-detail semantic layout")
 	var complex_detail_overlap_count := _overlapping_node_pairs().size()
 	var complex_overlap := await _capture_case("10b_complex_detail_overlap")
 	_assert_image_valid(complex_overlap, "complex detail overlap baseline renders")
-	_expect(complex_detail_overlap_count > 0, "complex overview-default coordinates reproduce overlap at full detail")
-	view._set_feature_enabled("auto_spacing", true, false)
+	_expect(complex_detail_overlap_count == 0, "real wheel zoom applies collision-free detail layout")
 	view._update_auto_spacing(0.0, true)
-	view._fit_visible_tree()
+	view._restore_zoom_layout_anchor()
 	await _settle()
+	view._restore_zoom_layout_anchor()
 	var complex_corrected_overlap_count := _overlapping_node_pairs().size()
 	var complex_corrected := await _capture_case("10c_complex_detail_auto_spacing")
 	_assert_image_valid(complex_corrected, "complex detail auto-spacing renders")
 	print("VISUAL_METRIC complex_overview_overlaps=%d complex_detail_overlaps=%d complex_corrected_overlaps=%d" % [complex_overview_overlap_count, complex_detail_overlap_count, complex_corrected_overlap_count])
 	_expect(complex_corrected_overlap_count == 0, "complex detail auto-spacing removes every visible overlap")
+	print("VISUAL_METRIC complex_zoom_center_relation_drift=%.3f" % float(real_zoom_metrics.get("max_relation_drift", INF)))
+	_expect(float(real_zoom_metrics.get("max_relation_drift", INF)) <= 1.0, "complex zoom-in reflow preserves the same center-relative node neighborhood")
+	_expect(_all_visual_offsets_nonnegative_y(), "complex detail auto-spacing never lifts lower tree levels")
+	var complex_gap_failures := _parent_child_gap_failures(view.AUTO_SPACING_CONNECTION_GAP)
+	print("VISUAL_METRIC complex_connection_gap_failures=%s" % str(complex_gap_failures))
+	_expect(complex_gap_failures.is_empty(), "complex detail auto-spacing reserves every parent-child connection channel")
+	var complex_connection_intersections := _connection_node_intersections()
+	print("VISUAL_METRIC complex_connection_intersections=%s" % str(complex_connection_intersections))
+	_expect(complex_connection_intersections.is_empty(), "complex detail routes avoid every unrelated node card")
 	_expect(_resource_positions_equal(view.current_tree, complex_positions), "complex auto-spacing preserves every saved overview coordinate")
+	var real_zoom_out_metrics := await _real_wheel_zoom_session(MOUSE_BUTTON_WHEEL_DOWN, 16, 0.52)
+	print("VISUAL_METRIC real_wheel_zoom_out_final=%.3f center_relation_drift=%.3f screen_formula_error=%.3f" % [float(real_zoom_out_metrics.get("final_zoom", 0.0)), float(real_zoom_out_metrics.get("max_relation_drift", INF)), float(real_zoom_out_metrics.get("max_screen_formula_error", INF))])
+	_expect(bool(real_zoom_out_metrics.get("sample_set_stable", false)), "real wheel zoom-out keeps one viewport-center neighborhood snapshot")
+	_expect(float(real_zoom_out_metrics.get("max_relation_drift", INF)) <= 1.0, "real wheel zoom-out preserves the viewport center's relative position within nearby nodes")
+	_expect(float(real_zoom_out_metrics.get("max_screen_formula_error", INF)) <= 1.0 and float(real_zoom_out_metrics.get("final_zoom", INF)) <= 0.52, "real wheel zoom-out matches rendered positions and returns to overview")
 
 	print("BT_VISUAL_TEST_SUMMARY passed=%d failed=%d output=%s" % [passed, failed, OUTPUT_DIR])
 	view.free()
@@ -424,6 +473,37 @@ func _all_node_transforms_reset() -> bool:
 	for child in view.graph_edit.get_children():
 		if child is BTGraphNode and (not is_equal_approx(child.fisheye_magnification, 1.0) or not child.scale.is_equal_approx(expected_graph_scale) or not child.pivot_offset.is_zero_approx() or child.z_index != 0):
 			return false
+	return true
+
+
+func _count_magnified_nodes() -> int:
+	var count := 0
+	for child in view.graph_edit.get_children():
+		if child is BTGraphNode and child.fisheye_magnification > 1.001:
+			count += 1
+	return count
+
+
+func _all_unfocused_nodes_shrunk(focused_id: int) -> bool:
+	for child in view.graph_edit.get_children():
+		if child is BTGraphNode and child.node_resource.id != focused_id and child.fisheye_magnification > view.FISHEYE_CONTEXT_SCALE + 0.01:
+			return false
+	return true
+
+
+func _rendered_tree_order_is_valid() -> bool:
+	for node in view.current_tree.nodes:
+		if node == null or node.decorator_parent_id != -1:
+			continue
+		var children := view.current_tree.get_children_of(node.id)
+		var previous_x := -INF
+		for child_node in children:
+			var rendered := _graph_node(view, child_node.id)
+			if rendered == null or rendered.position_offset.x < previous_x:
+				return false
+			if _graph_node(view, node.id).position_offset.y >= rendered.position_offset.y:
+				return false
+			previous_x = rendered.position_offset.x
 	return true
 
 
@@ -540,6 +620,46 @@ func _all_visual_offsets_zero() -> bool:
 	return true
 
 
+func _all_visual_offsets_nonnegative_y() -> bool:
+	for child in view.graph_edit.get_children():
+		if child is BTGraphNode and child.visual_offset.y < -0.01:
+			return false
+	return true
+
+
+func _connection_node_intersections() -> Array[String]:
+	var failures: Array[String] = []
+	for connection in view.graph_edit.get_connection_list():
+		var from_id := int(str(connection.get("from_node", "-1")))
+		var to_id := int(str(connection.get("to_node", "-1")))
+		var from_node := _graph_node(view, from_id)
+		var to_node := _graph_node(view, to_id)
+		if from_node == null or to_node == null:
+			continue
+		var points := view.graph_edit._route_connection_line(
+			view.graph_edit._output_port_position(from_node),
+			view.graph_edit._input_port_position(to_node)
+		)
+		for graph_child in view.graph_edit.get_children():
+			if not (graph_child is BTGraphNode) or graph_child == from_node or graph_child == to_node:
+				continue
+			var obstacle := Rect2(graph_child.position, graph_child.size * graph_child.scale).grow(-4.0)
+			if _polyline_enters_rect(points, obstacle):
+				failures.append("%d>%d through %s" % [from_id, to_id, graph_child.name])
+	return failures
+
+
+func _polyline_enters_rect(points: PackedVector2Array, rect: Rect2) -> bool:
+	for index in range(points.size() - 1):
+		var start := points[index]
+		var finish := points[index + 1]
+		var steps := maxi(1, ceili(start.distance_to(finish) / 4.0))
+		for step in range(steps + 1):
+			if rect.has_point(start.lerp(finish, float(step) / float(steps))):
+				return true
+	return false
+
+
 func _render_positions_match_resources() -> bool:
 	for child in view.graph_edit.get_children():
 		if child is BTGraphNode and not child.position_offset.is_equal_approx(child.node_resource.position):
@@ -585,6 +705,82 @@ func _test_real_pointer_connection() -> void:
 	view.current_tree.nodes.erase(target)
 	view._rebuild_graph()
 	await _settle()
+
+
+func _real_wheel_zoom_session(wheel_button: MouseButton, maximum_wheel_steps: int, target_zoom: float) -> Dictionary:
+	var viewport_position := view.graph_edit.get_global_transform_with_canvas() * (view.graph_edit.size * 0.5)
+	var max_relation_drift := 0.0
+	var max_screen_formula_error := 0.0
+	var session_anchor_id := -1
+	var session_sample_ids: Array[int] = []
+	var recorded_relation := Vector2.ZERO
+	var sample_set_stable := true
+	for _step in range(maximum_wheel_steps):
+		var wheel := InputEventMouseButton.new()
+		wheel.button_index = wheel_button
+		wheel.pressed = true
+		wheel.position = viewport_position
+		viewport.push_input(wheel, false)
+		await process_frame
+		view._process(1.0 / 60.0)
+		await process_frame
+		if view.zoom_layout_anchor_id != -1:
+			session_anchor_id = view.zoom_layout_anchor_id if session_anchor_id == -1 else session_anchor_id
+			if view.zoom_layout_anchor_id != session_anchor_id:
+				sample_set_stable = false
+			if session_sample_ids.is_empty():
+				session_sample_ids = _zoom_sample_ids(view.zoom_layout_anchor_samples)
+				recorded_relation = _weighted_zoom_sample_relation(view.zoom_layout_anchor_samples, true)
+			elif session_sample_ids != _zoom_sample_ids(view.zoom_layout_anchor_samples):
+				sample_set_stable = false
+			max_relation_drift = maxf(max_relation_drift, _weighted_zoom_sample_relation(view.zoom_layout_anchor_samples, false).distance_to(recorded_relation))
+		max_screen_formula_error = maxf(max_screen_formula_error, _maximum_screen_formula_error())
+		if (wheel_button == MOUSE_BUTTON_WHEEL_UP and view.graph_edit.zoom >= target_zoom) or (wheel_button == MOUSE_BUTTON_WHEEL_DOWN and view.graph_edit.zoom <= target_zoom):
+			break
+	# Continue through fisheye resume and auto-spacing animation settling.
+	for _frame in range(50):
+		view._process(1.0 / 60.0)
+		await process_frame
+		if view.zoom_layout_anchor_id != -1:
+			if session_sample_ids != _zoom_sample_ids(view.zoom_layout_anchor_samples):
+				sample_set_stable = false
+			max_relation_drift = maxf(max_relation_drift, _weighted_zoom_sample_relation(view.zoom_layout_anchor_samples, false).distance_to(recorded_relation))
+		max_screen_formula_error = maxf(max_screen_formula_error, _maximum_screen_formula_error())
+	return {"anchor_id": session_anchor_id, "sample_set_stable": sample_set_stable, "max_relation_drift": max_relation_drift, "max_screen_formula_error": max_screen_formula_error, "final_zoom": view.graph_edit.zoom}
+
+
+func _zoom_sample_ids(samples: Array) -> Array[int]:
+	var ids: Array[int] = []
+	for sample in samples:
+		ids.append(int(sample.get("id", -1)))
+	return ids
+
+
+func _weighted_zoom_sample_relation(samples: Array, use_recorded_relative: bool) -> Vector2:
+	var weighted_relation := Vector2.ZERO
+	var total_weight := 0.0
+	var view_center := view._graph_view_center_tree_position()
+	for sample in samples:
+		var weight := maxf(float(sample.get("weight", 1.0)), 0.001)
+		var relative := Vector2(sample.get("relative", Vector2.ZERO))
+		if not use_recorded_relative:
+			var graph_node := _graph_node(view, int(sample.get("id", -1)))
+			if graph_node == null:
+				continue
+			relative = graph_node.position_offset + graph_node.size * 0.5 - view_center
+		weighted_relation += relative * weight
+		total_weight += weight
+	return weighted_relation / total_weight if total_weight > 0.0 else Vector2.INF
+
+
+func _maximum_screen_formula_error() -> float:
+	var maximum_error := 0.0
+	for child in view.graph_edit.get_children():
+		if child is BTGraphNode:
+			var graph_node: BTGraphNode = child
+			var rendered_center: Vector2 = graph_node.position + graph_node.size * graph_node.scale * 0.5
+			maximum_error = maxf(maximum_error, rendered_center.distance_to(view._graph_node_screen_center(graph_node)))
+	return maximum_error
 
 
 func _node(id: int, type_name: String, parent_id: int, title: String, x: float, y: float) -> BTNodeResource:

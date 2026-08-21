@@ -59,6 +59,7 @@ var runtime_snapshot_active := false
 var fisheye_magnification := 1.0
 var manual_connection_dragging := false
 var visual_offset := Vector2.ZERO
+var fisheye_base_size := Vector2.ZERO
 
 
 func _ready() -> void:
@@ -378,8 +379,8 @@ func _apply_information_density() -> void:
 	failure_badge.custom_minimum_size.x = content_width
 	input_square.custom_minimum_size = Vector2.ONE * 14.0 * fisheye_magnification
 	output_square.custom_minimum_size = Vector2.ONE * 14.0 * fisheye_magnification
-	if fisheye_magnification > 1.001:
-		add_theme_font_size_override("font_size", roundi(16.0 * fisheye_magnification))
+	if not is_equal_approx(fisheye_magnification, 1.0):
+		add_theme_font_size_override("font_size", maxi(11, roundi(16.0 * fisheye_magnification)))
 	else:
 		remove_theme_font_size_override("font_size")
 	if node_resource != null:
@@ -401,16 +402,19 @@ func _reset_size_after_layout() -> void:
 
 
 func set_fisheye_magnification(value: float) -> void:
-	var next_value := clampf(value, 1.0, 1.2)
+	var next_value := clampf(value, 0.7, 1.25)
 	if is_equal_approx(fisheye_magnification, next_value):
 		return
+	if is_equal_approx(fisheye_magnification, 1.0) or fisheye_base_size.is_zero_approx():
+		fisheye_base_size = size
 	fisheye_magnification = next_value
 	_apply_information_density()
 
 
 func _fisheye_position_compensation() -> Vector2:
-	var base_size := COMPACT_CARD_SIZE if compact_mode else NORMAL_CARD_SIZE
-	return (base_size * fisheye_magnification - base_size) * 0.5
+	if fisheye_base_size.is_zero_approx():
+		return Vector2.ZERO
+	return (size - fisheye_base_size) * 0.5
 
 
 func _refresh_connection_slots(color: Color) -> void:

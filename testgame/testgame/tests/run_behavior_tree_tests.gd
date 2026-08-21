@@ -13,9 +13,7 @@ var failed := 0
 
 
 func _initialize() -> void:
-	_run_all()
-	print("BT_TEST_SUMMARY passed=%d failed=%d" % [passed, failed])
-	quit(0 if failed == 0 else 1)
+	_run_all.call_deferred()
 
 
 func _run_all() -> void:
@@ -41,6 +39,8 @@ func _run_all() -> void:
 	_test_actor_binding_and_debug_path()
 	_test_resource_round_trip()
 	_test_example_resources()
+	print("BT_TEST_SUMMARY passed=%d failed=%d" % [passed, failed])
+	quit(0 if failed == 0 else 1)
 
 
 func _test_status_conversion() -> void:

@@ -23,11 +23,11 @@ const NODE_TYPES := [
 	BTNodeResource.TYPE_WAIT,
 	BTNodeResource.TYPE_DECORATOR
 ]
-const FISHEYE_RADIUS := 430.0
-const FISHEYE_MAX_SCALE := 1.2
-const FISHEYE_MIN_SCALE := 1.0
+const FISHEYE_MAX_SCALE := 1.25
+const FISHEYE_CONTEXT_SCALE := 0.78
 const FISHEYE_LERP_SPEED := 12.0
 const FISHEYE_WHEEL_PAUSE := 0.2
+const FISHEYE_RESUME_POINTER_DISTANCE := 6.0
 const VIEW_SETTINGS_PATH := "user://behavior_tree_editor_view.cfg"
 const MULTI_COLUMN_THRESHOLD := 5
 const MULTI_COLUMN_COUNT := 4
@@ -38,9 +38,21 @@ const LAYOUT_MIN_VERTICAL_CLEARANCE := 60.0
 const OVERVIEW_LAYOUT_HORIZONTAL_GAP := BTGraphNode.NORMAL_CARD_SIZE.x + 24.0
 const OVERVIEW_LAYOUT_VERTICAL_GAP := BTGraphNode.NORMAL_CARD_SIZE.y + 24.0
 const AUTO_SPACING_GAP := 24.0
+const AUTO_SPACING_CONNECTION_GAP := 56.0
+const AUTO_SPACING_CONNECTION_MARGIN := 1.0
 const AUTO_SPACING_ITERATIONS := 24
 const AUTO_SPACING_LERP_SPEED := 14.0
 const AUTO_SPACING_EPSILON := 0.1
+const ZOOM_LAYOUT_ANCHOR_STABLE_FRAMES := 8
+const ZOOM_LAYOUT_ANCHOR_RELEASE_DELAY := 0.65
+const ZOOM_CENTER_SAMPLE_LIMIT := 12
+const ZOOM_CENTER_SAMPLE_RADIUS_FACTOR := 1.25
+const DISPLAY_MENU_GRID_ID := 1000
+const DEBUG_MENU_LIVE_ID := 0
+const DEBUG_MENU_DIM_ID := 1
+const DEBUG_MENU_FAILURE_ID := 2
+const DEBUG_MENU_BLACKBOARD_ID := 3
+const DEBUG_MENU_SCHEMA_ID := 4
 const FEATURE_DEFINITIONS := [
 	["fisheye", "Fisheye / Focus+Context", true],
 	["subtree_collapse", "Subtree Collapse / Expand", true],
@@ -54,6 +66,7 @@ const FEATURE_DEFINITIONS := [
 	["enhanced_minimap", "Overview + Detail / Enhanced Minimap", true],
 	["semantic_zoom", "Semantic Zoom", false],
 	["auto_spacing", "Zoom-Aware Auto Spacing", true],
+	["zoom_anchor", "Zoom View Anchor", true],
 	["path_summary", "Path Summary View", true],
 	["decorator_badges", "Decorator Condition Badges", true],
 	["search", "Search + Highlight", true],
@@ -79,6 +92,9 @@ var runtime_debug_elapsed := 0.0
 var runtime_debug_actor := ""
 var fisheye_enabled := true
 var fisheye_wheel_pause_elapsed := 0.0
+var fisheye_focus_node_id := -1
+var fisheye_waiting_for_pointer_motion := false
+var fisheye_resume_pointer_position := Vector2.ZERO
 var compact_mode_enabled := false
 var semantic_zoom_enabled := false
 var semantic_detail_level := 2
@@ -117,6 +133,7 @@ var grid_toggle: CheckBox
 var minimap_toggle: CheckBox
 var minimap_status_label: Label
 var feature_menu_button: MenuButton
+var debug_menu_button: MenuButton
 var path_navigation_row: VBoxContainer
 var runtime_path_label: Label
 var runtime_path_scroll: ScrollContainer
@@ -165,6 +182,20 @@ var minimap_total_node_count := 0
 var visible_failure_annotations: Array[Dictionary] = []
 var auto_spacing_targets: Dictionary = {}
 var auto_spacing_signature := ""
+var zoom_anchor_candidate_id := -1
+var zoom_anchor_candidate_screen_position := Vector2.ZERO
+var zoom_anchor_candidate_zoom := 1.0
+var zoom_anchor_candidate_frames := 0
+var zoom_anchor_candidate_view_center := Vector2.ZERO
+var zoom_anchor_candidate_samples: Array[Dictionary] = []
+var zoom_layout_anchor_id := -1
+var zoom_layout_anchor_screen_position := Vector2.ZERO
+var zoom_layout_anchor_last_center := Vector2.ZERO
+var zoom_layout_anchor_last_zoom := 1.0
+var zoom_layout_anchor_stable_frames := 0
+var zoom_layout_anchor_release_elapsed := 0.0
+var zoom_layout_anchor_restore_queued := false
+var zoom_layout_anchor_samples: Array[Dictionary] = []
 
 
 func _ready() -> void:
@@ -180,9 +211,13 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_poll_runtime_debug(delta)
+	zoom_layout_anchor_release_elapsed = maxf(0.0, zoom_layout_anchor_release_elapsed - delta)
+	_prepare_zoom_layout_anchor()
 	_update_fisheye(delta)
 	_update_semantic_zoom()
 	_update_auto_spacing(delta)
+	_restore_zoom_layout_anchor()
+	_queue_zoom_layout_anchor_post_layout_restore()
 	_update_minimap_status()
 
 
@@ -273,25 +308,36 @@ func _build_ui() -> void:
 	path_row.add_child(refresh_paths_button)
 
 	var runtime_row := HBoxContainer.new()
+	runtime_row.name = "RuntimeToolbar"
 	runtime_row.size_flags_horizontal = SIZE_EXPAND_FILL
 	add_child(runtime_row)
 
+	debug_menu_button = MenuButton.new()
+	debug_menu_button.text = "Debug"
+	debug_menu_button.tooltip_text = "Live Debug, runtime annotations, Blackboard values, and schema authoring."
+	runtime_row.add_child(debug_menu_button)
+	_build_debug_menu()
+
+	# Keep compatibility controls as hidden state mirrors for existing projects and tests.
 	live_debug_toggle = CheckBox.new()
 	live_debug_toggle.text = "Live Debug"
 	live_debug_toggle.button_pressed = true
 	live_debug_toggle.toggled.connect(_on_live_debug_toggled)
+	live_debug_toggle.visible = false
 	runtime_row.add_child(live_debug_toggle)
 
 	branch_dimming_toggle = CheckBox.new()
 	branch_dimming_toggle.text = "Dim Inactive"
 	branch_dimming_toggle.tooltip_text = "Fade nodes outside the current runtime path while Live Debug is active."
 	branch_dimming_toggle.toggled.connect(_on_branch_dimming_toggled)
+	branch_dimming_toggle.visible = false
 	runtime_row.add_child(branch_dimming_toggle)
 
 	failure_reason_toggle = CheckBox.new()
 	failure_reason_toggle.text = "Failure Reasons"
 	failure_reason_toggle.tooltip_text = "Annotate failed nodes and list the latest runtime failure causes."
 	failure_reason_toggle.toggled.connect(_on_failure_reason_toggled)
+	failure_reason_toggle.visible = false
 	runtime_row.add_child(failure_reason_toggle)
 
 	failure_summary_button = MenuButton.new()
@@ -304,12 +350,14 @@ func _build_ui() -> void:
 	blackboard_toggle.text = "Blackboard"
 	blackboard_toggle.tooltip_text = "Show typed values from the current Live Debug actor inside the editor."
 	blackboard_toggle.toggled.connect(_on_blackboard_panel_toggled)
+	blackboard_toggle.visible = false
 	runtime_row.add_child(blackboard_toggle)
 
 	schema_toggle = CheckBox.new()
 	schema_toggle.text = "Edit Schema"
 	schema_toggle.tooltip_text = "Author typed blackboard keys stored in this behavior tree resource."
 	schema_toggle.toggled.connect(_on_schema_panel_toggled)
+	schema_toggle.visible = false
 	runtime_row.add_child(schema_toggle)
 
 	runtime_debug_label = Label.new()
@@ -375,64 +423,72 @@ func _build_ui() -> void:
 	_refresh_schema_editor()
 
 	var view_row := HBoxContainer.new()
+	view_row.name = "ViewToolbar"
 	view_row.size_flags_horizontal = SIZE_EXPAND_FILL
 	add_child(view_row)
-	var view_label := Label.new()
-	view_label.text = "View"
-	view_row.add_child(view_label)
 
 	feature_menu_button = MenuButton.new()
-	feature_menu_button.text = "Display Features"
-	feature_menu_button.tooltip_text = "Enable each display optimization independently."
+	feature_menu_button.text = "Display"
+	feature_menu_button.tooltip_text = "Display optimizations and graph appearance. Each option can be toggled independently."
 	view_row.add_child(feature_menu_button)
 	_build_feature_menu()
 
+	# Retain these controls as compatibility state mirrors without duplicating the menu in the toolbar.
 	fisheye_toggle = CheckBox.new()
 	fisheye_toggle.text = "Fisheye"
 	fisheye_toggle.button_pressed = true
 	fisheye_toggle.toggled.connect(_on_fisheye_toggled)
+	fisheye_toggle.visible = false
 	view_row.add_child(fisheye_toggle)
 
 	compact_toggle = CheckBox.new()
 	compact_toggle.text = "Compact"
 	compact_toggle.tooltip_text = "Use smaller cards with only the node title and type color."
 	compact_toggle.toggled.connect(_on_compact_toggled)
+	compact_toggle.visible = false
 	view_row.add_child(compact_toggle)
 
 	semantic_zoom_toggle = CheckBox.new()
 	semantic_zoom_toggle.text = "Semantic Zoom"
 	semantic_zoom_toggle.tooltip_text = "Reduce card information when zoomed out; Zoom-Aware Auto Spacing prevents expanded cards from overlapping."
 	semantic_zoom_toggle.toggled.connect(_on_semantic_zoom_toggled)
+	semantic_zoom_toggle.visible = false
 	view_row.add_child(semantic_zoom_toggle)
 
 	path_summary_toggle = CheckBox.new()
 	path_summary_toggle.text = "Path Summary"
 	path_summary_toggle.tooltip_text = "Show the current Root-to-leaf runtime path with actor, status, and depth."
 	path_summary_toggle.toggled.connect(_on_path_summary_toggled)
+	path_summary_toggle.visible = false
 	view_row.add_child(path_summary_toggle)
 
 	grid_toggle = CheckBox.new()
 	grid_toggle.text = "Grid"
 	grid_toggle.button_pressed = true
 	grid_toggle.toggled.connect(_on_grid_toggled)
+	grid_toggle.visible = false
 	view_row.add_child(grid_toggle)
 
 	minimap_toggle = CheckBox.new()
 	minimap_toggle.text = "Minimap"
 	minimap_toggle.button_pressed = true
 	minimap_toggle.toggled.connect(_on_minimap_toggled)
+	minimap_toggle.visible = false
 	view_row.add_child(minimap_toggle)
 	minimap_status_label = Label.new()
 	minimap_status_label.tooltip_text = "Visible nodes represented in the overview and the current detail-view zoom."
+	minimap_status_label.visible = false
 	view_row.add_child(minimap_status_label)
 
 	var collapse_all_button := Button.new()
-	collapse_all_button.text = "Collapse All"
+	collapse_all_button.text = "Collapse"
+	collapse_all_button.tooltip_text = "Collapse every subtree."
 	collapse_all_button.pressed.connect(_set_all_subtrees_collapsed.bind(true))
 	view_row.add_child(collapse_all_button)
 
 	var expand_all_button := Button.new()
-	expand_all_button.text = "Expand All"
+	expand_all_button.text = "Expand"
+	expand_all_button.tooltip_text = "Expand every subtree."
 	expand_all_button.pressed.connect(_set_all_subtrees_collapsed.bind(false))
 	view_row.add_child(expand_all_button)
 
@@ -443,7 +499,8 @@ func _build_ui() -> void:
 	view_row.add_child(focus_button)
 
 	var clear_focus_button := Button.new()
-	clear_focus_button.text = "Show All"
+	clear_focus_button.text = "All"
+	clear_focus_button.tooltip_text = "Clear subtree focus and show the complete tree."
 	clear_focus_button.pressed.connect(_clear_subtree_focus)
 	view_row.add_child(clear_focus_button)
 
@@ -462,6 +519,7 @@ func _build_ui() -> void:
 	search_toggle.text = "Search"
 	search_toggle.tooltip_text = "Search and highlight nodes across the complete tree."
 	search_toggle.toggled.connect(_on_search_toggled)
+	search_toggle.visible = false
 	search_row.add_child(search_toggle)
 	search_edit = LineEdit.new()
 	search_edit.placeholder_text = "Title, type, description, action, condition, or decorator parameter"
@@ -746,10 +804,57 @@ func _build_feature_menu() -> void:
 	for index in range(FEATURE_DEFINITIONS.size()):
 		var definition: Array = FEATURE_DEFINITIONS[index]
 		popup.add_check_item(str(definition[1]), index)
+	popup.add_separator()
+	popup.add_check_item("Grid", DISPLAY_MENU_GRID_ID)
 	popup.id_pressed.connect(_on_feature_menu_pressed)
 
 
+func _build_debug_menu() -> void:
+	if not is_instance_valid(debug_menu_button):
+		return
+	var popup := debug_menu_button.get_popup()
+	popup.clear()
+	popup.add_check_item("Live Debug", DEBUG_MENU_LIVE_ID)
+	popup.add_check_item("Dim Inactive Branches", DEBUG_MENU_DIM_ID)
+	popup.add_check_item("Failure Reasons", DEBUG_MENU_FAILURE_ID)
+	popup.add_separator()
+	popup.add_check_item("Live Blackboard", DEBUG_MENU_BLACKBOARD_ID)
+	popup.add_check_item("Edit Blackboard Schema", DEBUG_MENU_SCHEMA_ID)
+	popup.id_pressed.connect(_on_debug_menu_pressed)
+	_update_debug_menu_checks()
+
+
+func _on_debug_menu_pressed(index: int) -> void:
+	match index:
+		DEBUG_MENU_LIVE_ID:
+			_on_live_debug_toggled(not runtime_debug_enabled)
+		DEBUG_MENU_DIM_ID:
+			_set_feature_enabled("branch_dimming", not _feature_enabled("branch_dimming"))
+		DEBUG_MENU_FAILURE_ID:
+			_set_feature_enabled("failure_reason", not _feature_enabled("failure_reason"))
+		DEBUG_MENU_BLACKBOARD_ID:
+			_on_blackboard_panel_toggled(not blackboard_panel.visible)
+		DEBUG_MENU_SCHEMA_ID:
+			_on_schema_panel_toggled(not schema_panel.visible)
+	_update_debug_menu_checks()
+
+
+func _update_debug_menu_checks() -> void:
+	if not is_instance_valid(debug_menu_button):
+		return
+	var popup := debug_menu_button.get_popup()
+	popup.set_item_checked(popup.get_item_index(DEBUG_MENU_LIVE_ID), runtime_debug_enabled)
+	popup.set_item_checked(popup.get_item_index(DEBUG_MENU_DIM_ID), _feature_enabled("branch_dimming"))
+	popup.set_item_checked(popup.get_item_index(DEBUG_MENU_FAILURE_ID), _feature_enabled("failure_reason"))
+	popup.set_item_checked(popup.get_item_index(DEBUG_MENU_BLACKBOARD_ID), is_instance_valid(blackboard_panel) and blackboard_panel.visible)
+	popup.set_item_checked(popup.get_item_index(DEBUG_MENU_SCHEMA_ID), is_instance_valid(schema_panel) and schema_panel.visible)
+
+
 func _on_feature_menu_pressed(index: int) -> void:
+	if index == DISPLAY_MENU_GRID_ID:
+		_on_grid_toggled(not graph_edit.show_grid)
+		_update_feature_menu_checks()
+		return
 	if index < 0 or index >= FEATURE_DEFINITIONS.size():
 		return
 	var key := str(FEATURE_DEFINITIONS[index][0])
@@ -785,6 +890,9 @@ func _set_feature_enabled(key: String, enabled: bool, persist := true) -> void:
 		"auto_spacing":
 			if not enabled:
 				_reset_auto_spacing()
+		"zoom_anchor":
+			if not enabled:
+				_clear_zoom_layout_anchor()
 		"enhanced_minimap":
 			if is_instance_valid(graph_edit):
 				graph_edit.set_enhanced_minimap(enabled)
@@ -969,6 +1077,10 @@ func _update_feature_menu_checks() -> void:
 	var popup := feature_menu_button.get_popup()
 	for index in range(FEATURE_DEFINITIONS.size()):
 		popup.set_item_checked(index, _feature_enabled(str(FEATURE_DEFINITIONS[index][0])))
+	var grid_index := popup.get_item_index(DISPLAY_MENU_GRID_ID)
+	if grid_index >= 0:
+		popup.set_item_checked(grid_index, graph_edit.show_grid if is_instance_valid(graph_edit) else true)
+	_update_debug_menu_checks()
 
 
 func _refresh_tree_path_picker() -> void:
@@ -1416,22 +1528,31 @@ func _on_tree_name_focus_exited() -> void:
 
 func _on_live_debug_toggled(enabled: bool) -> void:
 	runtime_debug_enabled = enabled
+	if is_instance_valid(live_debug_toggle):
+		live_debug_toggle.set_pressed_no_signal(enabled)
 	if not enabled:
 		_clear_runtime_highlights()
 		if is_instance_valid(runtime_debug_label):
 			runtime_debug_label.text = "Live Debug disabled."
+	_update_debug_menu_checks()
 
 
 func _on_blackboard_panel_toggled(enabled: bool) -> void:
 	blackboard_panel.visible = enabled
+	if is_instance_valid(blackboard_toggle):
+		blackboard_toggle.set_pressed_no_signal(enabled)
 	if enabled:
 		_refresh_blackboard_panel(last_runtime_snapshot)
+	_update_debug_menu_checks()
 
 
 func _on_schema_panel_toggled(enabled: bool) -> void:
 	schema_panel.visible = enabled
+	if is_instance_valid(schema_toggle):
+		schema_toggle.set_pressed_no_signal(enabled)
 	if enabled:
 		_refresh_schema_editor()
+	_update_debug_menu_checks()
 
 
 func _ensure_blackboard_schema() -> BTBlackboardSchema:
@@ -1752,6 +1873,9 @@ func _on_search_toggled(enabled: bool) -> void:
 
 func _on_grid_toggled(enabled: bool) -> void:
 	graph_edit.show_grid = enabled
+	if is_instance_valid(grid_toggle):
+		grid_toggle.set_pressed_no_signal(enabled)
+	_update_feature_menu_checks()
 	_save_view_settings()
 
 
@@ -1768,8 +1892,13 @@ func _update_minimap_status(force := false) -> void:
 	if not force and signature == minimap_status_signature:
 		return
 	minimap_status_signature = signature
-	minimap_status_label.visible = enabled
 	minimap_status_label.text = "Overview %d/%d nodes | Detail %d%%" % [minimap_visible_node_count, minimap_total_node_count, detail_percent]
+	minimap_status_label.visible = false
+	if is_instance_valid(feature_menu_button):
+		feature_menu_button.tooltip_text = "%s\n%s" % [
+			"Display optimizations and graph appearance. Each option can be toggled independently.",
+			minimap_status_label.text if enabled else "Overview minimap disabled.",
+		]
 
 
 func _refresh_minimap_node_counts() -> void:
@@ -1817,11 +1946,11 @@ func _update_auto_spacing(delta: float, immediate := false) -> void:
 	for child in graph_edit.get_children():
 		if child is BTGraphNode and child.manual_dragging:
 			return
-	var enabled := _feature_enabled("auto_spacing") and _feature_enabled("semantic_zoom") and semantic_detail_level > 0
+	var enabled := (_feature_enabled("auto_spacing") and _feature_enabled("semantic_zoom") and semantic_detail_level > 0) or fisheye_focus_node_id != -1
 	var signature := _auto_spacing_layout_signature() if enabled else "disabled"
 	if signature != auto_spacing_signature:
 		auto_spacing_signature = signature
-		auto_spacing_targets = _solve_auto_spacing_offsets() if enabled else {}
+		auto_spacing_targets = _solve_auto_spacing_offsets(fisheye_focus_node_id) if enabled else {}
 	var blend := 1.0 if immediate or delta <= 0.0 else clampf(delta * AUTO_SPACING_LERP_SPEED, 0.0, 1.0)
 	var changed := false
 	for child in graph_edit.get_children():
@@ -1840,7 +1969,7 @@ func _update_auto_spacing(delta: float, immediate := false) -> void:
 
 
 func _auto_spacing_layout_signature() -> String:
-	var values: Array[String] = [str(semantic_detail_level)]
+	var values: Array[String] = [str(semantic_detail_level), "focus:%d" % fisheye_focus_node_id]
 	for child in graph_edit.get_children():
 		if child is BTGraphNode and child.node_resource != null:
 			values.append("%d:%.3f:%.3f:%.3f:%.3f" % [
@@ -1854,14 +1983,18 @@ func _auto_spacing_layout_signature() -> String:
 	return "|".join(values)
 
 
-func _solve_auto_spacing_offsets() -> Dictionary:
+func _solve_auto_spacing_offsets(anchor_node_id := -1) -> Dictionary:
 	var nodes: Array[BTGraphNode] = []
+	var node_depths: Dictionary = {}
 	for child in graph_edit.get_children():
 		if child is BTGraphNode and child.node_resource != null:
 			nodes.append(child)
+			node_depths[child.node_resource.id] = _auto_spacing_node_depth(child.node_resource.id)
 	nodes.sort_custom(func(left: BTGraphNode, right: BTGraphNode) -> bool:
-		if not is_equal_approx(left.node_resource.position.y, right.node_resource.position.y):
-			return left.node_resource.position.y < right.node_resource.position.y
+		var left_depth := int(node_depths.get(left.node_resource.id, 0))
+		var right_depth := int(node_depths.get(right.node_resource.id, 0))
+		if left_depth != right_depth:
+			return left_depth < right_depth
 		if not is_equal_approx(left.node_resource.position.x, right.node_resource.position.x):
 			return left.node_resource.position.x < right.node_resource.position.x
 		return left.node_resource.id < right.node_resource.id
@@ -1870,35 +2003,103 @@ func _solve_auto_spacing_offsets() -> Dictionary:
 	for graph_node in nodes:
 		offsets[graph_node.node_resource.id] = Vector2.ZERO
 	for _iteration in range(AUTO_SPACING_ITERATIONS):
-		var collision_found := false
+		var layout_changed := false
+		# Reserve a stable vertical channel for every parent-child edge. Moving the
+		# complete child subtree down preserves topology and never pulls lower rows up.
+		for child_node in nodes:
+			var child_resource := child_node.node_resource
+			if child_resource.parent_id == -1:
+				continue
+			var parent_node := graph_edit.get_node_or_null(NodePath(str(child_resource.parent_id))) as BTGraphNode
+			if parent_node == null:
+				continue
+			var parent_rect := _auto_spacing_rect(parent_node, offsets)
+			var child_rect := _auto_spacing_rect(child_node, offsets)
+			var required_drop := parent_rect.end.y + AUTO_SPACING_CONNECTION_GAP + AUTO_SPACING_CONNECTION_MARGIN - child_rect.position.y
+			if required_drop > 0.01:
+				if _auto_spacing_subtree_contains(child_resource.id, anchor_node_id):
+					_shift_auto_spacing_ancestor_chain(offsets, parent_node.node_resource.id, Vector2(0.0, -required_drop))
+				else:
+					_shift_auto_spacing_subtree(offsets, child_resource.id, Vector2(0.0, required_drop))
+				layout_changed = true
 		for left_index in range(nodes.size()):
 			var left := nodes[left_index]
 			for right_index in range(left_index + 1, nodes.size()):
 				var right := nodes[right_index]
-				var left_offset: Vector2 = offsets[left.node_resource.id]
-				var right_offset: Vector2 = offsets[right.node_resource.id]
-				var left_base := left.position_offset - left.visual_offset
-				var right_base := right.position_offset - right.visual_offset
-				var left_rect := Rect2(left_base + left_offset, left.size).grow(AUTO_SPACING_GAP * 0.5)
-				var right_rect := Rect2(right_base + right_offset, right.size).grow(AUTO_SPACING_GAP * 0.5)
+				var left_rect := _auto_spacing_rect(left, offsets).grow(AUTO_SPACING_GAP * 0.5)
+				var right_rect := _auto_spacing_rect(right, offsets).grow(AUTO_SPACING_GAP * 0.5)
 				if not left_rect.intersects(right_rect):
 					continue
-				collision_found = true
+				layout_changed = true
+				var left_depth := int(node_depths.get(left.node_resource.id, 0))
+				var right_depth := int(node_depths.get(right.node_resource.id, 0))
 				var overlap_x := minf(left_rect.end.x, right_rect.end.x) - maxf(left_rect.position.x, right_rect.position.x)
-				var overlap_y := minf(left_rect.end.y, right_rect.end.y) - maxf(left_rect.position.y, right_rect.position.y)
-				if overlap_x <= overlap_y:
+				if left_depth == right_depth:
 					var direction_x := -1.0 if left_rect.get_center().x <= right_rect.get_center().x else 1.0
-					var shift_x := (overlap_x + 0.01) * 0.5
-					offsets[left.node_resource.id] = left_offset + Vector2(direction_x * shift_x, 0.0)
-					offsets[right.node_resource.id] = right_offset - Vector2(direction_x * shift_x, 0.0)
+					var total_shift_x := overlap_x + 0.01
+					var left_contains_anchor := _auto_spacing_subtree_contains(left.node_resource.id, anchor_node_id)
+					var right_contains_anchor := _auto_spacing_subtree_contains(right.node_resource.id, anchor_node_id)
+					if left_contains_anchor:
+						_shift_auto_spacing_subtree(offsets, right.node_resource.id, -Vector2(direction_x * total_shift_x, 0.0))
+					elif right_contains_anchor:
+						_shift_auto_spacing_subtree(offsets, left.node_resource.id, Vector2(direction_x * total_shift_x, 0.0))
+					else:
+						var shift_x := total_shift_x * 0.5
+						_shift_auto_spacing_subtree(offsets, left.node_resource.id, Vector2(direction_x * shift_x, 0.0))
+						_shift_auto_spacing_subtree(offsets, right.node_resource.id, -Vector2(direction_x * shift_x, 0.0))
 				else:
-					var direction_y := -1.0 if left_rect.get_center().y <= right_rect.get_center().y else 1.0
-					var shift_y := (overlap_y + 0.01) * 0.5
-					offsets[left.node_resource.id] = left_offset + Vector2(0.0, direction_y * shift_y)
-					offsets[right.node_resource.id] = right_offset - Vector2(0.0, direction_y * shift_y)
-		if not collision_found:
+					var shallow := left if left_depth < right_depth else right
+					var deep := right if left_depth < right_depth else left
+					var shallow_rect := _auto_spacing_rect(shallow, offsets)
+					var deep_rect := _auto_spacing_rect(deep, offsets)
+					var required_drop := shallow_rect.end.y + AUTO_SPACING_CONNECTION_GAP + AUTO_SPACING_CONNECTION_MARGIN - deep_rect.position.y
+					if _auto_spacing_subtree_contains(deep.node_resource.id, anchor_node_id):
+						_shift_auto_spacing_ancestor_chain(offsets, shallow.node_resource.id, Vector2(0.0, -maxf(required_drop, 0.01)))
+					else:
+						_shift_auto_spacing_subtree(offsets, deep.node_resource.id, Vector2(0.0, maxf(required_drop, 0.01)))
+		if not layout_changed:
 			break
 	return offsets
+
+
+func _auto_spacing_rect(graph_node: BTGraphNode, offsets: Dictionary) -> Rect2:
+	var base_position := graph_node.position_offset - graph_node.visual_offset
+	return Rect2(base_position + Vector2(offsets.get(graph_node.node_resource.id, Vector2.ZERO)), graph_node.size)
+
+
+func _auto_spacing_node_depth(node_id: int) -> int:
+	var depth := 0
+	var cursor := current_tree.find_node(node_id) if current_tree != null else null
+	var visited: Dictionary = {}
+	while cursor != null and cursor.parent_id != -1 and not visited.has(cursor.id):
+		visited[cursor.id] = true
+		depth += 1
+		cursor = current_tree.find_node(cursor.parent_id)
+	return depth
+
+
+func _auto_spacing_subtree_contains(root_id: int, candidate_id: int) -> bool:
+	if candidate_id == -1:
+		return false
+	return root_id == candidate_id or _collect_descendant_ids(root_id).has(candidate_id)
+
+
+func _shift_auto_spacing_subtree(offsets: Dictionary, root_id: int, delta: Vector2) -> void:
+	var ids: Array[int] = [root_id]
+	ids.append_array(_collect_descendant_ids(root_id))
+	for node_id in ids:
+		if offsets.has(node_id):
+			offsets[node_id] = Vector2(offsets[node_id]) + delta
+
+
+func _shift_auto_spacing_ancestor_chain(offsets: Dictionary, node_id: int, delta: Vector2) -> void:
+	var cursor := current_tree.find_node(node_id) if current_tree != null else null
+	var visited: Dictionary = {}
+	while cursor != null and not visited.has(cursor.id):
+		visited[cursor.id] = true
+		if offsets.has(cursor.id):
+			offsets[cursor.id] = Vector2(offsets[cursor.id]) + delta
+		cursor = current_tree.find_node(cursor.parent_id)
 
 
 func _reset_auto_spacing() -> void:
@@ -2035,7 +2236,7 @@ func _fit_visible_tree() -> void:
 	var viewport_size := graph_edit.size - Vector2(80.0, 80.0)
 	var target_zoom := min(viewport_size.x / max(1.0, bounds.size.x), viewport_size.y / max(1.0, bounds.size.y))
 	graph_edit.zoom = clampf(target_zoom, graph_edit.zoom_min, graph_edit.zoom_max)
-	graph_edit.scroll_offset = bounds.position - Vector2(40.0, 40.0) / graph_edit.zoom
+	graph_edit.scroll_offset = bounds.position * graph_edit.zoom - Vector2(40.0, 40.0)
 
 
 func _on_node_fields_changed() -> void:
@@ -2574,48 +2775,219 @@ func _runtime_visual_signature(snapshot: Dictionary) -> String:
 func _update_fisheye(delta: float) -> void:
 	if not is_instance_valid(graph_edit):
 		return
-	if fisheye_wheel_pause_elapsed > 0.0:
-		fisheye_wheel_pause_elapsed -= delta
+	if fisheye_wheel_pause_elapsed > 0.0 or zoom_layout_anchor_id != -1 or zoom_anchor_candidate_id != -1:
+		fisheye_wheel_pause_elapsed = maxf(0.0, fisheye_wheel_pause_elapsed - delta)
+		return
+	var mouse_position := get_viewport().get_mouse_position()
+	if fisheye_waiting_for_pointer_motion:
+		if mouse_position.distance_to(fisheye_resume_pointer_position) < FISHEYE_RESUME_POINTER_DISTANCE:
+			return
+		fisheye_waiting_for_pointer_motion = false
 		return
 	if not fisheye_enabled:
+		fisheye_focus_node_id = -1
 		graph_edit.fisheye_focus_position = Vector2.ZERO
 		graph_edit.queue_redraw()
 		return
-	var mouse_position := get_viewport().get_mouse_position()
 	if not graph_edit.get_global_rect().has_point(mouse_position):
 		_reset_fisheye(delta)
 		return
-	var weight_sum := 0.0
-	var weighted_local_position := Vector2.ZERO
+	var focused_node := _fisheye_node_at(mouse_position)
+	if focused_node == null:
+		_reset_fisheye(delta)
+		return
+	_apply_fisheye_focus(focused_node, delta)
+
+
+func _apply_fisheye_focus(focused_node: BTGraphNode, delta: float) -> void:
+	if focused_node == null or focused_node.node_resource == null:
+		_reset_fisheye(delta)
+		return
+	fisheye_focus_node_id = focused_node.node_resource.id
 	for child in graph_edit.get_children():
 		if not (child is BTGraphNode):
 			continue
 		var graph_node: BTGraphNode = child
-		var center := graph_node.get_global_rect().get_center()
-		var distance := center.distance_to(mouse_position)
-		var influence := _fisheye_influence(distance)
-		var target_scale := lerpf(FISHEYE_MIN_SCALE, FISHEYE_MAX_SCALE, influence)
-		_apply_node_fisheye_scale(graph_node, target_scale, influence, delta)
-		if influence > 0.0:
-			weight_sum += influence
-			weighted_local_position += graph_edit.get_global_transform().affine_inverse() * center * influence
-	if weight_sum > 0.0:
-		graph_edit.fisheye_focus_position = weighted_local_position / weight_sum
-	else:
-		graph_edit.fisheye_focus_position = graph_edit.get_global_transform().affine_inverse() * mouse_position
+		var is_focused := graph_node == focused_node
+		_apply_node_fisheye_scale(graph_node, FISHEYE_MAX_SCALE if is_focused else FISHEYE_CONTEXT_SCALE, 1.0 if is_focused else 0.0, delta)
+	graph_edit.fisheye_focus_position = focused_node.position_offset + focused_node.size * 0.5
 	graph_edit.queue_redraw()
 
 
-func _on_graph_view_wheel_scrolled() -> void:
+func _on_graph_view_wheel_scrolled(local_position: Vector2) -> void:
 	fisheye_wheel_pause_elapsed = FISHEYE_WHEEL_PAUSE
+	zoom_layout_anchor_release_elapsed = ZOOM_LAYOUT_ANCHOR_RELEASE_DELAY
+	_capture_zoom_layout_anchor(local_position)
+	if fisheye_enabled:
+		fisheye_waiting_for_pointer_motion = true
+		fisheye_resume_pointer_position = graph_edit.get_global_transform_with_canvas() * local_position
+		_reset_fisheye()
 
 
-func _fisheye_influence(distance: float) -> float:
-	if distance >= FISHEYE_RADIUS:
-		return 0.0
-	var normalized := clampf(distance / FISHEYE_RADIUS, 0.0, 1.0)
-	var falloff := 1.0 - normalized
-	return falloff * falloff * (3.0 - 2.0 * falloff)
+func _capture_zoom_layout_anchor(_local_position: Vector2) -> void:
+	if not _feature_enabled("zoom_anchor") or not is_instance_valid(graph_edit):
+		return
+	# One wheel burst keeps a snapshot of the viewport center and its neighboring
+	# nodes. This avoids switching anchors when temporary layout offsets move cards.
+	if zoom_layout_anchor_id != -1 or zoom_anchor_candidate_id != -1:
+		return
+	var viewport_center := graph_edit.size * 0.5
+	var view_center := _graph_view_center_tree_position()
+	graph_edit.set_zoom_scroll_boundary(view_center, graph_edit.size / maxf(graph_edit.zoom, 0.01))
+	var samples := _capture_zoom_center_samples(view_center, viewport_center)
+	if samples.is_empty():
+		return
+	zoom_anchor_candidate_id = int(samples[0].get("id", -1))
+	zoom_anchor_candidate_screen_position = viewport_center
+	zoom_anchor_candidate_zoom = graph_edit.zoom
+	zoom_anchor_candidate_frames = 2
+	zoom_anchor_candidate_view_center = view_center
+	zoom_anchor_candidate_samples = samples
+
+
+func _prepare_zoom_layout_anchor() -> void:
+	if zoom_anchor_candidate_id == -1 or not is_instance_valid(graph_edit):
+		return
+	if not is_equal_approx(graph_edit.zoom, zoom_anchor_candidate_zoom):
+		zoom_layout_anchor_id = zoom_anchor_candidate_id
+		zoom_layout_anchor_screen_position = zoom_anchor_candidate_screen_position
+		zoom_layout_anchor_samples = zoom_anchor_candidate_samples.duplicate(true)
+		zoom_layout_anchor_last_center = zoom_anchor_candidate_view_center
+		zoom_layout_anchor_last_zoom = graph_edit.zoom
+		zoom_layout_anchor_stable_frames = 0
+		zoom_anchor_candidate_id = -1
+		zoom_anchor_candidate_frames = 0
+		zoom_anchor_candidate_samples.clear()
+		return
+	zoom_anchor_candidate_frames -= 1
+	if zoom_anchor_candidate_frames <= 0:
+		zoom_anchor_candidate_id = -1
+		zoom_anchor_candidate_samples.clear()
+
+
+func _restore_zoom_layout_anchor() -> void:
+	if zoom_layout_anchor_id == -1 or not _feature_enabled("zoom_anchor") or not is_instance_valid(graph_edit):
+		return
+	var solved_center := _solve_zoom_view_center()
+	if solved_center == Vector2.INF:
+		_clear_zoom_layout_anchor()
+		return
+	graph_edit.set_zoom_scroll_boundary(solved_center, graph_edit.size / maxf(graph_edit.zoom, 0.01))
+	var target_scroll := solved_center * graph_edit.zoom - zoom_layout_anchor_screen_position
+	if not graph_edit.scroll_offset.is_equal_approx(target_scroll):
+		graph_edit.scroll_offset = target_scroll
+	var layout_stable := solved_center.distance_squared_to(zoom_layout_anchor_last_center) <= AUTO_SPACING_EPSILON * AUTO_SPACING_EPSILON
+	var zoom_stable := is_equal_approx(graph_edit.zoom, zoom_layout_anchor_last_zoom)
+	zoom_layout_anchor_stable_frames = zoom_layout_anchor_stable_frames + 1 if layout_stable and zoom_stable else 0
+	zoom_layout_anchor_last_center = solved_center
+	zoom_layout_anchor_last_zoom = graph_edit.zoom
+	if zoom_layout_anchor_release_elapsed <= 0.0 and zoom_layout_anchor_stable_frames >= ZOOM_LAYOUT_ANCHOR_STABLE_FRAMES and zoom_anchor_candidate_id == -1:
+		_clear_zoom_layout_anchor()
+
+
+func _capture_zoom_center_samples(view_center: Vector2, viewport_center: Vector2) -> Array[Dictionary]:
+	var candidates: Array[Dictionary] = []
+	var sample_radius := maxf(graph_edit.size.length() * ZOOM_CENTER_SAMPLE_RADIUS_FACTOR, 1.0)
+	for child in graph_edit.get_children():
+		if not (child is BTGraphNode) or not child.visible or child.node_resource == null:
+			continue
+		var graph_node: BTGraphNode = child
+		var node_center: Vector2 = graph_node.position_offset + graph_node.size * 0.5
+		var screen_distance: float = _graph_node_screen_center(graph_node).distance_to(viewport_center)
+		candidates.append({
+			"id": graph_node.node_resource.id,
+			"relative": node_center - view_center,
+			"distance": screen_distance,
+			"weight": 1.0 / (1.0 + screen_distance / sample_radius),
+		})
+	candidates.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
+		return float(left.get("distance", INF)) < float(right.get("distance", INF))
+	)
+	if candidates.size() > ZOOM_CENTER_SAMPLE_LIMIT:
+		candidates.resize(ZOOM_CENTER_SAMPLE_LIMIT)
+	return candidates
+
+
+func _solve_zoom_view_center() -> Vector2:
+	var weighted_center := Vector2.ZERO
+	var total_weight := 0.0
+	for sample in zoom_layout_anchor_samples:
+		var node_id := int(sample.get("id", -1))
+		var graph_node := graph_edit.get_node_or_null(NodePath(str(node_id))) as BTGraphNode
+		if graph_node == null or not graph_node.visible:
+			continue
+		var node_center := graph_node.position_offset + graph_node.size * 0.5
+		var relative := Vector2(sample.get("relative", Vector2.ZERO))
+		var weight := maxf(float(sample.get("weight", 1.0)), 0.001)
+		weighted_center += (node_center - relative) * weight
+		total_weight += weight
+	return weighted_center / total_weight if total_weight > 0.0 else Vector2.INF
+
+
+func _graph_view_center_tree_position() -> Vector2:
+	return (graph_edit.scroll_offset + graph_edit.size * 0.5) / maxf(graph_edit.zoom, 0.01)
+
+
+func _queue_zoom_layout_anchor_post_layout_restore() -> void:
+	if zoom_layout_anchor_id == -1 or zoom_layout_anchor_restore_queued:
+		return
+	zoom_layout_anchor_restore_queued = true
+	_restore_zoom_layout_anchor_post_layout.call_deferred()
+
+
+func _restore_zoom_layout_anchor_post_layout() -> void:
+	zoom_layout_anchor_restore_queued = false
+	# GraphNode size resets and auto-spacing are deferred by Godot. Correct once
+	# more after those updates so the viewport never displays their intermediate offset.
+	_restore_zoom_layout_anchor()
+
+
+func _nearest_visible_graph_node(local_position: Vector2) -> BTGraphNode:
+	var nearest: BTGraphNode
+	var nearest_distance := INF
+	for child in graph_edit.get_children():
+		if not (child is BTGraphNode) or not child.visible:
+			continue
+		var center := _graph_node_screen_center(child)
+		var distance := center.distance_squared_to(local_position)
+		if nearest == null or distance < nearest_distance:
+			nearest = child
+			nearest_distance = distance
+	return nearest
+
+
+func _graph_node_screen_center(graph_node: BTGraphNode) -> Vector2:
+	return (graph_node.position_offset + graph_node.size * 0.5) * graph_edit.zoom - graph_edit.scroll_offset
+
+
+func _clear_zoom_layout_anchor() -> void:
+	zoom_anchor_candidate_id = -1
+	zoom_anchor_candidate_frames = 0
+	zoom_anchor_candidate_samples.clear()
+	zoom_layout_anchor_id = -1
+	zoom_layout_anchor_stable_frames = 0
+	zoom_layout_anchor_release_elapsed = 0.0
+	zoom_layout_anchor_restore_queued = false
+	zoom_layout_anchor_samples.clear()
+
+
+func _fisheye_node_at(mouse_position: Vector2) -> BTGraphNode:
+	var focused: BTGraphNode
+	var closest_distance := INF
+	var graph_local := graph_edit.get_global_transform_with_canvas().affine_inverse() * mouse_position
+	var tree_position := _graph_local_to_tree_position(graph_local)
+	for child in graph_edit.get_children():
+		if not (child is BTGraphNode) or not child.visible:
+			continue
+		var graph_node: BTGraphNode = child
+		var rendered_rect := Rect2(graph_node.position_offset, graph_node.size)
+		if not rendered_rect.has_point(tree_position):
+			continue
+		var distance := rendered_rect.get_center().distance_squared_to(tree_position)
+		if focused == null or graph_node.z_index > focused.z_index or (graph_node.z_index == focused.z_index and distance <= closest_distance):
+			focused = graph_node
+			closest_distance = distance
+	return focused
 
 
 func _apply_node_fisheye_scale(graph_node: BTGraphNode, target_scale: float, influence: float, delta: float) -> void:
@@ -2630,6 +3002,7 @@ func _reset_fisheye(delta := 0.0) -> void:
 	if not is_instance_valid(graph_edit):
 		return
 	graph_edit.fisheye_focus_position = Vector2.ZERO
+	fisheye_focus_node_id = -1
 	var blend := 1.0 if delta <= 0.0 else clampf(delta * FISHEYE_LERP_SPEED, 0.0, 1.0)
 	for child in graph_edit.get_children():
 		if not (child is BTGraphNode):
@@ -2795,7 +3168,7 @@ func _attach_decorator_to_selected(title: String, parameters: Dictionary) -> voi
 
 
 func _graph_local_to_tree_position(local_position: Vector2) -> Vector2:
-	return (local_position / max(0.01, graph_edit.zoom)) + graph_edit.scroll_offset
+	return (local_position + graph_edit.scroll_offset) / maxf(0.01, graph_edit.zoom)
 
 
 func _popup_context_menu() -> void:

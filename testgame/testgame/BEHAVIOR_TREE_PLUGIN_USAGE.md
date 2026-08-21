@@ -13,15 +13,17 @@
 
 ## Display Tools
 
-- Open `Display Features` to enable or disable every optimization independently.
-- `Fisheye`: locally enlarges nodes near the pointer without changing the graph zoom.
+- Open the compact `Display` menu to enable or disable every optimization and the graph grid independently. The toolbar keeps only common navigation actions visible.
+- Open the compact `Debug` menu to toggle `Live Debug`, inactive-branch dimming, failure annotations, the Live Blackboard panel, and Blackboard Schema authoring. `Failures` remains beside it as a clickable node-location list.
+- `Fisheye`: enlarges only the card directly under the pointer, shrinks surrounding cards, and temporarily reflows them without changing saved positions.
 - `Compact`: reduces card size and keeps only the essential node identity.
 - `Semantic Zoom`: hides secondary information at low zoom while keeping card geometry stable.
-- `Zoom-Aware Auto Spacing`: temporarily separates expanded cards at medium or full detail without changing saved node coordinates.
+- `Zoom-Aware Auto Spacing`: temporarily separates expanded cards, keeps lower levels from moving upward, and reserves clear parent-child connection channels without changing saved node coordinates.
+- `Zoom View Anchor`: records the viewport center and nearby node relationships at the start of a wheel-zoom burst, then preserves that center-relative neighborhood while temporary layout changes settle.
 - `Arrange for Overview`: right-click the canvas and choose this command to save a compact low-detail layout; zooming in then demonstrates Auto Spacing, while zooming out restores the dense arrangement.
-- `Collapse All` / `Expand All`: summarizes or restores child subtrees.
-- `Focus`: keeps the selected subtree and its ancestor path; `Show All` restores the full tree.
-- `Find Node`: highlights matches in titles, types, descriptions, action names, condition names, and decorators.
+- `Collapse` / `Expand`: summarizes or restores all child subtrees.
+- `Focus`: keeps the selected subtree and its ancestor path; `All` restores the full tree.
+- `Find Node`: highlights matches in titles, types, descriptions, action names, condition names, and decorators. Enable or disable highlighting through `Display > Search + Highlight`.
 - `Minimap`, `Grid`, and `Fit`: support navigation in large trees.
 - `Runtime Path` and `Selection` show clickable path buttons for Live Debug and the selected node.
 - `Active Path Highlight`, `Non-active Branch Dimming`, and `Failure Reason Annotation` explain runtime decisions in the editor.

@@ -23,6 +23,7 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	_expect(view.graph_edit != null and view.search_edit != null and view.search_toggle != null and view.branch_dimming_toggle != null and view.failure_reason_toggle != null, "editor view builds controls")
+	_test_compact_display_toolbar(view)
 	_expect(view.palette_scroll != null and view.palette_scroll.vertical_scroll_mode == ScrollContainer.SCROLL_MODE_AUTO and view.palette_scroll.horizontal_scroll_mode == ScrollContainer.SCROLL_MODE_DISABLED, "node palette uses vertical scrolling instead of clipping overflow")
 	_expect(view.palette_content != null and view.palette_content.get_child_count() == 15, "scrollable node palette contains every group label and node type")
 	var original_view_size := view.size
@@ -121,7 +122,7 @@ func _run() -> void:
 	_expect(view.graph_edit.get_connection_list().size() == 4, "disabling fisheye rebuilds every connection")
 	_expect(is_equal_approx(view.graph_edit.zoom, zoom_before_fisheye_disable) and view.graph_edit.scroll_offset.is_equal_approx(scroll_before_fisheye_disable), "fisheye cleanup preserves viewport")
 
-	_test_display_feature_switches(view)
+	await _test_display_feature_switches(view)
 	await _test_editor_mutations(view)
 	_test_typed_parameter_inspector(view)
 	_test_blackboard_schema_editor(view)
@@ -736,12 +737,55 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	view._apply_semantic_detail_level()
 	view._update_auto_spacing(0.0, true)
 	_expect(_rendered_overlaps(view).is_empty(), "dense overview is readable without expanding logical spacing")
+	view.graph_edit.zoom = 1.0
 	view.semantic_detail_level = 2
 	view._apply_semantic_detail_level()
 	view._update_auto_spacing(0.0, true)
+	# GraphNode copies position_offset into its rendered Control position during
+	# deferred layout. Wait before testing the same coordinates used for drawing.
+	await process_frame
+	await process_frame
 	_expect(not _all_visual_offsets_zero(view), "zoom-aware auto spacing separates dense cards at full detail")
 	_expect(_rendered_overlaps(view).is_empty(), "zoom-aware auto spacing resolves every dense-card overlap")
+	_expect(_all_visual_offsets_nonnegative_y(view), "zoom-aware auto spacing never pulls lower nodes upward")
+	_expect(_parent_child_gap_failures(view, view.AUTO_SPACING_CONNECTION_GAP).is_empty(), "zoom-aware auto spacing reserves visible parent-child connection channels")
+	var connection_intersections := _connection_node_intersections(view)
+	if not connection_intersections.is_empty():
+		print("AUTO_SPACING_CONNECTION_INTERSECTIONS %s" % [connection_intersections])
+	_expect(connection_intersections.is_empty(), "zoom-aware auto spacing keeps connections out of unrelated node cards")
 	_expect(_resource_positions_equal(view.current_tree, dense_positions), "auto spacing never changes behavior-tree resource coordinates")
+	view.semantic_detail_level = 0
+	view._apply_semantic_detail_level()
+	view._update_auto_spacing(0.0, true)
+	view.graph_edit.zoom = 0.5
+	view.graph_edit.scroll_offset = Vector2(260.0, 80.0)
+	var viewport_center := view.graph_edit.size * 0.5
+	view._on_graph_view_wheel_scrolled(viewport_center)
+	var overview_samples := view.zoom_anchor_candidate_samples.duplicate(true)
+	var overview_relation := _weighted_zoom_sample_relation(view, overview_samples, true)
+	view.graph_edit.zoom = 1.0
+	view._prepare_zoom_layout_anchor()
+	view.semantic_detail_level = 2
+	view._apply_semantic_detail_level()
+	view._update_auto_spacing(0.0, true)
+	view._restore_zoom_layout_anchor()
+	var detail_relation := _weighted_zoom_sample_relation(view, overview_samples, false)
+	_expect(detail_relation.distance_to(overview_relation) <= 0.01, "zoom-in layout preserves the viewport center's relative position within nearby nodes")
+	view._clear_zoom_layout_anchor()
+	view._on_graph_view_wheel_scrolled(viewport_center)
+	var detail_samples := view.zoom_anchor_candidate_samples.duplicate(true)
+	var detail_return_relation := _weighted_zoom_sample_relation(view, detail_samples, true)
+	view.graph_edit.zoom = 0.5
+	view._prepare_zoom_layout_anchor()
+	view.semantic_detail_level = 0
+	view._apply_semantic_detail_level()
+	view._update_auto_spacing(0.0, true)
+	view._restore_zoom_layout_anchor()
+	var overview_return_relation := _weighted_zoom_sample_relation(view, detail_samples, false)
+	_expect(overview_return_relation.distance_to(detail_return_relation) <= 0.01, "zoom-out layout preserves the viewport center's relative position within nearby nodes")
+	view._set_feature_enabled("zoom_anchor", false, false)
+	_expect(view.zoom_layout_anchor_id == -1 and view.zoom_anchor_candidate_id == -1, "disabling Zoom View Anchor clears all viewport compensation state")
+	view._set_feature_enabled("zoom_anchor", true, false)
 	_graph_node(view, 2).sync_to_resource()
 	_expect(_resource_positions_equal(view.current_tree, dense_positions), "position synchronization excludes temporary visual offsets")
 	view.semantic_detail_level = 0
@@ -754,6 +798,28 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	view._set_feature_enabled("auto_spacing", false, false)
 	_expect(_all_visual_offsets_zero(view) and _render_positions_match_resources(view), "disabling auto spacing clears all temporary layout residue")
 	view._set_feature_enabled("semantic_zoom", false, false)
+
+	view.current_tree = _make_dense_zoom_tree()
+	view._rebuild_graph()
+	var fisheye_positions := _resource_positions(view.current_tree)
+	var fisheye_order := _child_ids(view.current_tree, 1)
+	view._set_feature_enabled("fisheye", true, false)
+	var focused_fisheye_node := _graph_node(view, 2)
+	var fisheye_local_point := (focused_fisheye_node.position_offset + focused_fisheye_node.size * 0.5) * view.graph_edit.zoom - view.graph_edit.scroll_offset
+	var fisheye_test_point := view.graph_edit.get_global_transform_with_canvas() * fisheye_local_point
+	var fisheye_hit := view._fisheye_node_at(fisheye_test_point)
+	_expect(fisheye_hit == focused_fisheye_node, "fisheye hit testing selects the node directly under the pointer")
+	view._apply_fisheye_focus(focused_fisheye_node, 1.0)
+	view._update_auto_spacing(0.0, true)
+	_expect(_count_magnified_nodes(view) == 1 and _graph_node(view, 2).fisheye_magnification >= 1.24, "fisheye magnifies only the focused node")
+	_expect(_all_unfocused_nodes_shrunk(view, 2), "fisheye shrinks every surrounding node")
+	_expect(_rendered_overlaps(view).is_empty(), "fisheye context layout prevents card overlap")
+	_expect(_child_ids(view.current_tree, 1) == fisheye_order and _rendered_child_order(view, 1) == fisheye_order, "fisheye preserves sibling left-to-right order")
+	_expect(_rendered_parent_above_children(view), "fisheye preserves parent-above-child topology")
+	_expect(_resource_positions_equal(view.current_tree, fisheye_positions), "fisheye layout never changes saved resource coordinates")
+	view._reset_fisheye()
+	view._update_auto_spacing(0.0, true)
+	_expect(_all_fisheye_state_reset(view), "leaving fisheye restores scale and temporary layout offsets")
 
 	view.current_tree = _make_view_tree()
 	view.selected_node_id = 4
@@ -890,6 +956,39 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	_expect(persisted_count == view.FEATURE_DEFINITIONS.size(), "all feature switches are independently serializable")
 
 
+func _test_compact_display_toolbar(view: BTEditorView) -> void:
+	var popup := view.feature_menu_button.get_popup()
+	var debug_popup := view.debug_menu_button.get_popup()
+	var grid_index := popup.get_item_index(view.DISPLAY_MENU_GRID_ID)
+	_expect(view.feature_menu_button.text == "Display", "display options use a compact menu label")
+	_expect(popup.item_count == view.FEATURE_DEFINITIONS.size() + 2 and grid_index >= 0, "display menu contains every feature plus Grid")
+	_expect(not view.fisheye_toggle.visible and not view.compact_toggle.visible and not view.semantic_zoom_toggle.visible and not view.path_summary_toggle.visible and not view.grid_toggle.visible and not view.minimap_toggle.visible, "redundant display checkboxes stay hidden from the toolbar")
+	var toolbar := view.get_node_or_null("ViewToolbar") as HBoxContainer
+	_expect(toolbar != null and toolbar.get_combined_minimum_size().x < 450.0, "compact view toolbar fits narrow editor panels")
+	var original_grid := view.graph_edit.show_grid
+	view._on_feature_menu_pressed(view.DISPLAY_MENU_GRID_ID)
+	_expect(view.graph_edit.show_grid != original_grid and popup.is_item_checked(grid_index) == view.graph_edit.show_grid, "Grid toggles and check mark synchronize through Display menu")
+	view._on_feature_menu_pressed(view.DISPLAY_MENU_GRID_ID)
+	var fisheye_index := popup.get_item_index(0)
+	view._set_feature_enabled("fisheye", false, false)
+	_expect(fisheye_index >= 0 and not popup.is_item_checked(fisheye_index) and not view.fisheye_toggle.button_pressed, "feature menu checks synchronize with compatibility state mirrors")
+	view._set_feature_enabled("fisheye", true, false)
+	_expect(view.debug_menu_button.text == "Debug" and debug_popup.item_count == 6, "runtime options use a compact Debug menu")
+	_expect(not view.live_debug_toggle.visible and not view.branch_dimming_toggle.visible and not view.failure_reason_toggle.visible and not view.blackboard_toggle.visible and not view.schema_toggle.visible, "redundant runtime checkboxes stay hidden from the toolbar")
+	_expect(not view.search_toggle.visible and view.search_edit.visible, "Search + Highlight uses the Display menu without hiding the search field")
+	var runtime_toolbar := view.get_node_or_null("RuntimeToolbar") as HBoxContainer
+	_expect(runtime_toolbar != null and runtime_toolbar.get_combined_minimum_size().x < 700.0, "compact runtime toolbar leaves room for Live Debug status")
+	view._on_debug_menu_pressed(view.DEBUG_MENU_LIVE_ID)
+	_expect(not view.runtime_debug_enabled and not debug_popup.is_item_checked(debug_popup.get_item_index(view.DEBUG_MENU_LIVE_ID)), "Debug menu toggles Live Debug and synchronizes its check mark")
+	view._on_debug_menu_pressed(view.DEBUG_MENU_LIVE_ID)
+	view._on_debug_menu_pressed(view.DEBUG_MENU_BLACKBOARD_ID)
+	_expect(view.blackboard_panel.visible and debug_popup.is_item_checked(debug_popup.get_item_index(view.DEBUG_MENU_BLACKBOARD_ID)), "Debug menu opens Live Blackboard and synchronizes its check mark")
+	view._on_debug_menu_pressed(view.DEBUG_MENU_BLACKBOARD_ID)
+	view._on_debug_menu_pressed(view.DEBUG_MENU_SCHEMA_ID)
+	_expect(view.schema_panel.visible and debug_popup.is_item_checked(debug_popup.get_item_index(view.DEBUG_MENU_SCHEMA_ID)), "Debug menu opens Schema authoring and synchronizes its check mark")
+	view._on_debug_menu_pressed(view.DEBUG_MENU_SCHEMA_ID)
+
+
 func _make_fanout_tree() -> BTTreeResource:
 	var tree := BTTreeResource.new()
 	tree.tree_name = "Fan-out Test"
@@ -949,6 +1048,32 @@ func _all_visual_offsets_zero(view: BTEditorView) -> bool:
 	return true
 
 
+func _all_visual_offsets_nonnegative_y(view: BTEditorView) -> bool:
+	for child in view.graph_edit.get_children():
+		if child is BTGraphNode and child.visual_offset.y < -0.01:
+			return false
+	return true
+
+
+func _weighted_zoom_sample_relation(view: BTEditorView, samples: Array, use_recorded_relative: bool) -> Vector2:
+	var weighted_relation := Vector2.ZERO
+	var total_weight := 0.0
+	var view_center := view._graph_view_center_tree_position()
+	for sample in samples:
+		var weight := maxf(float(sample.get("weight", 1.0)), 0.001)
+		var relative := Vector2(sample.get("relative", Vector2.ZERO))
+		if not use_recorded_relative:
+			var graph_node := _graph_node(view, int(sample.get("id", -1)))
+			if graph_node == null:
+				continue
+			relative = graph_node.position_offset + graph_node.size * 0.5 - view_center
+		weighted_relation += relative * weight
+		total_weight += weight
+	return weighted_relation / total_weight if total_weight > 0.0 else Vector2.INF
+
+
+
+
 func _render_positions_match_resources(view: BTEditorView) -> bool:
 	for child in view.graph_edit.get_children():
 		if child is BTGraphNode and not child.position_offset.is_equal_approx(child.node_resource.position):
@@ -967,6 +1092,98 @@ func _rendered_overlaps(view: BTEditorView) -> Array[String]:
 			if Rect2(nodes[left_index].position_offset, nodes[left_index].size).intersects(Rect2(nodes[right_index].position_offset, nodes[right_index].size)):
 				overlaps.append("%s:%s" % [nodes[left_index].name, nodes[right_index].name])
 	return overlaps
+
+
+func _parent_child_gap_failures(view: BTEditorView, minimum_gap: float) -> Array[String]:
+	var failures: Array[String] = []
+	for resource in view.current_tree.nodes:
+		if resource == null or resource.parent_id == -1 or resource.decorator_parent_id != -1:
+			continue
+		var parent := _graph_node(view, resource.parent_id)
+		var child := _graph_node(view, resource.id)
+		if parent == null or child == null:
+			continue
+		var gap := child.position_offset.y - (parent.position_offset.y + parent.size.y)
+		if gap + 0.01 < minimum_gap:
+			failures.append("%d>%d:%.1f" % [resource.parent_id, resource.id, gap])
+	return failures
+
+
+func _connection_node_intersections(view: BTEditorView) -> Array[String]:
+	var failures: Array[String] = []
+	for connection in view.graph_edit.get_connection_list():
+		var from_id := int(str(connection.get("from_node", "-1")))
+		var to_id := int(str(connection.get("to_node", "-1")))
+		var from_node := _graph_node(view, from_id)
+		var to_node := _graph_node(view, to_id)
+		if from_node == null or to_node == null:
+			continue
+		var points := view.graph_edit._route_connection_line(
+			view.graph_edit._output_port_position(from_node),
+			view.graph_edit._input_port_position(to_node)
+		)
+		for graph_child in view.graph_edit.get_children():
+			if not (graph_child is BTGraphNode) or graph_child == from_node or graph_child == to_node:
+				continue
+			var obstacle := Rect2(graph_child.position, graph_child.size * graph_child.scale).grow(-4.0)
+			if _polyline_enters_rect(points, obstacle):
+				failures.append("%d>%d through %s" % [from_id, to_id, graph_child.name])
+	return failures
+
+
+func _polyline_enters_rect(points: PackedVector2Array, rect: Rect2) -> bool:
+	for index in range(points.size() - 1):
+		var start := points[index]
+		var finish := points[index + 1]
+		var steps := maxi(1, ceili(start.distance_to(finish) / 4.0))
+		for step in range(steps + 1):
+			if rect.has_point(start.lerp(finish, float(step) / float(steps))):
+				return true
+	return false
+
+
+func _count_magnified_nodes(view: BTEditorView) -> int:
+	var count := 0
+	for child in view.graph_edit.get_children():
+		if child is BTGraphNode and child.fisheye_magnification > 1.001:
+			count += 1
+	return count
+
+
+func _all_unfocused_nodes_shrunk(view: BTEditorView, focused_id: int) -> bool:
+	for child in view.graph_edit.get_children():
+		if child is BTGraphNode and child.node_resource.id != focused_id and child.fisheye_magnification > view.FISHEYE_CONTEXT_SCALE + 0.01:
+			return false
+	return true
+
+
+func _rendered_child_order(view: BTEditorView, parent_id: int) -> Array[int]:
+	var children := view.current_tree.get_children_of(parent_id)
+	children.sort_custom(func(left: BTNodeResource, right: BTNodeResource):
+		return _graph_node(view, left.id).position_offset.x < _graph_node(view, right.id).position_offset.x
+	)
+	var ids: Array[int] = []
+	for node in children:
+		ids.append(node.id)
+	return ids
+
+
+func _rendered_parent_above_children(view: BTEditorView) -> bool:
+	for node in view.current_tree.nodes:
+		if node == null or node.parent_id == -1 or node.decorator_parent_id != -1:
+			continue
+		var parent := _graph_node(view, node.parent_id)
+		var child := _graph_node(view, node.id)
+		if parent != null and child != null and parent.position_offset.y >= child.position_offset.y:
+			return false
+	return true
+
+
+func _all_fisheye_state_reset(view: BTEditorView) -> bool:
+	for child in view.graph_edit.get_children():
+		if child is BTGraphNode and (not is_equal_approx(child.fisheye_magnification, 1.0) or not child.visual_offset.is_zero_approx()):
+			return false
+	return view.fisheye_focus_node_id == -1
 
 
 func _all_node_scales_reset(view: BTEditorView) -> bool:

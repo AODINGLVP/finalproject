@@ -4,11 +4,11 @@ class_name BTGraphEdit
 
 signal canvas_context_requested(local_position: Vector2)
 signal node_type_dropped(node_type: String, local_position: Vector2)
-signal viewport_wheel_scrolled
+signal viewport_wheel_scrolled(local_position: Vector2)
 signal custom_edge_disconnect_requested(from_node: StringName, to_node: StringName)
 signal manual_connection_requested(from_node: StringName, to_node: StringName)
 
-const FISHEYE_RADIUS := 430.0
+const FISHEYE_RADIUS := 82.0
 const ENHANCED_MINIMAP_SIZE := Vector2(230.0, 150.0)
 const ENHANCED_MINIMAP_OPACITY := 0.72
 
@@ -21,6 +21,8 @@ var native_connection_layer: Control
 var manual_connection_active := false
 var manual_connection_from := StringName()
 var manual_connection_pointer := Vector2.ZERO
+var zoom_boundary_min: GraphNode
+var zoom_boundary_max: GraphNode
 
 
 func _ready() -> void:
@@ -38,14 +40,44 @@ func _ready() -> void:
 	native_connection_layer = get_node_or_null("_connection_layer") as Control
 	connection_drag_started.connect(_on_connection_drag_started)
 	connection_drag_ended.connect(_on_connection_drag_ended)
+	_ensure_zoom_boundary_nodes()
 	_update_native_connection_layer()
+
+
+func set_zoom_scroll_boundary(view_center: Vector2, viewport_tree_size: Vector2) -> void:
+	_ensure_zoom_boundary_nodes()
+	var margin := Vector2(240.0, 240.0)
+	zoom_boundary_min.position_offset = view_center - viewport_tree_size * 0.5 - margin
+	zoom_boundary_max.position_offset = view_center + viewport_tree_size * 0.5 + margin
+
+
+func _ensure_zoom_boundary_nodes() -> void:
+	if not is_instance_valid(zoom_boundary_min):
+		zoom_boundary_min = _create_zoom_boundary("_zoom_boundary_min")
+	if not is_instance_valid(zoom_boundary_max):
+		zoom_boundary_max = _create_zoom_boundary("_zoom_boundary_max")
+
+
+func _create_zoom_boundary(node_name: String) -> GraphNode:
+	var boundary := GraphNode.new()
+	boundary.name = node_name
+	boundary.custom_minimum_size = Vector2.ONE
+	boundary.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	boundary.focus_mode = Control.FOCUS_NONE
+	boundary.selectable = false
+	boundary.draggable = false
+	boundary.resizable = false
+	boundary.modulate = Color(1.0, 1.0, 1.0, 0.0)
+	boundary.z_index = -4096
+	add_child(boundary)
+	return boundary
 
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion or event is InputEventMouseButton:
 		queue_redraw()
 	if event is InputEventMouseButton and event.pressed and _is_wheel_button(event.button_index):
-		viewport_wheel_scrolled.emit()
+		viewport_wheel_scrolled.emit(event.position)
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
 		var connection := find_connection_at(event.position)
 		if single_connection_rendering_enabled and not connection.is_empty():
@@ -211,7 +243,42 @@ func _route_connection_line(from_position: Vector2, to_position: Vector2) -> Pac
 			Vector2(to_position.x, middle_y),
 			to_position,
 		])
-	return _build_bezier_line(from_position, to_position)
+	return _build_channel_line(from_position, to_position)
+
+
+func _build_channel_line(from_position: Vector2, to_position: Vector2) -> PackedVector2Array:
+	var vertical_distance := to_position.y - from_position.y
+	if vertical_distance <= 8.0:
+		return _build_bezier_line(from_position, to_position)
+	var lane_y := from_position.y + vertical_distance * 0.5
+	var horizontal_distance := to_position.x - from_position.x
+	var direction_x := signf(horizontal_distance)
+	if is_zero_approx(direction_x):
+		return PackedVector2Array([from_position, to_position])
+	var radius := minf(24.0, minf(vertical_distance * 0.22, absf(horizontal_distance) * 0.22))
+	var points := PackedVector2Array([from_position, Vector2(from_position.x, lane_y - radius)])
+	_append_quadratic_points(
+		points,
+		Vector2(from_position.x, lane_y - radius),
+		Vector2(from_position.x, lane_y),
+		Vector2(from_position.x + direction_x * radius, lane_y)
+	)
+	points.append(Vector2(to_position.x - direction_x * radius, lane_y))
+	_append_quadratic_points(
+		points,
+		Vector2(to_position.x - direction_x * radius, lane_y),
+		Vector2(to_position.x, lane_y),
+		Vector2(to_position.x, lane_y + radius)
+	)
+	points.append(to_position)
+	return points
+
+
+func _append_quadratic_points(points: PackedVector2Array, start: Vector2, control: Vector2, finish: Vector2) -> void:
+	for index in range(1, 5):
+		var weight := float(index) / 4.0
+		var inverse := 1.0 - weight
+		points.append(inverse * inverse * start + 2.0 * inverse * weight * control + weight * weight * finish)
 
 
 func _build_bezier_line(from_position: Vector2, to_position: Vector2) -> PackedVector2Array:

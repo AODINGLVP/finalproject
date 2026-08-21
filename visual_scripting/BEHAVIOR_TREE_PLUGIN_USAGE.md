@@ -11,7 +11,11 @@
 
 ## Display Tools
 
-- Enable `Semantic Zoom` and `Zoom-Aware Auto Spacing` to keep low-detail trees dense while temporarily separating expanded cards.
+- Open the compact `Display` menu to switch individual optimizations and the graph grid. Common `Collapse`, `Expand`, `Focus`, `All`, and `Fit` actions remain directly available.
+- Open the compact `Debug` menu for Live Debug, inactive-branch dimming, failure annotations, Live Blackboard, and Blackboard Schema authoring.
+- `Fisheye` enlarges only the card directly under the pointer, shrinks surrounding cards, and temporarily reflows them without changing saved positions.
+- Enable `Semantic Zoom` and `Zoom-Aware Auto Spacing` to keep low-detail trees dense while temporarily separating expanded cards and preserving clear connection channels.
+- Keep `Zoom View Anchor` enabled to preserve the viewport center's relative position within nearby nodes while zoom-triggered layout changes settle.
 - Right-click the graph and choose `Arrange for Overview` to save a compact low-detail layout. Zooming out restores these saved coordinates; the expanded spacing is visual only.
 
 ## Runtime
