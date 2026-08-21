@@ -28,6 +28,7 @@ var current_behavior := "Initialize"
 var target_locked := false
 var damage_flash_remaining := 0.0
 var respawn_remaining := 0.0
+var alert_level := 0.0
 
 
 func _ready() -> void:
@@ -92,6 +93,23 @@ func has_last_known_position(blackboard: Dictionary, _delta: float, _node: Resou
 	return BTStatus.SUCCESS if bool(blackboard.get("has_last_known_position", false)) else BTStatus.FAILURE
 
 
+func should_dodge(blackboard: Dictionary, _delta: float, _node: Resource) -> int:
+	return BTStatus.SUCCESS if bool(blackboard.get("player_attacking", false)) and float(blackboard.get("player_distance", INF)) <= attack_range + 55.0 else BTStatus.FAILURE
+
+
+func can_melee(blackboard: Dictionary, _delta: float, _node: Resource) -> int:
+	return BTStatus.SUCCESS if bool(blackboard.get("player_in_range", false)) else BTStatus.FAILURE
+
+
+func should_apply_pressure(blackboard: Dictionary, _delta: float, _node: Resource) -> int:
+	var distance := float(blackboard.get("player_distance", INF))
+	return BTStatus.SUCCESS if bool(blackboard.get("player_detected", false)) and distance > attack_range and distance <= 190.0 else BTStatus.FAILURE
+
+
+func should_return_home(blackboard: Dictionary, _delta: float, _node: Resource) -> int:
+	return BTStatus.SUCCESS if not bool(blackboard.get("player_detected", false)) and not bool(blackboard.get("has_last_known_position", false)) and float(blackboard.get("home_distance", 0.0)) > 150.0 else BTStatus.FAILURE
+
+
 func retreat_from_player(blackboard: Dictionary, delta: float, node: Resource) -> int:
 	current_behavior = "Retreat"
 	var target_x := float(blackboard.get("player_x", global_position.x))
@@ -120,6 +138,94 @@ func chase_player(blackboard: Dictionary, delta: float, node: Resource) -> int:
 	var target_x := float(blackboard.get("player_x", global_position.x))
 	var direction := -1 if target_x < global_position.x else 1
 	return _timed_move(blackboard, delta, node, direction, chase_speed, decision_duration)
+
+
+func dodge_left(blackboard: Dictionary, delta: float, node: Resource) -> int:
+	current_behavior = "Dodge Left"
+	return _timed_move(blackboard, delta, node, -1, retreat_speed * 1.15, 0.16)
+
+
+func dodge_right(blackboard: Dictionary, delta: float, node: Resource) -> int:
+	current_behavior = "Dodge Right"
+	return _timed_move(blackboard, delta, node, 1, retreat_speed * 1.15, 0.16)
+
+
+func brace(blackboard: Dictionary, delta: float, node: Resource) -> int:
+	return _timed_stationary_action(blackboard, delta, node, "Brace", 0.14)
+
+
+func light_attack_left(blackboard: Dictionary, delta: float, node: Resource) -> int:
+	return _attack_action(blackboard, delta, node, -1, 0.22, 1, "Light Attack Left")
+
+
+func light_attack_right(blackboard: Dictionary, delta: float, node: Resource) -> int:
+	return _attack_action(blackboard, delta, node, 1, 0.22, 1, "Light Attack Right")
+
+
+func heavy_attack_left(blackboard: Dictionary, delta: float, node: Resource) -> int:
+	return _attack_action(blackboard, delta, node, -1, 0.48, 2, "Heavy Attack Left")
+
+
+func heavy_attack_right(blackboard: Dictionary, delta: float, node: Resource) -> int:
+	return _attack_action(blackboard, delta, node, 1, 0.48, 2, "Heavy Attack Right")
+
+
+func strafe_left(blackboard: Dictionary, delta: float, node: Resource) -> int:
+	current_behavior = "Strafe Left"
+	return _timed_move(blackboard, delta, node, -1, speed * 0.8, 0.24)
+
+
+func strafe_right(blackboard: Dictionary, delta: float, node: Resource) -> int:
+	current_behavior = "Strafe Right"
+	return _timed_move(blackboard, delta, node, 1, speed * 0.8, 0.24)
+
+
+func advance_cautiously(blackboard: Dictionary, delta: float, node: Resource) -> int:
+	current_behavior = "Cautious Advance"
+	return _move_toward_player(blackboard, delta, node, speed * 0.75, 0.28)
+
+
+func advance_aggressively(blackboard: Dictionary, delta: float, node: Resource) -> int:
+	current_behavior = "Aggressive Advance"
+	return _move_toward_player(blackboard, delta, node, chase_speed * 1.12, 0.24)
+
+
+func signal_allies(blackboard: Dictionary, _delta: float, _node: Resource) -> int:
+	current_behavior = "Signal Allies"
+	alert_level = 1.0
+	blackboard["alert_level"] = alert_level
+	return BTStatus.SUCCESS
+
+
+func scan_for_player(blackboard: Dictionary, delta: float, node: Resource) -> int:
+	return _timed_stationary_action(blackboard, delta, node, "Scan", 0.18)
+
+
+func search_sweep_left(blackboard: Dictionary, delta: float, node: Resource) -> int:
+	current_behavior = "Search Left"
+	return _timed_move(blackboard, delta, node, -1, speed * 0.62, 0.34)
+
+
+func search_sweep_right(blackboard: Dictionary, delta: float, node: Resource) -> int:
+	current_behavior = "Search Right"
+	return _timed_move(blackboard, delta, node, 1, speed * 0.62, 0.34)
+
+
+func return_home(blackboard: Dictionary, delta: float, node: Resource) -> int:
+	current_behavior = "Return Home"
+	var distance := home_position.x - global_position.x
+	if absf(distance) <= 18.0:
+		velocity.x = 0.0
+		return BTStatus.SUCCESS
+	return _timed_move(blackboard, delta, node, -1 if distance < 0.0 else 1, speed, 0.3)
+
+
+func observe_area(blackboard: Dictionary, delta: float, node: Resource) -> int:
+	return _timed_stationary_action(blackboard, delta, node, "Observe", 0.22)
+
+
+func idle_guard(blackboard: Dictionary, delta: float, node: Resource) -> int:
+	return _timed_stationary_action(blackboard, delta, node, "Guard Idle", 0.3)
 
 
 func search_last_known(blackboard: Dictionary, delta: float, node: Resource) -> int:
@@ -184,8 +290,8 @@ func _move_action(blackboard: Dictionary, delta: float, node: Resource, directio
 	return BTStatus.RUNNING
 
 
-func _attack_action(blackboard: Dictionary, delta: float, node: Resource, direction: int) -> int:
-	current_behavior = "Attack Left" if direction < 0 else "Attack Right"
+func _attack_action(blackboard: Dictionary, delta: float, node: Resource, direction: int, duration := -1.0, damage := -1, behavior_label := "") -> int:
+	current_behavior = behavior_label if not behavior_label.is_empty() else ("Attack Left" if direction < 0 else "Attack Right")
 	var key := _action_key(node)
 	var hit_key := "%s_hit" % key
 	var elapsed: float = blackboard.get(key, 0.0)
@@ -194,11 +300,12 @@ func _attack_action(blackboard: Dictionary, delta: float, node: Resource, direct
 	sprite.texture = attack_texture
 	sprite.flip_h = facing < 0
 	if not blackboard.get(hit_key, false):
-		_try_hit_player()
+		_try_hit_player(attack_damage if damage < 0 else damage)
 		blackboard[hit_key] = true
 	elapsed += delta
 	blackboard[key] = elapsed
-	if elapsed >= attack_duration:
+	var active_duration := attack_duration if duration < 0.0 else duration
+	if elapsed >= active_duration:
 		sprite.texture = idle_texture
 		blackboard.erase(key)
 		blackboard.erase(hit_key)
@@ -206,13 +313,13 @@ func _attack_action(blackboard: Dictionary, delta: float, node: Resource, direct
 	return BTStatus.RUNNING
 
 
-func _try_hit_player() -> void:
+func _try_hit_player(damage := -1) -> void:
 	for player in get_tree().get_nodes_in_group("player"):
 		var offset: Vector2 = player.global_position - global_position
 		var is_in_front: bool = (offset.x < 0.0 and facing < 0) or (offset.x > 0.0 and facing > 0) or is_zero_approx(offset.x)
 		if is_in_front and abs(offset.x) <= attack_range and abs(offset.y) <= 42.0:
 			if player.has_method("take_damage"):
-				player.take_damage(attack_damage)
+				player.take_damage(attack_damage if damage < 0 else damage)
 
 
 func _action_key(node: Resource) -> String:
@@ -231,6 +338,24 @@ func _timed_move(blackboard: Dictionary, delta: float, node: Resource, direction
 		blackboard.erase(key)
 		return BTStatus.SUCCESS
 	return BTStatus.RUNNING
+
+
+func _move_toward_player(blackboard: Dictionary, delta: float, node: Resource, action_speed: float, duration: float) -> int:
+	var target_x := float(blackboard.get("player_x", global_position.x))
+	return _timed_move(blackboard, delta, node, -1 if target_x < global_position.x else 1, action_speed, duration)
+
+
+func _timed_stationary_action(blackboard: Dictionary, delta: float, node: Resource, label: String, duration: float) -> int:
+	current_behavior = label
+	velocity.x = 0.0
+	sprite.texture = idle_texture
+	var key := _action_key(node)
+	var elapsed := float(blackboard.get(key, 0.0)) + delta
+	blackboard[key] = elapsed
+	if elapsed < duration:
+		return BTStatus.RUNNING
+	blackboard.erase(key)
+	return BTStatus.SUCCESS
 
 
 func _update_blackboard() -> void:
@@ -263,6 +388,12 @@ func _update_blackboard() -> void:
 	board["player_on_left"] = offset.x < 0.0
 	board["player_on_right"] = offset.x >= 0.0
 	board["player_x"] = nearest_player.global_position.x
+	board["player_distance"] = nearest_distance
+	board["player_attacking"] = float(nearest_player.get("attack_timer")) > 0.0
+	board["player_health"] = int(nearest_player.get("health"))
+	board["home_distance"] = global_position.distance_to(home_position)
+	board["nearby_allies"] = _nearby_ally_count()
+	board["alert_level"] = alert_level
 	board["health"] = health
 	board["health_ratio"] = float(health) / float(max_health)
 	board["low_health"] = health <= 3
@@ -270,3 +401,11 @@ func _update_blackboard() -> void:
 	if board["player_detected"]:
 		board["last_known_player_x"] = nearest_player.global_position.x
 		board["has_last_known_position"] = true
+
+
+func _nearby_ally_count() -> int:
+	var count := 0
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if enemy != self and enemy is Node2D and enemy.visible and global_position.distance_to(enemy.global_position) <= 260.0:
+			count += 1
+	return count

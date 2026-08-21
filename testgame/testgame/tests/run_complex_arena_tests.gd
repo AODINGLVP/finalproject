@@ -25,11 +25,11 @@ func _run() -> void:
 	var runner = enemy.get_node("BehaviorTreeComponent")
 	runner.tick_on_physics = false
 	runner.stop_tree()
-	_expect(runner.behavior_tree.tree_name == "Complex Guard Validation Tree", "complex guard tree is assigned")
-	_expect(runner.behavior_tree.nodes.size() == 36, "complex tree contains all validation nodes")
+	_expect(runner.behavior_tree.tree_name == "Playable Complex Tactical Enemy (213 Nodes)", "playable complex tactical tree is assigned")
+	_expect(runner.behavior_tree.nodes.size() == 213, "playable behavior tree contains 200+ meaningful nodes")
 	_expect(_tree_has_type(runner.behavior_tree, "Repeat") and _tree_has_type(runner.behavior_tree, "Random Selector") and _tree_has_type(runner.behavior_tree, "Parallel") and _tree_has_type(runner.behavior_tree, "Wait"), "complex tree uses every new runtime node type")
-	_expect(runner.behavior_tree.blackboard_schema != null and runner.behavior_tree.blackboard_schema.entries.size() == 11, "complex tree binds a typed blackboard schema")
-	_expect(runner.behavior_tree.find_node(33).parameters.get("duration") == 0.25 and runner.behavior_tree.find_node(36).parameters.get("duration") == 0.25, "both patrol Wait nodes keep the configured duration")
+	_expect(runner.behavior_tree.blackboard_schema != null and runner.behavior_tree.blackboard_schema.entries.size() == 17, "complex tree binds the expanded typed blackboard schema")
+	_expect(_tree_has_title(runner.behavior_tree, "1 Emergency Recovery") and _tree_has_title(runner.behavior_tree, "9 Guard Idle Variations"), "priority tree contains all tactical layers")
 	_expect(game.has_node("Medkit") and game.has_node("DamageZone"), "arena includes pickup and hazard systems")
 	_expect(game.has_node("UI/TopPanel/TopContent/PlayerStatus"), "arena includes gameplay HUD without runtime tree overlay")
 
@@ -39,32 +39,46 @@ func _run() -> void:
 	player.global_position = enemy.global_position + Vector2(45, 0)
 	enemy._update_blackboard()
 	_expect(runner.tick(0.1) == BTStatus.RUNNING, "right-side attack starts running")
-	_expect("Attack Right" in runner.active_path_titles, "selector chooses attack-right branch")
+	_expect("3 Directional Melee Combat" in runner.active_path_titles and "Right Combat" in runner.active_path_titles, "selector chooses direction-aware right combo")
 
 	_reset_runner(runner)
 	player.global_position = enemy.global_position + Vector2(-45, 0)
 	enemy._update_blackboard()
 	runner.tick(0.1)
-	_expect("Attack Left" in runner.active_path_titles, "selector chooses attack-left branch")
+	_expect("3 Directional Melee Combat" in runner.active_path_titles and "Left Combat" in runner.active_path_titles, "selector chooses direction-aware left combo")
+
+	_reset_runner(runner)
+	player.attack_timer = 0.15
+	player.global_position = enemy.global_position + Vector2(55, 0)
+	enemy._update_blackboard()
+	runner.tick(0.05)
+	_expect("2 Reactive Defense" in runner.active_path_titles and enemy.current_behavior in ["Dodge Left", "Dodge Right", "Brace"], "enemy reacts to the player's live attack window")
+	player.attack_timer = 0.0
+
+	_reset_runner(runner)
+	player.global_position = enemy.global_position + Vector2(135, 0)
+	enemy._update_blackboard()
+	runner.tick(0.1)
+	_expect("4 Mid-Range Pressure" in runner.active_path_titles and enemy.current_behavior in ["Strafe Left", "Strafe Right", "Brace"], "enemy uses a pressure pattern at middle range")
 
 	_reset_runner(runner)
 	player.global_position = enemy.global_position + Vector2(220, 0)
 	enemy._update_blackboard()
 	_expect(runner.blackboard.get("player_detected", false), "blackboard records detected player")
 	runner.tick(0.1)
-	_expect("Chase Player" in runner.active_path_titles and enemy.current_behavior == "Chase", "selector chooses chase branch")
+	_expect("5 Coordinated Chase" in runner.active_path_titles, "selector chooses a coordinated chase strategy")
 
 	_reset_runner(runner)
 	enemy.target_locked = false
 	player.global_position = enemy.global_position + Vector2(enemy.lose_target_range + 100.0, 0)
 	enemy._update_blackboard()
 	runner.tick(0.1)
-	_expect("Patrol Sequence" in runner.active_path_titles and "Random Patrol Direction" in runner.active_path_titles and _path_contains_any(runner.active_path_titles, ["Parallel Left Patrol", "Parallel Right Patrol"]), "enemy patrols through Random Selector and Parallel before acquiring a target")
+	_expect("8 Layered Patrol" in runner.active_path_titles and "Patrol Route Choice" in runner.active_path_titles, "enemy patrols through varied routes before acquiring a target")
 	player.global_position = enemy.global_position + Vector2(250, 0)
 	enemy._update_blackboard()
 	var distance_before: float = absf(player.global_position.x - enemy.global_position.x)
 	runner.tick(0.1)
-	_expect("Chase Player" in runner.active_path_titles, "detection immediately preempts running patrol")
+	_expect("5 Coordinated Chase" in runner.active_path_titles, "detection immediately preempts running patrol")
 	enemy.move_and_slide()
 	var distance_after: float = absf(player.global_position.x - enemy.global_position.x)
 	_expect(enemy.velocity.x > 0.0 and distance_after < distance_before, "chase movement closes distance to player")
@@ -77,7 +91,7 @@ func _run() -> void:
 	enemy._update_blackboard()
 	_expect(not runner.blackboard.get("player_detected", true) and runner.blackboard.get("has_last_known_position", false), "cloak preserves last-known position")
 	runner.tick(0.1)
-	_expect("Search Last Known" in runner.active_path_titles and enemy.current_behavior == "Search", "selector chooses search branch")
+	_expect("6 Last-Known-Position Search" in runner.active_path_titles, "selector chooses a multi-pattern search branch")
 
 	_reset_runner(runner)
 	player.cloaked = false
@@ -85,10 +99,17 @@ func _run() -> void:
 	enemy._update_blackboard()
 	runner.blackboard["has_last_known_position"] = false
 	runner.tick(0.1)
-	var patrol_statuses: Dictionary = runner.get_debug_snapshot().get("statuses", {})
-	var movement_ticked: bool = patrol_statuses.get(32, "") == "RUNNING" or patrol_statuses.get(35, "") == "RUNNING"
-	var wait_ticked: bool = patrol_statuses.get(33, "") == "RUNNING" or patrol_statuses.get(36, "") == "RUNNING"
-	_expect("Patrol Sequence" in runner.active_path_titles and movement_ticked and wait_ticked, "selector chooses fallback patrol with concurrent Wait")
+	_expect("8 Layered Patrol" in runner.active_path_titles and _path_contains_prefix(runner.active_path_titles, "Patrol Motion"), "selector chooses fallback patrol with concurrent movement and timing")
+
+	_reset_runner(runner)
+	enemy.global_position = enemy.home_position + Vector2(220, 0)
+	enemy.target_locked = false
+	player.global_position = enemy.global_position + Vector2(700, 0)
+	enemy._update_blackboard()
+	runner.blackboard["has_last_known_position"] = false
+	runner.tick(0.1)
+	_expect("7 Return to Guard Post" in runner.active_path_titles and enemy.current_behavior == "Return Home", "enemy returns to its post after patrol drift")
+	enemy.global_position = enemy.home_position
 
 	_reset_runner(runner)
 	enemy.health = 1
@@ -96,7 +117,7 @@ func _run() -> void:
 	enemy._update_blackboard()
 	_expect(runner.blackboard.get("critical_health", false), "blackboard exposes critical health")
 	runner.tick(0.1)
-	_expect("Retreat From Player" in runner.active_path_titles and enemy.current_behavior == "Retreat", "critical enemy chooses emergency retreat")
+	_expect("1 Emergency Recovery" in runner.active_path_titles and enemy.current_behavior == "Retreat", "critical enemy chooses emergency retreat")
 	var emergency_status := BTStatus.RUNNING
 	for index in range(12):
 		emergency_status = runner.tick(0.1)
@@ -142,9 +163,23 @@ func _tree_has_type(tree: Resource, type_name: String) -> bool:
 	return false
 
 
+func _tree_has_title(tree: Resource, title: String) -> bool:
+	for node in tree.nodes:
+		if node != null and node.title == title:
+			return true
+	return false
+
+
 func _path_contains_any(path: Array, titles: Array[String]) -> bool:
 	for title in titles:
 		if title in path:
+			return true
+	return false
+
+
+func _path_contains_prefix(path: Array, prefix: String) -> bool:
+	for title in path:
+		if str(title).begins_with(prefix):
 			return true
 	return false
 

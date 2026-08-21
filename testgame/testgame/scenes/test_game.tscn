@@ -9,7 +9,7 @@
 [ext_resource type="Texture2D" path="res://assets/enemy_idle.svg" id="7_enemy_idle"]
 [ext_resource type="Texture2D" path="res://assets/enemy_attack.svg" id="8_enemy_attack"]
 [ext_resource type="Script" path="res://scripts/arena_controller.gd" id="9_arena_script"]
-[ext_resource type="Resource" path="res://behavior_trees/complex_guard_validation_tree.tres" id="10_complex_tree"]
+[ext_resource type="Resource" path="res://behavior_trees/playable_complex_enemy_213.tres" id="10_complex_tree"]
 [ext_resource type="Script" path="res://scripts/medkit_pickup.gd" id="11_medkit_script"]
 [ext_resource type="Script" path="res://scripts/damage_zone.gd" id="12_damage_script"]
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
