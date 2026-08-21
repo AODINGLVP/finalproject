@@ -66,6 +66,20 @@ func _run() -> void:
 	_expect(_overlapping_node_pairs().is_empty(), "baseline node cards do not overlap")
 	_expect(_all_parent_child_gaps_at_least(45.0), "baseline keeps a clear parent-child vertical gap")
 
+	view.context_menu.position = Vector2i(260, 170)
+	view.context_menu.popup()
+	await _settle()
+	var context_creation_menu := await _capture_case("01_context_creation_menu")
+	_assert_image_valid(context_creation_menu, "canvas node creation menu renders")
+	var context_has_all_types := true
+	for creation_id in range(10):
+		if view.context_menu.get_item_index(creation_id) < 0:
+			context_has_all_types = false
+			break
+	_expect(view.context_menu.visible and context_has_all_types, "right-click menu visibly exposes all ten node types")
+	view.context_menu.hide()
+	await _settle()
+
 	var display_popup := view.feature_menu_button.get_popup()
 	display_popup.position = Vector2i(40, 135)
 	display_popup.popup()
