@@ -154,6 +154,7 @@ var runtime_path_status_label: Label
 var runtime_path_depth_label: Label
 var selection_path_scroll: ScrollContainer
 var selection_path_container: HBoxContainer
+var selection_path_row: HBoxContainer
 var search_edit: LineEdit
 var search_result_label: Label
 var search_previous_button: Button
@@ -547,8 +548,9 @@ func _build_ui() -> void:
 	runtime_path_container = HBoxContainer.new()
 	runtime_path_container.size_flags_horizontal = SIZE_EXPAND_FILL
 	runtime_path_scroll.add_child(runtime_path_container)
-	var selection_path_row := HBoxContainer.new()
+	selection_path_row = HBoxContainer.new()
 	selection_path_row.size_flags_horizontal = SIZE_EXPAND_FILL
+	selection_path_row.visible = false
 	path_navigation_row.add_child(selection_path_row)
 	var selection_path_label := Label.new()
 	selection_path_label.text = "Selection"
@@ -937,6 +939,8 @@ func _set_feature_enabled(key: String, enabled: bool, persist := true) -> void:
 			if not enabled:
 				_clear_container(runtime_path_container)
 		"breadcrumb":
+			if is_instance_valid(selection_path_row):
+				selection_path_row.visible = enabled
 			if not enabled:
 				_clear_container(selection_path_container)
 		"failure_reason":

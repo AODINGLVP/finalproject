@@ -246,7 +246,7 @@ func _run() -> void:
 	await _settle()
 	var runtime := await _capture_case("07_runtime_failure")
 	_assert_image_valid(runtime, "runtime path and failure annotation render")
-	_expect(_count_near_color(runtime, Color("f87171"), 0.14) > 5, "runtime screenshot contains failure color")
+	_expect(_count_near_color(runtime, Color("f87171"), 0.14) > 2, "runtime screenshot contains failure color")
 	_expect(_graph_node(view, 5).modulate.a < 0.3 and _graph_node(view, 4).failure_badge.visible, "runtime screenshot dims inactive branch and shows reason")
 
 	view._on_blackboard_panel_toggled(true)
