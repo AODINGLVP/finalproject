@@ -180,7 +180,7 @@ func _measure(view: BTEditorView, information_fields: int) -> Dictionary:
 		var rect := Rect2(graph_node.position_offset + graph_node.visual_offset, graph_node.size * graph_node.scale)
 		bounds = rect if index == 0 else bounds.merge(rect)
 		card_area += rect.size.x * rect.size.y
-		if not graph_node.search_matches:
+		if not view.search_query.is_empty() and not graph_node.search_matches:
 			dimmed += 1
 	var overlaps := 0
 	for left in range(nodes.size()):
