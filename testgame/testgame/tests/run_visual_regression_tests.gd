@@ -381,6 +381,27 @@ func _run() -> void:
 	_expect(float(real_zoom_out_metrics.get("max_relation_drift", INF)) <= 1.0, "real wheel zoom-out preserves the viewport center's relative position within nearby nodes")
 	_expect(float(real_zoom_out_metrics.get("max_screen_formula_error", INF)) <= 1.0 and float(real_zoom_out_metrics.get("final_zoom", INF)) <= 0.52, "real wheel zoom-out matches rendered positions and returns to overview")
 
+	view._set_feature_enabled("auto_spacing", false, false)
+	view._set_feature_enabled("compact", true, false)
+	view._set_feature_enabled("semantic_zoom", true, false)
+	view._set_feature_enabled("minimap", true, false)
+	view.current_tree = load("res://behavior_trees/complex_display_tree_241.tres") as BTTreeResource
+	view.current_tree_path = "res://behavior_trees/complex_display_tree_241.tres"
+	view.file_path_edit.text = view.current_tree_path
+	view.selected_node_id = view.current_tree.root_node_id
+	view._refresh_entire_ui()
+	var playable_positions := _resource_positions(view.current_tree)
+	view.semantic_detail_level = 0
+	view._apply_semantic_detail_level()
+	view._fit_visible_tree()
+	await _settle()
+	var playable_overview := await _capture_case("11_playable_241_zoomed_out")
+	_assert_image_valid(playable_overview, "playable 241-node zoomed-out overview renders")
+	_expect(view.current_tree.nodes.size() == 241 and _graph_node_count() == _non_decorator_node_count(), "playable tree renders every one of its 241 runtime nodes")
+	_expect(_overlapping_node_pairs().is_empty(), "saved 241-node overview remains overlap-free with Auto Spacing disabled")
+	_expect(view.graph_edit.zoom <= 0.35 and view.graph_edit.minimap_enabled, "zoomed-out 241-node screenshot includes the complete minimap context")
+	_expect(_resource_positions_equal(view.current_tree, playable_positions), "zooming the 241-node tree preserves every saved coordinate")
+
 	print("BT_VISUAL_TEST_SUMMARY passed=%d failed=%d output=%s" % [passed, failed, OUTPUT_DIR])
 	view.free()
 	viewport.free()
