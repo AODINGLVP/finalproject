@@ -1,0 +1,39 @@
+Godot Engine v4.6.stable.official.89cea1439 - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 610.74 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 5070 Laptop GPU
+
+PASS: 31-node fixture has exact resource count
+PASS: 31-node fixture passes structural validation
+PASS: 31-node fixture has a deterministic focus target
+PASS: 31-node fixture has a deterministic search target
+PASS: 61-node fixture has exact resource count
+PASS: 61-node fixture passes structural validation
+PASS: 61-node fixture has a deterministic focus target
+PASS: 61-node fixture has a deterministic search target
+PASS: 121-node fixture has exact resource count
+PASS: 121-node fixture passes structural validation
+PASS: 121-node fixture has a deterministic focus target
+PASS: 121-node fixture has a deterministic search target
+PASS: 241-node fixture has exact resource count
+PASS: 241-node fixture passes structural validation
+PASS: 241-node fixture has a deterministic focus target
+PASS: 241-node fixture has a deterministic search target
+PASS: 364-node fixture has exact resource count
+PASS: 364-node fixture passes structural validation
+PASS: 364-node fixture has a deterministic focus target
+PASS: 364-node fixture has a deterministic search target
+PASS: 31-node Baseline evidence screenshot saves
+PASS: 31-node Optimized Overview evidence screenshot saves
+PASS: 31-node Optimized Search evidence screenshot saves
+PASS: 61-node Baseline evidence screenshot saves
+PASS: 61-node Optimized Overview evidence screenshot saves
+PASS: 61-node Optimized Search evidence screenshot saves
+PASS: 121-node Baseline evidence screenshot saves
+PASS: 121-node Optimized Overview evidence screenshot saves
+PASS: 121-node Optimized Search evidence screenshot saves
+PASS: 241-node Baseline evidence screenshot saves
+PASS: 241-node Optimized Overview evidence screenshot saves
+PASS: 241-node Optimized Search evidence screenshot saves
+PASS: 364-node Baseline evidence screenshot saves
+PASS: 364-node Optimized Overview evidence screenshot saves
+PASS: 364-node Optimized Search evidence screenshot saves
+BT_MULTISCALE_SCREENSHOT_SUMMARY sizes=5 conditions=3 failed=0 directory=res://test_results/multiscale_display_visual
