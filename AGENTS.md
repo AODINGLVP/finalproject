@@ -156,6 +156,10 @@ Visual regression must use a real rendering method, not `--headless`, because th
 - Do not revert unrelated dirty-worktree changes.
 - Do not commit or push unless the user explicitly requests it.
 
+## Dissertation Writing Rules
+
+Before editing any dissertation content, read `docs/DISSERTATION_REQUIREMENTS.md` in full. It records the requirements extracted from the user-supplied University of Warwick template and the complete MSc Games Engineering dissertation workshop in `E:\course pdf\project\格式`. Dissertation structure, layout, evidence claims, tables, figures, citations and final checks must follow that document. Do not claim human-readability improvement from geometric or timing proxies, and never fabricate participant results.
+
 ## Git State
 
 This repository is already initialized locally.
