@@ -205,6 +205,7 @@ def report_markdown(
     engine: str,
     renderer: str,
     gpu: str,
+    current_plugin_commit: str,
 ) -> str:
     positive_sizes = sum(
         float(row["median_reduction_percent"]) > 0.0 for row in drag_summary
@@ -214,6 +215,18 @@ def report_markdown(
     )
     acceptance = positive_sizes >= 4 and no_major_regression
     largest = drag_summary[-1]
+    smallest = drag_summary[0]
+    robust_sizes = [
+        str(row["tree_size"])
+        for row in drag_summary
+        if float(row["bootstrap_ci_low_percent"]) > 0.0
+    ]
+    uncertain_sizes = [
+        str(row["tree_size"])
+        for row in drag_summary
+        if float(row["bootstrap_ci_low_percent"]) <= 0.0
+        <= float(row["bootstrap_ci_high_percent"])
+    ]
 
     drag_lines = [
         "| 资源节点 | 画布卡片 | 旧版 Median [Q1, Q3] ms | 优化版 Median [Q1, Q3] ms | 中位数降低 | Bootstrap 95% 区间 |",
@@ -252,7 +265,7 @@ def report_markdown(
 
 实验已在 {engine}、{renderer}、{gpu}、1600×900 固定 SubViewport 上完成。受控显示实验覆盖 31、61、121、241 和 364 个资源节点，六种条件各预热 3 次并正式重复 30 次，共 900 条观测。版本化拖拽实验按 A1–B1–B2–A2 顺序执行；每个版本、每个规模有 20 次正式观测，共 200 条，另有每规模每区块 1 次不计入统计的热身。
 
-旧插件实现来自提交 `{BEFORE_PLUGIN_COMMIT}`，拖拽优化由提交 `{OPTIMIZATION_COMMIT}` 引入。两版使用同一确定性树生成器、同一 240 步输入路径和同一硬件。所有 200 次拖拽均满足最终资源位置同步、移动距离阈值与执行顺序保持。
+旧插件实现来自提交 `{BEFORE_PLUGIN_COMMIT}`；当前受测插件源码最近变更提交为 `{current_plugin_commit}`，拖拽优化最初由提交 `{OPTIMIZATION_COMMIT}` 引入。两版使用同一确定性树生成器、同一 240 步输入路径和同一硬件。所有 200 次拖拽均满足最终资源位置同步、移动距离阈值与执行顺序保持。由于当前版本还包含 `{OPTIMIZATION_COMMIT}` 之后的功能变更，本对照衡量“旧版与当前系统”的净差异，不把全部差异归因于一个提交。
 
 ## 受控显示结果
 
@@ -264,7 +277,9 @@ Compact Cards 在不隐藏画布卡片的情况下，把总卡片面积降低 61
 
 {chr(10).join(drag_lines)}
 
-预设判据为：至少 4/5 个节点规模的中位拖拽时间降低，且没有任一规模回退超过 5%。本次结果为 {positive_sizes}/5 个规模降低、显著回退检查为 `{'通过' if no_major_regression else '未通过'}`，因此总体判据 `{'通过' if acceptance else '未通过'}`。在最大 364 节点规模，中位总处理时间由 {float(largest['before_median_ms']):.2f} ms 降至 {float(largest['optimized_median_ms']):.2f} ms，降低 {float(largest['median_reduction_percent']):.2f}%（bootstrap 95% 区间 {float(largest['bootstrap_ci_low_percent']):.2f}%–{float(largest['bootstrap_ci_high_percent']):.2f}%）。
+预设判据为：至少 4/5 个节点规模的中位拖拽时间降低，且没有任一规模回退超过 5%。本次结果为 {positive_sizes}/5 个规模降低、无显著回退检查为 `{'通过' if no_major_regression else '未通过'}`，因此总体严格判据 `{'通过' if acceptance else '未通过'}`。区间完全高于 0 的规模为 {', '.join(robust_sizes)} 节点；区间跨 0 的规模为 {', '.join(uncertain_sizes)} 节点。在最大 364 节点规模，中位总处理时间由 {float(largest['before_median_ms']):.2f} ms 降至 {float(largest['optimized_median_ms']):.2f} ms，降低 {float(largest['median_reduction_percent']):.2f}%（bootstrap 95% 区间 {float(largest['bootstrap_ci_low_percent']):.2f}%–{float(largest['bootstrap_ci_high_percent']):.2f}%）。
+
+31 节点的合并点估计为回退 {abs(float(smallest['median_reduction_percent'])):.2f}%，但区块 1 的中位数从 {float(smallest['before_block1_median_ms']):.2f} ms 降至 {float(smallest['optimized_block1_median_ms']):.2f} ms，区块 2 则从 {float(smallest['before_block2_median_ms']):.2f} ms 升至 {float(smallest['optimized_block2_median_ms']):.2f} ms，方向不一致，且 95% 区间跨 0。故该规模应解释为“没有稳定改善证据，同时违反预设无回退点估计门槛”，而不是确定的回退效应。
 
 Bootstrap 区间使用固定种子 `{BOOTSTRAP_SEED}`，分别在同规模的旧版和优化版 20 次观测内进行 {BOOTSTRAP_REPETITIONS:,} 次有放回重采样。它描述本机重复测量的不确定性，不代表跨硬件或真人主观流畅度的总体推断。
 
@@ -274,7 +289,7 @@ Bootstrap 区间使用固定种子 `{BOOTSTRAP_SEED}`，分别在同规模的旧
 
 ## 论文可直接使用的结果段
 
-为评估大规模行为树显示与交互优化，实验采用同一确定性生成器构造 31、61、121、241 和 364 节点的受控树。六种显示条件在真实 GPU 渲染下分别进行 3 次预热和 30 次正式重复，共获得 900 条显示观测。与 Baseline 相比，Compact Cards 在不隐藏节点的情况下将卡片总面积降低 61.09%–61.35%，Overview 将其降低 90.27%–90.34%；Search 弱化 96.15%–99.67% 的非目标卡片，Focus 与 Collapse 则随规模限制当前上下文。全部条件均保持零卡片重叠、保存位置不变和执行顺序不变。另以优化前提交 `{BEFORE_PLUGIN_COMMIT}` 和当前实现执行 A1–B1–B2–A2 版本对照，每个规模、每个版本记录 20 次相同的 240 步拖拽。{positive_sizes}/5 个规模的中位处理时间下降；364 节点下由 {float(largest['before_median_ms']):.2f} ms 降至 {float(largest['optimized_median_ms']):.2f} ms，降低 {float(largest['median_reduction_percent']):.2f}%。这些结果支持“插件在不同树规模下可量化地降低视觉密度，并在同任务版本对照中减少大图拖拽处理时间”，但几何代理与自动计时不能单独证明真人理解、可读性或主观流畅度改善。
+为评估大规模行为树显示与交互优化，实验采用同一确定性生成器构造 31、61、121、241 和 364 节点的受控树。六种显示条件在真实 GPU 渲染下分别进行 3 次预热和 30 次正式重复，共获得 900 条显示观测。与 Baseline 相比，Compact Cards 在不隐藏节点的情况下将卡片总面积降低 61.09%–61.35%，Overview 将其降低 90.27%–90.34%；Search 弱化 96.15%–99.67% 的非目标卡片，Focus 与 Collapse 则随规模限制当前上下文。全部条件均保持零卡片重叠、保存位置不变和执行顺序不变。另以优化前提交 `{BEFORE_PLUGIN_COMMIT}` 和当前实现执行 A1–B1–B2–A2 版本对照，每个规模、每个版本记录 20 次相同的 240 步拖拽。{positive_sizes}/5 个规模的中位处理时间下降，其中 241 与 364 节点的 bootstrap 区间完全高于 0；364 节点下由 {float(largest['before_median_ms']):.2f} ms 降至 {float(largest['optimized_median_ms']):.2f} ms，降低 {float(largest['median_reduction_percent']):.2f}%。31 节点点估计回退且总体严格判据未通过，因此结果支持“当前系统在复杂大图上减少固定拖拽处理时间”，不支持“所有规模均改善”。几何代理与自动计时也不能单独证明真人理解、可读性或主观流畅度改善。
 
 ## 限制与允许的结论
 
@@ -315,6 +330,13 @@ def main() -> None:
     write_csv(DRAG_SUMMARY_OUTPUT, summary_fields, drag_summary)
 
     first_drag = drag_rows[0]
+    current_plugin_commit = git_output(
+        "log",
+        "-1",
+        "--format=%H",
+        "--",
+        "testgame/testgame/addons/behavior_tree_editor",
+    )
     report = report_markdown(
         drag_summary,
         display_trends,
@@ -322,13 +344,21 @@ def main() -> None:
         first_drag["engine_version"],
         first_drag["renderer"],
         first_drag["gpu"],
+        current_plugin_commit,
     )
     REPORT_OUTPUT.write_text(report, encoding="utf-8")
 
     input_paths = [*DRAG_INPUTS, DISPLAY_RAW, DISPLAY_SUMMARY, DISPLAY_TRENDS, PLAYABLE_SUMMARY]
     manifest = {
-        "analysis_commit": git_output("rev-parse", "HEAD"),
+        "analysis_script_commit": git_output(
+            "log",
+            "-1",
+            "--format=%H",
+            "--",
+            "research/display_optimization/analyze_multiscale_experiment.py",
+        ),
         "before_plugin_commit": BEFORE_PLUGIN_COMMIT,
+        "current_plugin_commit": current_plugin_commit,
         "optimization_commit": OPTIMIZATION_COMMIT,
         "tree_sizes": list(TREE_SIZES),
         "display_conditions": 6,
