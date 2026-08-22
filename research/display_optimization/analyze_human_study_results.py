@@ -516,7 +516,7 @@ def main() -> int:
         run_self_test()
         return 0
     trials, planned_rows = load_trials(arguments.workbook)
-    descriptions = descriptive_rows(trials)
+    descriptions = descriptive_rows(trials) if trials else []
     inferences = inference_rows(trials) if trials else []
     arguments.output_dir.mkdir(parents=True, exist_ok=True)
     descriptive_fields = [
