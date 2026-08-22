@@ -1,6 +1,7 @@
 {
-  "analysis_commit": "c46f7c350604dac6e722626a81a7703ec5d27eb8",
+  "analysis_script_commit": "5f64b9795146666ce159c3e48fc0bd530fa63967",
   "before_plugin_commit": "5d914ae",
+  "current_plugin_commit": "92fb21d1b03a8e5ef5485424635b790f09c3492d",
   "optimization_commit": "92fb21d",
   "tree_sizes": [
     31,
