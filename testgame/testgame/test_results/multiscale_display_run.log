@@ -1,0 +1,184 @@
+Godot Engine v4.6.stable.official.89cea1439 - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 610.74 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 5070 Laptop GPU
+
+PASS: 31-node fixture has exact resource count
+PASS: 31-node fixture passes structural validation
+PASS: 31-node fixture has a deterministic focus target
+PASS: 31-node fixture has a deterministic search target
+PASS: 61-node fixture has exact resource count
+PASS: 61-node fixture passes structural validation
+PASS: 61-node fixture has a deterministic focus target
+PASS: 61-node fixture has a deterministic search target
+PASS: 121-node fixture has exact resource count
+PASS: 121-node fixture passes structural validation
+PASS: 121-node fixture has a deterministic focus target
+PASS: 121-node fixture has a deterministic search target
+PASS: 241-node fixture has exact resource count
+PASS: 241-node fixture passes structural validation
+PASS: 241-node fixture has a deterministic focus target
+PASS: 241-node fixture has a deterministic search target
+PASS: 364-node fixture has exact resource count
+PASS: 364-node fixture passes structural validation
+PASS: 364-node fixture has a deterministic focus target
+PASS: 364-node fixture has a deterministic search target
+BT_MULTISCALE_DISPLAY_PROGRESS trial=1/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=2/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=3/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=4/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=5/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=6/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=7/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=8/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=9/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=10/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=11/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=12/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=13/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=14/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=15/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=16/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=17/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=18/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=19/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=20/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=21/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=22/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=23/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=24/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=25/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=26/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=27/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=28/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=29/30
+BT_MULTISCALE_DISPLAY_PROGRESS trial=30/30
+PASS: 31-node Baseline evidence screenshot saves
+PASS: 31-node Optimized Overview evidence screenshot saves
+PASS: 31-node Optimized Search evidence screenshot saves
+PASS: 61-node Baseline evidence screenshot saves
+PASS: 61-node Optimized Overview evidence screenshot saves
+PASS: 61-node Optimized Search evidence screenshot saves
+PASS: 121-node Baseline evidence screenshot saves
+PASS: 121-node Optimized Overview evidence screenshot saves
+PASS: 121-node Optimized Search evidence screenshot saves
+PASS: 241-node Baseline evidence screenshot saves
+PASS: 241-node Optimized Overview evidence screenshot saves
+PASS: 241-node Optimized Search evidence screenshot saves
+PASS: 364-node Baseline evidence screenshot saves
+PASS: 364-node Optimized Overview evidence screenshot saves
+PASS: 364-node Optimized Search evidence screenshot saves
+PASS: 31-node fixture remains exact
+PASS: 31-node Baseline renders every card
+PASS: 31-node Compact reduces card area by at least 40 percent
+PASS: 31-node Overview reduces card area by at least 70 percent
+PASS: 31-node Overview does not reduce fit-to-view zoom
+PASS: 31-node Search centers its target inside the canvas
+PASS: 31-node Baseline has zero overlaps
+PASS: 31-node Baseline preserves parent-child spacing
+PASS: 31-node Compact Cards has zero overlaps
+PASS: 31-node Compact Cards preserves parent-child spacing
+PASS: 31-node Optimized Overview has zero overlaps
+PASS: 31-node Optimized Overview preserves parent-child spacing
+PASS: 31-node Optimized Search has zero overlaps
+PASS: 31-node Optimized Search preserves parent-child spacing
+PASS: 31-node Subtree Focus has zero overlaps
+PASS: 31-node Subtree Focus preserves parent-child spacing
+PASS: 31-node Context Collapse has zero overlaps
+PASS: 31-node Context Collapse preserves parent-child spacing
+PASS: 31-node display conditions preserve saved positions
+PASS: 31-node display conditions preserve execution order
+PASS: 61-node fixture remains exact
+PASS: 61-node Baseline renders every card
+PASS: 61-node Compact reduces card area by at least 40 percent
+PASS: 61-node Overview reduces card area by at least 70 percent
+PASS: 61-node Overview does not reduce fit-to-view zoom
+PASS: 61-node Search dims at least 95 percent of cards
+PASS: 61-node Search centers its target inside the canvas
+PASS: 61-node Baseline has zero overlaps
+PASS: 61-node Baseline preserves parent-child spacing
+PASS: 61-node Compact Cards has zero overlaps
+PASS: 61-node Compact Cards preserves parent-child spacing
+PASS: 61-node Optimized Overview has zero overlaps
+PASS: 61-node Optimized Overview preserves parent-child spacing
+PASS: 61-node Optimized Search has zero overlaps
+PASS: 61-node Optimized Search preserves parent-child spacing
+PASS: 61-node Subtree Focus has zero overlaps
+PASS: 61-node Subtree Focus preserves parent-child spacing
+PASS: 61-node Context Collapse has zero overlaps
+PASS: 61-node Context Collapse preserves parent-child spacing
+PASS: 61-node display conditions preserve saved positions
+PASS: 61-node display conditions preserve execution order
+PASS: 121-node fixture remains exact
+PASS: 121-node Baseline renders every card
+PASS: 121-node Compact reduces card area by at least 40 percent
+PASS: 121-node Overview reduces card area by at least 70 percent
+PASS: 121-node Overview does not reduce fit-to-view zoom
+PASS: 121-node Search dims at least 95 percent of cards
+PASS: 121-node Search centers its target inside the canvas
+PASS: 121-node Focus reduces cards by at least 70 percent
+PASS: 121-node Collapse reduces cards by at least 70 percent
+PASS: 121-node Baseline has zero overlaps
+PASS: 121-node Baseline preserves parent-child spacing
+PASS: 121-node Compact Cards has zero overlaps
+PASS: 121-node Compact Cards preserves parent-child spacing
+PASS: 121-node Optimized Overview has zero overlaps
+PASS: 121-node Optimized Overview preserves parent-child spacing
+PASS: 121-node Optimized Search has zero overlaps
+PASS: 121-node Optimized Search preserves parent-child spacing
+PASS: 121-node Subtree Focus has zero overlaps
+PASS: 121-node Subtree Focus preserves parent-child spacing
+PASS: 121-node Context Collapse has zero overlaps
+PASS: 121-node Context Collapse preserves parent-child spacing
+PASS: 121-node display conditions preserve saved positions
+PASS: 121-node display conditions preserve execution order
+PASS: 241-node fixture remains exact
+PASS: 241-node Baseline renders every card
+PASS: 241-node Compact reduces card area by at least 40 percent
+PASS: 241-node Overview reduces card area by at least 70 percent
+PASS: 241-node Overview does not reduce fit-to-view zoom
+PASS: 241-node Search dims at least 95 percent of cards
+PASS: 241-node Search centers its target inside the canvas
+PASS: 241-node Focus reduces cards by at least 70 percent
+PASS: 241-node Collapse reduces cards by at least 70 percent
+PASS: 241-node Baseline has zero overlaps
+PASS: 241-node Baseline preserves parent-child spacing
+PASS: 241-node Compact Cards has zero overlaps
+PASS: 241-node Compact Cards preserves parent-child spacing
+PASS: 241-node Optimized Overview has zero overlaps
+PASS: 241-node Optimized Overview preserves parent-child spacing
+PASS: 241-node Optimized Search has zero overlaps
+PASS: 241-node Optimized Search preserves parent-child spacing
+PASS: 241-node Subtree Focus has zero overlaps
+PASS: 241-node Subtree Focus preserves parent-child spacing
+PASS: 241-node Context Collapse has zero overlaps
+PASS: 241-node Context Collapse preserves parent-child spacing
+PASS: 241-node display conditions preserve saved positions
+PASS: 241-node display conditions preserve execution order
+PASS: 364-node fixture remains exact
+PASS: 364-node Baseline renders every card
+PASS: 364-node Compact reduces card area by at least 40 percent
+PASS: 364-node Overview reduces card area by at least 70 percent
+PASS: 364-node Overview does not reduce fit-to-view zoom
+PASS: 364-node Search dims at least 95 percent of cards
+PASS: 364-node Search centers its target inside the canvas
+PASS: 364-node Focus reduces cards by at least 70 percent
+PASS: 364-node Collapse reduces cards by at least 70 percent
+PASS: 364-node Baseline has zero overlaps
+PASS: 364-node Baseline preserves parent-child spacing
+PASS: 364-node Compact Cards has zero overlaps
+PASS: 364-node Compact Cards preserves parent-child spacing
+PASS: 364-node Optimized Overview has zero overlaps
+PASS: 364-node Optimized Overview preserves parent-child spacing
+PASS: 364-node Optimized Search has zero overlaps
+PASS: 364-node Optimized Search preserves parent-child spacing
+PASS: 364-node Subtree Focus has zero overlaps
+PASS: 364-node Subtree Focus preserves parent-child spacing
+PASS: 364-node Context Collapse has zero overlaps
+PASS: 364-node Context Collapse preserves parent-child spacing
+PASS: 364-node display conditions preserve saved positions
+PASS: 364-node display conditions preserve execution order
+BT_MULTISCALE_RESULT size=31 cards=26 overview_area_reduction=90.34% fit_zoom=0.214->0.216
+BT_MULTISCALE_RESULT size=61 cards=51 overview_area_reduction=90.33% fit_zoom=0.110->0.110
+BT_MULTISCALE_RESULT size=121 cards=101 overview_area_reduction=90.33% fit_zoom=0.100->0.100
+BT_MULTISCALE_RESULT size=241 cards=202 overview_area_reduction=90.29% fit_zoom=0.100->0.100
+BT_MULTISCALE_RESULT size=364 cards=305 overview_area_reduction=90.27% fit_zoom=0.100->0.100
+BT_MULTISCALE_DISPLAY_SUMMARY sizes=5 conditions=6 observations=900 failed=0 raw=res://test_results/multiscale_display_raw.csv summary=res://test_results/multiscale_display_summary.csv trends=res://test_results/multiscale_display_trends.csv
