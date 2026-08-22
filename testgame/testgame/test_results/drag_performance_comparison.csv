@@ -1,0 +1,3 @@
+mode,median_total_ms,median_ms_per_step,change_vs_baseline_percent
+Before,1124.693,4.68622083333333,0.0
+Optimized,825.571,3.43987916666667,26.5958799423487

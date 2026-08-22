@@ -202,8 +202,6 @@ func _gui_input(event: InputEvent) -> void:
 		if parent is GraphEdit:
 			zoom = max(0.01, parent.zoom)
 		position_offset += event.relative / zoom
-		if node_resource != null:
-			node_resource.position = get_logical_position()
 		accept_event()
 
 

@@ -225,7 +225,8 @@ func _process(delta: float) -> void:
 	_poll_runtime_debug(delta)
 	zoom_layout_anchor_release_elapsed = maxf(0.0, zoom_layout_anchor_release_elapsed - delta)
 	_prepare_zoom_layout_anchor()
-	_update_fisheye(delta)
+	if drag_history_node_id == -1:
+		_update_fisheye(delta)
 	_update_semantic_zoom()
 	_update_auto_spacing(delta)
 	_restore_zoom_layout_anchor()
@@ -1491,7 +1492,11 @@ func _on_graph_node_gui_input(event: InputEvent, graph_node: BTGraphNode) -> voi
 
 
 func _on_graph_node_position_changed(graph_node: BTGraphNode) -> void:
-	graph_node.sync_to_resource()
+	# Resource mutation emits change notifications into the editor. On a large tree,
+	# doing that for every pointer sample is much more expensive than the visual move.
+	# Keep the card responsive and persist the final logical position on release.
+	if not graph_node.manual_dragging:
+		graph_node.sync_to_resource()
 	graph_edit.queue_redraw()
 
 
@@ -1499,16 +1504,26 @@ func _on_graph_node_drag_started(node_id: int) -> void:
 	var node := current_tree.find_node(node_id)
 	if node == null:
 		return
-	drag_history_snapshot = current_tree.duplicate_tree()
+	_reset_fisheye()
+	drag_history_snapshot = null
 	drag_history_node_id = node_id
 	drag_history_position = node.position
 
 
 func _on_graph_node_drag_finished(node_id: int) -> void:
 	var node := current_tree.find_node(node_id)
-	if node == null or drag_history_snapshot == null or node_id != drag_history_node_id:
+	if node == null or node_id != drag_history_node_id:
 		return
+	var graph_node := graph_edit.get_node_or_null(NodePath(str(node_id))) as BTGraphNode
+	if graph_node != null:
+		graph_node.sync_to_resource()
 	if not node.position.is_equal_approx(drag_history_position):
+		# Build the undo snapshot after movement, away from the latency-sensitive
+		# pointer-down path, then restore only this node's previous position in it.
+		drag_history_snapshot = current_tree.duplicate_tree()
+		var snapshot_node := drag_history_snapshot.find_node(node_id)
+		if snapshot_node != null:
+			snapshot_node.position = drag_history_position
 		undo_stack.append(drag_history_snapshot)
 		redo_stack.clear()
 		if undo_stack.size() > 50:

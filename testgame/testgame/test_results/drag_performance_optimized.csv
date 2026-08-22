@@ -1,0 +1,2 @@
+resource_nodes,rendered_cards,drag_steps,trials,median_total_ms,median_ms_per_step,minimum_ms,maximum_ms,moved_distance
+241,202,240,5,825.571,3.43987916666667,615.025,830.523,240.22541809082

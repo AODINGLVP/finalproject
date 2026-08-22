@@ -5,7 +5,9 @@ const BTGraphNode = preload("res://addons/behavior_tree_editor/bt_graph_node.gd"
 const BTTreeResource = preload("res://addons/behavior_tree_editor/bt_tree_resource.gd")
 
 const TREE_PATH := "res://behavior_trees/complex_display_tree_241.tres"
-const OUTPUT_PATH := "res://test_results/drag_performance_baseline.csv"
+const BASELINE_PATH := "res://test_results/drag_performance_baseline.csv"
+const OUTPUT_PATH := "res://test_results/drag_performance_optimized.csv"
+const COMPARISON_PATH := "res://test_results/drag_performance_comparison.csv"
 const VIEWPORT_SIZE := Vector2i(1600, 900)
 const DRAG_STEPS := 240
 const MEASURED_TRIALS := 5
@@ -68,10 +70,24 @@ func _run() -> void:
 		str(moved_distance),
 	]))
 	file.close()
-	print("BT_DRAG_BASELINE nodes=%d cards=%d steps=%d trials=%d median_ms=%.3f ms_per_step=%.3f range=%.3f..%.3f moved=%.1f output=%s" % [
-		view.current_tree.nodes.size(), rendered_cards, DRAG_STEPS, MEASURED_TRIALS, median_ms, median_ms / float(DRAG_STEPS), trial_times.front(), trial_times.back(), moved_distance, OUTPUT_PATH,
+	var baseline_file := FileAccess.open(BASELINE_PATH, FileAccess.READ)
+	var baseline_ms := INF
+	if baseline_file != null:
+		baseline_file.get_csv_line()
+		var baseline_values := baseline_file.get_csv_line()
+		if baseline_values.size() >= 5:
+			baseline_ms = float(baseline_values[4])
+		baseline_file.close()
+	var improvement_percent := (1.0 - median_ms / baseline_ms) * 100.0 if is_finite(baseline_ms) and baseline_ms > 0.0 else 0.0
+	var comparison_file := FileAccess.open(COMPARISON_PATH, FileAccess.WRITE)
+	comparison_file.store_csv_line(PackedStringArray(["mode", "median_total_ms", "median_ms_per_step", "change_vs_baseline_percent"] ))
+	comparison_file.store_csv_line(PackedStringArray(["Before", str(baseline_ms), str(baseline_ms / float(DRAG_STEPS)), "0.0"] ))
+	comparison_file.store_csv_line(PackedStringArray(["Optimized", str(median_ms), str(median_ms / float(DRAG_STEPS)), str(improvement_percent)] ))
+	comparison_file.close()
+	print("BT_DRAG_OPTIMIZED nodes=%d cards=%d steps=%d trials=%d median_ms=%.3f ms_per_step=%.3f range=%.3f..%.3f improvement=%.1f%% moved=%.1f output=%s" % [
+		view.current_tree.nodes.size(), rendered_cards, DRAG_STEPS, MEASURED_TRIALS, median_ms, median_ms / float(DRAG_STEPS), trial_times.front(), trial_times.back(), improvement_percent, moved_distance, OUTPUT_PATH,
 	])
-	var valid := view.current_tree.nodes.size() == 241 and rendered_cards >= 200 and moved_distance > 100.0 and median_ms > 0.0
+	var valid := view.current_tree.nodes.size() == 241 and rendered_cards >= 200 and moved_distance > 100.0 and median_ms > 0.0 and median_ms <= baseline_ms
 	view.free()
 	viewport.free()
 	quit(0 if valid else 1)

@@ -23,6 +23,7 @@ var manual_connection_from := StringName()
 var manual_connection_pointer := Vector2.ZERO
 var zoom_boundary_min: GraphNode
 var zoom_boundary_max: GraphNode
+var connection_route_cache: Dictionary = {}
 
 
 func _ready() -> void:
@@ -74,7 +75,10 @@ func _create_zoom_boundary(node_name: String) -> GraphNode:
 
 
 func _gui_input(event: InputEvent) -> void:
-	if event is InputEventMouseMotion or event is InputEventMouseButton:
+	# Node movement and fisheye updates already request redraws when their visuals
+	# actually change. Redrawing every edge for unrelated pointer motion wastes most
+	# of the frame budget on large trees.
+	if event is InputEventMouseButton or (event is InputEventMouseMotion and manual_connection_active):
 		queue_redraw()
 	if event is InputEventMouseButton and event.pressed and _is_wheel_button(event.button_index):
 		viewport_wheel_scrolled.emit(event.position)
@@ -121,6 +125,7 @@ func _draw() -> void:
 func _draw_behavior_tree_connections() -> void:
 	if not single_connection_rendering_enabled:
 		return
+	var viewport_rect := Rect2(Vector2.ZERO, size).grow(64.0)
 	for connection in get_connection_list():
 		var from_node := get_node_or_null(NodePath(str(connection.get("from_node", "")))) as BTGraphNode
 		var to_node := get_node_or_null(NodePath(str(connection.get("to_node", "")))) as BTGraphNode
@@ -128,11 +133,30 @@ func _draw_behavior_tree_connections() -> void:
 			continue
 		var from_position := _output_port_position(from_node)
 		var to_position := _input_port_position(to_node)
-		var points := _route_connection_line(from_position, to_position)
+		var rough_bounds := Rect2(from_position, Vector2.ZERO).expand(to_position).grow(32.0)
+		if not viewport_rect.intersects(rough_bounds):
+			continue
+		var cache_key := "%s>%s" % [from_node.name, to_node.name]
+		var points := _cached_connection_line(cache_key, from_position, to_position)
 		var active := _is_active_connection(from_node.node_resource.id, to_node.node_resource.id)
 		var color := Color("f8fafc") if active else from_node.output_square.color.lerp(to_node.input_square.color, 0.35)
 		var thickness := 5.0 if active else (2.5 if edge_bundling_enabled else 3.5)
 		draw_polyline(points, color, thickness, true)
+
+
+func _cached_connection_line(cache_key: String, from_position: Vector2, to_position: Vector2) -> PackedVector2Array:
+	var cached: Dictionary = connection_route_cache.get(cache_key, {})
+	if not cached.is_empty() \
+			and Vector2(cached.get("from", Vector2.INF)).is_equal_approx(from_position) \
+			and Vector2(cached.get("to", Vector2.INF)).is_equal_approx(to_position):
+		return cached.get("points", PackedVector2Array()) as PackedVector2Array
+	var points := _route_connection_line(from_position, to_position)
+	connection_route_cache[cache_key] = {
+		"from": from_position,
+		"to": to_position,
+		"points": points,
+	}
+	return points
 
 
 func _draw_manual_connection_preview() -> void:
@@ -308,6 +332,7 @@ func set_edge_display(orthogonal_enabled: bool, bundling_enabled: bool) -> void:
 		connection_lines_curvature = 0.82
 	else:
 		connection_lines_curvature = 0.45
+	connection_route_cache.clear()
 	connection_lines_thickness = 0.0 if single_connection_rendering_enabled else 3.5
 	queue_redraw()
 

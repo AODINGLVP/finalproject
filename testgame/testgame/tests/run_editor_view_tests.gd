@@ -275,9 +275,12 @@ func _test_editor_mutations(view: BTEditorView) -> void:
 	var graph_node := _graph_node(view, action_id)
 	var old_position := view.current_tree.find_node(action_id).position
 	view._on_graph_node_drag_started(action_id)
+	graph_node.manual_dragging = true
 	graph_node.position_offset = old_position + Vector2(137.0, 59.0)
 	view._on_graph_node_position_changed(graph_node)
+	_expect(view.current_tree.find_node(action_id).position.is_equal_approx(old_position), "large-tree drag defers resource writes until pointer release")
 	view._on_graph_node_drag_finished(action_id)
+	graph_node.manual_dragging = false
 	_expect(view.current_tree.find_node(action_id).position.is_equal_approx(old_position + Vector2(137.0, 59.0)), "drag persists resource position")
 	view._undo()
 	_expect(view.current_tree.find_node(action_id).position.is_equal_approx(old_position), "drag movement is undoable")
@@ -660,6 +663,11 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	)
 	var edge_hit := view.graph_edit.find_connection_at(edge_points[edge_points.size() / 2], 12.0)
 	_expect(view.graph_edit.single_connection_rendering_enabled and view.graph_edit.connection_lines_thickness == 0.0 and not view.graph_edit.native_connection_layer.visible and not edge_hit.is_empty(), "single-connection mode hides native lines and provides custom edge hit testing")
+	view.graph_edit.connection_route_cache.clear()
+	var cached_edge := view.graph_edit._cached_connection_line("2>3", edge_points[0], edge_points[edge_points.size() - 1])
+	var cached_edge_repeat := view.graph_edit._cached_connection_line("2>3", edge_points[0], edge_points[edge_points.size() - 1])
+	var moved_cached_edge := view.graph_edit._cached_connection_line("2>3", edge_points[0] + Vector2(12.0, 0.0), edge_points[edge_points.size() - 1])
+	_expect(cached_edge == cached_edge_repeat and view.graph_edit.connection_route_cache.size() == 1 and moved_cached_edge[0].is_equal_approx(edge_points[0] + Vector2(12.0, 0.0)), "connection route cache reuses stable edges and invalidates a moved endpoint")
 	view._on_custom_edge_disconnect_requested(StringName("2"), StringName("3"))
 	_expect(view.current_tree.find_node(3).parent_id == -1 and view.graph_edit.get_connection_list().size() == 3, "custom edge interaction disconnects exactly one resource connection")
 	view._undo()
