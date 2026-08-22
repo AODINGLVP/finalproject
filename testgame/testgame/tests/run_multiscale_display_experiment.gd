@@ -103,6 +103,7 @@ func _run() -> void:
 				var interaction_ms := float(Time.get_ticks_usec() - started_usec) / 1000.0
 				var metrics := _measure(view, fixture, _information_fields_for(condition))
 				metrics["fit_zoom"] = await _measure_fit_zoom(view)
+				metrics["cards_in_viewport"] = _count_cards_in_viewport(view)
 				var key := _key(tree_size, condition)
 				var samples: Array[float] = samples_by_key[key]
 				samples.append(interaction_ms)
@@ -284,7 +285,7 @@ func _measure(view: BTEditorView, fixture: Dictionary, information_fields: int) 
 		rects_by_id[graph_node.node_resource.id] = rect
 		bounds = rect if bounds.size == Vector2.ZERO else bounds.merge(rect)
 		card_area += rect.size.x * rect.size.y
-		if not graph_node.search_matches:
+		if not view.search_query.is_empty() and not graph_node.search_matches:
 			dimmed += 1
 		var center_in_canvas := graph_canvas.has_point(graph_node.get_global_rect().get_center())
 		if center_in_canvas:
@@ -329,6 +330,15 @@ func _measure_fit_zoom(view: BTEditorView) -> float:
 	view._fit_visible_tree()
 	await _settle_frames()
 	return view.graph_edit.zoom
+
+
+func _count_cards_in_viewport(view: BTEditorView) -> int:
+	var graph_canvas := view.graph_edit.get_global_rect()
+	var count := 0
+	for child in view.graph_edit.get_children():
+		if child is BTGraphNode and graph_canvas.has_point(child.get_global_rect().get_center()):
+			count += 1
+	return count
 
 
 func _raw_row(trial: int, size_position: int, condition_position: int, tree_size: int, condition: String, metrics: Dictionary, interaction_ms: float) -> PackedStringArray:
