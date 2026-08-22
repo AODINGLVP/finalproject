@@ -10,7 +10,7 @@ await fs.mkdir(outputDir, { recursive: true });
 const sheets = await workbook.inspect({ kind: "sheet", include: "id,name" });
 console.log(sheets.ndjson);
 
-for (const range of ["Trial Plan!A270:J273", "Raw Data!A270:Q273"]) {
+for (const range of ["Trial Plan!A216:O219", "Raw Data!A216:T219"]) {
   const tail = await workbook.inspect({ kind: "table", range, include: "values,formulas", tableMaxRows: 10, tableMaxCols: 20 });
   console.log(tail.ndjson);
 }
@@ -37,7 +37,7 @@ console.log(errors.ndjson);
 
 // In-memory samples prove that the empty template formulas calculate real observations correctly.
 const raw = workbook.worksheets.getItem("Raw Data");
-raw.getRange("E4:L5").values = [
+raw.getRange("H4:O5").values = [
   [30, 1, 2, 1, "Yes", 6, 2, "No"],
   [60, 3, 4, 2, "No", 4, 5, "No"],
 ];
