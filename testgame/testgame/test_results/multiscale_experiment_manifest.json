@@ -1,0 +1,38 @@
+{
+  "analysis_commit": "c46f7c350604dac6e722626a81a7703ec5d27eb8",
+  "before_plugin_commit": "5d914ae",
+  "optimization_commit": "92fb21d",
+  "tree_sizes": [
+    31,
+    61,
+    121,
+    241,
+    364
+  ],
+  "display_conditions": 6,
+  "display_warmups_per_group": 3,
+  "display_repetitions_per_group": 30,
+  "display_observations": 900,
+  "drag_abba_order": [
+    "Before-1",
+    "Optimized-1",
+    "Optimized-2",
+    "Before-2"
+  ],
+  "drag_steps": 240,
+  "drag_warmups_per_size_block": 1,
+  "drag_repetitions_per_size_version": 20,
+  "drag_observations": 200,
+  "bootstrap_repetitions": 10000,
+  "bootstrap_seed": 20260822,
+  "inputs": {
+    "testgame/testgame/test_results/multiscale_drag_before_block1.csv": "3e5e0872a34458c9cc71ee1fb66aa2155705cebabd5eac03a22319e5f57f8e57",
+    "testgame/testgame/test_results/multiscale_drag_optimized_block1.csv": "35163c48a60ac28351f15453ef2c4496883aafe15ad2d97bee1a41b800f1d31a",
+    "testgame/testgame/test_results/multiscale_drag_optimized_block2.csv": "2d647cbba83ec4fc50bf03f982614122ac5c4b473eade3e0009c90dbc7427c84",
+    "testgame/testgame/test_results/multiscale_drag_before_block2.csv": "ff1a33c8b3c4b0452af67d68a87faa142513f70da0e1418e4c2923ae9333b8f7",
+    "testgame/testgame/test_results/multiscale_display_raw.csv": "22731ed13add18f6f4ab104f0ccc966318a49f82bd2db8e9bf8dab2e29eec6f1",
+    "testgame/testgame/test_results/multiscale_display_summary.csv": "65976a39734b3e298d2d6a422a144f15d00ffaf08154d116725eff117bcec541",
+    "testgame/testgame/test_results/multiscale_display_trends.csv": "03244c914ac11371da1f8d5a313d0b3bcb6808a3bd560a6ec4de3fbc8704aa0a",
+    "testgame/testgame/test_results/complex_display_experiment_summary.csv": "a1ea573fc61591872a379d49a4c96bd570a44b8e184351e4378e2e1e5eab2eb1"
+  }
+}
