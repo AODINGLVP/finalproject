@@ -134,6 +134,12 @@ node research/display_optimization/build_human_comparison_study_workbook.mjs
 node research/display_optimization/audit_human_comparison_study_workbook.mjs
 ```
 
+数据采集后运行预注册统计；空工作簿只会生成“待采集”报告：
+
+```powershell
+python research/display_optimization/analyze_human_study_results.py
+```
+
 ## 12. 每次试验重置清单
 
 1. 按 Trial Plan 加载 241 节点正式树、方法、任务和目标。
