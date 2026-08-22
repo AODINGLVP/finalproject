@@ -48,6 +48,15 @@ func _run() -> void:
 		viewport.free()
 		quit(1)
 		return
+	if OS.get_cmdline_user_args().has("--screenshots-only"):
+		await _capture_evidence(view, viewport, fixtures)
+		print("BT_MULTISCALE_SCREENSHOT_SUMMARY sizes=%d conditions=%d failed=%d directory=%s" % [
+			TREE_SIZES.size(), SCREENSHOT_CONDITIONS.size(), failures, SCREENSHOT_DIR,
+		])
+		view.free()
+		viewport.free()
+		quit(0 if failures == 0 else 1)
+		return
 
 	var raw_rows: Array[PackedStringArray] = []
 	raw_rows.append(PackedStringArray([
@@ -412,6 +421,11 @@ func _capture_evidence(view: BTEditorView, viewport: SubViewport, fixtures: Dict
 			var condition := str(condition_variant)
 			await _restore_baseline(view, fixture["tree"])
 			await _apply_condition(view, fixture, condition)
+			# Search deliberately frames the matching node. The other evidence
+			# conditions need an explicit whole-tree frame before capture.
+			if condition != "Optimized Search":
+				view._fit_visible_tree()
+				await _settle_frames()
 			viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 			RenderingServer.force_draw(false, 0.0)
 			await process_frame
