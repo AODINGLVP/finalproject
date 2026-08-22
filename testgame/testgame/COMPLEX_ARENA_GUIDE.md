@@ -47,7 +47,7 @@ The tree uses all ten supported resource types, a 23-key typed blackboard schema
 
 ## Suggested Demonstration
 
-1. Open `complex_guard_validation_tree.tres` in the Behavior Tree panel and enable `Live Debug`.
+1. Choose `complex_display_tree_241.tres` from the Behavior Tree selector and enable `Live Debug`.
 2. Run the game and stand far away to observe Patrol.
 3. Enter detection range to observe Chase.
 4. Move close to either side to observe directional Attack and Cooldown failures.
