@@ -1,0 +1,80 @@
+{
+  "formal_tree": "res://behavior_trees/complex_display_tree_241.tres",
+  "practice_tree": "res://behavior_trees/human_study_tree_121.tres",
+  "resource_nodes": 241,
+  "rendered_cards": 202,
+  "participants": 12,
+  "methods": ["Baseline", "Compact", "Collapse", "Fisheye", "Search", "Minimap"],
+  "tasks": ["Locate Action", "Trace Active Path", "Edit Decorator"],
+  "method_orders": [
+    ["Baseline", "Compact", "Minimap", "Collapse", "Search", "Fisheye"],
+    ["Compact", "Collapse", "Baseline", "Fisheye", "Minimap", "Search"],
+    ["Collapse", "Fisheye", "Compact", "Search", "Baseline", "Minimap"],
+    ["Fisheye", "Search", "Collapse", "Minimap", "Compact", "Baseline"],
+    ["Search", "Minimap", "Fisheye", "Baseline", "Collapse", "Compact"],
+    ["Minimap", "Baseline", "Search", "Compact", "Fisheye", "Collapse"]
+  ],
+  "task_orders": [
+    ["Locate Action", "Trace Active Path", "Edit Decorator"],
+    ["Trace Active Path", "Edit Decorator", "Locate Action"],
+    ["Edit Decorator", "Locate Action", "Trace Active Path"]
+  ],
+  "trace_targets": [
+    {
+      "key": "obstacle",
+      "id": 83,
+      "title": "Jump Obstacle 1",
+      "brief": "Find the Action that makes the enemy jump over an obstacle.",
+      "path_ids": [1, 2, 3, 79, 81, 82, 83],
+      "path_titles": ["Root", "Continuous Tactical Decisions", "Reactive Tactical Priority", "4 Obstacle Traversal", "Obstacle Solution", "Vault Route 1", "Jump Obstacle 1"]
+    },
+    {
+      "key": "vertical",
+      "id": 91,
+      "title": "Climb Ladder 1",
+      "brief": "Find the Action that makes the enemy climb toward the player.",
+      "path_ids": [1, 2, 3, 87, 89, 90, 91],
+      "path_titles": ["Root", "Continuous Tactical Decisions", "Reactive Tactical Priority", "5 Vertical Pursuit", "Climb Approach", "Climb Route 1", "Climb Ladder 1"]
+    },
+    {
+      "key": "ranged",
+      "id": 101,
+      "title": "Fire Projectile 1",
+      "brief": "Find the Action that fires the first ranged projectile pattern.",
+      "path_ids": [1, 2, 3, 95, 97, 98, 101],
+      "path_titles": ["Root", "Continuous Tactical Decisions", "Reactive Tactical Priority", "6 Ranged Suppression", "Ranged Firing Pattern", "Ranged Pattern 1", "Fire Projectile 1"]
+    },
+    {
+      "key": "pressure",
+      "id": 113,
+      "title": "Pressure Advance 1",
+      "brief": "Find the Action that advances after a mid-range pressure read.",
+      "path_ids": [1, 2, 3, 107, 109, 110, 113],
+      "path_titles": ["Root", "Continuous Tactical Decisions", "Reactive Tactical Priority", "7 Mid-Range Pressure", "Pressure Pattern", "Pressure Pattern 1", "Pressure Advance 1"]
+    },
+    {
+      "key": "search",
+      "id": 156,
+      "title": "Search Movement 1",
+      "brief": "Find the Action that starts the leftward last-known-position search.",
+      "path_ids": [1, 2, 3, 152, 154, 155, 156],
+      "path_titles": ["Root", "Continuous Tactical Decisions", "Reactive Tactical Priority", "9 Last-Known-Position Search", "Search Pattern", "Search Pattern 1", "Search Movement 1"]
+    },
+    {
+      "key": "patrol",
+      "id": 201,
+      "title": "Observe Patrol Point 1",
+      "brief": "Find the Action that observes the first patrol point.",
+      "path_ids": [1, 2, 3, 193, 196, 197, 201],
+      "path_titles": ["Root", "Continuous Tactical Decisions", "Reactive Tactical Priority", "11 Layered Patrol", "Patrol Route Choice", "Patrol Route 1", "Observe Patrol Point 1"]
+    }
+  ],
+  "decorator_targets": [
+    {"key": "defense", "id": 31, "title": "Defense Cooldown 1", "owner_id": 29, "owner_title": "Dodge Left", "mode": "cooldown", "start_duration": 0.45, "target_duration": 0.55},
+    {"key": "pressure", "id": 114, "title": "Pressure Cooldown 1", "owner_id": 111, "owner_title": "Pressure Reposition 1", "mode": "cooldown", "start_duration": 0.35, "target_duration": 0.45},
+    {"key": "chase", "id": 133, "title": "Chase Step Limit 1", "owner_id": 130, "owner_title": "Chase Movement 1", "mode": "time_limit", "start_duration": 0.8, "target_duration": 0.9},
+    {"key": "search", "id": 159, "title": "Search Leg Limit 1", "owner_id": 156, "owner_title": "Search Movement 1", "mode": "time_limit", "start_duration": 1.25, "target_duration": 1.35},
+    {"key": "return", "id": 182, "title": "Return Step Limit 1", "owner_id": 179, "owner_title": "Return Movement 1", "mode": "time_limit", "start_duration": 0.9, "target_duration": 1.0},
+    {"key": "patrol", "id": 202, "title": "Patrol Leg Limit 1", "owner_id": 199, "owner_title": "Patrol Movement 1", "mode": "time_limit", "start_duration": 1.5, "target_duration": 1.6}
+  ]
+}

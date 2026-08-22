@@ -7,6 +7,8 @@ const HumanStudyDebug = preload("res://tests/prepare_human_study_live_debug.gd")
 
 const VIEWPORT_SIZE := Vector2i(1600, 900)
 const OUTPUT_DIR := "res://test_results/human_study_visual"
+const FORMAL_TREE_PATH := "res://behavior_trees/complex_display_tree_241.tres"
+const TRACE_TARGET_KEY := "ranged"
 
 var passed := 0
 var failed := 0
@@ -38,43 +40,48 @@ func _run() -> void:
 	_expect(_graph_node_count() == 120, "121-node study tree shows 120 graph cards plus one attached Decorator")
 	_expect(_graph_node(120) != null, "121-node target Action exists on the canvas")
 
-	await _load_arrange_and_fit("res://behavior_trees/human_study_tree_364.tres")
-	var large := await _capture("02_tree_364_overview")
-	_assert_image(large, "364-node study tree renders")
-	_expect(_graph_node_count() == 363, "364-node study tree shows 363 graph cards plus one attached Decorator")
-	_expect(_graph_node(363) != null, "364-node target Action exists on the canvas")
+	var target := HumanStudyDebug.trace_target(TRACE_TARGET_KEY)
+	var target_id := int(target.get("id", -1))
+	var target_title := str(target.get("title", ""))
+	var path_ids: Array = target.get("path_ids", [])
+	await _load_arrange_and_fit(FORMAL_TREE_PATH)
+	var large := await _capture("02_tree_241_overview")
+	_assert_image(large, "241-node playable study tree renders")
+	_expect(view.current_tree.nodes.size() == 241, "formal study tree has 241 resource nodes")
+	_expect(_graph_node_count() == 202, "241-node study tree shows 202 graph cards plus 39 attached Decorators")
+	_expect(_graph_node(target_id) != null, "meaningful ranged target Action exists on the canvas")
 
 	view._set_feature_enabled("search", true, false)
-	view._on_search_changed("STUDY_TARGET_ACTION")
-	view._on_search_submitted("STUDY_TARGET_ACTION")
+	view._on_search_changed(target_title)
+	view._on_search_submitted(target_title)
 	await _settle()
-	var searched := await _capture("03_tree_364_target_search")
-	_assert_image(searched, "364-node target search renders")
-	_expect(view.search_result_ids == [363], "search returns only stable target Action #363")
-	_expect(_graph_node(363).search_matches, "stable target Action is highlighted")
-	var target_center := _graph_node(363).get_global_rect().get_center()
+	var searched := await _capture("03_tree_241_target_search")
+	_assert_image(searched, "241-node target search renders")
+	_expect(view.search_result_ids == [target_id], "search returns only the assigned meaningful target Action")
+	_expect(_graph_node(target_id).search_matches, "assigned meaningful target Action is highlighted")
+	var target_center := _graph_node(target_id).get_global_rect().get_center()
 	var canvas_rect := view.graph_edit.get_global_rect()
 	if not canvas_rect.has_point(target_center):
-		printerr("VISUAL_DIAGNOSTIC target_center=%s canvas=%s zoom=%.3f scroll=%s node_offset=%s" % [target_center, canvas_rect, view.graph_edit.zoom, view.graph_edit.scroll_offset, _graph_node(363).position_offset])
+		printerr("VISUAL_DIAGNOSTIC target_center=%s canvas=%s zoom=%.3f scroll=%s node_offset=%s" % [target_center, canvas_rect, view.graph_edit.zoom, view.graph_edit.scroll_offset, _graph_node(target_id).position_offset])
 	_expect(canvas_rect.has_point(target_center), "search navigation centers target Action inside the graph canvas")
 
 	view._on_search_changed("")
 	view._set_feature_enabled("active_path", true, false)
 	view._set_feature_enabled("branch_dimming", true, false)
 	var bridge_backup := _read_bridge_text()
-	_expect(HumanStudyDebug.write_snapshot(), "deterministic Live Debug fixture writes a fresh bridge snapshot")
+	_expect(HumanStudyDebug.write_snapshot(TRACE_TARGET_KEY), "deterministic playable-tree Live Debug fixture writes a fresh bridge snapshot")
 	view.runtime_debug_enabled = true
 	view.runtime_debug_elapsed = 0.0
 	view._poll_runtime_debug(1.0)
 	await _settle()
-	var live_debug := await _capture("04_tree_364_live_debug_path")
-	_assert_image(live_debug, "364-node deterministic Live Debug path renders")
-	_expect(view.last_runtime_snapshot.get("actor", "") == "StudyNPC", "editor polls the deterministic bridge through the public Live Debug path")
-	_expect(view.graph_edit.active_path_ids == HumanStudyDebug.PATH_IDS, "Live Debug highlights the seven-node stable execution chain")
-	_expect(_graph_node(363).runtime_active and _graph_node(363).runtime_leaf, "stable target Action is the active RUNNING leaf")
-	_expect(is_equal_approx(_graph_node(362).modulate.a, BTGraphNode.INACTIVE_BRANCH_ALPHA), "non-current branches are dimmed during the study trial")
+	var live_debug := await _capture("04_tree_241_live_debug_path")
+	_assert_image(live_debug, "241-node deterministic Live Debug path renders")
+	_expect(view.last_runtime_snapshot.get("actor", "") == "ArenaEnemy", "editor polls the deterministic playable actor through the public Live Debug path")
+	_expect(view.graph_edit.active_path_ids == path_ids, "Live Debug highlights the assigned seven-node gameplay chain")
+	_expect(_graph_node(target_id).runtime_active and _graph_node(target_id).runtime_leaf, "assigned target Action is the active RUNNING leaf")
+	_expect(is_equal_approx(_graph_node(105).modulate.a, BTGraphNode.INACTIVE_BRANCH_ALPHA), "non-current ranged branches are dimmed during the study trial")
 	view._set_feature_enabled("branch_dimming", false, false)
-	_expect(is_equal_approx(_graph_node(362).modulate.a, 1.0), "disabling study branch dimming restores full opacity")
+	_expect(is_equal_approx(_graph_node(105).modulate.a, 1.0), "disabling study branch dimming restores full opacity")
 	_restore_bridge_text(bridge_backup)
 
 	print("BT_HUMAN_STUDY_VISUAL_SUMMARY passed=%d failed=%d output=%s" % [passed, failed, OUTPUT_DIR])
