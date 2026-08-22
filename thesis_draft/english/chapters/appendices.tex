@@ -40,7 +40,10 @@ All paths below are relative to the project repository root.
     \item[Distributable plugin source:] \path{visual_scripting/addons/behavior_tree_editor/}
     \item[Complex tree:] \path{testgame/testgame/behavior_trees/complex_guard_validation_tree.tres}
     \item[Core test scripts:] \path{testgame/testgame/tests/}
-    \item[Raw display data:] \path{testgame/testgame/test_results/display_optimization_raw.csv}
+    \item[Multiscale display data:] \path{testgame/testgame/test_results/multiscale_display_raw.csv}
+    \item[Multiscale drag data:] \path{testgame/testgame/test_results/multiscale_drag_raw.csv}
+    \item[Multiscale summaries:] \path{testgame/testgame/test_results/multiscale_display_summary.csv} and \path{multiscale_drag_summary.csv}
+    \item[Analysis and report:] \path{research/display_optimization/analyze_multiscale_experiment.py} and \path{multiscale_experiment_results.md}
     \item[Runtime profile:] \path{testgame/testgame/test_results/runtime_profile.csv}
     \item[Visual screenshots:] \path{testgame/testgame/test_results/visual/}
     \item[Human-study protocol:] \path{research/display_optimization/human_comparison_study_protocol.md}
@@ -53,10 +56,10 @@ All paths below are relative to the project repository root.
 
 The principal test commands are recorded in \texttt{AGENTS.md} and in the generated project report. Real visual regression must use \texttt{--rendering-method gl\_compatibility} rather than headless dummy rendering, because the dummy renderer cannot provide the required viewport textures.
 
-\chapter{Planned Participant Study}
+\chapter{Optional Future Participant Study}
 \label{app:study}
 
-The prepared study contains six display conditions and three tasks per condition on the playable 241-node tree. A participant first completes three standardised practice tasks, then performs 18 counterbalanced formal trials. Six Action/path targets and six Decorator targets are balanced with condition order so that every method--target pair occurs twice across the planned 12 participants. The workbook contains 216 rows and records capped completion time, incorrect selections, zoom, pan, success, readability and cognitive load. The analysis script reports medians and quartiles, withholds inference below eight complete participant sets and applies the pre-registered repeated-measures tests only after real data are entered.
+The prepared study contains six display conditions and three tasks per condition on the playable 241-node tree. A participant would complete three standardised practice tasks followed by 18 counterbalanced formal trials. Six Action/path targets and six Decorator targets are balanced with condition order so that every method--target pair occurs twice across 12 participants. The workbook contains 216 empty rows and records capped completion time, incorrect selections, zoom, pan, success, readability and cognitive load. It is retained for optional future construct validation and is not a source for the dissertation's current results.
 
 No participant rows have been collected. Before use, the author must obtain any required ethics approval, confirm the protocol with the supervisor, replace prototype instructions with participant-facing wording, and verify that consent and withdrawal procedures meet University requirements.
 
@@ -68,7 +71,7 @@ Before final submission, the author should:
     \item replace all identity and supervisor placeholders;
     \item revise the declaration to match University policy, including permitted AI assistance;
     \item verify the current submission deadline and exact word-count rules on Tabula;
-    \item conduct or formally remove the planned participant study and update Abstract, Results, Discussion and Conclusion consistently;
+    \item confirm with the supervisor whether the optional participant protocol should remain as future-work material;
     \item have the supervisor review the literature claims, research questions and evidential limits;
     \item run the final text through Turnitin according to departmental guidance;
     \item compile with the supplied Warwick template and inspect every page, reference and figure;

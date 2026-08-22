@@ -28,43 +28,67 @@ Additional suites were kept separate to avoid inflating the core total. Human-st
 
 The complex-arena tests showed that agents were genuinely driven by tree execution rather than a parallel hard-coded controller. In addition to chase, melee, target loss, search, retreat and healing, the enemy selected reactive defence during the player's attack window, spawned a projectile at ranged distance, jumped when a sensed crate blocked pursuit, and climbed when the detected player was elevated near a ladder. Action methods performed movement and damage, but branch choice, ordering and interruption came from the 241-node resource.
 
-\section{Display-density and context results}
+\section{Controlled multiscale display results}
 
-\Cref{tab:displaymain} reports the principal measurements. Compact cards retained every node while reducing total card area by 55.9\% at all three sizes because the card dimensions were reduced consistently. Semantic zoom reduced representative fields from six to one at low detail, an 83.3\% reduction, while preserving node geometry. These results demonstrate density changes, not task performance.
+The real-\ac{GPU} experiment completed all 900 observations and all pre-set assertions. \Cref{tab:displaymain} reports deterministic geometric values for the five same-generator trees. Compact retained every canvas card while reducing summed card area by 61.09--61.35\%. Optimized Overview also retained every card and reduced summed area by 90.27--90.34\%. These percentages measure presentation density rather than task performance.
 
 \begin{table}[htbp]
 \centering
-\caption{Principal display measurements on fixed generated trees.}
+\caption{Controlled display measurements across five resource sizes. Reductions are relative to Baseline.}
 \label{tab:displaymain}
 \small
-\begin{tabular}{lrrr}
+\begin{tabular}{lrrrrr}
 \toprule
-Measure & 31 nodes & 121 nodes & 364 nodes \\
+Measure & 31 & 61 & 121 & 241 & 364 \\
 \midrule
-Baseline card area (px\textsuperscript{2}) & 1,162,500 & 4,537,500 & 13,650,000 \\
-Compact card area (px\textsuperscript{2}) & 512,864 & 2,001,824 & 6,022,016 \\
-Compact area reduction & 55.9\% & 55.9\% & 55.9\% \\
-Subtree-focus visible nodes & 7 & 8 & 9 \\
-Focus visible-node reduction & 77.4\% & 93.4\% & 97.5\% \\
-Subtree-collapse visible nodes & 2 & 2 & 2 \\
-Collapse visible-node reduction & 93.5\% & 98.3\% & 99.5\% \\
-Search-dimmed nodes & 30 & 120 & 363 \\
-Fisheye target gain & 1.20x & 1.20x & 1.20x \\
-Minimap coverage & 100\% & 100\% & 100\% \\
+Canvas cards & 26 & 51 & 101 & 202 & 305 \\
+Compact area reduction & 61.35\% & 61.30\% & 61.30\% & 61.16\% & 61.09\% \\
+Overview area reduction & 90.34\% & 90.33\% & 90.33\% & 90.29\% & 90.27\% \\
+Search dimming & 96.15\% & 98.04\% & 99.01\% & 99.50\% & 99.67\% \\
+Focus card reduction & 76.92\% & 86.27\% & 87.13\% & 91.58\% & 85.90\% \\
+Collapse card reduction & 69.23\% & 78.43\% & 89.11\% & 93.07\% & 96.39\% \\
+Baseline/overview fit zoom & .214/.216 & .110/.110 & .100/.100 & .100/.100 & .100/.100 \\
+Maximum overlap pairs & 0 & 0 & 0 & 0 & 0 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Subtree focus became proportionally more selective as tree size increased: it showed seven of 31 nodes, eight of 121 and nine of 364. Collapse was more aggressive, retaining two visible entry cards in all three fixtures. On the largest tree, these correspond to 97.5\% and 99.5\% reductions respectively. Search preserved the entire layout but dimmed every node except the fixed target, reaching 99.7\% non-target dimming for 364 nodes. The fixed minimap represented all nodes at every scale.
+Search left one unique target salient and centred it in the canvas, so non-target dimming rose from 96.15\% at 31 resources to 99.67\% at 364. Focus and Collapse reduced the rendered context without changing resource membership. The non-monotonic Focus value at 364 nodes reflects the deterministic target's larger local subtree, whereas Collapse became progressively more selective. Every size and condition had zero card intersections and non-negative parent--child spacing; saved positions and left-to-right execution order matched their pre-experiment signatures.
+
+Fit-to-view exposed an important limit rather than an unqualified improvement. All 26 and 51 cards entered the viewport at 31 and 61 resources. At 121 resources and above, both Baseline and Overview reached GraphEdit's 0.10x minimum and 54 card centres entered the main canvas. Reduced card area therefore did not make the complete wide tree readable in one view; Search, Focus, Collapse and the minimap remain necessary context controls.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\textwidth]{figures/optimization_ratios.png}
-    \caption{Measured geometric and salience effects for principal methods on the 364-node fixture.}
+    \caption{Measured density, salience and context reductions across the five controlled tree sizes.}
     \label{fig:optimization}
 \end{figure}
 
 The fisheye result is intentionally modest. The target increased by 20\%, enough to make local content more prominent without the severe relocation associated with stronger distortion. Unlike collapse or focus, fisheye did not reduce visible-node count. It is therefore complementary rather than directly comparable on that metric.
+
+\section{Versioned drag interaction results}
+
+The A1--B1--B2--A2 experiment produced 200 recorded drags, with 20 observations per version and tree size after block-level warm-ups. All trials moved the target more than 150 pixels, synchronised the final resource position and preserved execution order. \Cref{tab:dragscale} reports total time for the identical 240-sample input path. Bootstrap intervals use 10,000 fixed-seed resamples within each version--size group.
+
+\begin{table}[htbp]
+\centering
+\caption{Fixed-path drag processing for the pre-optimisation and current versions. Values are median [Q1, Q3].}
+\label{tab:dragscale}
+\small
+\begin{tabular}{rrrrr}
+\toprule
+Nodes & Before (ms) & Current (ms) & Median reduction & Bootstrap 95\% interval \\
+\midrule
+31  & 331.72 [317.45, 455.03] & 410.17 [364.86, 428.71] & -23.65\% & [-29.73\%, 1.04\%] \\
+61  & 616.39 [468.75, 686.80] & 558.17 [520.06, 594.17] & 9.44\% & [-17.28\%, 19.09\%] \\
+121 & 904.23 [780.34, 1056.48] & 803.08 [759.32, 850.43] & 11.19\% & [-0.35\%, 24.81\%] \\
+241 & 1616.84 [1415.49, 1687.75] & 1301.43 [1205.34, 1462.50] & 19.51\% & [9.46\%, 24.73\%] \\
+364 & 2939.47 [2506.93, 3464.54] & 1758.30 [1720.89, 1821.63] & 40.18\% & [29.16\%, 49.21\%] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Four of five point estimates decreased, but the pre-set overall criterion also prohibited a regression greater than 5\% at any size. The 31-node estimate regressed by 23.65\%, so that strict criterion failed. Its block directions were inconsistent and its interval crossed zero; the 61- and 121-node intervals also crossed zero. The evidence is therefore strongest at 241 and 364 nodes, where intervals were wholly positive. At 364 nodes the median fell by 40.18\%, from 2,939.47 to 1,758.30 ms. This supports reduced fixed-path processing for complex large graphs, not improvement at every scale or human-perceived smoothness. The current system contains changes after the drag optimisation commit, so the comparison measures the net old-versus-current difference rather than isolating one code change.
 
 \section{Playable 241-node display results}
 
@@ -91,7 +115,7 @@ Context Collapse & 43 & 78.71\% & 90.46\% & 20.99\% & 0 \\
 
 Compact Cards retained all cards while reducing their summed area from 14,086,640.0 to 5,926,318.0 px\textsuperscript{2}. Overview retained all cards at low semantic detail and reduced summed area to 1,481,579.5 px\textsuperscript{2}. Search dimmed 201 of 202 cards, leaving one match salient. Focus and Collapse limited the current canvas to 32 and 43 cards. Every recorded condition had zero card overlaps, and the final saved resource positions matched the initial positions. These findings show that the mechanisms change density and context without reproducing the earlier ``all cards stacked together'' failure; they do not show that a person completes a task more effectively.
 
-Operation timings were retained for reproducibility but are not ranked because the conditions perform different work. Baseline's complete rebuild had the highest 95th percentile at 932.64 ms; the other conditions ranged from 327.51 to 534.02 ms. In a separate same-task 240-step drag comparison, median total processing time fell from 1,124.693 to 825.571 ms, a 26.60\% reduction, and median per-step time fell from 4.686 to 3.440 ms. This supports reduced processing on the fixed drag path, not a claim of perceived smoothness.
+Operation timings were retained for reproducibility but are not ranked because the conditions perform different work. Baseline's complete rebuild had the highest 95th percentile at 932.64 ms; the other conditions ranged from 327.51 to 534.02 ms. The ecological result is used to test transfer of the geometric mechanisms, while the controlled versioned experiment in \cref{tab:dragscale} provides the same-task interaction comparison.
 
 \section{Runtime-path and overview results}
 
@@ -174,12 +198,10 @@ Nodes & Runners & No cache (\si{\micro\second}/tick) & Cache (\si{\micro\second}
 
 The data do not show a clear monotonic penalty from adding runners because the benchmark fixes total tick work approximately rather than running every actor for a fixed wall-clock duration. The valid interpretation is therefore within each size/load pair: cached and uncached conditions execute comparable work on the same machine. Cross-machine or production-frame claims require a different benchmark.
 
-\section{Developer-study readiness and current status}
+\section{Human-usability evidence boundary}
 
-The final human-study fixture uses the playable tree rather than the earlier synthetic 364-node target. Automated material validation confirmed six unique seven-node Action paths, six unique Decorators attached to real Actions, fixed starting values, complete method/task permutations and exactly two occurrences of every method--target pairing across 12 planned participants. The workbook contains 216 pre-generated formal trials and formulas that remain blank when no observation exists. Import/recalculation testing with temporary in-memory values confirmed that a completed row enters the correct method--task summary.
-
-At the reporting cut-off, zero of 216 participant trials had been collected. Consequently, no completion-time, success-rate, error, navigation, readability, cognitive-load or inferential human result is presented. The analysis pipeline produces an explicit pending report for the empty workbook and will withhold inference when fewer than eight complete participant sets are available. This is a result-status statement, not a finding that the optimizations improve usability.
+The optional participant workbook contains 216 pre-generated rows but zero observations. Consequently, no completion-time, success-rate, error, navigation, readability, cognitive-load or inferential human result is presented. Automated material checks show only that the future protocol and its empty-data guard are internally consistent; they are not part of the evidence used to answer RQ2.
 
 \section{Summary against research questions}
 
-RQ1 is supported by the complete test matrix and complex game: the plugin authors, serialises, validates, executes and debugs non-trivial agent behaviour. The instrumented component of RQ2 is supported by both controlled generated trees and the playable 241-node case: compact, semantic, structural and salience mechanisms produced distinct measurable effects, preserved positions and avoided overlaps. The human-performance component remains unanswered because the pre-registered study contains no participant observations. RQ3 is supported for the tested workload: exact-signature topology caching preserved semantics and substantially reduced median tick cost, especially on larger trees.
+RQ1 is supported by the complete test matrix and complex game: the plugin authors, serialises, validates, executes and debugs non-trivial agent behaviour. RQ2 is answered at the defined instrumented level: five controlled sizes and the playable resource show repeatable density, context and salience effects with no overlap or semantic mutation, while fixed-path processing improved most clearly at 241 and 364 nodes and did not improve at every scale. Human usability is outside that answered construct and remains unverified. RQ3 is supported for the tested workload: exact-signature topology caching preserved semantics and substantially reduced median tick cost, especially on larger trees.
