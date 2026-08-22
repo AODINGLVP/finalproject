@@ -5,7 +5,7 @@ const BTTreeResource = preload("res://addons/behavior_tree_editor/bt_tree_resour
 const BTBlackboardSchema = preload("res://addons/behavior_tree_editor/bt_blackboard_schema.gd")
 const BTBlackboardEntry = preload("res://addons/behavior_tree_editor/bt_blackboard_entry.gd")
 
-const OUTPUT_PATH := "res://behavior_trees/playable_complex_enemy_213.tres"
+const OUTPUT_PATH := "res://behavior_trees/complex_display_tree_241.tres"
 
 var next_id := 1
 var failures := 0
@@ -14,19 +14,19 @@ var failures := 0
 func _initialize() -> void:
 	var tree := _build_tree()
 	_layout_tree(tree)
-	_check(tree.nodes.size() == 213, "playable complex enemy tree contains exactly 213 nodes")
+	_check(tree.nodes.size() == 241, "playable complex enemy tree contains exactly 241 nodes")
 	_check(tree.validate_tree().is_empty(), "playable complex enemy tree validates")
 	var save_error := ResourceSaver.save(tree, OUTPUT_PATH)
 	_check(save_error == OK, "playable complex enemy tree saves")
 	var loaded := ResourceLoader.load(OUTPUT_PATH, "", ResourceLoader.CACHE_MODE_IGNORE) as BTTreeResource
-	_check(loaded != null and loaded.nodes.size() == 213, "playable complex enemy tree reloads")
+	_check(loaded != null and loaded.nodes.size() == 241, "playable complex enemy tree reloads")
 	print("BT_PLAYABLE_COMPLEX_TREE_GENERATOR nodes=%d failed=%d output=%s" % [tree.nodes.size(), failures, OUTPUT_PATH])
 	quit(0 if failures == 0 else 1)
 
 
 func _build_tree() -> BTTreeResource:
 	var tree := BTTreeResource.new()
-	tree.tree_name = "Playable Complex Tactical Enemy (213 Nodes)"
+	tree.tree_name = "Playable Complex Tactical Enemy (241 Nodes)"
 	tree.blackboard_schema = _build_schema()
 	var root_node := _node(tree, BTNodeResource.TYPE_ROOT, -1, "Root", "Runtime entry point for the playable tactical enemy.")
 	tree.root_node_id = root_node.id
@@ -35,6 +35,9 @@ func _build_tree() -> BTTreeResource:
 	_add_emergency(tree, priority)
 	_add_dodge(tree, priority)
 	_add_melee(tree, priority)
+	_add_obstacle_traversal(tree, priority)
+	_add_vertical_navigation(tree, priority)
+	_add_ranged(tree, priority)
 	_add_pressure(tree, priority)
 	_add_chase(tree, priority)
 	_add_search(tree, priority)
@@ -42,6 +45,38 @@ func _build_tree() -> BTTreeResource:
 	_add_patrol(tree, priority)
 	_add_idle(tree, priority)
 	return tree
+
+
+func _add_ranged(tree: BTTreeResource, parent: BTNodeResource) -> void:
+	var branch := _node(tree, BTNodeResource.TYPE_SEQUENCE, parent.id, "6 Ranged Suppression", "Fire visible projectiles when the player is beyond melee pressure range.")
+	_node(tree, BTNodeResource.TYPE_CONDITION, branch.id, "Clear Ranged Shot?", "Requires a detected target at a useful projectile distance.", {"condition_name": "can_use_ranged_attack"})
+	var choices := _node(tree, BTNodeResource.TYPE_RANDOM_SELECTOR, branch.id, "Ranged Firing Pattern", "Alternate between quick and carefully aimed shots.", {"seed": 404})
+	for index in range(2):
+		var pattern := _node(tree, BTNodeResource.TYPE_SEQUENCE, choices.id, "Ranged Pattern %d" % (index + 1), "Aim, telegraph, and release one projectile.")
+		_node(tree, BTNodeResource.TYPE_ACTION, pattern.id, "Aim Projectile %d" % (index + 1), "Face and track the current player position.", {"action_name": "aim_at_player"})
+		_node(tree, BTNodeResource.TYPE_WAIT, pattern.id, "Ranged Telegraph %d" % (index + 1), "Give the player a readable reaction window.", {"duration": 0.08 + index * 0.07})
+		_node(tree, BTNodeResource.TYPE_ACTION, pattern.id, "Fire Projectile %d" % (index + 1), "Spawn a damaging projectile toward the tracked target.", {"action_name": "fire_projectile"})
+	_decorator(tree, branch, "Ranged Attack Cooldown", "cooldown", 0.9)
+
+
+func _add_obstacle_traversal(tree: BTTreeResource, parent: BTNodeResource) -> void:
+	var branch := _node(tree, BTNodeResource.TYPE_SEQUENCE, parent.id, "4 Obstacle Traversal", "Jump over a blocking crate instead of pushing against it.")
+	_node(tree, BTNodeResource.TYPE_CONDITION, branch.id, "Obstacle Ahead?", "Horizontal ray sensing detects obstacle-group bodies.", {"condition_name": "has_obstacle_ahead"})
+	var choices := _node(tree, BTNodeResource.TYPE_RANDOM_SELECTOR, branch.id, "Obstacle Solution", "Choose a direct vault or a guarded vault.", {"seed": 505})
+	for index in range(2):
+		var route := _node(tree, BTNodeResource.TYPE_SEQUENCE, choices.id, "Vault Route %d" % (index + 1), "Commit to one complete obstacle-crossing action.")
+		_node(tree, BTNodeResource.TYPE_ACTION, route.id, "Jump Obstacle %d" % (index + 1), "Apply vertical impulse and forward movement until landing.", {"action_name": "jump_over_obstacle"})
+	_decorator(tree, branch, "Obstacle Traversal Limit", "time_limit", 1.8)
+
+
+func _add_vertical_navigation(tree: BTTreeResource, parent: BTNodeResource) -> void:
+	var branch := _node(tree, BTNodeResource.TYPE_SEQUENCE, parent.id, "5 Vertical Pursuit", "Use ladders when the player occupies an elevated platform.")
+	_node(tree, BTNodeResource.TYPE_CONDITION, branch.id, "Player Above Near Ladder?", "Checks vertical separation and a nearby ladder trigger.", {"condition_name": "should_climb_to_player"})
+	var choices := _node(tree, BTNodeResource.TYPE_RANDOM_SELECTOR, branch.id, "Climb Approach", "Choose a direct or guarded ladder approach.", {"seed": 707})
+	for index in range(2):
+		var route := _node(tree, BTNodeResource.TYPE_SEQUENCE, choices.id, "Climb Route %d" % (index + 1), "Align with the ladder and climb toward the platform.")
+		_node(tree, BTNodeResource.TYPE_ACTION, route.id, "Climb Ladder %d" % (index + 1), "Move horizontally to the ladder, then vertically upward.", {"action_name": "climb_toward_player"})
+	_decorator(tree, branch, "Vertical Pursuit Limit", "time_limit", 3.0)
 
 
 func _add_emergency(tree: BTTreeResource, parent: BTNodeResource) -> void:
@@ -91,7 +126,7 @@ func _add_melee(tree: BTTreeResource, parent: BTNodeResource) -> void:
 
 
 func _add_pressure(tree: BTTreeResource, parent: BTNodeResource) -> void:
-	var branch := _node(tree, BTNodeResource.TYPE_SEQUENCE, parent.id, "4 Mid-Range Pressure", "Reposition instead of running straight at a nearby target.")
+	var branch := _node(tree, BTNodeResource.TYPE_SEQUENCE, parent.id, "7 Mid-Range Pressure", "Reposition instead of running straight at a nearby target.")
 	_node(tree, BTNodeResource.TYPE_CONDITION, branch.id, "Pressure Range?", "Target is detected, outside melee, but still nearby.", {"condition_name": "should_apply_pressure"})
 	var choices := _node(tree, BTNodeResource.TYPE_RANDOM_SELECTOR, branch.id, "Pressure Pattern", "Mix lateral steps with cautious or aggressive advances.", {"seed": 404})
 	var strafes := ["strafe_left", "strafe_right", "brace"]
@@ -104,7 +139,7 @@ func _add_pressure(tree: BTTreeResource, parent: BTNodeResource) -> void:
 
 
 func _add_chase(tree: BTTreeResource, parent: BTNodeResource) -> void:
-	var branch := _node(tree, BTNodeResource.TYPE_SEQUENCE, parent.id, "5 Coordinated Chase", "Pursue a visible target outside close pressure range.")
+	var branch := _node(tree, BTNodeResource.TYPE_SEQUENCE, parent.id, "8 Coordinated Chase", "Pursue a visible target outside close pressure range.")
 	_node(tree, BTNodeResource.TYPE_CONDITION, branch.id, "Should Chase?", "Requires detection outside attack range.", {"condition_name": "should_chase"})
 	var choices := _node(tree, BTNodeResource.TYPE_RANDOM_SELECTOR, branch.id, "Chase Strategy", "Choose direct, cautious, left-feint, or right-feint pursuit.", {"seed": 505})
 	var methods := ["advance_aggressively", "advance_cautiously", "strafe_left", "strafe_right"]
@@ -118,7 +153,7 @@ func _add_chase(tree: BTTreeResource, parent: BTNodeResource) -> void:
 
 
 func _add_search(tree: BTTreeResource, parent: BTNodeResource) -> void:
-	var branch := _node(tree, BTNodeResource.TYPE_SEQUENCE, parent.id, "6 Last-Known-Position Search", "Search after cloak or loss of sight instead of forgetting immediately.")
+	var branch := _node(tree, BTNodeResource.TYPE_SEQUENCE, parent.id, "9 Last-Known-Position Search", "Search after cloak or loss of sight instead of forgetting immediately.")
 	_node(tree, BTNodeResource.TYPE_CONDITION, branch.id, "Has Last Known Position?", "Memory persists when visual detection is lost.", {"condition_name": "has_last_known_position"})
 	var choices := _node(tree, BTNodeResource.TYPE_RANDOM_SELECTOR, branch.id, "Search Pattern", "Use four deterministic but varied sweep patterns.", {"seed": 606})
 	var sweeps := ["search_sweep_left", "search_sweep_right", "search_last_known", "search_last_known"]
@@ -131,7 +166,7 @@ func _add_search(tree: BTTreeResource, parent: BTNodeResource) -> void:
 
 
 func _add_return_home(tree: BTTreeResource, parent: BTNodeResource) -> void:
-	var branch := _node(tree, BTNodeResource.TYPE_SEQUENCE, parent.id, "7 Return to Guard Post", "Prevent patrol drift after the target is gone.")
+	var branch := _node(tree, BTNodeResource.TYPE_SEQUENCE, parent.id, "10 Return to Guard Post", "Prevent patrol drift after the target is gone.")
 	_node(tree, BTNodeResource.TYPE_CONDITION, branch.id, "Too Far From Home?", "Only return when no target memory remains.", {"condition_name": "should_return_home"})
 	var choices := _node(tree, BTNodeResource.TYPE_RANDOM_SELECTOR, branch.id, "Return Formation", "Choose a guarded return cadence.", {"seed": 707})
 	for index in range(3):
@@ -143,7 +178,7 @@ func _add_return_home(tree: BTTreeResource, parent: BTNodeResource) -> void:
 
 
 func _add_patrol(tree: BTTreeResource, parent: BTNodeResource) -> void:
-	var branch := _node(tree, BTNodeResource.TYPE_SEQUENCE, parent.id, "8 Layered Patrol", "Fallback patrol only when the player is not currently detected.")
+	var branch := _node(tree, BTNodeResource.TYPE_SEQUENCE, parent.id, "11 Layered Patrol", "Fallback patrol only when the player is not currently detected.")
 	var invert := _node(tree, BTNodeResource.TYPE_DECORATOR, branch.id, "No Visible Player", "Invert the perception condition.", {"mode": "invert"})
 	_node(tree, BTNodeResource.TYPE_CONDITION, invert.id, "Player Detected?", "The inverted result gates patrol.", {"condition_name": "is_player_detected"})
 	var choices := _node(tree, BTNodeResource.TYPE_RANDOM_SELECTOR, branch.id, "Patrol Route Choice", "Five routes prevent a single mechanical loop.", {"seed": 808})
@@ -158,7 +193,7 @@ func _add_patrol(tree: BTTreeResource, parent: BTNodeResource) -> void:
 
 
 func _add_idle(tree: BTTreeResource, parent: BTNodeResource) -> void:
-	var choices := _node(tree, BTNodeResource.TYPE_RANDOM_SELECTOR, parent.id, "9 Guard Idle Variations", "Always-available final fallback with varied facing and observation.", {"seed": 909})
+	var choices := _node(tree, BTNodeResource.TYPE_RANDOM_SELECTOR, parent.id, "12 Guard Idle Variations", "Always-available final fallback with varied facing and observation.", {"seed": 909})
 	for index in range(4):
 		var idle := _node(tree, BTNodeResource.TYPE_SEQUENCE, choices.id, "Idle Variation %d" % (index + 1), "Short idle action followed by an explicit wait.")
 		var action := _node(tree, BTNodeResource.TYPE_ACTION, idle.id, "Guard Stance %d" % (index + 1), "Hold position without disabling perception.", {"action_name": "idle_guard" if index % 2 == 0 else "observe_area"})
@@ -191,12 +226,15 @@ func _build_schema() -> BTBlackboardSchema:
 	var definitions := [
 		["player_detected", "Bool", false], ["player_in_range", "Bool", false],
 		["player_on_left", "Bool", false], ["player_on_right", "Bool", false],
-		["player_x", "Float", 0.0], ["player_distance", "Float", 9999.0],
+		["player_x", "Float", 0.0], ["player_y", "Float", 0.0], ["player_distance", "Float", 9999.0],
+		["player_above", "Bool", false],
 		["player_attacking", "Bool", false], ["player_health", "Int", 8],
 		["health", "Int", 6], ["health_ratio", "Float", 1.0],
 		["low_health", "Bool", false], ["critical_health", "Bool", false],
 		["last_known_player_x", "Float", 0.0], ["has_last_known_position", "Bool", false],
 		["home_distance", "Float", 0.0], ["nearby_allies", "Int", 0], ["alert_level", "Float", 0.0],
+		["obstacle_ahead", "Bool", false], ["obstacle_direction", "Int", 1],
+		["near_ladder", "Bool", false], ["ladder_x", "Float", 0.0],
 	]
 	for definition in definitions:
 		var entry := BTBlackboardEntry.new()

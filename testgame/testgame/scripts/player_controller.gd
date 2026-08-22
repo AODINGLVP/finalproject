@@ -9,6 +9,8 @@ extends CharacterBody2D
 @export var dash_duration := 0.16
 @export var dash_cost := 35.0
 @export var stamina_recovery := 24.0
+@export var jump_velocity := 390.0
+@export var climb_speed := 175.0
 @export var idle_texture: Texture2D
 @export var attack_texture: Texture2D
 
@@ -56,10 +58,15 @@ func _physics_process(delta: float) -> void:
 			cloaked = false
 			self_modulate = Color.WHITE
 	stamina = minf(100.0, stamina + stamina_recovery * delta)
+	var vertical_input := Input.get_axis("move_up", "move_down")
+	var ladder := _nearby_ladder()
+	var climbing := ladder != null and not is_zero_approx(vertical_input)
 	var direction: float = Input.get_axis("move_left", "move_right")
 	if direction != 0.0:
 		facing = -1 if direction < 0.0 else 1
 		sprite.flip_h = facing < 0
+	if Input.is_action_just_pressed("move_up") and is_on_floor() and ladder == null:
+		velocity.y = -jump_velocity
 	if Input.is_action_just_pressed("dash") and dash_timer <= 0.0 and stamina >= dash_cost:
 		dash_timer = dash_duration
 		stamina -= dash_cost
@@ -67,17 +74,36 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("heal") and healing_charges > 0 and health < max_health:
 		healing_charges -= 1
 		health = mini(max_health, health + 3)
-	if dash_timer > 0.0:
+	if climbing:
+		velocity.x = (ladder.global_position.x - global_position.x) * 5.0
+		velocity.y = vertical_input * climb_speed
+	elif dash_timer > 0.0:
 		dash_timer -= delta
 		velocity.x = float(facing) * dash_speed
 	else:
 		velocity.x = direction * speed
-	velocity.y += gravity * delta
+		velocity.y += gravity * delta
 	move_and_slide()
 
 	if Input.is_action_just_pressed("attack"):
 		_start_attack()
 	_update_attack(delta)
+
+
+func _nearby_ladder() -> Node2D:
+	var nearest: Node2D
+	var nearest_distance := INF
+	for ladder in get_tree().get_nodes_in_group("ladders"):
+		if not (ladder is Node2D):
+			continue
+		var offset: Vector2 = global_position - ladder.global_position
+		if absf(offset.x) > 44.0 or absf(offset.y) > 120.0:
+			continue
+		var distance: float = offset.length_squared()
+		if distance < nearest_distance:
+			nearest = ladder
+			nearest_distance = distance
+	return nearest
 
 
 func _start_attack() -> void:

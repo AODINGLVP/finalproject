@@ -40,6 +40,9 @@ func _draw() -> void:
 	var font := ThemeDB.fallback_font
 	draw_string(font, Vector2(350, 500), "STEALTH TEST ZONE", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.45, 0.9, 0.92, 0.75))
 	draw_string(font, Vector2(860, 525), "DAMAGE ZONE", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(1.0, 0.55, 0.4, 0.78))
+	draw_string(font, Vector2(610, 485), "JUMP", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(1.0, 0.72, 0.28, 0.9))
+	draw_string(font, Vector2(700, 380), "CLIMB", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(0.55, 0.9, 1.0, 0.9))
+	draw_string(font, Vector2(985, 285), "HIGH GROUND", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(0.55, 0.9, 1.0, 0.9))
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		if not (enemy is CharacterBody2D) or not enemy.visible:
 			continue
@@ -56,7 +59,7 @@ func _update_hud() -> void:
 		player.health, player.max_health, roundi(player.stamina), player.healing_charges,
 		"ACTIVE" if player.cloaked else ("READY" if player.cloak_cooldown <= 0.0 else "%.1fs" % player.cloak_cooldown)
 	]
-	help_label.text = "A/D Move   J/Mouse Attack   Space Dash   H Heal   C Cloak   T Pause AI   R Reset"
+	help_label.text = "A/D Move  W/Up Jump+Climb  S/Down Climb  J Attack  Space Dash  H Heal  C Cloak  T AI  R Reset"
 
 
 func _toggle_ai() -> void:

@@ -4,10 +4,15 @@ extends Area2D
 @export var respawn_time := 5.0
 
 var available := true
+var respawn_timer: Timer
 
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
+	respawn_timer = Timer.new()
+	respawn_timer.one_shot = true
+	respawn_timer.timeout.connect(_on_respawn_timeout)
+	add_child(respawn_timer)
 
 
 func _on_body_entered(body: Node) -> void:
@@ -15,11 +20,13 @@ func _on_body_entered(body: Node) -> void:
 		return
 	available = false
 	visible = false
-	monitoring = false
+	set_deferred("monitoring", false)
 	if body.has_method("collect_medkit"):
 		body.collect_medkit(heal_amount)
-	await get_tree().create_timer(respawn_time).timeout
+	respawn_timer.start(respawn_time)
+
+
+func _on_respawn_timeout() -> void:
 	available = true
 	visible = true
-	monitoring = true
-
+	set_deferred("monitoring", true)

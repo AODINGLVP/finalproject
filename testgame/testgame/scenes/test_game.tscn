@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3]
+[gd_scene load_steps=22 format=3]
 
 [ext_resource type="Script" path="res://scripts/player_controller.gd" id="1_player_script"]
 [ext_resource type="Script" path="res://scripts/enemy_actor.gd" id="2_enemy_script"]
@@ -9,7 +9,7 @@
 [ext_resource type="Texture2D" path="res://assets/enemy_idle.svg" id="7_enemy_idle"]
 [ext_resource type="Texture2D" path="res://assets/enemy_attack.svg" id="8_enemy_attack"]
 [ext_resource type="Script" path="res://scripts/arena_controller.gd" id="9_arena_script"]
-[ext_resource type="Resource" path="res://behavior_trees/playable_complex_enemy_213.tres" id="10_complex_tree"]
+[ext_resource type="Resource" path="res://behavior_trees/complex_display_tree_241.tres" id="10_complex_tree"]
 [ext_resource type="Script" path="res://scripts/medkit_pickup.gd" id="11_medkit_script"]
 [ext_resource type="Script" path="res://scripts/damage_zone.gd" id="12_damage_script"]
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
@@ -29,6 +29,15 @@ size = Vector2(30, 30)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_damage"]
 size = Vector2(160, 80)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_obstacle"]
+size = Vector2(54, 70)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_platform"]
+size = Vector2(250, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ladder"]
+size = Vector2(28, 190)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_top"]
 bg_color = Color(0.035, 0.075, 0.105, 0.94)
@@ -165,6 +174,92 @@ script = ExtResource("12_damage_script")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DamageZone"]
 shape = SubResource("RectangleShape2D_damage")
 
+[node name="ObstacleA" type="StaticBody2D" parent="." groups=["obstacles"]]
+position = Vector2(655, 543)
+
+[node name="Visual" type="Polygon2D" parent="ObstacleA"]
+polygon = PackedVector2Array(-27, -35, 27, -35, 27, 35, -27, 35)
+color = Color(0.48, 0.3, 0.18, 1)
+
+[node name="Stripe" type="Polygon2D" parent="ObstacleA"]
+polygon = PackedVector2Array(-22, -5, 22, -5, 22, 5, -22, 5)
+color = Color(0.9, 0.58, 0.16, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ObstacleA"]
+shape = SubResource("RectangleShape2D_obstacle")
+
+[node name="ObstacleB" type="StaticBody2D" parent="." groups=["obstacles"]]
+position = Vector2(930, 543)
+
+[node name="Visual" type="Polygon2D" parent="ObstacleB"]
+polygon = PackedVector2Array(-27, -35, 27, -35, 27, 35, -27, 35)
+color = Color(0.48, 0.3, 0.18, 1)
+
+[node name="Stripe" type="Polygon2D" parent="ObstacleB"]
+polygon = PackedVector2Array(-22, -5, 22, -5, 22, 5, -22, 5)
+color = Color(0.9, 0.58, 0.16, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ObstacleB"]
+shape = SubResource("RectangleShape2D_obstacle")
+
+[node name="PlatformA" type="StaticBody2D" parent="." groups=["obstacles"]]
+position = Vector2(790, 405)
+
+[node name="Visual" type="Polygon2D" parent="PlatformA"]
+polygon = PackedVector2Array(-125, -10, 125, -10, 125, 10, -125, 10)
+color = Color(0.2, 0.52, 0.62, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlatformA"]
+shape = SubResource("RectangleShape2D_platform")
+one_way_collision = true
+
+[node name="LadderA" type="Area2D" parent="." groups=["ladders"]]
+position = Vector2(735, 493)
+collision_layer = 0
+collision_mask = 0
+
+[node name="LeftRail" type="Polygon2D" parent="LadderA"]
+polygon = PackedVector2Array(-13, -95, -8, -95, -8, 95, -13, 95)
+color = Color(0.78, 0.68, 0.34, 1)
+
+[node name="RightRail" type="Polygon2D" parent="LadderA"]
+polygon = PackedVector2Array(8, -95, 13, -95, 13, 95, 8, 95)
+color = Color(0.78, 0.68, 0.34, 1)
+
+[node name="Rungs" type="Polygon2D" parent="LadderA"]
+polygon = PackedVector2Array(-10, -75, 10, -75, 10, -70, -10, -70, -10, -40, 10, -40, 10, -35, -10, -35, -10, -5, 10, -5, 10, 0, -10, 0, -10, 30, 10, 30, 10, 35, -10, 35, -10, 65, 10, 65, 10, 70, -10, 70)
+color = Color(0.9, 0.8, 0.42, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LadderA"]
+shape = SubResource("RectangleShape2D_ladder")
+
+[node name="PlatformB" type="StaticBody2D" parent="." groups=["obstacles"]]
+position = Vector2(1080, 315)
+
+[node name="Visual" type="Polygon2D" parent="PlatformB"]
+polygon = PackedVector2Array(-125, -10, 125, -10, 125, 10, -125, 10)
+color = Color(0.24, 0.46, 0.68, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlatformB"]
+shape = SubResource("RectangleShape2D_platform")
+one_way_collision = true
+
+[node name="LadderB" type="Area2D" parent="." groups=["ladders"]]
+position = Vector2(1015, 410)
+collision_layer = 0
+collision_mask = 0
+
+[node name="LeftRail" type="Polygon2D" parent="LadderB"]
+polygon = PackedVector2Array(-13, -95, -8, -95, -8, 95, -13, 95)
+color = Color(0.78, 0.68, 0.34, 1)
+
+[node name="RightRail" type="Polygon2D" parent="LadderB"]
+polygon = PackedVector2Array(8, -95, 13, -95, 13, 95, 8, 95)
+color = Color(0.78, 0.68, 0.34, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LadderB"]
+shape = SubResource("RectangleShape2D_ladder")
+
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="TopPanel" type="PanelContainer" parent="UI"]
@@ -182,7 +277,7 @@ theme_override_constants/separation = 3
 layout_mode = 2
 theme_override_colors/font_color = Color(0.66, 0.92, 0.95, 1)
 theme_override_font_sizes/font_size = 15
-text = "A/D Move   J/Mouse Attack   Space Dash   H Heal   C Cloak   T Pause AI   R Reset"
+text = "A/D Move   W/Up Jump or Climb   S/Down Climb   J Attack   Space Dash   C Cloak"
 
 [node name="PlayerStatus" type="Label" parent="UI/TopPanel/TopContent"]
 layout_mode = 2
