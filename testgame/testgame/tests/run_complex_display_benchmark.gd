@@ -51,13 +51,13 @@ func _run() -> void:
 	rows.append(overview)
 
 	start = Time.get_ticks_usec()
-	view._on_search_changed("Execute Patrol and Idle")
+	view._on_search_changed("Patrol Route Choice")
 	await process_frame
 	var search := _measure(view, "Optimized Search", 1, _elapsed_ms(start))
 	rows.append(search)
 	view._on_search_changed("")
 
-	var patrol_branch := _find_node_id(tree, "Patrol and Idle")
+	var patrol_branch := _find_node_id(tree, "11 Layered Patrol")
 	start = Time.get_ticks_usec()
 	view.focus_root_id = patrol_branch
 	view._rebuild_graph()
