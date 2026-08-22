@@ -3,6 +3,8 @@
 .codex/
 .codex_tmp/
 node_modules/
+__pycache__/
+*.py[cod]
 contact/
 
 # Godot local/editor generated files
