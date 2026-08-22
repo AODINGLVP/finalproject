@@ -101,6 +101,7 @@ The generated trees isolate scale, whereas \cref{tab:playable241} reports an eco
 \caption{Objective display results on the playable 241-node behaviour tree. Reductions are relative to Baseline.}
 \label{tab:playable241}
 \small
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{lrrrrr}
 \toprule
 Condition & Cards & Card reduction & Area reduction & Bounds reduction & Dimmed \\
@@ -113,6 +114,7 @@ Subtree Focus & 32 & 84.16\% & 93.04\% & 63.37\% & 0 \\
 Context Collapse & 43 & 78.71\% & 90.46\% & 20.99\% & 0 \\
 \bottomrule
 \end{tabular}
+}
 \end{table}
 
 Compact Cards retained all cards while reducing their summed area from 14,086,640.0 to 5,926,318.0 px\textsuperscript{2}. Overview retained all cards at low semantic detail and reduced summed area to 1,481,579.5 px\textsuperscript{2}. Search dimmed 201 of 202 cards, leaving one match salient. Focus and Collapse limited the current canvas to 32 and 43 cards. Every recorded condition had zero card overlaps, and the final saved resource positions matched the initial positions. These findings show that the mechanisms change density and context without reproducing the earlier ``all cards stacked together'' failure; they do not show that a person completes a task more effectively.

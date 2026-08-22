@@ -84,6 +84,7 @@ A1--B1--B2--A2 实验获得 200 次正式拖拽；区块热身后，每个版本
 \caption{可玩 241 节点行为树的客观显示结果，降低比例均相对 Baseline。}
 \label{tab:playable241}
 \small
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{lrrrrr}
 \toprule
 条件 & 卡片数 & 卡片数降低 & 卡片面积降低 & 边界面积降低 & 淡化数 \\
@@ -96,6 +97,7 @@ Subtree Focus & 32 & 84.16\% & 93.04\% & 63.37\% & 0 \\
 Context Collapse & 43 & 78.71\% & 90.46\% & 20.99\% & 0 \\
 \bottomrule
 \end{tabular}
+}
 \end{table}
 
 Compact Cards 保留全部卡片，同时把卡片面积总和从 14,086,640.0 降到 5,926,318.0 px\textsuperscript{2}。Overview 在低语义细节下同样保留全部卡片，并把面积总和降到 1,481,579.5 px\textsuperscript{2}。Search 淡化 202 张卡片中的 201 张，只保留一个匹配项显著。Focus 与 Collapse 分别把当前画布限制为 32 和 43 张卡片。所有观测条件的卡片重叠均为零，最终保存的资源位置也与实验前完全相同。这些结果说明机制能改变密度与上下文，并且没有重现此前“所有节点叠在一起”的故障；它们不能说明真人一定能更有效地完成任务。
