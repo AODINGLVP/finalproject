@@ -75,6 +75,7 @@ The A1--B1--B2--A2 experiment produced 200 recorded drags, with 20 observations 
 \caption{Fixed-path drag processing for the pre-optimisation and current versions. Values are median [Q1, Q3].}
 \label{tab:dragscale}
 \small
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{rrrrr}
 \toprule
 Nodes & Before (ms) & Current (ms) & Median reduction & Bootstrap 95\% interval \\
@@ -86,6 +87,7 @@ Nodes & Before (ms) & Current (ms) & Median reduction & Bootstrap 95\% interval 
 364 & 2939.47 [2506.93, 3464.54] & 1758.30 [1720.89, 1821.63] & 40.18\% & [29.16\%, 49.21\%] \\
 \bottomrule
 \end{tabular}
+}
 \end{table}
 
 Four of five point estimates decreased, but the pre-set overall criterion also prohibited a regression greater than 5\% at any size. The 31-node estimate regressed by 23.65\%, so that strict criterion failed. Its block directions were inconsistent and its interval crossed zero; the 61- and 121-node intervals also crossed zero. The evidence is therefore strongest at 241 and 364 nodes, where intervals were wholly positive. At 364 nodes the median fell by 40.18\%, from 2,939.47 to 1,758.30 ms. This supports reduced fixed-path processing for complex large graphs, not improvement at every scale or human-perceived smoothness. The current system contains changes after the drag optimisation commit, so the comparison measures the net old-versus-current difference rather than isolating one code change.
