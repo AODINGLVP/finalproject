@@ -43,7 +43,9 @@ func _run() -> void:
 	var target := HumanStudyDebug.trace_target(TRACE_TARGET_KEY)
 	var target_id := int(target.get("id", -1))
 	var target_title := str(target.get("title", ""))
-	var path_ids: Array = target.get("path_ids", [])
+	var path_ids: Array[int] = []
+	for value in target.get("path_ids", []):
+		path_ids.append(int(value))
 	await _load_arrange_and_fit(FORMAL_TREE_PATH)
 	var large := await _capture("02_tree_241_overview")
 	_assert_image(large, "241-node playable study tree renders")
