@@ -11,7 +11,7 @@
 \label{fig:architecture}
 \end{figure}
 
-\texttt{BTTreeResource} 保存 Root ID、节点数组和可选黑板 Schema；\texttt{BTNodeResource} 保存类型、标题、描述、参数、图位置、普通父级和 Decorator 所属者；\texttt{BehaviorTreeRunner} 针对 Actor 与字典黑板执行树；\texttt{BehaviorTreeComponent} 把树、ActorPath、Tick 模式和生命周期暴露为可复用场景组件。编辑器中，\texttt{BTEditorView} 管理 Palette、Toolbar、Graph、Inspector、Schema Editor、历史和 Live Debug，另外两个控件负责画布输入、连线和卡片显示。
+\texttt{BTTreeResource} 保存 Root ID、节点数组和可选黑板 Schema；\texttt{BTNodeResource} 保存类型、标题、描述、参数、图位置、普通父级和 Decorator 所属者；\texttt{BehaviorTreeRunner} 针对 Actor 与字典黑板执行树；\texttt{BehaviorTreeComponent} 把树、ActorPath、Tick 模式和生命周期暴露为可复用场景组件。编辑器中，\texttt{BTEditorView} 管理 Toolbar、Graph、Inspector、Schema Editor、历史和 Live Debug，另外两个控件负责画布输入、连线和卡片显示。
 
 \section{资源模型与校验}
 
@@ -51,11 +51,13 @@ Decorator 在所属节点前或周围执行，支持黑板比较、Cooldown、Ti
 
 \section{编辑器编写工作流}
 
-插件注册为底部面板。Palette 支持点击和拖拽创建；节点可以移动、从底部方形端口连接到顶部方形端口、断开、复制和删除；复合节点支持多个子节点；右键菜单提供常用操作和子树显示命令。所有数据改动都推入树快照，因此撤销重做覆盖创建、删除、移动、连线、参数、Schema 和折叠状态。
+插件注册为底部面板。为避免永久显示一排节点创建按钮，用户在画布上右键，通过上下文菜单把所需节点创建在对应图位置。节点可以移动、从底部方形端口连接到顶部方形端口、断开、复制和删除；复合节点支持多个子节点；右键菜单还提供常用操作和子树显示命令。行为树选择器只显示已选资源名称，不要求用户管理原始路径文本框。所有数据改动都推入树快照，因此撤销重做覆盖创建、删除、移动、连线、参数、Schema 和折叠状态。
 
 Inspector 为常见字段提供类型化控件，不要求手写 JSON。Action 编辑方法名；Condition 编辑 Actor/Blackboard 模式、Key、Operator 与值；Random、Parallel、Repeat、Wait 和 Decorator 暴露对应策略。Advanced JSON 仍作为兼容入口，无效 JSON 不会持续输出红色错误，并在修复前保留旧有效参数。
 
 连线需要特殊处理：Godot 原生 GraphEdit 曲线使用侧面 Slot，而本项目采用上下端口。单连接模式隐藏原生持久层并绘制自定义上下边，拖拽预览期间临时恢复原生层。自定义线段命中保留右键断开和撤销重做；关闭该功能则恢复原生线，形成安全回退。
+
+大型树拖拽避免在每个指针事件上发送资源变更通知。手动拖拽期间卡片只更新视觉位置并请求连线重绘，在释放鼠标后才把最终位置同步到资源；撤销快照也在移动完成后生成，而不占用对延迟敏感的按下路径。自定义连线路径按端点缓存，视口外边被裁剪，无关指针移动不再重绘整个图，鱼眼更新在拖拽期间暂停。这些修改保持最终位置和单步撤销语义，同时减少重复工作。
 
 \section{Live Debug 与黑板检查}
 
@@ -99,4 +101,4 @@ Orthogonal 使用直角边，Bundling 让同方向连线共享主干。Active Pa
 
 \section{演示游戏}
 
-复杂二维竞技场提供合成树之外的行为证据。玩家可以移动、近战、冲刺、治疗和短暂隐身；三个守卫运行行为树组件。低血量时守卫撤退并治疗；否则左右攻击分支检查范围、方向、冷却和时限；追击分支接近可见玩家；玩家隐身后 Search 前往最后位置；巡逻使用 Random Selector、Parallel、Repeat 和 Wait。检测采用滞回：330 像素内获得可见目标，超过 460 像素才释放，避免边界抖动。游戏使用简单生成图形和贴图切换，把重点保留在决策逻辑并提高自动测试稳定性。
+复杂二维竞技场提供合成树之外的行为证据。玩家可以移动、跳跃、攀爬梯子、近战、冲刺、治疗和短暂隐身；三个守卫共享同一棵 241 节点树并通过行为树组件运行。低血量时守卫撤退并治疗；响应式防御会回应玩家当前攻击窗口；方向近战检查范围与朝向；远程压制瞄准并生成可见投射物；障碍感知会选择跳过箱子而不是继续撞墙；探测到梯子附近高处玩家时则选择攀爬。较低优先级分支还覆盖压迫推进、协同追击、最后位置搜索、返回、分层巡逻和待机变化。检测采用滞回：330 像素内获得可见目标，超过 460 像素才释放，避免边界抖动。游戏使用简单生成图形和贴图切换，把重点保留在决策逻辑并提高自动测试稳定性。
