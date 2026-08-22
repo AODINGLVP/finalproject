@@ -1,0 +1,183 @@
+Godot Engine v4.6.stable.official.89cea1439 - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 610.74 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 5070 Laptop GPU
+
+PASS: EDID physical width and height are available
+PASS: physical display device key is available
+PASS: trial counts are valid
+BT_PHYSICAL_SCREEN_CANDIDATE index=0 position=(0, 453) size=(2560, 1600) dpi=144 scale=1.000
+BT_PHYSICAL_SCREEN_CANDIDATE index=1 position=(9600, 257) size=(3840, 2160) dpi=144 scale=1.000
+BT_PHYSICAL_SCREEN_CANDIDATE index=2 position=(3840, 0) size=(3840, 2160) dpi=144 scale=1.000
+PASS: Godot screen index is available for the requested physical display
+PASS: experiment window is on the requested physical display
+PASS: 31-node fixture has exact resource count
+PASS: 31-node fixture passes structural validation
+PASS: 31-node fixture has a deterministic focus target
+PASS: 31-node fixture has a deterministic search target
+PASS: 61-node fixture has exact resource count
+PASS: 61-node fixture passes structural validation
+PASS: 61-node fixture has a deterministic focus target
+PASS: 61-node fixture has a deterministic search target
+PASS: 121-node fixture has exact resource count
+PASS: 121-node fixture passes structural validation
+PASS: 121-node fixture has a deterministic focus target
+PASS: 121-node fixture has a deterministic search target
+PASS: 241-node fixture has exact resource count
+PASS: 241-node fixture passes structural validation
+PASS: 241-node fixture has a deterministic focus target
+PASS: 241-node fixture has a deterministic search target
+PASS: 364-node fixture has exact resource count
+PASS: 364-node fixture passes structural validation
+PASS: 364-node fixture has a deterministic focus target
+PASS: 364-node fixture has a deterministic search target
+BT_PHYSICAL_SCREEN_PROGRESS device=AOCB319_UID4352 trial=1/3
+BT_PHYSICAL_SCREEN_PROGRESS device=AOCB319_UID4352 trial=2/3
+BT_PHYSICAL_SCREEN_PROGRESS device=AOCB319_UID4352 trial=3/3
+PASS: CSV output opens: raw.csv
+PASS: CSV output opens: summary.csv
+PASS: 241-node Baseline physical-screen screenshot saves
+PASS: 241-node Optimized Overview physical-screen screenshot saves
+PASS: 241-node Optimized Search physical-screen screenshot saves
+PASS: 364-node Baseline physical-screen screenshot saves
+PASS: 364-node Optimized Overview physical-screen screenshot saves
+PASS: 364-node Optimized Search physical-screen screenshot saves
+PASS: 31-node fixture remains exact
+PASS: 31-node Baseline renders every card
+PASS: 31-node Compact reduces card area by at least 40 percent
+PASS: 31-node Overview reduces card area by at least 70 percent
+PASS: 31-node Overview does not reduce fit-to-view zoom
+PASS: 31-node Search centers its target inside the canvas
+PASS: 31-node Baseline has zero overlaps
+PASS: 31-node Baseline preserves parent-child spacing
+PASS: 31-node Compact Cards has zero overlaps
+PASS: 31-node Compact Cards preserves parent-child spacing
+PASS: 31-node Optimized Overview has zero overlaps
+PASS: 31-node Optimized Overview preserves parent-child spacing
+PASS: 31-node Optimized Search has zero overlaps
+PASS: 31-node Optimized Search preserves parent-child spacing
+PASS: 31-node Subtree Focus has zero overlaps
+PASS: 31-node Subtree Focus preserves parent-child spacing
+PASS: 31-node Context Collapse has zero overlaps
+PASS: 31-node Context Collapse preserves parent-child spacing
+PASS: 31-node display conditions preserve saved positions
+PASS: 31-node display conditions preserve execution order
+PASS: 61-node fixture remains exact
+PASS: 61-node Baseline renders every card
+PASS: 61-node Compact reduces card area by at least 40 percent
+PASS: 61-node Overview reduces card area by at least 70 percent
+PASS: 61-node Overview does not reduce fit-to-view zoom
+PASS: 61-node Search dims at least 95 percent of cards
+PASS: 61-node Search centers its target inside the canvas
+PASS: 61-node Baseline has zero overlaps
+PASS: 61-node Baseline preserves parent-child spacing
+PASS: 61-node Compact Cards has zero overlaps
+PASS: 61-node Compact Cards preserves parent-child spacing
+PASS: 61-node Optimized Overview has zero overlaps
+PASS: 61-node Optimized Overview preserves parent-child spacing
+PASS: 61-node Optimized Search has zero overlaps
+PASS: 61-node Optimized Search preserves parent-child spacing
+PASS: 61-node Subtree Focus has zero overlaps
+PASS: 61-node Subtree Focus preserves parent-child spacing
+PASS: 61-node Context Collapse has zero overlaps
+PASS: 61-node Context Collapse preserves parent-child spacing
+PASS: 61-node display conditions preserve saved positions
+PASS: 61-node display conditions preserve execution order
+PASS: 121-node fixture remains exact
+PASS: 121-node Baseline renders every card
+PASS: 121-node Compact reduces card area by at least 40 percent
+PASS: 121-node Overview reduces card area by at least 70 percent
+PASS: 121-node Overview does not reduce fit-to-view zoom
+PASS: 121-node Search dims at least 95 percent of cards
+PASS: 121-node Search centers its target inside the canvas
+PASS: 121-node Focus reduces cards by at least 70 percent
+PASS: 121-node Collapse reduces cards by at least 70 percent
+PASS: 121-node Baseline has zero overlaps
+PASS: 121-node Baseline preserves parent-child spacing
+PASS: 121-node Compact Cards has zero overlaps
+PASS: 121-node Compact Cards preserves parent-child spacing
+PASS: 121-node Optimized Overview has zero overlaps
+PASS: 121-node Optimized Overview preserves parent-child spacing
+PASS: 121-node Optimized Search has zero overlaps
+PASS: 121-node Optimized Search preserves parent-child spacing
+PASS: 121-node Subtree Focus has zero overlaps
+PASS: 121-node Subtree Focus preserves parent-child spacing
+PASS: 121-node Context Collapse has zero overlaps
+PASS: 121-node Context Collapse preserves parent-child spacing
+PASS: 121-node display conditions preserve saved positions
+PASS: 121-node display conditions preserve execution order
+PASS: 241-node fixture remains exact
+PASS: 241-node Baseline renders every card
+PASS: 241-node Compact reduces card area by at least 40 percent
+PASS: 241-node Overview reduces card area by at least 70 percent
+PASS: 241-node Overview does not reduce fit-to-view zoom
+PASS: 241-node Search dims at least 95 percent of cards
+PASS: 241-node Search centers its target inside the canvas
+PASS: 241-node Focus reduces cards by at least 70 percent
+PASS: 241-node Collapse reduces cards by at least 70 percent
+PASS: 241-node Baseline has zero overlaps
+PASS: 241-node Baseline preserves parent-child spacing
+PASS: 241-node Compact Cards has zero overlaps
+PASS: 241-node Compact Cards preserves parent-child spacing
+PASS: 241-node Optimized Overview has zero overlaps
+PASS: 241-node Optimized Overview preserves parent-child spacing
+PASS: 241-node Optimized Search has zero overlaps
+PASS: 241-node Optimized Search preserves parent-child spacing
+PASS: 241-node Subtree Focus has zero overlaps
+PASS: 241-node Subtree Focus preserves parent-child spacing
+PASS: 241-node Context Collapse has zero overlaps
+PASS: 241-node Context Collapse preserves parent-child spacing
+PASS: 241-node display conditions preserve saved positions
+PASS: 241-node display conditions preserve execution order
+PASS: 364-node fixture remains exact
+PASS: 364-node Baseline renders every card
+PASS: 364-node Compact reduces card area by at least 40 percent
+PASS: 364-node Overview reduces card area by at least 70 percent
+PASS: 364-node Overview does not reduce fit-to-view zoom
+PASS: 364-node Search dims at least 95 percent of cards
+PASS: 364-node Search centers its target inside the canvas
+PASS: 364-node Focus reduces cards by at least 70 percent
+PASS: 364-node Collapse reduces cards by at least 70 percent
+PASS: 364-node Baseline has zero overlaps
+PASS: 364-node Baseline preserves parent-child spacing
+PASS: 364-node Compact Cards has zero overlaps
+PASS: 364-node Compact Cards preserves parent-child spacing
+PASS: 364-node Optimized Overview has zero overlaps
+PASS: 364-node Optimized Overview preserves parent-child spacing
+PASS: 364-node Optimized Search has zero overlaps
+PASS: 364-node Optimized Search preserves parent-child spacing
+PASS: 364-node Subtree Focus has zero overlaps
+PASS: 364-node Subtree Focus preserves parent-child spacing
+PASS: 364-node Context Collapse has zero overlaps
+PASS: 364-node Context Collapse preserves parent-child spacing
+PASS: 364-node display conditions preserve saved positions
+PASS: 364-node display conditions preserve execution order
+PASS: 31|Baseline geometry is stable across repetitions
+PASS: 31|Compact Cards geometry is stable across repetitions
+PASS: 31|Optimized Overview geometry is stable across repetitions
+PASS: 31|Optimized Search geometry is stable across repetitions
+PASS: 31|Subtree Focus geometry is stable across repetitions
+PASS: 31|Context Collapse geometry is stable across repetitions
+PASS: 61|Baseline geometry is stable across repetitions
+PASS: 61|Compact Cards geometry is stable across repetitions
+PASS: 61|Optimized Overview geometry is stable across repetitions
+PASS: 61|Optimized Search geometry is stable across repetitions
+PASS: 61|Subtree Focus geometry is stable across repetitions
+PASS: 61|Context Collapse geometry is stable across repetitions
+PASS: 121|Baseline geometry is stable across repetitions
+PASS: 121|Compact Cards geometry is stable across repetitions
+PASS: 121|Optimized Overview geometry is stable across repetitions
+PASS: 121|Optimized Search geometry is stable across repetitions
+PASS: 121|Subtree Focus geometry is stable across repetitions
+PASS: 121|Context Collapse geometry is stable across repetitions
+PASS: 241|Baseline geometry is stable across repetitions
+PASS: 241|Compact Cards geometry is stable across repetitions
+PASS: 241|Optimized Overview geometry is stable across repetitions
+PASS: 241|Optimized Search geometry is stable across repetitions
+PASS: 241|Subtree Focus geometry is stable across repetitions
+PASS: 241|Context Collapse geometry is stable across repetitions
+PASS: 364|Baseline geometry is stable across repetitions
+PASS: 364|Compact Cards geometry is stable across repetitions
+PASS: 364|Optimized Overview geometry is stable across repetitions
+PASS: 364|Optimized Search geometry is stable across repetitions
+PASS: 364|Subtree Focus geometry is stable across repetitions
+PASS: 364|Context Collapse geometry is stable across repetitions
+BT_PHYSICAL_SCREEN_SUMMARY device=AOCB319_UID4352 diagonal_in=31.55 canvas=2450x1365 observations=90 failed=0 output=E:/course pdf/project/finalproject/research/display_optimization/physical_screen_size_experiment/data/2026-08-23_three_displays/runs/aocb319_uid4352
