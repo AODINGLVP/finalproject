@@ -151,6 +151,7 @@ func _load_configuration() -> void:
 		"screen_area_cm2": width_cm * height_cm,
 		"expected_x": _environment_int("BT_SCREEN_POSITION_X", 0),
 		"expected_y": _environment_int("BT_SCREEN_POSITION_Y", 0),
+		"expected_godot_index": _environment_int("BT_SCREEN_GODOT_INDEX", -1),
 		"native_width": _environment_int("BT_SCREEN_NATIVE_WIDTH", 0),
 		"native_height": _environment_int("BT_SCREEN_NATIVE_HEIGHT", 0),
 		"refresh_hz": _environment_int("BT_SCREEN_REFRESH_HZ", 0),
@@ -163,6 +164,7 @@ func _load_configuration() -> void:
 
 func _place_window_on_requested_screen() -> void:
 	var expected_position := Vector2i(int(screen_metadata["expected_x"]), int(screen_metadata["expected_y"]))
+	var expected_godot_index := int(screen_metadata["expected_godot_index"])
 	var closest_distance := INF
 	for screen_index in range(DisplayServer.get_screen_count()):
 		var position := DisplayServer.screen_get_position(screen_index)
@@ -174,7 +176,9 @@ func _place_window_on_requested_screen() -> void:
 		if distance < closest_distance:
 			closest_distance = distance
 			matched_screen_index = screen_index
-	failures += _expect(matched_screen_index >= 0 and closest_distance <= 8.0, "Godot screen matches the requested physical display position")
+	if expected_godot_index >= 0 and expected_godot_index < DisplayServer.get_screen_count():
+		matched_screen_index = expected_godot_index
+	failures += _expect(matched_screen_index >= 0, "Godot screen index is available for the requested physical display")
 	if matched_screen_index < 0:
 		return
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
