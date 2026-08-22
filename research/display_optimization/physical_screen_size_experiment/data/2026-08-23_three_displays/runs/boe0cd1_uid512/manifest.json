@@ -1,0 +1,58 @@
+{
+  "conditions": [
+    "Baseline",
+    "Compact Cards",
+    "Optimized Overview",
+    "Optimized Search",
+    "Subtree Focus",
+    "Context Collapse"
+  ],
+  "created_at": "2026-08-22T16:28:40",
+  "engine_version": "4.6-stable (official)",
+  "failures": 0,
+  "git_commit": "7f39d8dfb536af63b6a99cfce376cb7f3472f7e7",
+  "gpu": "NVIDIA GeForce RTX 5070 Laptop GPU",
+  "matched_screen": {
+    "godot_dpi": 144,
+    "godot_position": "(0, 453)",
+    "godot_scale": 1.0,
+    "godot_screen_index": 0,
+    "godot_size": "(2560, 1600)",
+    "godot_usable_rect": "[P: (0, 453), S: (2560, 1528)]"
+  },
+  "measured_trials": 3,
+  "normalized_canvas": {
+    "height": 770,
+    "logical_units_per_cm": 35.0,
+    "width": 1190
+  },
+  "observation_count": 90,
+  "renderer": "gl_compatibility",
+  "schema_version": 1,
+  "screen": {
+    "device_key": "BOE0CD1_UID512",
+    "diagonal_in": 15.9436667175721,
+    "expected_godot_index": 0,
+    "expected_x": -2560,
+    "expected_y": 302,
+    "gdi_name": "\\\\.\\DISPLAY1",
+    "height_cm": 22.0,
+    "manufacturer": "BOE",
+    "model": "BOE0CD1",
+    "native_height": 1600,
+    "native_width": 2560,
+    "refresh_hz": 240,
+    "screen_area_cm2": 748.0,
+    "serial": "65441",
+    "session": "2026-08-23_three_displays",
+    "width_cm": 34.0
+  },
+  "tree_sizes": [
+    31,
+    61,
+    121,
+    241,
+    364
+  ],
+  "warmups": 2
+}

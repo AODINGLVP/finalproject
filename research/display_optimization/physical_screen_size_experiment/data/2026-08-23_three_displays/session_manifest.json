@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "session": "2026-08-23_three_displays",
+  "device_count": 3,
+  "observation_count": 270,
+  "tree_sizes": [
+    31,
+    61,
+    121,
+    241,
+    364
+  ],
+  "conditions": [
+    "Baseline",
+    "Compact Cards",
+    "Optimized Overview",
+    "Optimized Search",
+    "Subtree Focus",
+    "Context Collapse"
+  ],
+  "logical_units_per_cm": 35,
+  "git_commits": [
+    "7f39d8dfb536af63b6a99cfce376cb7f3472f7e7"
+  ],
+  "all_run_failures": 0,
+  "source_sha256": {
+    "devices.csv": "08a356facb14e99ffee6eaed6a969769c93fb072e2bdc3e3f2e2b9de9102b805",
+    "runs\\boe0cd1_uid512\\raw.csv": "e6a19a5990c2c269f06809e5ea1de77d116656036ea96d61866aedddfd5a442c",
+    "runs\\boe0cd1_uid512\\summary.csv": "23a977bc817850a7398eb7d3494d5dd7ab5e4af556a342d468b5f40b5a77f232",
+    "runs\\boe0cd1_uid512\\manifest.json": "c9790db45b8ec2b3ab572a5e1d8a6ed9517c55694108600aee7d25236f46cd22",
+    "runs\\boe0cd1_uid512\\godot.log": "53748ef7eb144349cfe183cc28809f55c6b2b7f9e1e1b2b3fb7685bc98ef669c",
+    "runs\\skg27a8_uid513\\raw.csv": "e72825968f7f4a04c0b1fc9d0482a389cde3e6b8e4218f409572d2348f41b11f",
+    "runs\\skg27a8_uid513\\summary.csv": "af67c918e23d6e80e8d59dbd83296b3b7933fe65529347507612c29b44f34946",
+    "runs\\skg27a8_uid513\\manifest.json": "04a5aa2aebfe91effb608214a365650d85eef56caff98977c7584e3626548d24",
+    "runs\\skg27a8_uid513\\godot.log": "2ae0fb387fa2c58b3f7707ad5a3df428ada75c72ef4e1820fd6cbf6b0cff9813",
+    "runs\\aocb319_uid4352\\raw.csv": "914e34045a739f4f847af5d900914512307bb84355294eef6b751675c379c2dd",
+    "runs\\aocb319_uid4352\\summary.csv": "29bae80622917a7ffd0d082ce59f80b2c915d8af7e6fd56a45c69059e6ee2d60",
+    "runs\\aocb319_uid4352\\manifest.json": "db7e59bb2a8e9dcfe449b01d320a3b3149c01d5d0bf313cd8a16880e1195117f",
+    "runs\\aocb319_uid4352\\godot.log": "44c46e1d67dd68c4755268fd01548a79d3f1f1512e581370f0a1097ef9832626"
+  }
+}

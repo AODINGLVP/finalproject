@@ -1,0 +1,58 @@
+{
+  "conditions": [
+    "Baseline",
+    "Compact Cards",
+    "Optimized Overview",
+    "Optimized Search",
+    "Subtree Focus",
+    "Context Collapse"
+  ],
+  "created_at": "2026-08-22T16:30:50",
+  "engine_version": "4.6-stable (official)",
+  "failures": 0,
+  "git_commit": "7f39d8dfb536af63b6a99cfce376cb7f3472f7e7",
+  "gpu": "NVIDIA GeForce RTX 5070 Laptop GPU",
+  "matched_screen": {
+    "godot_dpi": 144,
+    "godot_position": "(9600, 257)",
+    "godot_scale": 1.0,
+    "godot_screen_index": 1,
+    "godot_size": "(3840, 2160)",
+    "godot_usable_rect": "[P: (9600, 257), S: (3840, 2088)]"
+  },
+  "measured_trials": 3,
+  "normalized_canvas": {
+    "height": 1155,
+    "logical_units_per_cm": 35.0,
+    "width": 2100
+  },
+  "observation_count": 90,
+  "renderer": "gl_compatibility",
+  "schema_version": 1,
+  "screen": {
+    "device_key": "SKG27A8_UID513",
+    "diagonal_in": 26.959162702,
+    "expected_godot_index": 1,
+    "expected_x": 3840,
+    "expected_y": 171,
+    "gdi_name": "\\\\.\\DISPLAY2",
+    "height_cm": 33.0,
+    "manufacturer": "SKG",
+    "model": "H27T22S",
+    "native_height": 1440,
+    "native_width": 2560,
+    "refresh_hz": 60,
+    "screen_area_cm2": 1980.0,
+    "serial": "0000000000000",
+    "session": "2026-08-23_three_displays",
+    "width_cm": 60.0
+  },
+  "tree_sizes": [
+    31,
+    61,
+    121,
+    241,
+    364
+  ],
+  "warmups": 2
+}
