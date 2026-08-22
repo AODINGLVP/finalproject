@@ -166,6 +166,10 @@ func _place_window_on_requested_screen() -> void:
 	var closest_distance := INF
 	for screen_index in range(DisplayServer.get_screen_count()):
 		var position := DisplayServer.screen_get_position(screen_index)
+		print("BT_PHYSICAL_SCREEN_CANDIDATE index=%d position=%s size=%s dpi=%d scale=%.3f" % [
+			screen_index, str(position), str(DisplayServer.screen_get_size(screen_index)),
+			DisplayServer.screen_get_dpi(screen_index), DisplayServer.screen_get_scale(screen_index),
+		])
 		var distance := Vector2(position - expected_position).length()
 		if distance < closest_distance:
 			closest_distance = distance
