@@ -54,7 +54,7 @@ foreach ($device in $devices) {
     $env:BT_SCREEN_TRIALS = $Trials
     $env:BT_SCREEN_GIT_COMMIT = $commit
 
-    $logPath = Join-Path $runDir 'godot.log'
+    $logPath = Join-Path $runDir 'godot_output.txt'
     Write-Output "PHYSICAL_SCREEN_RUN_START device=$($device.device_key) diagonal=$($device.diagonal_in)in godot_index=$($device.godot_index)"
     & $godot --rendering-method gl_compatibility --audio-driver Dummy --screen $device.godot_index --path $project --script $harness 2>&1 |
         Tee-Object -FilePath $logPath

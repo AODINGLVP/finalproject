@@ -85,7 +85,7 @@ def main() -> int:
         all_raw.extend(raw_rows)
         all_summary.extend(summary_rows)
         manifests.append(manifest)
-        source_files.extend((raw_path, summary_path, manifest_path, run_dir / "godot.log"))
+        source_files.extend((raw_path, summary_path, manifest_path, run_dir / "godot_output.txt"))
 
     expected_total = sum(int(manifest["observation_count"]) for manifest in manifests)
     if len(all_raw) != expected_total:
@@ -138,6 +138,29 @@ def main() -> int:
     search_successes = sum(row["target_in_viewport"].lower() == "true" for row in search_rows)
     overlap_max = max(int(row["overlap_max"]) for row in all_summary)
     smallest, largest = devices[0], devices[-1]
+    complex_screen_changes: dict[int, dict[str, float]] = {}
+    for tree_size in (241, 364):
+        small_row = next(
+            row for row in comparison_rows
+            if row["device_key"] == smallest["device_key"] and row["tree_size"] == tree_size
+        )
+        large_row = next(
+            row for row in comparison_rows
+            if row["device_key"] == largest["device_key"] and row["tree_size"] == tree_size
+        )
+        small_coverage = float(small_row["baseline_coverage_after_fit_percent"])
+        large_coverage = float(large_row["baseline_coverage_after_fit_percent"])
+        small_graph_ratio = float(small_row["baseline_graph_to_screen_area_ratio"])
+        large_graph_ratio = float(large_row["baseline_graph_to_screen_area_ratio"])
+        complex_screen_changes[tree_size] = {
+            "small_coverage": small_coverage,
+            "large_coverage": large_coverage,
+            "coverage_points": large_coverage - small_coverage,
+            "coverage_multiple": large_coverage / small_coverage,
+            "small_graph_ratio": small_graph_ratio,
+            "large_graph_ratio": large_graph_ratio,
+            "graph_ratio_reduction": (1.0 - large_graph_ratio / small_graph_ratio) * 100.0,
+        }
 
     lines = [
         "# 三块物理屏幕尺寸实验结果",
@@ -177,7 +200,21 @@ def main() -> int:
             f"{float(row['overview_fit_zoom']):.3f} | {float(row['baseline_graph_to_screen_area_ratio']):.2f}× |"
         )
 
+    change_241 = complex_screen_changes[241]
+    change_364 = complex_screen_changes[364]
+
     lines.extend([
+        "",
+        "从 15.94 英寸增加到 31.55 英寸后，241 节点 Baseline 覆盖率由 "
+        f"{change_241['small_coverage']:.2f}% 增至 {change_241['large_coverage']:.2f}%（+{change_241['coverage_points']:.2f} 个百分点，"
+        f"为原来的 {change_241['coverage_multiple']:.2f} 倍）；364 节点由 {change_364['small_coverage']:.2f}% 增至 "
+        f"{change_364['large_coverage']:.2f}%（+{change_364['coverage_points']:.2f} 个百分点，为原来的 {change_364['coverage_multiple']:.2f} 倍）。",
+        "",
+        f"同一变化使 241 节点 Baseline 图面积/屏幕面积由 {change_241['small_graph_ratio']:.2f}× 降至 "
+        f"{change_241['large_graph_ratio']:.2f}×（降低 {change_241['graph_ratio_reduction']:.2f}%），364 节点由 "
+        f"{change_364['small_graph_ratio']:.2f}× 降至 {change_364['large_graph_ratio']:.2f}×（降低 {change_364['graph_ratio_reduction']:.2f}%）。",
+        "",
+        "241 和 364 节点在三块屏幕的 Baseline 与 Overview 中均达到 0.10× 最小缩放。因此物理面积增加显著提高了进入视口的节点比例，但没有让完整宽树进入一屏；Search、Focus、Collapse 和小地图仍然必要。",
         "",
         "## 跨屏幕显示机制结果",
         "",
