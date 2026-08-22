@@ -212,7 +212,8 @@ func _measure_physical_screen(view: BTEditorView, fixture: Dictionary, informati
 	var target_center_error_ratio := -1.0
 	for child in view.graph_edit.get_children():
 		if child is BTGraphNode and child.node_resource.id == int(fixture["target_id"]):
-			var target_center := child.get_global_rect().get_center()
+			var graph_node: BTGraphNode = child
+			var target_center: Vector2 = graph_node.get_global_rect().get_center()
 			target_center_error_ratio = target_center.distance_to(graph_canvas.get_center()) / graph_canvas.size.length()
 			break
 	metrics["target_center_error_ratio"] = target_center_error_ratio
