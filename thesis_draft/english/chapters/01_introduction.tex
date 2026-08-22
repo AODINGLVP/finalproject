@@ -19,17 +19,17 @@ However, these findings do not directly answer how a game-development behaviour-
 
 \section{Research aim and questions}
 
-The aim of this dissertation is to design, implement and evaluate a Godot 4.6 visual behaviour-tree plugin that supports real non-player character (NPC) execution while providing robust, switchable mechanisms for inspecting large trees.
+The aim of this dissertation is to design, implement and evaluate a Godot 4.6 visual behaviour-tree plugin that supports real non-player character (NPC) execution while making large trees more convenient for game developers to locate, understand and edit.
 
 The study addresses three research questions:
 
 \begin{description}
     \item[RQ1:] Can a Godot editor plugin provide the core authoring, runtime, blackboard, decorator and live-debug capabilities required to control a non-trivial 2D game agent?
-    \item[RQ2:] How do independently switchable visualisation techniques affect measurable properties of 31-, 121- and 364-node behaviour trees, including visible-node ratio, card area, information fields, target dimming, overview coverage and update cost?
+    \item[RQ2:] How do independently switchable visualisation techniques change measurable presentation properties of large behaviour trees, and do those changes improve game-developer performance when locating actions, tracing active paths and editing decorators in a playable 241-node tree?
     \item[RQ3:] Can topology caching reduce behaviour-tree tick cost across tree sizes and actor counts without changing execution results or becoming unsafe when a resource is mutated in place?
 \end{description}
 
-RQ2 deliberately asks about measurable display properties rather than claiming improved usability. Whether the techniques reduce user completion time, error rate or cognitive load requires participant data. The corresponding study is designed in this dissertation, but no participant outcomes are fabricated.
+RQ2 has an instrumented and a human component. Geometry, salience and interaction data can establish what the editor changes; whether those changes reduce completion time, errors, navigation or cognitive load requires participant data. The corresponding study apparatus is implemented in this dissertation, but no participant outcomes are fabricated. Consequently, the instrumented component is answered and the human-performance component remains open until data collection.
 
 \section{Objectives and success criteria}
 
@@ -43,7 +43,7 @@ The project objectives are to:
     \item show the current path, node status, blackboard and failure reason only inside the Godot editor;
     \item implement large-tree presentation methods behind independent persisted switches and safe reset paths;
     \item create deterministic trees and a sufficiently complex 2D scenario to test real decision changes;
-    \item evaluate correctness, visual geometry, visual regressions, runtime performance and clean installation with reproducible evidence.
+    \item evaluate correctness, visual geometry, visual regressions, large-tree drag interaction and clean installation with reproducible evidence, while implementing a balanced developer-task study for human evaluation.
 \end{enumerate}
 
 Success requires more than launching the plugin. Every runtime node must have focused semantic tests; editor operations must survive save/reload and history operations; the game scenario must demonstrate detection, pursuit, attack, search, retreat and recovery; visual features must be checked with a real renderer; and cached and uncached execution must return identical terminal states. Logs are treated as failed if they contain script errors, leaks, native crashes or illegal memory access, even if an assertion counter reports success.
@@ -56,7 +56,7 @@ The main contributions of this work are:
     \item a distributable Godot 4.6 behaviour-tree plugin with executable composite, leaf and decorator semantics, actor-method integration and a typed blackboard;
     \item an editor-only live-debug bridge that reports active paths, blackboard values and failure causes without coupling debugging presentation to the running game;
     \item an integrated set of 19 independently switchable display features, including compact and semantic representations, focus+context, subtree reduction, navigation, path emphasis, accessibility encodings and alternative edge rendering;
-    \item a reproducible evaluation corpus containing deterministic 31-, 121- and 364-node resources, GPU screenshots, raw CSV measurements, formula workbooks and a participant-study protocol;
+    \item a reproducible evaluation corpus containing deterministic 31-, 121- and 364-node resources, a playable 241-node tree, real-\ac{GPU} screenshots, 180 repeated display observations, formula workbooks and a 12-participant/216-trial developer-study protocol;
     \item a topology cache whose exact signature detects same-size reordering, reparenting, decorator reassignment and resource-instance replacement, together with measurements over nine size/load combinations.
 \end{itemize}
 

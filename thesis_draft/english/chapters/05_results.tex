@@ -26,7 +26,7 @@ Total & 447 & 447 & All core assertions passed \\
 
 Additional suites were kept separate to avoid inflating the core total. The controlled human-study fixture passed 21 of 21 GPU assertions, runtime profiling and topology safety passed 511 of 511 assertions, and packaging passed 53 of 53 checks. The version 0.9.0 archive contained only the plugin directory, included an MIT licence and SHA-256 manifest, and enabled successfully in an otherwise empty Godot 4.6 project.
 
-The complex-arena tests showed that agents were genuinely driven by tree execution rather than a parallel hard-coded controller. Entering detection range set blackboard target state and selected chase; entering oriented attack range selected the corresponding attack branch; cloaking caused target loss and last-known-position search; and low health selected retreat and healing. Action methods still performed movement and damage, but branch choice, ordering and interruption came from the tree resource.
+The complex-arena tests showed that agents were genuinely driven by tree execution rather than a parallel hard-coded controller. In addition to chase, melee, target loss, search, retreat and healing, the enemy selected reactive defence during the player's attack window, spawned a projectile at ranged distance, jumped when a sensed crate blocked pursuit, and climbed when the detected player was elevated near a ladder. Action methods performed movement and damage, but branch choice, ordering and interruption came from the 241-node resource.
 
 \section{Display-density and context results}
 
@@ -65,6 +65,33 @@ Subtree focus became proportionally more selective as tree size increased: it sh
 \end{figure}
 
 The fisheye result is intentionally modest. The target increased by 20\%, enough to make local content more prominent without the severe relocation associated with stronger distortion. Unlike collapse or focus, fisheye did not reduce visible-node count. It is therefore complementary rather than directly comparable on that metric.
+
+\section{Playable 241-node display results}
+
+The generated trees isolate scale, whereas \cref{tab:playable241} reports an ecological case whose 241 resources control the playable enemy. The graph renders 202 cards because 39 decorators are attached to owner cards. Each condition was warmed three times and recorded 30 times; the cyclic condition order produced 180 raw observations and placed every condition in every sequence position five times.
+
+\begin{table}[htbp]
+\centering
+\caption{Objective display results on the playable 241-node behaviour tree. Reductions are relative to Baseline.}
+\label{tab:playable241}
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+Condition & Cards & Card reduction & Area reduction & Bounds reduction & Dimmed \\
+\midrule
+Baseline & 202 & 0.00\% & 0.00\% & 0.00\% & 0 \\
+Compact Cards & 202 & 0.00\% & 57.93\% & 5.78\% & 0 \\
+Optimized Overview & 202 & 0.00\% & 89.48\% & 8.59\% & 0 \\
+Optimized Search & 202 & 0.00\% & 89.48\% & 8.59\% & 201 \\
+Subtree Focus & 32 & 84.16\% & 93.04\% & 63.37\% & 0 \\
+Context Collapse & 43 & 78.71\% & 90.46\% & 20.99\% & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Compact Cards retained all cards while reducing their summed area from 14,086,640.0 to 5,926,318.0 px\textsuperscript{2}. Overview retained all cards at low semantic detail and reduced summed area to 1,481,579.5 px\textsuperscript{2}. Search dimmed 201 of 202 cards, leaving one match salient. Focus and Collapse limited the current canvas to 32 and 43 cards. Every recorded condition had zero card overlaps, and the final saved resource positions matched the initial positions. These findings show that the mechanisms change density and context without reproducing the earlier ``all cards stacked together'' failure; they do not show that a person completes a task more effectively.
+
+Operation timings were retained for reproducibility but are not ranked because the conditions perform different work. Baseline's complete rebuild had the highest 95th percentile at 932.64 ms; the other conditions ranged from 327.51 to 534.02 ms. In a separate same-task 240-step drag comparison, median total processing time fell from 1,124.693 to 825.571 ms, a 26.60\% reduction, and median per-step time fell from 4.686 to 3.440 ms. This supports reduced processing on the fixed drag path, not a claim of perceived smoothness.
 
 \section{Runtime-path and overview results}
 
@@ -147,6 +174,12 @@ Nodes & Runners & No cache (\si{\micro\second}/tick) & Cache (\si{\micro\second}
 
 The data do not show a clear monotonic penalty from adding runners because the benchmark fixes total tick work approximately rather than running every actor for a fixed wall-clock duration. The valid interpretation is therefore within each size/load pair: cached and uncached conditions execute comparable work on the same machine. Cross-machine or production-frame claims require a different benchmark.
 
+\section{Developer-study readiness and current status}
+
+The final human-study fixture uses the playable tree rather than the earlier synthetic 364-node target. Automated material validation confirmed six unique seven-node Action paths, six unique Decorators attached to real Actions, fixed starting values, complete method/task permutations and exactly two occurrences of every method--target pairing across 12 planned participants. The workbook contains 216 pre-generated formal trials and formulas that remain blank when no observation exists. Import/recalculation testing with temporary in-memory values confirmed that a completed row enters the correct method--task summary.
+
+At the reporting cut-off, zero of 216 participant trials had been collected. Consequently, no completion-time, success-rate, error, navigation, readability, cognitive-load or inferential human result is presented. The analysis pipeline produces an explicit pending report for the empty workbook and will withhold inference when fewer than eight complete participant sets are available. This is a result-status statement, not a finding that the optimizations improve usability.
+
 \section{Summary against research questions}
 
-RQ1 is supported by the complete test matrix and complex game: the plugin authors, serialises, validates, executes and debugs non-trivial agent behaviour. RQ2 is answered at the instrumented-display level: compact, semantic, structural, salience and overview methods produced distinct measurable effects and passed real-renderer reset checks. Human readability remains unanswered. RQ3 is supported for the tested workload: exact-signature topology caching preserved semantics and substantially reduced median tick cost, especially on larger trees.
+RQ1 is supported by the complete test matrix and complex game: the plugin authors, serialises, validates, executes and debugs non-trivial agent behaviour. The instrumented component of RQ2 is supported by both controlled generated trees and the playable 241-node case: compact, semantic, structural and salience mechanisms produced distinct measurable effects, preserved positions and avoided overlaps. The human-performance component remains unanswered because the pre-registered study contains no participant observations. RQ3 is supported for the tested workload: exact-signature topology caching preserved semantics and substantially reduced median tick cost, especially on larger trees.

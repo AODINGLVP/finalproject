@@ -44,6 +44,9 @@ All paths below are relative to the project repository root.
     \item[Runtime profile:] \path{testgame/testgame/test_results/runtime_profile.csv}
     \item[Visual screenshots:] \path{testgame/testgame/test_results/visual/}
     \item[Human-study protocol:] \path{research/display_optimization/human_comparison_study_protocol.md}
+    \item[Human-study workbook:] \path{research/display_optimization/behavior_tree_human_comparison_study.xlsx}
+    \item[Human-study analysis:] \path{research/display_optimization/analyze_human_study_results.py}
+    \item[Playable-tree raw data:] \path{testgame/testgame/test_results/complex_display_experiment_raw.csv}
     \item[Evaluation workbook:] \path{research/display_optimization/behavior_tree_complete_validation_and_display_evaluation.xlsx}
     \item[Versioned package:] \path{dist/behavior-tree-editor-0.9.0.zip}
 \end{description}
@@ -53,7 +56,7 @@ The principal test commands are recorded in \texttt{AGENTS.md} and in the genera
 \chapter{Planned Participant Study}
 \label{app:study}
 
-The prepared study contains six display conditions and three tasks per condition. A participant first completes a standardised practice task, then performs 18 counterbalanced trials. The software records condition, tree size, target, completion time, incorrect selections, zoom count, pan count and success. After each condition, the participant gives seven-point readability and cognitive-load ratings. The workbook supports up to 15 participants and 270 rows.
+The prepared study contains six display conditions and three tasks per condition on the playable 241-node tree. A participant first completes three standardised practice tasks, then performs 18 counterbalanced formal trials. Six Action/path targets and six Decorator targets are balanced with condition order so that every method--target pair occurs twice across the planned 12 participants. The workbook contains 216 rows and records capped completion time, incorrect selections, zoom, pan, success, readability and cognitive load. The analysis script reports medians and quartiles, withholds inference below eight complete participant sets and applies the pre-registered repeated-measures tests only after real data are entered.
 
 No participant rows have been collected. Before use, the author must obtain any required ethics approval, confirm the protocol with the supervisor, replace prototype instructions with participant-facing wording, and verify that consent and withdrawal procedures meet University requirements.
 
