@@ -58,13 +58,13 @@ Latest verified automated results:
 | Suite | Result |
 | --- | ---: |
 | Runtime and resource tests | 153/153 |
-| Editor GUI tests | 185/185 |
+| Editor GUI tests | 250/250 |
 | Basic game integration | 13/13 |
-| Complex arena integration | 26/26 |
-| Real GPU visual regression | 70/70 |
-| Total core automated assertions | 447/447 |
+| Complex arena integration | 34/34 |
+| Real GPU visual regression | 124/124 |
+| Total core automated assertions | 574/574 |
 
-Additional verified suites: human-study GPU visual `21/21`, runtime profile `511/511`, package validation `53/53`, and 126 raw timing observations.
+Additional verified suites: human-study material validation `91/91`, human-study GPU visual `22/22`, runtime profile `511/511`, package validation `53/53`, 180 playable-tree display observations, and 126 raw runtime timing observations.
 
 The final report is generated from the current CSV baseline. It records 17 core and 4 controlled-study real GPU screenshots, fisheye maximum `1.20x`, and enhanced minimap size `230x150`.
 
@@ -89,7 +89,7 @@ Tasks are ordered by recommended graduation-project priority. Do not start lower
 | P1 | Add blackboard schema resource | Completed and verified | Yes | Typed keys, defaults, validation, tree binding, and persistence work without breaking existing trees |
 | P1 | Add Live Debug blackboard panel | Completed and verified | Yes | Editor shows current values and types for the selected actor without adding an in-game overlay |
 | P1 | Expand the demonstration behavior tree | Completed and verified | Yes | Demo exercises Parallel, random choice, Wait, repeat, blackboard checks, Decorators, and Action calls |
-| P1 | Run a human comparison study | Protocol/template complete; participants pending | Partly | Fixed trees, Live Debug fixture, protocol, counterbalancing, 270-row workbook, and visual tests are ready; user recruits 8-15 participants before analysis |
+| P1 | Run a human comparison study | Protocol/template complete; participants pending | Partly | Playable 241-node tree, Live Debug fixture, protocol, counterbalancing, 216-row workbook, analysis pipeline, and visual tests are ready; user recruits 12 participants before analysis |
 | P1 | Add reproducible screenshots/video script | Screenshot suite completed | Yes | Fixed 121/364-node trees, target Action/Decorator, search framing, and deterministic Live Debug path pass real GPU tests |
 | P2 | Add shape/icon type encoding | Completed and verified | Yes | Independent switch, grayscale evidence and low-zoom identity pass |
 | P2 | Remove the faint native GraphEdit helper edge | Completed and verified | Yes | Custom hit-testing preserves disconnect/undo/redo while one persistent edge is visible |
@@ -102,7 +102,7 @@ The planned implementation sequence is complete: `Parallel`, `Random Selector`, 
 
 The remaining work depends on external input or release decisions:
 
-1. Recruit 8-15 participants, conduct the prepared human comparison study, and add real results to the dissertation. The protocol and workbook are complete; do not fabricate data.
+1. Recruit 12 participants, conduct the prepared 216-trial human comparison study, and add real results to the dissertation. The protocol, workbook and analysis pipeline are complete; do not fabricate data.
 2. Prepare the Godot Asset Library listing and final icon if public distribution is required.
 3. Run a cross-version compatibility matrix only after the target Godot versions are selected and installed.
 
@@ -135,7 +135,7 @@ Run commands from the repository root. Treat nonzero exit codes, `ERROR:`, `SCRI
 ./Godot_v4.6-stable_win64_console.exe --headless --audio-driver Dummy --path ./testgame/testgame --script res://tests/run_editor_view_tests.gd
 ./Godot_v4.6-stable_win64_console.exe --headless --audio-driver Dummy --path ./testgame/testgame --script res://tests/run_game_integration_tests.gd
 ./Godot_v4.6-stable_win64_console.exe --headless --audio-driver Dummy --path ./testgame/testgame --script res://tests/run_complex_arena_tests.gd
-./Godot_v4.6-stable_win64_console.exe --headless --audio-driver Dummy --path ./testgame/testgame --script res://tests/run_arena_smoke_test.gd
+./Godot_v4.6-stable_win64_console.exe --rendering-method gl_compatibility --audio-driver Dummy --path ./testgame/testgame --script res://tests/run_arena_smoke_test.gd
 ./Godot_v4.6-stable_win64_console.exe --rendering-method gl_compatibility --audio-driver Dummy --path ./testgame/testgame --script res://tests/run_visual_regression_tests.gd
 ./Godot_v4.6-stable_win64_console.exe --headless --audio-driver Dummy --path ./testgame/testgame --editor --quit-after 10
 ```
