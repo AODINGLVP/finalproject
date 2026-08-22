@@ -57,7 +57,7 @@ func _run() -> void:
 	var initial_positions := _capture_positions(tree)
 	var raw_rows: Array[PackedStringArray] = []
 	raw_rows.append(PackedStringArray([
-		"trial", "condition", "resource_nodes", "rendered_cards", "visible_ratio",
+		"trial", "sequence_position", "condition", "resource_nodes", "rendered_cards", "visible_ratio",
 		"bounds_area_px2", "card_area_px2", "overlap_pairs", "information_fields",
 		"dimmed_cards", "interaction_ms", "engine_version", "renderer", "viewport",
 	]))
@@ -66,20 +66,31 @@ func _run() -> void:
 
 	for condition_variant in CONDITIONS:
 		var condition := str(condition_variant)
+		var empty_samples: Array[float] = []
+		samples_by_condition[condition] = empty_samples
 		for warmup in range(WARMUP_TRIALS):
 			await _restore_baseline(view, tree)
 			await _apply_condition(view, tree, condition, focus_id, priority_node.id)
-		var samples: Array[float] = []
-		for trial in range(1, MEASURED_TRIALS + 1):
+	# Rotate the six-condition order once per repetition. Because 30 is exactly
+	# divisible by six, every condition occupies every sequence position five
+	# times, reducing time/temperature drift without introducing randomness.
+	for trial in range(1, MEASURED_TRIALS + 1):
+		for sequence_position in range(CONDITIONS.size()):
+			var condition_index := (trial - 1 + sequence_position) % CONDITIONS.size()
+			var condition := str(CONDITIONS[condition_index])
 			await _restore_baseline(view, tree)
 			var started_usec := Time.get_ticks_usec()
 			await _apply_condition(view, tree, condition, focus_id, priority_node.id)
 			var interaction_ms := float(Time.get_ticks_usec() - started_usec) / 1000.0
 			var metrics := _measure(view, _information_fields_for(condition))
+			var samples: Array[float] = samples_by_condition[condition]
 			samples.append(interaction_ms)
-			raw_rows.append(_raw_row(trial, condition, metrics, interaction_ms))
+			samples_by_condition[condition] = samples
+			raw_rows.append(_raw_row(trial, sequence_position + 1, condition, metrics, interaction_ms))
 			metrics_by_condition[condition] = metrics
-		samples_by_condition[condition] = samples
+	for condition_variant in CONDITIONS:
+		var condition := str(condition_variant)
+		var samples: Array[float] = samples_by_condition[condition]
 		print("BT_COMPLEX_EXPERIMENT condition=%s trials=%d median_ms=%.3f" % [
 			condition, samples.size(), _median(samples),
 		])
@@ -201,9 +212,9 @@ func _measure(view: BTEditorView, information_fields: int) -> Dictionary:
 	}
 
 
-func _raw_row(trial: int, condition: String, metrics: Dictionary, interaction_ms: float) -> PackedStringArray:
+func _raw_row(trial: int, sequence_position: int, condition: String, metrics: Dictionary, interaction_ms: float) -> PackedStringArray:
 	return PackedStringArray([
-		str(trial), condition, str(metrics["resource_nodes"]), str(metrics["rendered_cards"]),
+		str(trial), str(sequence_position), condition, str(metrics["resource_nodes"]), str(metrics["rendered_cards"]),
 		str(metrics["visible_ratio"]), str(metrics["bounds_area_px2"]), str(metrics["card_area_px2"]),
 		str(metrics["overlap_pairs"]), str(metrics["information_fields"]), str(metrics["dimmed_cards"]),
 		str(interaction_ms), str(Engine.get_version_info().get("string", "unknown")),
