@@ -27,16 +27,11 @@ Context Collapse & 开启 Compact，折叠固定目标路径之外的指定分�
     \item[复杂树：] \path{testgame/testgame/behavior_trees/complex_guard_validation_tree.tres}
     \item[测试脚本：] \path{testgame/testgame/tests/}
     \item[多规模显示数据：] \path{testgame/testgame/test_results/multiscale_display_raw.csv}
-    \item[多规模拖拽数据：] \path{testgame/testgame/test_results/multiscale_drag_raw.csv}
-    \item[多规模汇总：] \path{testgame/testgame/test_results/multiscale_display_summary.csv} 与 \path{multiscale_drag_summary.csv}
-    \item[分析与报告：] \path{research/display_optimization/analyze_multiscale_experiment.py} 与 \path{multiscale_experiment_results.md}
-    \item[视觉截图：] \path{testgame/testgame/test_results/visual/}
-    \item[可玩树原始数据：] \path{testgame/testgame/test_results/complex_display_experiment_raw.csv}
+    \item[多规模显示汇总：] \path{testgame/testgame/test_results/multiscale_display_summary.csv}
+    \item[多规模显示脚本：] \path{testgame/testgame/tests/run_multiscale_display_experiment.gd}
     \item[物理屏幕证据：] 实验根目录为 \path{research/display_optimization/}\ \path{physical_screen_size_experiment/}；其中 \path{data/2026-08-23_three_displays/} Session 包含 \path{combined_raw.csv}、\path{screen_size_comparison.csv} 与 \path{report_zh.md}。
     \item[发布包：] \path{dist/behavior-tree-editor-0.9.0.zip}
 \end{description}
-
-真实视觉回归必须使用 \texttt{--rendering-method gl\_compatibility}，不能使用 Dummy Headless，因为 Dummy 无法提供所需 SubViewport 纹理。
 
 \chapter{初稿完成清单}
 
