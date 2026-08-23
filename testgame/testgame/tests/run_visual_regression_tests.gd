@@ -665,12 +665,16 @@ func _relative_axis_order_preserved(saved_positions: Dictionary) -> bool:
 			var saved_delta := Vector2(saved_positions[right.node_resource.id]) - Vector2(saved_positions[left.node_resource.id])
 			var rendered_delta := right.position_offset - left.position_offset
 			if saved_delta.x > 0.05 and rendered_delta.x < -0.05:
+				print("RELATIVE_ORDER_INVERSION axis=x left=%d right=%d saved=%s rendered=%s" % [left.node_resource.id, right.node_resource.id, saved_delta, rendered_delta])
 				return false
 			if saved_delta.x < -0.05 and rendered_delta.x > 0.05:
+				print("RELATIVE_ORDER_INVERSION axis=x left=%d right=%d saved=%s rendered=%s" % [left.node_resource.id, right.node_resource.id, saved_delta, rendered_delta])
 				return false
 			if saved_delta.y > 0.05 and rendered_delta.y < -0.05:
+				print("RELATIVE_ORDER_INVERSION axis=y left=%d right=%d saved=%s rendered=%s" % [left.node_resource.id, right.node_resource.id, saved_delta, rendered_delta])
 				return false
 			if saved_delta.y < -0.05 and rendered_delta.y > 0.05:
+				print("RELATIVE_ORDER_INVERSION axis=y left=%d right=%d saved=%s rendered=%s" % [left.node_resource.id, right.node_resource.id, saved_delta, rendered_delta])
 				return false
 	return true
 
