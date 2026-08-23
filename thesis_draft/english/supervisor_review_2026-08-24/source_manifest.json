@@ -1,0 +1,30 @@
+{
+  "source_docx": "E:\\course pdf\\project\\finalproject\\论文对比资料_2026-08-23\\09_完整显示设计与数据讨论论文_2026-08-24\\行为树论文_中文_完整版_引用核验版_2026-08-24.docx",
+  "source": {
+    "sha256": "C2D1A61538897534782B00CC570F30D85F97D72688BFA10A33BA7346E43687EA",
+    "headings": 45,
+    "tables": 5,
+    "images": 10,
+    "hyperlinks": 14
+  },
+  "latex": {
+    "chapters": 7,
+    "tables": 5,
+    "numbered_figures": 7,
+    "embedded_images": 10,
+    "bibliography_entries": 14,
+    "citation_keys": 14
+  },
+  "scope": {
+    "language": "English",
+    "audience": "UK supervisor review",
+    "omitted": [
+      "Acknowledgements",
+      "Declaration",
+      "Section 2.6 removed by the author",
+      "Section 5.4 removed by the author",
+      "Sections 7.2--7.5 removed by the author",
+      "All appendices removed by the author"
+    ]
+  }
+}
