@@ -1112,13 +1112,14 @@ func _relative_axis_order_preserved(view: BTEditorView, saved_positions: Diction
 			var right := nodes[right_index]
 			var saved_delta := Vector2(saved_positions[right.node_resource.id]) - Vector2(saved_positions[left.node_resource.id])
 			var rendered_delta := right.position_offset - left.position_offset
-			if saved_delta.x > POSITION_EPSILON and rendered_delta.x < -POSITION_EPSILON:
+			if absf(saved_delta.x) >= absf(saved_delta.y):
+				if saved_delta.x > POSITION_EPSILON and rendered_delta.x < -POSITION_EPSILON:
+					return false
+				if saved_delta.x < -POSITION_EPSILON and rendered_delta.x > POSITION_EPSILON:
+					return false
+			elif saved_delta.y > POSITION_EPSILON and rendered_delta.y < -POSITION_EPSILON:
 				return false
-			if saved_delta.x < -POSITION_EPSILON and rendered_delta.x > POSITION_EPSILON:
-				return false
-			if saved_delta.y > POSITION_EPSILON and rendered_delta.y < -POSITION_EPSILON:
-				return false
-			if saved_delta.y < -POSITION_EPSILON and rendered_delta.y > POSITION_EPSILON:
+			elif saved_delta.y < -POSITION_EPSILON and rendered_delta.y > POSITION_EPSILON:
 				return false
 	return true
 

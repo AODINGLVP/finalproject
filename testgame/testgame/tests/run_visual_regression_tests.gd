@@ -664,17 +664,11 @@ func _relative_axis_order_preserved(saved_positions: Dictionary) -> bool:
 			var right := nodes[right_index]
 			var saved_delta := Vector2(saved_positions[right.node_resource.id]) - Vector2(saved_positions[left.node_resource.id])
 			var rendered_delta := right.position_offset - left.position_offset
-			if saved_delta.x > 0.05 and rendered_delta.x < -0.05:
-				print("RELATIVE_ORDER_INVERSION axis=x left=%d right=%d saved=%s rendered=%s" % [left.node_resource.id, right.node_resource.id, saved_delta, rendered_delta])
-				return false
-			if saved_delta.x < -0.05 and rendered_delta.x > 0.05:
-				print("RELATIVE_ORDER_INVERSION axis=x left=%d right=%d saved=%s rendered=%s" % [left.node_resource.id, right.node_resource.id, saved_delta, rendered_delta])
-				return false
-			if saved_delta.y > 0.05 and rendered_delta.y < -0.05:
-				print("RELATIVE_ORDER_INVERSION axis=y left=%d right=%d saved=%s rendered=%s" % [left.node_resource.id, right.node_resource.id, saved_delta, rendered_delta])
-				return false
-			if saved_delta.y < -0.05 and rendered_delta.y > 0.05:
-				print("RELATIVE_ORDER_INVERSION axis=y left=%d right=%d saved=%s rendered=%s" % [left.node_resource.id, right.node_resource.id, saved_delta, rendered_delta])
+			var dominant_axis := "x" if absf(saved_delta.x) >= absf(saved_delta.y) else "y"
+			var saved_value := saved_delta.x if dominant_axis == "x" else saved_delta.y
+			var rendered_value := rendered_delta.x if dominant_axis == "x" else rendered_delta.y
+			if (saved_value > 0.05 and rendered_value < -0.05) or (saved_value < -0.05 and rendered_value > 0.05):
+				print("RELATIVE_ORDER_INVERSION axis=%s left=%d right=%d saved=%s rendered=%s" % [dominant_axis, left.node_resource.id, right.node_resource.id, saved_delta, rendered_delta])
 				return false
 	return true
 
