@@ -38,7 +38,7 @@ const LAYOUT_MIN_VERTICAL_CLEARANCE := 60.0
 const OVERVIEW_LAYOUT_HORIZONTAL_GAP := BTGraphNode.NORMAL_CARD_SIZE.x + 24.0
 const OVERVIEW_LAYOUT_VERTICAL_GAP := BTGraphNode.NORMAL_CARD_SIZE.y + 24.0
 const AUTO_SPACING_GAP := 24.0
-const AUTO_SPACING_ITERATIONS := 256
+const AUTO_SPACING_ITERATIONS := 64
 const AUTO_SPACING_SEPARATION_EPSILON := 0.05
 const AUTO_SPACING_IDENTICAL_GROUP_MIN_SIZE := 5
 const AUTO_SPACING_POSITION_BUCKET := 0.05
@@ -2101,6 +2101,9 @@ func _solve_auto_spacing_offsets(anchor_node_id := -1) -> Dictionary:
 	var offsets: Dictionary = {}
 	for graph_node in nodes:
 		offsets[graph_node.node_resource.id] = Vector2.ZERO
+	var anchor_influence: Dictionary = {}
+	if nodes_by_id.has(anchor_node_id):
+		anchor_influence[anchor_node_id] = 0
 
 	# Old or damaged resources can contain many cards at the exact same point.
 	# There is no relative layout to preserve in such a group, so seed only that
@@ -2132,15 +2135,16 @@ func _solve_auto_spacing_offsets(anchor_node_id := -1) -> Dictionary:
 			if is_equal_approx(left_axis_value, right_axis_value):
 				left_precedes_right = int(source_order.get(left_id, left_id)) < int(source_order.get(right_id, right_id))
 			var direction := axis if left_precedes_right else -axis
-			var left_weight := 0.0 if left_id == anchor_node_id else 1.0
-			var right_weight := 0.0 if right_id == anchor_node_id else 1.0
+			var weights := _auto_spacing_pair_weights(left_id, right_id, anchor_influence)
+			var left_weight := weights.x
+			var right_weight := weights.y
 			var weight_sum := left_weight + right_weight
 			if weight_sum <= 0.0:
 				continue
 			var correction := direction * (penetration + AUTO_SPACING_SEPARATION_EPSILON)
 			offsets[left_id] = Vector2(offsets[left_id]) - correction * (left_weight / weight_sum)
 			offsets[right_id] = Vector2(offsets[right_id]) + correction * (right_weight / weight_sum)
-		var order_changed := _preserve_auto_spacing_order(nodes, nodes_by_id, base_positions, offsets, source_order, anchor_node_id)
+		var order_changed := _preserve_auto_spacing_order(nodes, nodes_by_id, base_positions, offsets, source_order, anchor_influence)
 		if collision_pairs.is_empty() and not order_changed:
 			break
 	return offsets
@@ -2220,7 +2224,26 @@ func _auto_spacing_rect(graph_node: BTGraphNode, base_positions: Dictionary, off
 	return rect.grow(AUTO_SPACING_GAP * 0.5) if padded else rect
 
 
-func _preserve_auto_spacing_order(nodes: Array[BTGraphNode], nodes_by_id: Dictionary, base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary, anchor_node_id: int) -> bool:
+func _auto_spacing_pair_weights(first_id: int, second_id: int, anchor_influence: Dictionary) -> Vector2:
+	var first_influenced := anchor_influence.has(first_id)
+	var second_influenced := anchor_influence.has(second_id)
+	if first_influenced and not second_influenced:
+		anchor_influence[second_id] = int(anchor_influence[first_id]) + 1
+		return Vector2(0.0, 1.0)
+	if second_influenced and not first_influenced:
+		anchor_influence[first_id] = int(anchor_influence[second_id]) + 1
+		return Vector2(1.0, 0.0)
+	if first_influenced and second_influenced:
+		var first_depth := int(anchor_influence[first_id])
+		var second_depth := int(anchor_influence[second_id])
+		if first_depth < second_depth:
+			return Vector2(0.0, 1.0)
+		if second_depth < first_depth:
+			return Vector2(1.0, 0.0)
+	return Vector2.ONE
+
+
+func _preserve_auto_spacing_order(nodes: Array[BTGraphNode], nodes_by_id: Dictionary, base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary, anchor_influence: Dictionary) -> bool:
 	var changed := false
 	var children_by_parent: Dictionary = {}
 	for graph_node in nodes:
@@ -2231,9 +2254,9 @@ func _preserve_auto_spacing_order(nodes: Array[BTGraphNode], nodes_by_id: Dictio
 			var child_base := Vector2(base_positions[graph_node.node_resource.id])
 			var base_vertical_delta := child_base.y - parent_base.y
 			if base_vertical_delta > AUTO_SPACING_SEPARATION_EPSILON:
-				changed = _apply_auto_spacing_order_constraint(parent, graph_node, Vector2.DOWN, base_positions, offsets, anchor_node_id) or changed
+				changed = _apply_auto_spacing_order_constraint(parent, graph_node, Vector2.DOWN, base_positions, offsets, anchor_influence) or changed
 			elif base_vertical_delta < -AUTO_SPACING_SEPARATION_EPSILON:
-				changed = _apply_auto_spacing_order_constraint(graph_node, parent, Vector2.DOWN, base_positions, offsets, anchor_node_id) or changed
+				changed = _apply_auto_spacing_order_constraint(graph_node, parent, Vector2.DOWN, base_positions, offsets, anchor_influence) or changed
 			if not children_by_parent.has(parent_id):
 				children_by_parent[parent_id] = []
 			children_by_parent[parent_id].append(graph_node)
@@ -2251,11 +2274,11 @@ func _preserve_auto_spacing_order(nodes: Array[BTGraphNode], nodes_by_id: Dictio
 			var right := siblings[index + 1] as BTGraphNode
 			var base_horizontal_delta := Vector2(base_positions[right.node_resource.id]).x - Vector2(base_positions[left.node_resource.id]).x
 			if base_horizontal_delta > AUTO_SPACING_SEPARATION_EPSILON:
-				changed = _apply_auto_spacing_order_constraint(left, right, Vector2.RIGHT, base_positions, offsets, anchor_node_id) or changed
+				changed = _apply_auto_spacing_order_constraint(left, right, Vector2.RIGHT, base_positions, offsets, anchor_influence) or changed
 	return changed
 
 
-func _apply_auto_spacing_order_constraint(first: BTGraphNode, second: BTGraphNode, axis: Vector2, base_positions: Dictionary, offsets: Dictionary, anchor_node_id: int) -> bool:
+func _apply_auto_spacing_order_constraint(first: BTGraphNode, second: BTGraphNode, axis: Vector2, base_positions: Dictionary, offsets: Dictionary, anchor_influence: Dictionary) -> bool:
 	var first_id: int = first.node_resource.id
 	var second_id: int = second.node_resource.id
 	var first_position := Vector2(base_positions[first_id]) + Vector2(offsets[first_id])
@@ -2263,8 +2286,9 @@ func _apply_auto_spacing_order_constraint(first: BTGraphNode, second: BTGraphNod
 	var current_delta := (second_position - first_position).dot(axis)
 	if current_delta >= AUTO_SPACING_SEPARATION_EPSILON:
 		return false
-	var first_weight := 0.0 if first_id == anchor_node_id else 1.0
-	var second_weight := 0.0 if second_id == anchor_node_id else 1.0
+	var weights := _auto_spacing_pair_weights(first_id, second_id, anchor_influence)
+	var first_weight := weights.x
+	var second_weight := weights.y
 	var weight_sum := first_weight + second_weight
 	if weight_sum <= 0.0:
 		return false
