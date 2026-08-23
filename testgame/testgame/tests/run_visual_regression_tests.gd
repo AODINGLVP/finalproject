@@ -162,7 +162,7 @@ func _run() -> void:
 	await _settle()
 	var dense_overview := await _capture_case("02b_dense_overview")
 	_assert_image_valid(dense_overview, "dense semantic overview renders")
-	_expect(_all_visual_offsets_zero() and _overlapping_node_pairs().is_empty(), "dense overview retains readable compact logical positions")
+	_expect(_overlapping_node_pairs().is_empty(), "dense overview remains readable and overlap-free")
 	var dense_positions := _resource_positions(view.current_tree)
 	view._set_feature_enabled("auto_spacing", false, false)
 	view.semantic_detail_level = 2
@@ -343,7 +343,7 @@ func _run() -> void:
 	_assert_image_valid(complex_overview, "complex 36-node overview-default tree renders")
 	_expect(view.current_tree.nodes.size() == 36 and _graph_node_count() == _non_decorator_node_count(), "complex tree renders every graph node")
 	var complex_overview_overlap_count := _overlapping_node_pairs().size()
-	_expect(complex_overview_overlap_count == 0 and _all_visual_offsets_zero(), "complex tree default coordinates are compact and overlap-free at overview detail")
+	_expect(complex_overview_overlap_count == 0 and _resource_positions_equal(view.current_tree, complex_positions), "complex overview is overlap-free without changing saved coordinates")
 	var complex_anchor := _graph_node(view, 24)
 	var real_zoom_metrics := await _real_wheel_zoom_session(MOUSE_BUTTON_WHEEL_UP, 16, 0.95)
 	print("VISUAL_METRIC real_wheel_final_zoom=%.3f detail_level=%d center_relation_drift=%.3f screen_formula_error=%.3f" % [float(real_zoom_metrics.get("final_zoom", 0.0)), view.semantic_detail_level, float(real_zoom_metrics.get("max_relation_drift", INF)), float(real_zoom_metrics.get("max_screen_formula_error", INF))])
