@@ -1,0 +1,38 @@
+\chapter{Reference for the Six Experimental Conditions}
+\label{app:features}
+
+\small
+\begin{longtable}{p{0.24\textwidth}p{0.30\textwidth}p{0.31\textwidth}}
+\caption{The six display conditions used in the dissertation.}\\
+\toprule Condition & Switches and input & Actual display effect\\ \midrule\endfirsthead
+\toprule Condition & Switches and input & Actual display effect\\ \midrule\endhead
+Baseline & Disable experimental optimisations, expand every node, clear search and focus, and set zoom to 100\%. & Full cards and every branch.\\
+Compact Cards & Enable only Compact. & Every node is retained; cards display only the type and short title.\\
+Optimized Overview & Enable Compact and Semantic Zoom and set zoom to 50\%. & Every node is retained; the overall structure is viewed at the lowest detail level.\\
+Optimized Search & Search for a fixed unique title in Overview. & The target enters the viewport and remains prominent; other cards are dimmed.\\
+Subtree Focus & Enable Compact and set a fixed Focus Root. & Display only the specified branch and necessary context.\\
+Context Collapse & Enable Compact and collapse specified branches outside the fixed target path. & Retain each collapsed root and summary while hiding its descendant cards.\\
+\bottomrule
+\end{longtable}
+
+The detailed steps and measurement purposes of the six conditions are provided in Table \ref{tab:displayconditions}. Other display functions in the plugin are not experimental conditions in this dissertation.
+
+\chapter{Reproduction and Evidence Index}
+\label{app:evidence}
+
+All paths below are relative to the repository root:
+\begin{description}
+    \item[Active project:] \path{testgame/testgame/}
+    \item[Distributable plugin:] \path{visual_scripting/addons/behavior_tree_editor/}
+    \item[Complex tree:] \path{testgame/testgame/behavior_trees/complex_guard_validation_tree.tres}
+    \item[Test scripts:] \path{testgame/testgame/tests/}
+    \item[Multiscale display data:] \path{testgame/testgame/test_results/multiscale_display_raw.csv}
+    \item[Multiscale display summary:] \path{testgame/testgame/test_results/multiscale_display_summary.csv}
+    \item[Multiscale display script:] \path{testgame/testgame/tests/run_multiscale_display_experiment.gd}
+    \item[Physical-screen evidence:] The experiment root is \path{research/display_optimization/}\ \path{physical_screen_size_experiment/}; its \path{data/2026-08-23_three_displays/} Session contains \path{combined_raw.csv}, \path{screen_size_comparison.csv} and \path{report_zh.md}.
+    \item[Release package:] \path{dist/behavior-tree-editor-0.9.0.zip}
+\end{description}
+
+\chapter{Draft Completion Checklist}
+
+Before formal submission, the author should: replace identity and supervisor placeholders; revise the declaration according to University policy and disclose AI assistance accurately; verify the deadline and word-count rules on Tabula; ask the supervisor to review the literature, research question and evidential boundaries; use Turnitin according to departmental requirements; compile with the template and inspect every page; and include the final word count and required repository or archive information.

@@ -1,0 +1,34 @@
+\chapter{Conclusion}
+\label{ch:conclusion}
+
+\section{Summary}
+
+This dissertation implemented a visual behaviour-tree plugin in Godot 4.6 and studied the display problem of large behaviour trees. Godot provides general graph-editing controls but does not provide a complete behaviour-tree editing and execution workflow. Traditional node graphs also occupy a large amount of canvas space as nodes, parameters and debugging information increase.
+
+The final plugin can create, save, load and execute behaviour trees, and supports a blackboard, Decorators, multiple composite-node types, Actions, Conditions, undo, redo and Live Debug. A complex two-dimensional scene uses a 241-node behaviour tree to control enemy detection, defence, melee attack, ranged attack, jumping, climbing, search, retreat, healing and patrol.
+
+Functionality testing and the playable game confirmed that the plugin could serve as an experimental platform. The actual subject investigated by this dissertation is display optimisation, not the basic functionality of behaviour trees themselves.
+
+Experiments across five tree scales showed that Compact reduced card area by 61.09--61.35\%, Overview reduced it by 90.27--90.34\%, and Search dimmed 96.15--99.67\% of non-target cards. Focus and Collapse also substantially reduced the context currently displayed, and no condition changed saved positions or execution order.
+
+The three-screen experiment showed that complex-tree coverage on the 31.55-inch screen was 2.54 times that on the 15.94-inch screen. The effects of Compact, Overview and Search remained stable across different screens. Overall, the display optimisations improved some objective display and editing-interaction measures for large behaviour trees. Because no human experiment was conducted, this dissertation cannot demonstrate that user understanding improved.
+
+\section{Contributions}
+
+The principal contributions of this project are a Godot behaviour-tree plugin that can actually execute; six clearly defined display conditions that can be reset to Baseline; and experimental materials containing 900 multiscale observations, 270 physical-screen observations, automated functionality tests, source-file checksums and fixed test resources.
+
+The experimental data show that the display functions address different problems: Compact and Overview improve information density, Search improves target location, Focus and Collapse reduce current context, and a physically larger screen provides more display area.
+
+\section{Limitations}
+
+The experiments were conducted only on one Windows computer, Godot 4.6, one rendering environment and three available screens. The largest generated tree contained 364 nodes. Automated experiments can measure interface changes but cannot demonstrate long-term development efficiency or cognitive load. The current Live Debug displays only the latest state and does not provide a complete execution timeline. Service nodes, reusable subtrees, Asset Library publication and cross-version testing are also outside the completed scope of this project.
+
+\section{Future Work}
+
+Future work can connect more physical screens and repeat the experiments on other Godot versions, GPUs and irregular manually authored behaviour trees. If ethics approval, participants and time are available, human tasks can also be designed to measure node location, branch understanding and editing operations. Human experiments are future research and are not data already obtained by this dissertation.
+
+The plugin can later add reusable subtrees, pause and step debugging, an execution timeline, and debug selection among multiple Actors. Display research can also add smooth layout transitions and test whether users can relocate their original nodes after switching display methods. Cross-version validation and Asset Library preparation are still required before formal publication.
+
+\section{Final Conclusion}
+
+This project completed a Godot behaviour-tree plugin that can be used in actual game development and added independently switchable display optimisations for large behaviour trees. Automated experiments show that these functions can reduce card area, highlight search targets and control the current display range without changing behaviour-tree structure or execution order. The plugin can continue to serve both as a game-AI editing tool and as a platform for future human-usability research.

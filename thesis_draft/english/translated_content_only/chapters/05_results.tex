@@ -1,0 +1,79 @@
+\chapter{Results and Analysis}
+\label{ch:results}
+
+\section{Plugin Functionality and Playable-Game Validation}
+
+Plugin functionality testing contained 450 checks and all passed, as shown in Table \ref{tab:coretests}. The logs contained no script error, memory leak, invalid access or program crash. The subsequent display experiments therefore used a functionally correct behaviour-tree plugin.
+
+\begin{table}[htbp]
+\centering\caption{Final core automated regression.}\label{tab:coretests}
+\begin{tabular}{lrrp{0.42\textwidth}}
+\toprule Suite & Passed & Total & Principal coverage \\
+\midrule
+Resource and runtime & 153 & 153 & Structure, node semantics, Decorators, Actors, Schema, debug bridge and execution reset after resource modification\\
+Editor GUI & 250 & 250 & Simplified menus, context creation, graph editing, history, Schema and display-condition reset\\
+Basic game & 13 & 13 & Three enemies, movement, damage, patrol, death/restart and lifecycle\\
+Complex arena & 34 & 34 & Detection, reactive defence, melee/ranged attack, jumping, climbing, search, retreat and recovery\\
+\midrule Total & 450 & 450 & All functionality and game assertions passed\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The playable scene also passed testing. Depending on the situation, enemies pursue, perform melee attacks, defend, perform ranged attacks, jump over obstacles, climb ladders, search for the player, retreat and heal. Actor methods are responsible for actual movement and damage, while the 241-node behaviour tree selects behaviours, determines execution order and interrupts lower-priority behaviours. This part demonstrates only that the plugin can correctly control a complex enemy; it is not an independent display-optimisation experiment.
+
+\section{Controlled Multiscale Display Results}
+
+The controlled experiment produced the planned 900 observations and every predefined check passed. Table \ref{tab:displaymain} presents the principal results for the five tree scales. Compact did not hide nodes but reduced total card area by 61.09--61.35\%. Optimized Overview likewise retained every node and reduced total card area by 90.27--90.34\%. This shows that both methods can reduce screen occupancy, but it does not show that users complete tasks faster by an equivalent proportion.
+
+\begin{table}[htbp]
+\centering\caption{Controlled display measurements for five resource scales; reductions are relative to Baseline.}\label{tab:displaymain}\small
+\begin{tabular}{lrrrrr}
+\toprule Measure & 31 & 61 & 121 & 241 & 364\\
+\midrule
+Canvas cards & 26 & 51 & 101 & 202 & 305\\
+Compact area reduction & 61.35\% & 61.30\% & 61.30\% & 61.16\% & 61.09\%\\
+Overview area reduction & 90.34\% & 90.33\% & 90.33\% & 90.29\% & 90.27\%\\
+Search dimming & 96.15\% & 98.04\% & 99.01\% & 99.50\% & 99.67\%\\
+Focus card reduction & 76.92\% & 86.27\% & 87.13\% & 91.58\% & 85.90\%\\
+Collapse card reduction & 69.23\% & 78.43\% & 89.11\% & 93.07\% & 96.39\%\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Search highlights the unique target and moves it into the viewport. The proportion of dimmed non-target nodes increased from 96.15\% for the 31-node tree to 99.67\% for the 364-node tree. Focus and Collapse reduce the context currently displayed but do not delete resource nodes. The Focus reduction did not continue increasing for the 364-node tree because the fixed target owns a larger local branch in that tree. Every condition preserved node positions and left-to-right execution order.
+
+\begin{figure}[htbp]\centering\includegraphics[width=0.9\textwidth]{figures/optimization_ratios.png}\caption{Reductions in density, salience and context across the five controlled scales.}\label{fig:optimization}\end{figure}
+
+\section{Physical Screen-Size Results}
+
+All 270 tests on the three screens completed without failure. Table \ref{tab:physicalscreens} lists the results for the 241- and 364-node trees. ``Coverage'' is the proportion of card centres that fit within the canvas; ``graph/screen'' is the number of times the complete behaviour-tree area exceeds the test-screen area.
+
+\begin{table}[htbp]
+\centering
+\caption{Complex-tree coverage on three physical screen sizes. Resolution is audit metadata, not an experimental treatment.}
+\label{tab:physicalscreens}
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Screen & Surface (cm) & Canvas & 241 coverage & 364 coverage & 241 graph/screen & 364 graph/screen \\
+\midrule
+BOE0CD1, 15.94 inches & (34\times22) & (1190\times770) & 18.32\% & 12.13\% & 116.38x & 184.13x \\
+H27T22S, 26.96 inches & (60\times33) & (2100\times1155) & 38.61\% & 25.57\% & 43.96x & 69.56x \\
+U32G3X, 31.55 inches & (70\times39) & (2450\times1365) & 46.53\% & 30.82\% & 31.89x & 50.45x \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+When screen size increased from 15.94 inches to 31.55 inches, Baseline coverage for the 241-node tree increased from 18.32\% to 46.53\%, while coverage for the 364-node tree increased from 12.13\% to 30.82\%. Coverage for both trees became 2.54 times the original value. The complete-tree area relative to the screen area decreased by 72.60\%. This shows that a physically larger screen can display more context, but it does not demonstrate that developers necessarily understand that content more easily.
+
+The relative effects of the display optimisations were broadly consistent across the three screens. Compact area reduction remained between 61.09\% and 61.35\%, while Overview remained between 90.27\% and 90.34\%. Search moved the target into the viewport in all 15 screen--scale combinations. Every condition also preserved node positions and execution order.
+
+Structural reduction had a more visible effect on the small screen. For the 241-node tree, Subtree Focus coverage across the three screens was 82.35\%, 88.24\% and 88.24\%, while Context Collapse coverage was 50.00\%, 64.29\% and 64.29\%. For the 364-node tree, Subtree Focus coverage was 86.05\%, 95.35\% and 95.35\%, while Context Collapse coverage was 36.36\%, 54.55\% and 54.55\%. Here, coverage means the proportion of cards retained by the current condition that enter the canvas; it does not mean that the same proportion of the complete behaviour tree is simultaneously visible.
+
+\section{Results for the Research Question}
+
+Functionality testing and the playable game confirmed that the experimental platform could correctly author, save and execute behaviour trees. This is a prerequisite for the display experiment, not a result that this dissertation investigates independently.
+
+Data from five node scales and three screen sizes show that the six display conditions consistently change card density, displayed context and the prominence of a search target while preserving node positions, parent--child relationships and execution order. The experimental data support the conclusion that these optimisations improve some measurable display and editing-interaction properties of large behaviour trees. Because there were no human participants, this study cannot additionally claim that human readability or use efficiency has been demonstrated.

@@ -1,0 +1,32 @@
+\chapter{Discussion}
+\label{ch:discussion}
+
+\section{Functional Correctness of the Experimental Platform}
+
+The complete plugin is the platform for the display-optimisation experiment, not a separate object of study. It can save and execute behaviour trees and supports Actors, composite nodes, conditions, actions, Decorators, the blackboard and Live Debug. The experiment therefore uses a behaviour tree that can actually execute, rather than a static node graph drawn only on a canvas.
+
+All 450 checks across resource and runtime, editor interface, basic game and complex arena passed. The 241-node behaviour tree controls enemy detection, defence, melee attack, ranged attack, jumping, climbing, search, retreat and healing. These results show that the plugin provides a functionally correct test platform with actual game behaviour for the display-optimisation experiment.
+
+\section{Evaluation of Display-Optimisation Effects}
+
+\subsection{Optimisation Effects across Different Node Scales}
+
+Compact retained every card at all five scales while reducing total card area by 61.09--61.35\%. The reduction proportions are very similar across scales, showing that the effect of compact cards does not weaken substantially as node count increases. It is suitable for reducing the space occupied by individual cards when every node still needs to be viewed.
+
+Optimized Overview likewise retained every card, with a stable area reduction of 90.27--90.34\%. Compared with Compact, it further reduces information inside each card and is therefore more suitable for viewing the overall branch structure of a large behaviour tree. The results changed very little from 31 to 364 nodes, showing that this combination retains a similar improvement in information density across different tree scales.
+
+The proportion of non-target cards dimmed by Optimized Search increased from 96.15\% for the 31-node tree to 99.67\% for the 364-node tree. As the behaviour tree becomes larger, the view contains more non-target nodes, so Search produces a more visible improvement in target prominence. The fixed target entered the viewport at every scale, showing that Search can reliably locate a known node in a large tree.
+
+Subtree Focus reduced displayed cards by 76.92--91.58\% across the five scales, with a reduction of 85.90\% for the 364-node tree. This proportion is determined by the size of the target branch itself, so it does not increase strictly with total node count. Context Collapse card reduction increased from 69.23\% to 96.39\%, showing that larger trees contain more non-target branches that can be collapsed. Both methods reduce irrelevant context in the current view, but Focus addresses a specified branch while Collapse retains more positional information about the overall structure.
+
+Across the five scales, the area reductions from Compact and Overview remained stable, the target-highlighting effect of Search increased with scale, and Focus and Collapse directly reduced the context displayed at one time. These results show that the display optimisations already have an effect on small trees and are more apparent on the larger 121-, 241- and 364-node trees.
+
+\subsection{Optimisation Effects across Different Physical Screen Sizes}
+
+The screen-size experiment shows that physical display area directly affects the context that a large tree can present. When screen size increased from 15.94 inches to 31.55 inches, Baseline coverage for the 241-node tree increased from 18.32\% to 46.53\%, while coverage for the 364-node tree increased from 12.13\% to 30.82\%. Coverage for both complex trees became 2.54 times the small-screen value, showing that a larger physical screen can accommodate more nodes at once.
+
+Different functions did not respond to screen size in the same way. Compact card-area reduction remained between 61.09\% and 61.35\% on all three screens, while Overview remained between 90.27\% and 90.34\%. Their relative effects were almost identical on the small and large screens, so they provide an information-density improvement that is independent of screen size and do not further amplify the advantage of a large screen. Because the 241- and 364-node trees had already reached the 0.10 minimum zoom, these methods substantially reduced card size and information content but did not allow the small screen to display more nodes from the complete tree at once.
+
+Subtree Focus provided the clearest compensation for the small screen. For the 241-node tree, it increased coverage by 64.04 percentage points on the small screen and by 41.70 percentage points on the large screen; the gap between the small and large screens narrowed from 28.22 to 5.88 percentage points. For the 364-node tree, the small-screen increase was 73.92 percentage points and the large-screen increase was 64.53 percentage points, narrowing the inter-screen gap from 18.69 to 9.30 percentage points. Context Collapse provided weaker compensation: the inter-screen gap narrowed to 14.29 percentage points for the 241-node tree and only to 18.18 percentage points for the 364-node tree. This is because Collapse still retains the path and collapsed roots, whereas Focus retains only the current branch and necessary context. The comparison concerns coverage of cards retained by the current condition and does not indicate that the complete tree has become fully visible.
+
+Search moved the fixed target into the viewport in all 15 screen--scale combinations, showing that reducing screen size did not break target location. Overall, a large screen still displays more absolute context, but the optimisations did not further expand this advantage. Compact and Overview remained stable across screens, Search preserved target location, and Focus substantially reduced the coverage gap between small and large screens. The data therefore support the statement that ``display optimisations compensate for some spatial limitations of small screens while retaining the absolute capacity advantage of large screens'', rather than that ``display optimisations principally increase the advantage of a large screen''. This conclusion concerns only card area, context coverage and target location, and is not equivalent to human readability or use efficiency.
