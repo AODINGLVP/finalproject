@@ -38,7 +38,7 @@ const LAYOUT_MIN_VERTICAL_CLEARANCE := 60.0
 const OVERVIEW_LAYOUT_HORIZONTAL_GAP := BTGraphNode.NORMAL_CARD_SIZE.x + 24.0
 const OVERVIEW_LAYOUT_VERTICAL_GAP := BTGraphNode.NORMAL_CARD_SIZE.y + 24.0
 const AUTO_SPACING_GAP := 24.0
-const AUTO_SPACING_ITERATIONS := 64
+const AUTO_SPACING_ITERATIONS := 32
 const AUTO_SPACING_SEPARATION_EPSILON := 0.05
 const AUTO_SPACING_IDENTICAL_GROUP_MIN_SIZE := 5
 const AUTO_SPACING_POSITION_BUCKET := 0.05
@@ -2128,12 +2128,19 @@ func _solve_auto_spacing_offsets(anchor_node_id := -1) -> Dictionary:
 			var left_base_center := Vector2(base_positions[left_id]) + left.size * 0.5
 			var right_base_center := Vector2(base_positions[right_id]) + right.size * 0.5
 			var axis := Vector2.RIGHT if overlap_x <= overlap_y else Vector2.DOWN
-			var penetration := overlap_x if overlap_x <= overlap_y else overlap_y
 			var left_axis_value := left_base_center.x if axis == Vector2.RIGHT else left_base_center.y
 			var right_axis_value := right_base_center.x if axis == Vector2.RIGHT else right_base_center.y
 			var left_precedes_right := left_axis_value < right_axis_value
 			if is_equal_approx(left_axis_value, right_axis_value):
 				left_precedes_right = int(source_order.get(left_id, left_id)) < int(source_order.get(right_id, right_id))
+			# Use the distance to the required ordered boundary, not only the current
+			# intersection width. If earlier avoidance has carried two cards across
+			# one another, this restores their saved order in one correction.
+			var penetration := 0.0
+			if axis == Vector2.RIGHT:
+				penetration = left_rect.end.x - right_rect.position.x if left_precedes_right else right_rect.end.x - left_rect.position.x
+			else:
+				penetration = left_rect.end.y - right_rect.position.y if left_precedes_right else right_rect.end.y - left_rect.position.y
 			var direction := axis if left_precedes_right else -axis
 			var weights := _auto_spacing_pair_weights(left_id, right_id, anchor_influence)
 			var left_weight := weights.x
