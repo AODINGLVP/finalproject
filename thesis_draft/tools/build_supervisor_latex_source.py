@@ -81,7 +81,7 @@ MAIN_TEX = r"""\documentclass[11pt,a4paper,oneside,extrafontsizes]{memoir}
 \usepackage[nameinlink,noabbrev]{cleveref}
 \setlength{\emergencystretch}{2em}
 
-\title{Display Optimisation and Experimental Evaluation of Large Visual Behaviour Trees in Godot 4.6}
+\title{Display Optimisation and Experimental Evaluation\\of Large Visual Behaviour Trees\\in Godot 4.6}
 \author{[AUTHOR NAME]}
 \date{September 2026}
 \qualification{Master of Science in Games Engineering}
@@ -212,6 +212,12 @@ def transform_chapter(name: str, text: str) -> str:
             " The results can explain only geometric display differences produced by different screen sizes and cannot directly demonstrate that a large screen is easier to use.",
             "",
             label="removed screen-size limitation sentence",
+        )
+        text = replace_once(
+            text,
+            r"\begin{longtable}{p{0.17\textwidth}p{0.38\textwidth}p{0.32\textwidth}}",
+            r"\begin{longtable}{p{0.16\textwidth}p{0.34\textwidth}p{0.28\textwidth}}",
+            label="narrow-margin display-condition table columns",
         )
 
     if name == "04_method.tex":

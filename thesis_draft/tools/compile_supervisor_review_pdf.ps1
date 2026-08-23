@@ -46,7 +46,7 @@ Copy-Item -LiteralPath $builtPdf -Destination $delivery -Force
 
 $log = Join-Path $source 'supervisor_review.log'
 if (Test-Path -LiteralPath $log -PathType Leaf) {
-    $failurePatterns = '(^|\s)(! LaTeX Error:|Emergency stop|Fatal error|Undefined control sequence)'
+    $failurePatterns = '(^|\s)(! LaTeX Error:|Emergency stop|Fatal error|Undefined control sequence|Overfull \\hbox)'
     $failures = Select-String -LiteralPath $log -Pattern $failurePatterns
     if ($failures) {
         throw "The LaTeX log contains fatal errors: $($failures.Line -join '; ')"
