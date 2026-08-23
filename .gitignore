@@ -23,6 +23,11 @@ Godot_v*_win64_console.exe
 # Generated verification logs
 *.inspect.ndjson
 *.log
+*.aux
+*.lof
+*.lot
+*.out
+*.toc
 ~$*
 
 # Extracted full source text from downloaded papers.
