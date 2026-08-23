@@ -2459,10 +2459,14 @@ func _restore_auto_spacing_after_click() -> void:
 			child.set_visual_offset(Vector2(auto_spacing_targets.get(child.node_resource.id, Vector2.ZERO)))
 	drag_auto_spacing_base_targets.clear()
 	drag_auto_spacing_original_targets.clear()
-	pending_auto_spacing_seed_targets.clear()
+	# Card dimensions may have changed while the pointer was held (for example,
+	# after crossing a Semantic Zoom boundary). Restore the click-time positions as
+	# a seed, then verify them against the current dimensions after drag state clears.
+	pending_auto_spacing_seed_targets = auto_spacing_targets.duplicate(true)
 	pending_auto_spacing_anchor_id = -1
-	auto_spacing_signature = _auto_spacing_layout_signature()
+	auto_spacing_signature = ""
 	graph_edit.queue_redraw()
+	_refresh_auto_spacing_deferred.call_deferred()
 
 
 func _build_drag_auto_spacing_baseline(dragged_node_id: int) -> Dictionary:
@@ -3212,7 +3216,13 @@ func _apply_fisheye_focus(focused_node: BTGraphNode, delta: float) -> void:
 func _on_graph_view_wheel_scrolled(local_position: Vector2) -> void:
 	fisheye_wheel_pause_elapsed = FISHEYE_WHEEL_PAUSE
 	zoom_layout_anchor_release_elapsed = ZOOM_LAYOUT_ANCHOR_RELEASE_DELAY
-	_capture_zoom_layout_anchor(local_position)
+	# The dragged card must remain the only screen-space anchor while the pointer is
+	# held. A competing wheel anchor would alter scroll_offset after the zoom and
+	# make the card appear to slide away from the pointer.
+	if _active_dragged_graph_node() == null:
+		_capture_zoom_layout_anchor(local_position)
+	else:
+		_clear_zoom_layout_anchor()
 	if fisheye_enabled:
 		fisheye_waiting_for_pointer_motion = true
 		fisheye_resume_pointer_position = graph_edit.get_global_transform_with_canvas() * local_position
