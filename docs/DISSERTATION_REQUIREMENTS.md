@@ -74,6 +74,14 @@ The ZIP is the University of Warwick thesis template. The PDF is the complete 45
 - Never fabricate participant data. Until the prepared human study is run, state that human usability remains unverified.
 - Every table, figure and percentage in the thesis must be traceable to a committed raw data file and reproducible script.
 
+## Mandatory dissertation source and generation sequence
+
+- After every dissertation text revision, first generate a complete editable DOCX and give it to the author for correction or confirmation. Only after the author returns or confirms that DOCX should the accepted text be synchronized to LaTeX and compiled to PDF.
+- Never reconstruct the dissertation DOCX by converting or extracting text from a PDF. Use the recorded authoritative text source for that version, such as the accepted DOCX, tracked Markdown, or tracked LaTeX snapshot.
+- Unless the user explicitly requests an omission, the DOCX must preserve the title, front matter, every heading and body paragraph, citations, bibliography, footnotes and appendices. A request for a text-only version may omit tables, images and their captions, but it must not silently shorten or rewrite the surrounding prose.
+- DOCX, LaTeX and PDF must represent the same accepted text. Before delivery, compare their chapter and section structure, paragraph content, citations, references and key numbers. Do not deliver a version when a mismatch or unexplained omission remains.
+- Keep each accepted DOCX as a named version checkpoint. Do not overwrite an author-edited DOCX when generating a later LaTeX or PDF version.
+
 ## Final pre-submission audit
 
 - Word count is at or below 15,000.
