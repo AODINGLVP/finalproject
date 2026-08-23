@@ -15,7 +15,7 @@ The system is divided into editor, resource, runtime and test components, as sho
 
 \section{Resource Model and Validation}
 
-Ordinary nodes record their parent in \texttt{parent\_id}, while Decorators use a separate \texttt{decorator\_parent\_id}. A Decorator is therefore not incorrectly executed as an ordinary child. Sibling nodes are sorted by horizontal position on the canvas, so the visible order from left to right is also the execution order. Node positions and this order are both retained when the resource is saved.
+Ordinary nodes record their parent in \path{parent_id}, while Decorators use a separate \path{decorator_parent_id}. A Decorator is therefore not incorrectly executed as an ordinary child. Sibling nodes are sorted by horizontal position on the canvas, so the visible order from left to right is also the execution order. Node positions and this order are both retained when the resource is saved.
 
 Before saving, the plugin checks that a Root exists, node IDs are not duplicated, parents are valid, Decorators are attached correctly, and node parameters are complete. For example, a Root cannot have a parent, while an Action or Condition cannot own ordinary children. Editor saving and automated testing use the same validation rules.
 
@@ -120,11 +120,11 @@ The runtime representation displays the active path, current node, success or fa
 
 \section{Physical Screen Experiment Infrastructure}
 
-The screen-testing tool reads physical width and height from EDID and records them separately from resolution. For a screen of width (W_{\mathrm{cm}}) and height (H_{\mathrm{cm}}), the test canvas is
+The screen-testing tool reads physical width and height from EDID and records them separately from resolution. For a screen of width \(W_{\mathrm{cm}}\) and height \(H_{\mathrm{cm}}\), the test canvas is
 \[
 W_c=35W_{\mathrm{cm}}, \qquad H_c=35H_{\mathrm{cm}},
 \]
-where (W_c) and (H_c) are the logical width and height of the canvas. Every screen uses 35 logical units per centimetre, so the experiment compares physical display area rather than the pixel density of different devices.
+where \(W_c\) and \(H_c\) are the logical width and height of the canvas. Every screen uses 35 logical units per centimetre, so the experiment compares physical display area rather than the pixel density of different devices.
 
 The test window moves to the specified screen and then loads the same behaviour tree and display condition. Every test saves device information and raw CSV data. When a new screen is connected in the future, its data are written to a new Session without overwriting existing results.
 
