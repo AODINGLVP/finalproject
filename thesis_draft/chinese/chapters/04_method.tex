@@ -57,7 +57,7 @@ Inspector 为常见字段提供类型化控件，不要求手写 JSON。Action �
 
 连线需要特殊处理：Godot 原生 GraphEdit 曲线使用侧面 Slot，而本项目采用上下端口。单连接模式隐藏原生持久层并绘制自定义上下边，拖拽预览期间临时恢复原生层。自定义线段命中保留右键断开和撤销重做；关闭该功能则恢复原生线，形成安全回退。
 
-大型树拖拽避免在每个指针事件上发送资源变更通知。手动拖拽期间卡片只更新视觉位置并请求连线重绘，在释放鼠标后才把最终位置同步到资源；撤销快照也在移动完成后生成，而不占用对延迟敏感的按下路径。自定义连线路径按端点缓存，视口外边被裁剪，无关指针移动不再重绘整个图，鱼眼更新在拖拽期间暂停。这些修改保持最终位置和单步撤销语义，同时减少重复工作。
+大型树拖拽避免在每个指针事件上发送资源变更通知。手动拖拽期间卡片只更新视觉位置并请求连线重绘，在释放鼠标后才把最终位置同步到资源；撤销快照也在移动完成后生成，而不占用对延迟敏感的按下路径。自定义连线路径按端点缓存，视口外边被裁剪，无关指针移动不再重绘整个图。这些修改保持最终位置和单步撤销语义，同时减少重复工作。
 
 \section{Live Debug 与黑板检查}
 
@@ -72,10 +72,10 @@ Runner 把 Actor、树路径、活动节点、有序路径、节点状态、失�
 
 \section{大型树显示机制}
 
-19 项功能通过统一开关系统登记，状态保存在 Godot \texttt{ConfigFile}。组合测试会启用功能、重建、全部关闭，并检查残留。
+本文实验只使用六种显示条件。它们建立在 Compact、Semantic Zoom、Search、Subtree Focus 和 Collapse 等可独立复位的实现上；Baseline 则关闭这些实验开关。每次切换条件都会重建画布，并检查上一条件是否留下卡片尺寸、搜索文本、聚焦 ID 或折叠状态。
 
 \subsection{信息密度控制}
-Compact 减少卡片宽高，保留类型编码和短标题；Semantic Zoom 不改变几何，而是按缩放层级决定字段可见性；形状/图标补充颜色，可选色盲安全配色提供冗余编码。
+Compact 减少卡片宽高，保留类型标识和短标题，但不隐藏任何节点。Semantic Zoom 不改变树结构，而是按缩放层级决定字段可见性。Optimized Overview 同时启用两者，并在 50\% 缩放下使用最低细节层级。
 
 \begin{figure}[htbp]
 \centering
@@ -84,14 +84,8 @@ Compact 减少卡片宽高，保留类型编码和短标题；Semantic Zoom 不�
 \caption{同一行为树的完整细节基线和紧凑显示。}\label{fig:compact}
 \end{figure}
 
-\subsection{焦点与结构裁剪}
-Fisheye 最多把鼠标所在及附近卡片放大 1.20 倍，保留远处上下文。实现不再修改 \texttt{GraphNode.scale}，而是改变内部尺寸与字体，并围绕中心补偿；关闭时恢复所有值。Collapse 隐藏后代并显示数量与下两层摘要，Focus 隔离所选分支；Stable Layout 尽量复用无冲突位置。
-
-\subsection{导航与概览}
-Search 匹配标题、类型、描述、方法和 Decorator 参数，并用 F3/Shift+F3 导航；Breadcrumb 显示祖先；Fit 计算完整树缩放，大树最低支持 0.10；230×150 小地图表示全部节点和当前视口；Multi-column 平衡宽分支，并用顺序提示保持执行优先级可见。
-
-\subsection{连线与运行表示}
-Orthogonal 使用直角边，Bundling 让同方向连线共享主干。Active Path、Branch Dimming、Decorator Badge、Path Summary 和 Failure Annotation 提供运行解释，但不修改行为树资源。它们保持可选，因为不同密度和任务对高亮与连线的偏好不同。
+\subsection{目标定位与上下文控制}
+Optimized Search 在 Overview 状态下匹配固定且唯一的节点标题，淡化其他卡片，并在提交后把目标移动到视口内。Subtree Focus 根据固定 Focus Root 只构建目标分支及必要上下文。Context Collapse 保留折叠根和摘要，但不渲染其后代。Focus 与 Collapse 都不会删除资源节点或改变父子关系；实验结束后会清除聚焦和折叠显示状态。
 
 \section{物理屏幕实验基础设施}
 
