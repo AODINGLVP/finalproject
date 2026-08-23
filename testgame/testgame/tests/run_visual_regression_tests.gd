@@ -406,7 +406,9 @@ func _run() -> void:
 	view.graph_edit.zoom = view.graph_edit.zoom_max
 	view._update_semantic_zoom()
 	await _settle()
-	_expect(_overlapping_node_pairs().is_empty(), "playable 241-node full-detail layout is overlap-free at maximum zoom")
+	var playable_max_zoom_pairs := _overlapping_node_pairs()
+	print("VISUAL_METRIC playable_max_zoom_overlaps=%d pairs=%s" % [playable_max_zoom_pairs.size(), playable_max_zoom_pairs.slice(0, mini(12, playable_max_zoom_pairs.size()))])
+	_expect(playable_max_zoom_pairs.is_empty(), "playable 241-node full-detail layout is overlap-free at maximum zoom")
 	var playable_leaf_ids := _last_visible_leaf_ids(2)
 	_expect(playable_leaf_ids.size() == 2, "playable 241-node live visual test has two leaf cards")
 	if playable_leaf_ids.size() == 2:
@@ -420,11 +422,15 @@ func _run() -> void:
 		var playable_live_drag := await _capture_case("11b_playable_241_max_zoom_live_drag")
 		_assert_image_valid(playable_live_drag, "playable 241-node maximum-zoom live drag renders")
 		_expect(live_source.manual_dragging, "playable 241-node screenshot is captured before pointer release")
-		_expect(_overlapping_node_pairs().is_empty(), "playable 241-node live drag avoids every overlap at maximum zoom")
+		var playable_live_pairs := _overlapping_node_pairs()
+		print("VISUAL_METRIC playable_live_drag_overlaps=%d pairs=%s" % [playable_live_pairs.size(), playable_live_pairs.slice(0, mini(12, playable_live_pairs.size()))])
+		_expect(playable_live_pairs.is_empty(), "playable 241-node live drag avoids every overlap at maximum zoom")
 		_expect(_resource_positions_equal(view.current_tree, playable_positions), "playable 241-node live drag keeps resources unchanged before release")
 		_end_live_visual_drag(live_drag_state)
 		await _settle()
-		_expect(_overlapping_node_pairs().is_empty(), "playable 241-node maximum-zoom layout remains overlap-free after release")
+		var playable_release_pairs := _overlapping_node_pairs()
+		print("VISUAL_METRIC playable_release_overlaps=%d pairs=%s" % [playable_release_pairs.size(), playable_release_pairs.slice(0, mini(12, playable_release_pairs.size()))])
+		_expect(playable_release_pairs.is_empty(), "playable 241-node maximum-zoom layout remains overlap-free after release")
 
 	print("BT_VISUAL_TEST_SUMMARY passed=%d failed=%d output=%s" % [passed, failed, OUTPUT_DIR])
 	view.free()
