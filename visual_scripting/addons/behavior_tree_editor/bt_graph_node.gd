@@ -245,6 +245,16 @@ func sync_to_resource() -> void:
 	node_resource.position = get_logical_position()
 
 
+func sync_rendered_position_to_resource() -> void:
+	if node_resource == null:
+		return
+	# A manual drop owns the visible position. Temporary spacing must not be
+	# subtracted here, otherwise a previously displaced card jumps on release.
+	node_resource.position = position_offset + _fisheye_position_compensation()
+	visual_offset = Vector2.ZERO
+	_apply_render_position()
+
+
 func get_logical_position() -> Vector2:
 	return position_offset - visual_offset + _fisheye_position_compensation()
 

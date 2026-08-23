@@ -38,8 +38,10 @@ const LAYOUT_MIN_VERTICAL_CLEARANCE := 60.0
 const OVERVIEW_LAYOUT_HORIZONTAL_GAP := BTGraphNode.NORMAL_CARD_SIZE.x + 24.0
 const OVERVIEW_LAYOUT_VERTICAL_GAP := BTGraphNode.NORMAL_CARD_SIZE.y + 24.0
 const AUTO_SPACING_GAP := 24.0
-const AUTO_SPACING_CONNECTION_GAP := 56.0
-const AUTO_SPACING_CONNECTION_MARGIN := 1.0
+const AUTO_SPACING_ITERATIONS := 64
+const AUTO_SPACING_SEPARATION_EPSILON := 0.05
+const AUTO_SPACING_IDENTICAL_GROUP_MIN_SIZE := 5
+const AUTO_SPACING_POSITION_BUCKET := 0.05
 const AUTO_SPACING_LERP_SPEED := 14.0
 const AUTO_SPACING_EPSILON := 0.1
 const ZOOM_LAYOUT_ANCHOR_STABLE_FRAMES := 8
@@ -193,6 +195,7 @@ var minimap_total_node_count := 0
 var visible_failure_annotations: Array[Dictionary] = []
 var auto_spacing_targets: Dictionary = {}
 var auto_spacing_signature := ""
+var pending_auto_spacing_anchor_id := -1
 var zoom_anchor_candidate_id := -1
 var zoom_anchor_candidate_screen_position := Vector2.ZERO
 var zoom_anchor_candidate_zoom := 1.0
@@ -1359,6 +1362,7 @@ func _rebuild_graph() -> void:
 	last_runtime_visual_signature = ""
 	auto_spacing_signature = ""
 	auto_spacing_targets.clear()
+	pending_auto_spacing_anchor_id = -1
 	_refresh_search_results(true)
 	graph_edit.cancel_manual_connection()
 	graph_edit.clear_connections()
@@ -1523,7 +1527,11 @@ func _on_graph_node_drag_finished(node_id: int) -> void:
 		return
 	var graph_node := graph_edit.get_node_or_null(NodePath(str(node_id))) as BTGraphNode
 	if graph_node != null:
-		graph_node.sync_to_resource()
+		# A dragged card is placed where the user released it, even when the card
+		# previously had a temporary collision-avoidance offset. The local solver
+		# treats this card as the fixed point and moves only colliding neighbours.
+		graph_node.sync_rendered_position_to_resource()
+		pending_auto_spacing_anchor_id = node_id
 	if not node.position.is_equal_approx(drag_history_position):
 		# Build the undo snapshot after movement, away from the latency-sensitive
 		# pointer-down path, then restore only this node's previous position in it.
@@ -1539,8 +1547,7 @@ func _on_graph_node_drag_finished(node_id: int) -> void:
 	drag_history_snapshot = null
 	drag_history_node_id = -1
 	# BTGraphNode emits drag_finished immediately before it clears manual_dragging.
-	# Defer one frame so the solver sees the released logical position and can
-	# restore collision-free visual spacing at every zoom level.
+	# Defer one frame so local collision avoidance sees the released position.
 	auto_spacing_signature = ""
 	_refresh_auto_spacing_deferred.call_deferred()
 
@@ -2040,7 +2047,9 @@ func _update_auto_spacing(delta: float, immediate := false) -> void:
 	var signature := _auto_spacing_layout_signature() if enabled else "disabled"
 	if signature != auto_spacing_signature:
 		auto_spacing_signature = signature
-		auto_spacing_targets = _solve_auto_spacing_offsets(fisheye_focus_node_id) if enabled else {}
+		var anchor_node_id := fisheye_focus_node_id if fisheye_focus_node_id != -1 else pending_auto_spacing_anchor_id
+		auto_spacing_targets = _solve_auto_spacing_offsets(anchor_node_id) if enabled else {}
+		pending_auto_spacing_anchor_id = -1
 	var blend := 1.0 if immediate or delta <= 0.0 else clampf(delta * AUTO_SPACING_LERP_SPEED, 0.0, 1.0)
 	var changed := false
 	for child in graph_edit.get_children():
@@ -2076,7 +2085,6 @@ func _auto_spacing_layout_signature() -> String:
 
 func _solve_auto_spacing_offsets(anchor_node_id := -1) -> Dictionary:
 	var nodes: Array[BTGraphNode] = []
-	var nodes_by_id: Dictionary = {}
 	var base_positions: Dictionary = {}
 	var source_order: Dictionary = {}
 	if current_tree != null:
@@ -2087,105 +2095,126 @@ func _solve_auto_spacing_offsets(anchor_node_id := -1) -> Dictionary:
 	for child in graph_edit.get_children():
 		if child is BTGraphNode and child.node_resource != null:
 			nodes.append(child)
-			nodes_by_id[child.node_resource.id] = child
 			base_positions[child.node_resource.id] = child.position_offset - child.visual_offset
-	var node_depths: Dictionary = {}
-	for graph_node in nodes:
-		_auto_spacing_cached_depth(graph_node.node_resource.id, nodes_by_id, node_depths, {})
-	var topology_order: Array[BTGraphNode] = nodes.duplicate()
-	topology_order.sort_custom(func(left: BTGraphNode, right: BTGraphNode) -> bool:
-		var left_depth := int(node_depths.get(left.node_resource.id, 0))
-		var right_depth := int(node_depths.get(right.node_resource.id, 0))
-		if left_depth != right_depth:
-			return left_depth < right_depth
-		return int(source_order.get(left.node_resource.id, left.node_resource.id)) < int(source_order.get(right.node_resource.id, right.node_resource.id))
-	)
-	var target_positions: Dictionary = {}
-	# First establish a monotonic top-to-bottom channel for every visible edge.
-	# A child can move down, but an unrelated saved position is never pulled up.
-	for graph_node in topology_order:
-		var node_id: int = graph_node.node_resource.id
-		var target := Vector2(base_positions[node_id])
-		var parent_id: int = graph_node.node_resource.parent_id
-		if nodes_by_id.has(parent_id) and target_positions.has(parent_id):
-			var parent_graph_node := nodes_by_id[parent_id] as BTGraphNode
-			var parent_target := Vector2(target_positions[parent_id])
-			target.y = maxf(
-				target.y,
-				parent_target.y + parent_graph_node.size.y + AUTO_SPACING_CONNECTION_GAP + AUTO_SPACING_CONNECTION_MARGIN
-			)
-		target_positions[node_id] = target
-
-	# The stable rank mirrors the resource's left-to-right ordering. For every
-	# pair whose padded vertical spans intersect, place the later card to the
-	# right of the earlier one. All constraints point forward, so one pass is
-	# sufficient and cannot oscillate, even when every saved position is equal.
-	var horizontal_order: Array[BTGraphNode] = nodes.duplicate()
-	horizontal_order.sort_custom(func(left: BTGraphNode, right: BTGraphNode) -> bool:
-		var left_position: Vector2 = left.node_resource.position
-		var right_position: Vector2 = right.node_resource.position
-		if not is_equal_approx(left_position.x, right_position.x):
-			return left_position.x < right_position.x
-		if not is_equal_approx(left_position.y, right_position.y):
-			return left_position.y < right_position.y
-		return int(source_order.get(left.node_resource.id, left.node_resource.id)) < int(source_order.get(right.node_resource.id, right.node_resource.id))
-	)
-	var total_x_shift := 0.0
-	for right_index in range(horizontal_order.size()):
-		var right: BTGraphNode = horizontal_order[right_index]
-		var right_id: int = right.node_resource.id
-		var right_target := Vector2(target_positions[right_id])
-		for left_index in range(right_index):
-			var left: BTGraphNode = horizontal_order[left_index]
-			var left_id: int = left.node_resource.id
-			var left_target := Vector2(target_positions[left_id])
-			if not _auto_spacing_y_intervals_overlap(left_target.y, left.size.y, right_target.y, right.size.y):
-				continue
-			right_target.x = maxf(
-				right_target.x,
-				left_target.x + left.size.x + AUTO_SPACING_GAP + AUTO_SPACING_CONNECTION_MARGIN
-			)
-		target_positions[right_id] = right_target
-		total_x_shift += right_target.x - Vector2(base_positions[right_id]).x
-
-	# Center normal reflows around their saved coordinates. During fisheye, keep
-	# the focused card fixed and translate the complete temporary layout instead.
-	var translate_x := 0.0
-	if nodes_by_id.has(anchor_node_id):
-		translate_x = Vector2(base_positions[anchor_node_id]).x - Vector2(target_positions[anchor_node_id]).x
-	elif not horizontal_order.is_empty():
-		translate_x = -total_x_shift / float(horizontal_order.size())
-	var translate_y := 0.0
-	if nodes_by_id.has(anchor_node_id):
-		translate_y = Vector2(base_positions[anchor_node_id]).y - Vector2(target_positions[anchor_node_id]).y
-
 	var offsets: Dictionary = {}
 	for graph_node in nodes:
-		var node_id := graph_node.node_resource.id
-		var target := Vector2(target_positions[node_id]) + Vector2(translate_x, translate_y)
-		offsets[node_id] = target - Vector2(base_positions[node_id])
+		offsets[graph_node.node_resource.id] = Vector2.ZERO
+
+	# Old or damaged resources can contain many cards at the exact same point.
+	# There is no relative layout to preserve in such a group, so seed only that
+	# group into a compact temporary grid before applying normal local avoidance.
+	_seed_identical_auto_spacing_groups(nodes, base_positions, offsets, source_order, anchor_node_id)
+
+	for _iteration in range(AUTO_SPACING_ITERATIONS):
+		var collision_pairs := _auto_spacing_collision_pairs(nodes, base_positions, offsets, source_order)
+		if collision_pairs.is_empty():
+			break
+		for pair in collision_pairs:
+			var left := pair[0] as BTGraphNode
+			var right := pair[1] as BTGraphNode
+			var left_rect := _auto_spacing_rect(left, base_positions, offsets, true)
+			var right_rect := _auto_spacing_rect(right, base_positions, offsets, true)
+			if not left_rect.intersects(right_rect):
+				continue
+			var overlap_x := minf(left_rect.end.x, right_rect.end.x) - maxf(left_rect.position.x, right_rect.position.x)
+			var overlap_y := minf(left_rect.end.y, right_rect.end.y) - maxf(left_rect.position.y, right_rect.position.y)
+			if overlap_x <= 0.0 or overlap_y <= 0.0:
+				continue
+			var axis := Vector2.RIGHT if overlap_x <= overlap_y else Vector2.DOWN
+			var penetration := overlap_x if overlap_x <= overlap_y else overlap_y
+			var left_id: int = left.node_resource.id
+			var right_id: int = right.node_resource.id
+			var left_base_center := Vector2(base_positions[left_id]) + left.size * 0.5
+			var right_base_center := Vector2(base_positions[right_id]) + right.size * 0.5
+			var left_axis_value := left_base_center.x if axis == Vector2.RIGHT else left_base_center.y
+			var right_axis_value := right_base_center.x if axis == Vector2.RIGHT else right_base_center.y
+			var left_precedes_right := left_axis_value < right_axis_value
+			if is_equal_approx(left_axis_value, right_axis_value):
+				left_precedes_right = int(source_order.get(left_id, left_id)) < int(source_order.get(right_id, right_id))
+			var direction := axis if left_precedes_right else -axis
+			var left_weight := 0.0 if left_id == anchor_node_id else 1.0
+			var right_weight := 0.0 if right_id == anchor_node_id else 1.0
+			var weight_sum := left_weight + right_weight
+			if weight_sum <= 0.0:
+				continue
+			var correction := direction * (penetration + AUTO_SPACING_SEPARATION_EPSILON)
+			offsets[left_id] = Vector2(offsets[left_id]) - correction * (left_weight / weight_sum)
+			offsets[right_id] = Vector2(offsets[right_id]) + correction * (right_weight / weight_sum)
 	return offsets
 
 
-func _auto_spacing_cached_depth(node_id: int, nodes_by_id: Dictionary, cache: Dictionary, visiting: Dictionary) -> int:
-	if cache.has(node_id):
-		return int(cache[node_id])
-	if visiting.has(node_id) or not nodes_by_id.has(node_id):
-		return 0
-	visiting[node_id] = true
-	var graph_node := nodes_by_id[node_id] as BTGraphNode
-	var parent_id := graph_node.node_resource.parent_id
-	var depth := 0
-	if nodes_by_id.has(parent_id):
-		depth = _auto_spacing_cached_depth(parent_id, nodes_by_id, cache, visiting) + 1
-	visiting.erase(node_id)
-	cache[node_id] = depth
-	return depth
+func _seed_identical_auto_spacing_groups(nodes: Array[BTGraphNode], base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary, anchor_node_id: int) -> void:
+	var groups: Dictionary = {}
+	for graph_node in nodes:
+		var node_id: int = graph_node.node_resource.id
+		var position := Vector2(base_positions[node_id])
+		var key := "%d:%d" % [roundi(position.x / AUTO_SPACING_POSITION_BUCKET), roundi(position.y / AUTO_SPACING_POSITION_BUCKET)]
+		if not groups.has(key):
+			groups[key] = []
+		groups[key].append(graph_node)
+	for key in groups:
+		var group: Array = groups[key]
+		if group.size() < AUTO_SPACING_IDENTICAL_GROUP_MIN_SIZE:
+			continue
+		group.sort_custom(func(left: BTGraphNode, right: BTGraphNode) -> bool:
+			return int(source_order.get(left.node_resource.id, left.node_resource.id)) < int(source_order.get(right.node_resource.id, right.node_resource.id))
+		)
+		var maximum_size := Vector2.ZERO
+		for member in group:
+			maximum_size.x = maxf(maximum_size.x, member.size.x)
+			maximum_size.y = maxf(maximum_size.y, member.size.y)
+		var step := maximum_size + Vector2.ONE * AUTO_SPACING_GAP
+		var column_count := maxi(1, ceili(sqrt(float(group.size()) * step.y / maxf(step.x, 1.0))))
+		var row_count := ceili(float(group.size()) / float(column_count))
+		var seeded_positions: Dictionary = {}
+		var anchor_seed := Vector2.ZERO
+		for index in range(group.size()):
+			var member := group[index] as BTGraphNode
+			var column := index % column_count
+			var row := index / column_count
+			var members_in_row := mini(column_count, group.size() - row * column_count)
+			var seed := Vector2(
+				(float(column) - float(members_in_row - 1) * 0.5) * step.x,
+				(float(row) - float(row_count - 1) * 0.5) * step.y
+			)
+			seeded_positions[member.node_resource.id] = seed
+			if member.node_resource.id == anchor_node_id:
+				anchor_seed = seed
+		var translation := -anchor_seed if seeded_positions.has(anchor_node_id) else Vector2.ZERO
+		for member in group:
+			var member_id: int = member.node_resource.id
+			offsets[member_id] = Vector2(seeded_positions[member_id]) + translation
 
 
-func _auto_spacing_y_intervals_overlap(left_y: float, left_height: float, right_y: float, right_height: float) -> bool:
-	var padding := AUTO_SPACING_GAP * 0.5
-	return left_y - padding < right_y + right_height + padding and right_y - padding < left_y + left_height + padding
+func _auto_spacing_collision_pairs(nodes: Array[BTGraphNode], base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary) -> Array[Array]:
+	var ordered: Array[BTGraphNode] = nodes.duplicate()
+	ordered.sort_custom(func(left: BTGraphNode, right: BTGraphNode) -> bool:
+		var left_rect := _auto_spacing_rect(left, base_positions, offsets, true)
+		var right_rect := _auto_spacing_rect(right, base_positions, offsets, true)
+		if not is_equal_approx(left_rect.position.x, right_rect.position.x):
+			return left_rect.position.x < right_rect.position.x
+		if not is_equal_approx(left_rect.position.y, right_rect.position.y):
+			return left_rect.position.y < right_rect.position.y
+		return int(source_order.get(left.node_resource.id, left.node_resource.id)) < int(source_order.get(right.node_resource.id, right.node_resource.id))
+	)
+	var pairs: Array[Array] = []
+	for left_index in range(ordered.size()):
+		var left := ordered[left_index]
+		var left_rect := _auto_spacing_rect(left, base_positions, offsets, true)
+		for right_index in range(left_index + 1, ordered.size()):
+			var right := ordered[right_index]
+			var right_rect := _auto_spacing_rect(right, base_positions, offsets, true)
+			if right_rect.position.x >= left_rect.end.x:
+				break
+			if left_rect.intersects(right_rect):
+				pairs.append([left, right])
+	return pairs
+
+
+func _auto_spacing_rect(graph_node: BTGraphNode, base_positions: Dictionary, offsets: Dictionary, padded := false) -> Rect2:
+	var node_id: int = graph_node.node_resource.id
+	var rect := Rect2(Vector2(base_positions[node_id]) + Vector2(offsets.get(node_id, Vector2.ZERO)), graph_node.size)
+	return rect.grow(AUTO_SPACING_GAP * 0.5) if padded else rect
 
 
 func _reset_auto_spacing() -> void:
@@ -2193,6 +2222,7 @@ func _reset_auto_spacing() -> void:
 		return
 	auto_spacing_targets.clear()
 	auto_spacing_signature = ""
+	pending_auto_spacing_anchor_id = -1
 	for child in graph_edit.get_children():
 		if child is BTGraphNode:
 			child.set_visual_offset(Vector2.ZERO)

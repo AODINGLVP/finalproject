@@ -20,8 +20,11 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var view := await _make_view()
+	await _test_freeform_layout_is_untouched(view)
+	await _test_local_drag_avoidance(view)
 	await _test_complete_zoom_range(view)
 	await _test_complex_tree_scales(view)
+	await _test_complex_tree_drag_locality(view)
 	await _test_zero_coordinate_recovery(view)
 	await _test_drag_undo_redo(view)
 	await _test_save_reload_reflow(view)
@@ -43,6 +46,92 @@ func _make_view() -> BTEditorView:
 	view._set_feature_enabled("subtree_collapse", false, false)
 	view._set_feature_enabled("auto_spacing", true, false)
 	return view
+
+
+func _test_freeform_layout_is_untouched(view: BTEditorView) -> void:
+	var zoom_values: Array[float] = [
+		view.graph_edit.zoom_min,
+		0.50,
+		0.619,
+		0.620,
+		0.621,
+		0.879,
+		0.880,
+		0.881,
+		1.0,
+		view.graph_edit.zoom_max,
+	]
+	for semantic_zoom in [false, true]:
+		for compact_cards in [false, true]:
+			for requested_zoom in zoom_values:
+				var zoom_value := clampf(requested_zoom, view.graph_edit.zoom_min, view.graph_edit.zoom_max)
+				var tree := _make_freeform_tree()
+				var resource_positions := _resource_positions(tree)
+				var order_before := _execution_order_signature(tree)
+				var label := "freeform zoom %.3f semantic=%s compact=%s" % [zoom_value, semantic_zoom, compact_cards]
+				await _prepare_view(view, tree, zoom_value, semantic_zoom, compact_cards)
+				_expect(_render_positions_match_expected(view, resource_positions), "%s leaves every non-overlapping card exactly where the user placed it" % label)
+				_expect(_all_visual_offsets_zero(view), "%s does not apply hidden layout offsets to a freeform arrangement" % label)
+				_expect(_rendered_overlaps(view).is_empty() and _screen_overlaps(view).is_empty(), "%s remains overlap-free without forced topology formatting" % label)
+				_expect(_execution_order_signature(tree) == order_before, "%s preserves freeform left-to-right execution order" % label)
+
+
+func _test_local_drag_avoidance(view: BTEditorView) -> void:
+	var cases: Array[Array] = [
+		[view.graph_edit.zoom_min, false, false],
+		[0.50, true, false],
+		[0.619, true, false],
+		[0.620, true, false],
+		[0.621, true, false],
+		[0.879, true, false],
+		[0.880, true, false],
+		[0.881, true, false],
+		[1.0, true, false],
+		[view.graph_edit.zoom_max, false, true],
+	]
+	for case in cases:
+		var zoom_value := clampf(float(case[0]), view.graph_edit.zoom_min, view.graph_edit.zoom_max)
+		var semantic_zoom := bool(case[1])
+		var compact_cards := bool(case[2])
+		var tree := _make_local_avoidance_tree()
+		var structure_before := _structure_signature(tree)
+		var order_before := _execution_order_signature(tree)
+		var other_resource_positions := _resource_positions_except(tree, 4)
+		var label := "local avoidance zoom %.3f semantic=%s compact=%s" % [zoom_value, semantic_zoom, compact_cards]
+		await _prepare_view(view, tree, zoom_value, semantic_zoom, compact_cards)
+		var initial_render_positions := _render_positions(view)
+
+		var free_target := Vector2(200.0, 550.0)
+		var free_drag := _drag_graph_node_to(view, 4, free_target)
+		await _wait_frames(SETTLE_FRAMES)
+		_expect(bool(free_drag.get("started", false)), "%s starts a free-position drag" % label)
+		_expect(_graph_node(view, 4).position_offset.distance_to(free_target) <= POSITION_EPSILON, "%s keeps an unobstructed node at the exact release point" % label)
+		_expect(_render_positions_for_ids_equal(view, initial_render_positions, [1, 2, 3, 5, 6, 7]), "%s does not move any other rendered card for an unobstructed drag" % label)
+
+		var before_collision_positions := _render_positions(view)
+		var collision_target := Vector2(330.0, 550.0)
+		var collision_drag := _drag_graph_node_to(view, 4, collision_target)
+		await _wait_frames(SETTLE_FRAMES)
+		var after_collision_positions := _render_positions(view)
+		var moved_ids := _moved_render_ids(before_collision_positions, after_collision_positions)
+		_expect(bool(collision_drag.get("started", false)), "%s starts a collision-producing drag" % label)
+		_expect(tree.find_node(4).position.distance_to(collision_target) <= POSITION_EPSILON, "%s stores the exact logical release point" % label)
+		_expect(_graph_node(view, 4).position_offset.distance_to(collision_target) <= POSITION_EPSILON, "%s keeps the user-dragged card fixed while neighbours avoid it" % label)
+		_expect(_render_positions_for_ids_equal(view, before_collision_positions, [1, 2, 3, 7]), "%s gives every remote card zero rendered drift" % label)
+		_expect(moved_ids.has(4) and moved_ids.has(5) and _ids_are_subset(moved_ids, [4, 5, 6]), "%s moves only the dragged card and its local collision closure" % label)
+		_expect(_rendered_ids_left_to_right(view, [3, 4, 5, 6, 7]), "%s preserves the established relative left-to-right order" % label)
+		_expect(_rendered_overlaps(view).is_empty() and _screen_overlaps(view).is_empty(), "%s removes the local collision without hiding cards at the active zoom" % label)
+		_expect(_resource_positions_except_equal(tree, 4, other_resource_positions), "%s keeps all non-dragged resource coordinates unchanged" % label)
+		_expect(_structure_signature(tree) == structure_before and _execution_order_signature(tree) == order_before, "%s preserves structure and execution order" % label)
+		var stable_positions := _render_positions(view)
+		await _wait_frames(3)
+		_expect(_render_positions_equal(view, stable_positions), "%s reaches a stable local solution without jitter" % label)
+
+		var release_target := Vector2(200.0, 550.0)
+		_drag_graph_node_to(view, 4, release_target)
+		await _wait_frames(SETTLE_FRAMES)
+		_expect(_render_positions_match_resources(view), "%s clears temporary avoidance offsets when the collision is removed" % label)
+		_expect(_rendered_overlaps(view).is_empty(), "%s remains overlap-free after moving back into free space" % label)
 
 
 func _test_complete_zoom_range(view: BTEditorView) -> void:
@@ -102,6 +191,45 @@ func _test_complex_tree_scales(view: BTEditorView) -> void:
 			_expect(_rendered_overlaps(view).is_empty(), "%s reflows a collision without overlap" % label)
 			_expect(_structure_signature(tree) == structure_before and tree.validate_tree().is_empty(), "%s keeps the generated behavior tree valid" % label)
 			_expect(_execution_order_signature(tree) == order_after_release, "%s keeps execution order after automatic reflow" % label)
+
+
+func _test_complex_tree_drag_locality(view: BTEditorView) -> void:
+	for node_count in SCALE_COUNTS:
+		var tree := TreeFactory.generate(node_count) as BTTreeResource
+		_assign_layered_positions(tree)
+		var leaf_ids := _last_leaf_ids(tree, 2)
+		var label := "%d-node isolated local collision" % node_count
+		_expect(leaf_ids.size() == 2, "%s provides two leaf drag targets" % label)
+		if leaf_ids.size() != 2:
+			continue
+		var source_id := leaf_ids[0]
+		var target_id := leaf_ids[1]
+		var bounds := _resource_card_bounds(tree)
+		var isolated_target := bounds.end + Vector2(1000.0, 500.0)
+		tree.find_node(target_id).position = isolated_target
+		tree.find_node(source_id).position = isolated_target + Vector2(-500.0, 0.0)
+		var structure_before := _structure_signature(tree)
+		var order_before := _execution_order_signature(tree)
+		var other_resource_positions := _resource_positions_except(tree, source_id)
+		await _prepare_view(view, tree, 1.0, false, false)
+		var rendered_before := _render_positions(view)
+		var source_graph_node := _graph_node(view, source_id)
+		var collision_target := isolated_target + Vector2(-source_graph_node.size.x + 100.0, 0.0)
+		_drag_graph_node_to(view, source_id, collision_target)
+		await _wait_frames(SETTLE_FRAMES)
+		var rendered_after := _render_positions(view)
+		var remote_ids: Array[int] = []
+		for id_variant in rendered_before.keys():
+			var node_id := int(id_variant)
+			if node_id != source_id and node_id != target_id:
+				remote_ids.append(node_id)
+		var moved_ids := _moved_render_ids(rendered_before, rendered_after)
+		_expect(_graph_node(view, source_id).position_offset.distance_to(collision_target) <= POSITION_EPSILON, "%s keeps the dragged leaf at its requested position" % label)
+		_expect(_render_positions_for_ids_equal(view, rendered_before, remote_ids), "%s leaves every non-colliding card at its previous rendered position" % label)
+		_expect(moved_ids.has(source_id) and moved_ids.has(target_id) and _ids_are_subset(moved_ids, [source_id, target_id]), "%s confines automatic movement to the isolated collision pair" % label)
+		_expect(_rendered_overlaps(view).is_empty() and _screen_overlaps(view).is_empty(), "%s resolves the isolated collision without overlap" % label)
+		_expect(_resource_positions_except_equal(tree, source_id, other_resource_positions), "%s does not write avoidance movement into other resources" % label)
+		_expect(_structure_signature(tree) == structure_before and _execution_order_signature(tree) == order_before, "%s preserves tree semantics and execution order" % label)
 
 
 func _test_zero_coordinate_recovery(view: BTEditorView) -> void:
@@ -236,6 +364,64 @@ func _drag_graph_node_onto(view: BTEditorView, source_id: int, target_id: int) -
 		"started": not graph_delta.is_zero_approx(),
 		"resource_unchanged_during_drag": unchanged_during_drag,
 	}
+
+
+func _drag_graph_node_to(view: BTEditorView, source_id: int, logical_target: Vector2) -> Dictionary:
+	var source := _graph_node(view, source_id)
+	if source == null:
+		return {}
+	var resource_before := source.node_resource.position
+	var local_pointer := Vector2(38.0, source.size.y * 0.5)
+	var press := InputEventMouseButton.new()
+	press.button_index = MOUSE_BUTTON_LEFT
+	press.pressed = true
+	press.position = local_pointer
+	source._gui_input(press)
+	var graph_delta := logical_target - source.get_logical_position()
+	var motion := InputEventMouseMotion.new()
+	motion.position = local_pointer + graph_delta * view.graph_edit.zoom
+	motion.relative = graph_delta * view.graph_edit.zoom
+	source._gui_input(motion)
+	var unchanged_during_drag := source.node_resource.position.is_equal_approx(resource_before)
+	var release := InputEventMouseButton.new()
+	release.button_index = MOUSE_BUTTON_LEFT
+	release.pressed = false
+	release.position = local_pointer
+	source._gui_input(release)
+	return {
+		"started": not graph_delta.is_zero_approx(),
+		"resource_unchanged_during_drag": unchanged_during_drag,
+	}
+
+
+func _make_freeform_tree() -> BTTreeResource:
+	var tree := BTTreeResource.new()
+	tree.tree_name = "Freeform Auto Spacing Fixture"
+	tree.root_node_id = 1
+	tree.nodes = [
+		_make_node(1, BTNodeResource.TYPE_ROOT, -1, Vector2(650.0, 420.0)),
+		_make_node(2, BTNodeResource.TYPE_SELECTOR, 1, Vector2(80.0, 80.0)),
+		_make_node(3, BTNodeResource.TYPE_ACTION, 2, Vector2(1200.0, 100.0)),
+		_make_node(4, BTNodeResource.TYPE_ACTION, 2, Vector2(300.0, 760.0)),
+		_make_node(5, BTNodeResource.TYPE_ACTION, 2, Vector2(1050.0, 740.0)),
+	]
+	return tree
+
+
+func _make_local_avoidance_tree() -> BTTreeResource:
+	var tree := BTTreeResource.new()
+	tree.tree_name = "Local Collision Avoidance Fixture"
+	tree.root_node_id = 1
+	tree.nodes = [
+		_make_node(1, BTNodeResource.TYPE_ROOT, -1, Vector2(650.0, 0.0)),
+		_make_node(2, BTNodeResource.TYPE_SEQUENCE, 1, Vector2(650.0, 250.0)),
+		_make_node(3, BTNodeResource.TYPE_ACTION, 2, Vector2(-300.0, 550.0)),
+		_make_node(4, BTNodeResource.TYPE_ACTION, 2, Vector2(0.0, 550.0)),
+		_make_node(5, BTNodeResource.TYPE_ACTION, 2, Vector2(500.0, 550.0)),
+		_make_node(6, BTNodeResource.TYPE_ACTION, 2, Vector2(800.0, 550.0)),
+		_make_node(7, BTNodeResource.TYPE_ACTION, 2, Vector2(1300.0, 550.0)),
+	]
+	return tree
 
 
 func _make_drag_tree() -> BTTreeResource:
@@ -374,6 +560,69 @@ func _render_positions(view: BTEditorView) -> Dictionary:
 	return result
 
 
+func _render_positions_match_expected(view: BTEditorView, expected: Dictionary) -> bool:
+	if expected.size() != _graph_nodes(view).size():
+		return false
+	for graph_node in _graph_nodes(view):
+		if not expected.has(graph_node.node_resource.id):
+			return false
+		if graph_node.position_offset.distance_to(Vector2(expected[graph_node.node_resource.id])) > POSITION_EPSILON:
+			return false
+	return true
+
+
+func _render_positions_match_resources(view: BTEditorView) -> bool:
+	for graph_node in _graph_nodes(view):
+		if graph_node.position_offset.distance_to(graph_node.node_resource.position) > POSITION_EPSILON:
+			return false
+	return true
+
+
+func _render_positions_for_ids_equal(view: BTEditorView, expected: Dictionary, node_ids: Array) -> bool:
+	for id_variant in node_ids:
+		var node_id := int(id_variant)
+		var graph_node := _graph_node(view, node_id)
+		if graph_node == null or not expected.has(node_id):
+			return false
+		if graph_node.position_offset.distance_to(Vector2(expected[node_id])) > POSITION_EPSILON:
+			return false
+	return true
+
+
+func _moved_render_ids(before: Dictionary, after: Dictionary) -> Array[int]:
+	var result: Array[int] = []
+	for id_variant in before.keys():
+		var node_id := int(id_variant)
+		if not after.has(node_id) or Vector2(before[node_id]).distance_to(Vector2(after[node_id])) > POSITION_EPSILON:
+			result.append(node_id)
+	result.sort()
+	return result
+
+
+func _ids_are_subset(candidate_ids: Array[int], allowed_ids: Array) -> bool:
+	for node_id in candidate_ids:
+		if not allowed_ids.has(node_id):
+			return false
+	return true
+
+
+func _rendered_ids_left_to_right(view: BTEditorView, node_ids: Array) -> bool:
+	var previous_x := -INF
+	for id_variant in node_ids:
+		var graph_node := _graph_node(view, int(id_variant))
+		if graph_node == null or graph_node.position_offset.x <= previous_x:
+			return false
+		previous_x = graph_node.position_offset.x
+	return true
+
+
+func _all_visual_offsets_zero(view: BTEditorView) -> bool:
+	for graph_node in _graph_nodes(view):
+		if graph_node.visual_offset.length() > POSITION_EPSILON:
+			return false
+	return true
+
+
 func _render_positions_equal(view: BTEditorView, expected: Dictionary) -> bool:
 	for graph_node in _graph_nodes(view):
 		if not expected.has(graph_node.node_resource.id):
@@ -413,6 +662,18 @@ func _resource_positions_equal(tree: BTTreeResource, expected: Dictionary) -> bo
 		if node == null or not expected.has(node.id) or not node.position.is_equal_approx(Vector2(expected[node.id])):
 			return false
 	return expected.size() == tree.nodes.size()
+
+
+func _resource_card_bounds(tree: BTTreeResource) -> Rect2:
+	var initialized := false
+	var bounds := Rect2()
+	for node in tree.nodes:
+		if node == null or node.decorator_parent_id != -1:
+			continue
+		var card_rect := Rect2(node.position, BTGraphNode.NORMAL_CARD_SIZE)
+		bounds = bounds.merge(card_rect) if initialized else card_rect
+		initialized = true
+	return bounds
 
 
 func _structure_signature(tree: BTTreeResource) -> String:
