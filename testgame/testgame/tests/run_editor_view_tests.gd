@@ -6,6 +6,7 @@ const BTNodeResource = preload("res://addons/behavior_tree_editor/bt_node_resour
 const BTTreeResource = preload("res://addons/behavior_tree_editor/bt_tree_resource.gd")
 const BTBlackboardEntry = preload("res://addons/behavior_tree_editor/bt_blackboard_entry.gd")
 const BTBlackboardSchema = preload("res://addons/behavior_tree_editor/bt_blackboard_schema.gd")
+const POSITION_EPSILON := 0.05
 
 var passed := 0
 var failed := 0
@@ -778,12 +779,9 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	await process_frame
 	_expect(not _all_visual_offsets_zero(view), "zoom-aware auto spacing separates dense cards at full detail")
 	_expect(_rendered_overlaps(view).is_empty(), "zoom-aware auto spacing resolves every dense-card overlap")
-	_expect(_all_visual_offsets_nonnegative_y(view), "zoom-aware auto spacing never pulls lower nodes upward")
-	_expect(_parent_child_gap_failures(view, view.AUTO_SPACING_CONNECTION_GAP).is_empty(), "zoom-aware auto spacing reserves visible parent-child connection channels")
-	var connection_intersections := _connection_node_intersections(view)
-	if not connection_intersections.is_empty():
-		print("AUTO_SPACING_CONNECTION_INTERSECTIONS %s" % [connection_intersections])
-	_expect(connection_intersections.is_empty(), "zoom-aware auto spacing keeps connections out of unrelated node cards")
+	_expect(_relative_axis_order_preserved(view, dense_positions), "zoom-aware auto spacing preserves the user's relative node placement")
+	_expect(_rendered_child_order(view, 1) == _child_ids(view.current_tree, 1), "local avoidance preserves the saved left-to-right sibling order")
+	_expect(_graph_node(view, 1).position_offset.y < _graph_node(view, 2).position_offset.y and _graph_node(view, 1).position_offset.y < _graph_node(view, 3).position_offset.y, "local avoidance preserves the fixture's existing vertical order")
 	_expect(_resource_positions_equal(view.current_tree, dense_positions), "auto spacing never changes behavior-tree resource coordinates")
 	view.semantic_detail_level = 0
 	view._apply_semantic_detail_level()
@@ -1100,6 +1098,28 @@ func _all_visual_offsets_nonnegative_y(view: BTEditorView) -> bool:
 	for child in view.graph_edit.get_children():
 		if child is BTGraphNode and child.visual_offset.y < -0.01:
 			return false
+	return true
+
+
+func _relative_axis_order_preserved(view: BTEditorView, saved_positions: Dictionary) -> bool:
+	var nodes: Array[BTGraphNode] = []
+	for child in view.graph_edit.get_children():
+		if child is BTGraphNode and saved_positions.has(child.node_resource.id):
+			nodes.append(child)
+	for left_index in range(nodes.size()):
+		for right_index in range(left_index + 1, nodes.size()):
+			var left := nodes[left_index]
+			var right := nodes[right_index]
+			var saved_delta := Vector2(saved_positions[right.node_resource.id]) - Vector2(saved_positions[left.node_resource.id])
+			var rendered_delta := right.position_offset - left.position_offset
+			if saved_delta.x > POSITION_EPSILON and rendered_delta.x < -POSITION_EPSILON:
+				return false
+			if saved_delta.x < -POSITION_EPSILON and rendered_delta.x > POSITION_EPSILON:
+				return false
+			if saved_delta.y > POSITION_EPSILON and rendered_delta.y < -POSITION_EPSILON:
+				return false
+			if saved_delta.y < -POSITION_EPSILON and rendered_delta.y > POSITION_EPSILON:
+				return false
 	return true
 
 

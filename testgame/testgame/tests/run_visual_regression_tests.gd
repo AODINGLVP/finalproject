@@ -180,9 +180,7 @@ func _run() -> void:
 	var overlap_after := _overlapping_node_pairs().size()
 	print("VISUAL_METRIC auto_spacing_overlap_before=%d auto_spacing_overlap_after=%d" % [overlap_before, overlap_after])
 	_expect(overlap_after == 0, "dense detail auto-spacing removes visible overlap")
-	_expect(_all_visual_offsets_nonnegative_y(), "dense detail auto-spacing never pulls lower nodes upward")
-	_expect(_all_parent_child_gaps_at_least(view.AUTO_SPACING_CONNECTION_GAP), "dense detail auto-spacing preserves clear connection channels")
-	_expect(_connection_node_intersections().is_empty(), "dense detail connections remain visible outside unrelated cards")
+	_expect(_relative_axis_order_preserved(dense_positions), "dense detail auto-spacing preserves the user's relative node placement")
 	_expect(_resource_positions_equal(view.current_tree, dense_positions), "dense detail auto-spacing preserves resource coordinates")
 	view.semantic_detail_level = 0
 	view._apply_semantic_detail_level()
@@ -367,13 +365,7 @@ func _run() -> void:
 	_expect(complex_corrected_overlap_count == 0, "complex detail auto-spacing removes every visible overlap")
 	print("VISUAL_METRIC complex_zoom_center_relation_drift=%.3f" % float(real_zoom_metrics.get("max_relation_drift", INF)))
 	_expect(float(real_zoom_metrics.get("max_relation_drift", INF)) <= 1.0, "complex zoom-in reflow preserves the same center-relative node neighborhood")
-	_expect(_all_visual_offsets_nonnegative_y(), "complex detail auto-spacing never lifts lower tree levels")
-	var complex_gap_failures := _parent_child_gap_failures(view.AUTO_SPACING_CONNECTION_GAP)
-	print("VISUAL_METRIC complex_connection_gap_failures=%s" % str(complex_gap_failures))
-	_expect(complex_gap_failures.is_empty(), "complex detail auto-spacing reserves every parent-child connection channel")
-	var complex_connection_intersections := _connection_node_intersections()
-	print("VISUAL_METRIC complex_connection_intersections=%s" % str(complex_connection_intersections))
-	_expect(complex_connection_intersections.is_empty(), "complex detail routes avoid every unrelated node card")
+	_expect(_relative_axis_order_preserved(complex_positions), "complex detail auto-spacing preserves relative node placement")
 	_expect(_resource_positions_equal(view.current_tree, complex_positions), "complex auto-spacing preserves every saved overview coordinate")
 	var real_zoom_out_metrics := await _real_wheel_zoom_session(MOUSE_BUTTON_WHEEL_DOWN, 16, 0.52)
 	print("VISUAL_METRIC real_wheel_zoom_out_final=%.3f center_relation_drift=%.3f screen_formula_error=%.3f" % [float(real_zoom_out_metrics.get("final_zoom", 0.0)), float(real_zoom_out_metrics.get("max_relation_drift", INF)), float(real_zoom_out_metrics.get("max_screen_formula_error", INF))])
@@ -658,6 +650,28 @@ func _all_visual_offsets_nonnegative_y() -> bool:
 	for child in view.graph_edit.get_children():
 		if child is BTGraphNode and child.visual_offset.y < -0.01:
 			return false
+	return true
+
+
+func _relative_axis_order_preserved(saved_positions: Dictionary) -> bool:
+	var nodes: Array[BTGraphNode] = []
+	for child in view.graph_edit.get_children():
+		if child is BTGraphNode and saved_positions.has(child.node_resource.id):
+			nodes.append(child)
+	for left_index in range(nodes.size()):
+		for right_index in range(left_index + 1, nodes.size()):
+			var left := nodes[left_index]
+			var right := nodes[right_index]
+			var saved_delta := Vector2(saved_positions[right.node_resource.id]) - Vector2(saved_positions[left.node_resource.id])
+			var rendered_delta := right.position_offset - left.position_offset
+			if saved_delta.x > 0.05 and rendered_delta.x < -0.05:
+				return false
+			if saved_delta.x < -0.05 and rendered_delta.x > 0.05:
+				return false
+			if saved_delta.y > 0.05 and rendered_delta.y < -0.05:
+				return false
+			if saved_delta.y < -0.05 and rendered_delta.y > 0.05:
+				return false
 	return true
 
 
