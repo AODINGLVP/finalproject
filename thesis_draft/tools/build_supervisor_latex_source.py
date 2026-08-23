@@ -216,6 +216,7 @@ def transform_chapter(name: str, text: str) -> str:
         text = replace_once(
             text,
             r"\begin{longtable}{p{0.17\textwidth}p{0.38\textwidth}p{0.32\textwidth}}",
+            "\\setlength{\\LTcapwidth}{\\textwidth}\n"
             r"\begin{longtable}{p{0.16\textwidth}p{0.34\textwidth}p{0.28\textwidth}}",
             label="narrow-margin display-condition table columns",
         )

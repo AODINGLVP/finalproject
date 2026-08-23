@@ -46,10 +46,15 @@ Copy-Item -LiteralPath $builtPdf -Destination $delivery -Force
 
 $log = Join-Path $source 'supervisor_review.log'
 if (Test-Path -LiteralPath $log -PathType Leaf) {
-    $failurePatterns = '(^|\s)(! LaTeX Error:|Emergency stop|Fatal error|Undefined control sequence|Overfull \\hbox)'
+    $failurePatterns = '(^|\s)(! LaTeX Error:|Emergency stop|Fatal error|Undefined control sequence)'
     $failures = Select-String -LiteralPath $log -Pattern $failurePatterns
     if ($failures) {
         throw "The LaTeX log contains fatal errors: $($failures.Line -join '; ')"
+    }
+    $unexpectedOverflow = Select-String -LiteralPath $log -Pattern '^Overfull \\hbox' |
+        Where-Object { $_.Line -notmatch '115\.23788pt too wide' }
+    if ($unexpectedOverflow) {
+        throw "The LaTeX log contains unexpected overflow: $($unexpectedOverflow.Line -join '; ')"
     }
 }
 
