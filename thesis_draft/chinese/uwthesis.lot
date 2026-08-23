@@ -6,16 +6,18 @@
 \addvspace {10pt}
 \addvspace {10pt}
 \addvspace {10pt}
-\contentsline {table}{\numberline {4.1}{\ignorespaces 已实现的运行时节点语义。}}{11}{table.4.1}%
+\contentsline {table}{\numberline {4.1}{\ignorespaces 已实现的运行时节点语义。}}{12}{table.4.1}%
 \addvspace {10pt}
-\contentsline {table}{\numberline {5.1}{\ignorespaces 最终核心自动回归。}}{15}{table.5.1}%
-\contentsline {table}{\numberline {5.2}{\ignorespaces 固定生成树的主要显示测量。}}{16}{table.5.2}%
-\contentsline {table}{\numberline {5.3}{\ignorespaces 活动分支淡化与增强小地图。}}{17}{table.5.3}%
-\contentsline {table}{\numberline {5.4}{\ignorespaces 按树规模和 Runner 数统计的运行时中位值。}}{18}{table.5.4}%
+\contentsline {table}{\numberline {5.1}{\ignorespaces 最终核心自动回归。}}{16}{table.5.1}%
+\contentsline {table}{\numberline {5.2}{\ignorespaces 五种资源规模的受控显示测量，降低比例相对 Baseline。}}{17}{table.5.2}%
+\contentsline {table}{\numberline {5.3}{\ignorespaces 三种物理屏幕尺寸下的复杂树覆盖率。分辨率仅为审计元数据，不是实验处理。}}{18}{table.5.3}%
+\contentsline {table}{\numberline {5.4}{\ignorespaces 优化前与当前版本的固定路径拖拽处理时间，中位数 [Q1, Q3]。}}{19}{table.5.4}%
+\contentsline {table}{\numberline {5.5}{\ignorespaces 可玩 241 节点行为树的客观显示结果，降低比例均相对 Baseline。}}{19}{table.5.5}%
+\contentsline {table}{\numberline {5.6}{\ignorespaces 活动分支淡化与增强小地图。}}{20}{table.5.6}%
 \addvspace {10pt}
 \addvspace {10pt}
 \addvspace {10pt}
-\contentsline {table}{\numberline {A.1}{最终编辑器的独立显示功能。}}{26}{table.A.1}%
+\contentsline {table}{\numberline {A.1}{最终编辑器的独立显示功能。}}{30}{table.A.1}%
 \addvspace {10pt}
 \addvspace {10pt}
 \addvspace {10pt}
