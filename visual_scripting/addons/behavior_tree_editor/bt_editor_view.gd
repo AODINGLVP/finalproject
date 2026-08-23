@@ -39,7 +39,8 @@ const OVERVIEW_LAYOUT_HORIZONTAL_GAP := BTGraphNode.NORMAL_CARD_SIZE.x + 24.0
 const OVERVIEW_LAYOUT_VERTICAL_GAP := BTGraphNode.NORMAL_CARD_SIZE.y + 24.0
 const AUTO_SPACING_GAP := 24.0
 const AUTO_SPACING_ITERATIONS := 32
-const AUTO_SPACING_COMPONENT_PASSES := 8
+const AUTO_SPACING_RESIDUAL_PASSES := 8
+const AUTO_SPACING_RESIDUAL_ITERATIONS := 128
 const AUTO_SPACING_SEPARATION_EPSILON := 0.05
 const AUTO_SPACING_IDENTICAL_GROUP_MIN_SIZE := 5
 const AUTO_SPACING_POSITION_BUCKET := 0.05
@@ -2171,10 +2172,9 @@ func _solve_auto_spacing_offsets(anchor_node_id := -1, initial_offsets: Dictiona
 		var order_changed := _preserve_auto_spacing_order(nodes, nodes_by_id, base_positions, offsets, source_order, anchor_influence)
 		if collision_pairs.is_empty() and not order_changed:
 			break
-	# A large irregular tree can leave a few end-of-chain collisions after local
-	# projection. Pack only those remaining collision components along their
-	# cheapest axis, preserving their saved order and centre (or fixed anchor).
-	_resolve_auto_spacing_collision_components(nodes, nodes_by_id, base_positions, offsets, source_order, anchor_node_id)
+	# Continue only on the small set still involved in collisions. This preserves
+	# freeform positions while avoiding another 128 full-tree topology scan.
+	_resolve_auto_spacing_residual_collisions(nodes, base_positions, offsets, source_order, anchor_influence)
 	return offsets
 
 
@@ -2216,109 +2216,25 @@ func _apply_auto_spacing_collision_pair(left: BTGraphNode, right: BTGraphNode, b
 	return true
 
 
-func _resolve_auto_spacing_collision_components(nodes: Array[BTGraphNode], nodes_by_id: Dictionary, base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary, anchor_node_id: int) -> void:
-	for _pass_index in range(AUTO_SPACING_COMPONENT_PASSES):
-		var pairs := _auto_spacing_collision_pairs(nodes, base_positions, offsets, source_order)
-		if pairs.is_empty():
+func _resolve_auto_spacing_residual_collisions(nodes: Array[BTGraphNode], base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary, anchor_influence: Dictionary) -> void:
+	var active_ids: Dictionary = {}
+	for _pass_index in range(AUTO_SPACING_RESIDUAL_PASSES):
+		var global_pairs := _auto_spacing_collision_pairs(nodes, base_positions, offsets, source_order)
+		if global_pairs.is_empty():
 			return
-		var adjacency: Dictionary = {}
-		for pair in pairs:
-			var left := pair[0] as BTGraphNode
-			var right := pair[1] as BTGraphNode
-			var left_id: int = left.node_resource.id
-			var right_id: int = right.node_resource.id
-			if not adjacency.has(left_id):
-				adjacency[left_id] = []
-			if not adjacency.has(right_id):
-				adjacency[right_id] = []
-			adjacency[left_id].append(right_id)
-			adjacency[right_id].append(left_id)
-		var visited: Dictionary = {}
-		for start_variant in adjacency.keys():
-			var start_id := int(start_variant)
-			if visited.has(start_id):
-				continue
-			var stack: Array[int] = [start_id]
-			var component: Array[BTGraphNode] = []
-			while not stack.is_empty():
-				var node_id := stack.pop_back()
-				if visited.has(node_id):
-					continue
-				visited[node_id] = true
-				if nodes_by_id.has(node_id):
-					component.append(nodes_by_id[node_id] as BTGraphNode)
-				for neighbor_variant in adjacency.get(node_id, []):
-					var neighbor_id := int(neighbor_variant)
-					if not visited.has(neighbor_id):
-						stack.append(neighbor_id)
-			if component.size() > 1:
-				_pack_auto_spacing_component(component, base_positions, offsets, source_order, anchor_node_id)
-
-
-func _pack_auto_spacing_component(component: Array[BTGraphNode], base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary, anchor_node_id: int) -> void:
-	var horizontal := _auto_spacing_axis_pack_proposal(component, base_positions, offsets, source_order, anchor_node_id, true)
-	var vertical := _auto_spacing_axis_pack_proposal(component, base_positions, offsets, source_order, anchor_node_id, false)
-	var use_horizontal := float(horizontal.get("cost", INF)) <= float(vertical.get("cost", INF))
-	var positions: Dictionary = horizontal.get("positions", {}) if use_horizontal else vertical.get("positions", {})
-	for graph_node in component:
-		var node_id: int = graph_node.node_resource.id
-		var next_offset := Vector2(offsets[node_id])
-		var base_position := Vector2(base_positions[node_id])
-		if use_horizontal:
-			next_offset.x = float(positions[node_id]) - base_position.x
-		else:
-			next_offset.y = float(positions[node_id]) - base_position.y
-		offsets[node_id] = next_offset
-
-
-func _auto_spacing_axis_pack_proposal(component: Array[BTGraphNode], base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary, anchor_node_id: int, horizontal: bool) -> Dictionary:
-	var ordered: Array[BTGraphNode] = component.duplicate()
-	ordered.sort_custom(func(left: BTGraphNode, right: BTGraphNode) -> bool:
-		var left_position := Vector2(base_positions[left.node_resource.id])
-		var right_position := Vector2(base_positions[right.node_resource.id])
-		var left_value := left_position.x if horizontal else left_position.y
-		var right_value := right_position.x if horizontal else right_position.y
-		if not is_equal_approx(left_value, right_value):
-			return left_value < right_value
-		return int(source_order.get(left.node_resource.id, left.node_resource.id)) < int(source_order.get(right.node_resource.id, right.node_resource.id))
-	)
-	var packed: Dictionary = {}
-	var cursor := 0.0
-	for graph_node in ordered:
-		var node_id: int = graph_node.node_resource.id
-		packed[node_id] = cursor
-		cursor += (graph_node.size.x if horizontal else graph_node.size.y) + AUTO_SPACING_GAP
-	var translation := 0.0
-	if packed.has(anchor_node_id):
-		var anchor: BTGraphNode
-		for candidate in component:
-			if candidate.node_resource.id == anchor_node_id:
-				anchor = candidate
+		for pair in global_pairs:
+			active_ids[(pair[0] as BTGraphNode).node_resource.id] = true
+			active_ids[(pair[1] as BTGraphNode).node_resource.id] = true
+		var active_nodes: Array[BTGraphNode] = []
+		for graph_node in nodes:
+			if active_ids.has(graph_node.node_resource.id):
+				active_nodes.append(graph_node)
+		for _iteration in range(AUTO_SPACING_RESIDUAL_ITERATIONS):
+			var local_pairs := _auto_spacing_collision_pairs(active_nodes, base_positions, offsets, source_order)
+			if local_pairs.is_empty():
 				break
-		var anchor_base := Vector2(base_positions[anchor_node_id])
-		var anchor_offset := Vector2(offsets[anchor_node_id])
-		translation = (anchor_base.x + anchor_offset.x if horizontal else anchor_base.y + anchor_offset.y) - float(packed[anchor_node_id])
-	else:
-		var current_center_sum := 0.0
-		var packed_center_sum := 0.0
-		for graph_node in ordered:
-			var node_id: int = graph_node.node_resource.id
-			var base_position := Vector2(base_positions[node_id])
-			var current_position := base_position + Vector2(offsets[node_id])
-			var size_value := graph_node.size.x if horizontal else graph_node.size.y
-			current_center_sum += (current_position.x if horizontal else current_position.y) + size_value * 0.5
-			packed_center_sum += float(packed[node_id]) + size_value * 0.5
-		translation = (current_center_sum - packed_center_sum) / float(maxi(1, ordered.size()))
-	var positions: Dictionary = {}
-	var cost := 0.0
-	for graph_node in ordered:
-		var node_id: int = graph_node.node_resource.id
-		var desired := float(packed[node_id]) + translation
-		var current_position := Vector2(base_positions[node_id]) + Vector2(offsets[node_id])
-		var current_value := current_position.x if horizontal else current_position.y
-		positions[node_id] = desired
-		cost += absf(desired - current_value)
-	return {"positions": positions, "cost": cost}
+			for pair in local_pairs:
+				_apply_auto_spacing_collision_pair(pair[0] as BTGraphNode, pair[1] as BTGraphNode, base_positions, offsets, source_order, anchor_influence)
 
 
 func _seed_identical_auto_spacing_groups(nodes: Array[BTGraphNode], base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary, anchor_node_id: int) -> void:
