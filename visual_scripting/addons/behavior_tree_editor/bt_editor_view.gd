@@ -39,8 +39,6 @@ const OVERVIEW_LAYOUT_HORIZONTAL_GAP := BTGraphNode.NORMAL_CARD_SIZE.x + 24.0
 const OVERVIEW_LAYOUT_VERTICAL_GAP := BTGraphNode.NORMAL_CARD_SIZE.y + 24.0
 const AUTO_SPACING_GAP := 24.0
 const AUTO_SPACING_ITERATIONS := 32
-const AUTO_SPACING_RESIDUAL_PASSES := 64
-const AUTO_SPACING_RESIDUAL_ITERATIONS := 128
 const AUTO_SPACING_SEPARATION_EPSILON := 0.05
 const AUTO_SPACING_IDENTICAL_GROUP_MIN_SIZE := 5
 const AUTO_SPACING_POSITION_BUCKET := 0.05
@@ -201,6 +199,7 @@ var pending_auto_spacing_anchor_id := -1
 var drag_auto_spacing_base_targets: Dictionary = {}
 var drag_auto_spacing_original_targets: Dictionary = {}
 var pending_auto_spacing_seed_targets: Dictionary = {}
+var live_auto_spacing_refresh_pending := false
 var zoom_anchor_candidate_id := -1
 var zoom_anchor_candidate_screen_position := Vector2.ZERO
 var zoom_anchor_candidate_zoom := 1.0
@@ -1519,9 +1518,25 @@ func _on_graph_node_position_changed(graph_node: BTGraphNode) -> void:
 		# Resource coordinates intentionally stay unchanged during a drag, so the
 		# normal cache key cannot observe pointer movement without this invalidation.
 		auto_spacing_signature = ""
+		_queue_live_auto_spacing_refresh()
 	else:
 		graph_node.sync_to_resource()
 	graph_edit.queue_redraw()
+
+
+func _queue_live_auto_spacing_refresh() -> void:
+	# Mouse devices can emit several motion events in one frame. Coalesce them into
+	# one solve while still completing avoidance before the next rendered frame.
+	if live_auto_spacing_refresh_pending:
+		return
+	live_auto_spacing_refresh_pending = true
+	_refresh_live_auto_spacing_deferred.call_deferred()
+
+
+func _refresh_live_auto_spacing_deferred() -> void:
+	live_auto_spacing_refresh_pending = false
+	if _active_dragged_graph_node() != null:
+		_update_auto_spacing(0.0, true)
 
 
 func _on_graph_node_drag_started(node_id: int) -> void:
@@ -2222,24 +2237,19 @@ func _apply_auto_spacing_collision_pair(left: BTGraphNode, right: BTGraphNode, b
 
 
 func _resolve_auto_spacing_residual_collisions(nodes: Array[BTGraphNode], base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary, anchor_influence: Dictionary) -> void:
-	var active_ids: Dictionary = {}
-	for _pass_index in range(AUTO_SPACING_RESIDUAL_PASSES):
-		var global_pairs := _auto_spacing_collision_pairs(nodes, base_positions, offsets, source_order)
-		if global_pairs.is_empty():
+	# A one-sided Gauss-Seidel pass propagates a dragged card's displacement along
+	# a packed chain without the nested 64 x 128 rescans used by the diagnostic
+	# implementation. At most one new card needs to join the chain per pass, so a
+	# node-count bound is sufficient and keeps large-tree work predictable.
+	for _pass_index in range(nodes.size() + 1):
+		var collision_pairs := _auto_spacing_collision_pairs(nodes, base_positions, offsets, source_order)
+		if collision_pairs.is_empty():
 			return
-		for pair in global_pairs:
-			active_ids[(pair[0] as BTGraphNode).node_resource.id] = true
-			active_ids[(pair[1] as BTGraphNode).node_resource.id] = true
-		var active_nodes: Array[BTGraphNode] = []
-		for graph_node in nodes:
-			if active_ids.has(graph_node.node_resource.id):
-				active_nodes.append(graph_node)
-		for _iteration in range(AUTO_SPACING_RESIDUAL_ITERATIONS):
-			var local_pairs := _auto_spacing_collision_pairs(active_nodes, base_positions, offsets, source_order)
-			if local_pairs.is_empty():
-				break
-			for pair in local_pairs:
-				_apply_auto_spacing_collision_pair(pair[0] as BTGraphNode, pair[1] as BTGraphNode, base_positions, offsets, source_order, anchor_influence, true)
+		var changed := false
+		for pair in collision_pairs:
+			changed = _apply_auto_spacing_collision_pair(pair[0] as BTGraphNode, pair[1] as BTGraphNode, base_positions, offsets, source_order, anchor_influence, true) or changed
+		if not changed:
+			return
 
 
 func _seed_identical_auto_spacing_groups(nodes: Array[BTGraphNode], base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary, anchor_node_id: int) -> void:
