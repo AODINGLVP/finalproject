@@ -427,6 +427,8 @@ func _run() -> void:
 		var playable_live_pairs := _overlapping_node_pairs()
 		var playable_live_target_pairs := _target_overlapping_node_pairs()
 		print("VISUAL_METRIC playable_live_drag_overlaps=%d target_overlaps=%d pairs=%s target_pairs=%s" % [playable_live_pairs.size(), playable_live_target_pairs.size(), playable_live_pairs.slice(0, mini(12, playable_live_pairs.size())), playable_live_target_pairs.slice(0, mini(12, playable_live_target_pairs.size()))])
+		var direct_live_targets: Dictionary = view._solve_auto_spacing_offsets(live_source.node_resource.id, view.drag_auto_spacing_base_targets)
+		print("VISUAL_METRIC playable_live_source=%d target=%d signature_cached=%s cached_target_offset=%s direct_target_offset=%s" % [live_source.node_resource.id, live_target.node_resource.id, str(view.auto_spacing_signature == view._auto_spacing_layout_signature()), str(view.auto_spacing_targets.get(live_target.node_resource.id, Vector2.ZERO)), str(direct_live_targets.get(live_target.node_resource.id, Vector2.ZERO))])
 		_print_overlap_geometry("playable_live", playable_live_pairs)
 		_expect(playable_live_pairs.is_empty(), "playable 241-node live drag avoids every overlap at maximum zoom")
 		_expect(_resource_positions_equal(view.current_tree, playable_positions), "playable 241-node live drag keeps resources unchanged before release")
