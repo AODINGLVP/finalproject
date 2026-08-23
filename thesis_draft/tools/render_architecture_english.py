@@ -69,7 +69,7 @@ def render() -> None:
     draw = ImageDraw.Draw(canvas)
     title_font = font(FONT_BOLD, 48)
     box_title = font(FONT_BOLD, 28)
-    box_body = font(FONT_REGULAR, 23)
+    box_body = font(FONT_REGULAR, 21)
     footer_font = font(FONT_REGULAR, 21)
 
     title = "Plugin Architecture and Data Flow"
@@ -86,7 +86,8 @@ def render() -> None:
     boxes = [
         (editor, "#2F75B5", [
             ("Godot Editor Plugin", box_title, "#2F75B5"),
-            ("Node creation, dragging and connection", box_body, "#1F2937"),
+            ("Node creation, dragging", box_body, "#1F2937"),
+            ("and connection", box_body, "#1F2937"),
             ("Layout and display optimisation", box_body, "#1F2937"),
         ]),
         (resource, "#159C9C", [
