@@ -1,0 +1,40 @@
+\chapter{Literature Review}
+\label{ch:literature}
+
+\section{Behaviour Trees as Executable Hierarchies}
+
+A behaviour tree repeatedly evaluates a rooted hierarchy and propagates one of three states: \textsc{success}, \textsc{failure} or \textsc{running}. A Sequence normally stops at the first child that fails or is running; a Selector stops at the first child that succeeds or is running; and leaf nodes read state or perform actions. This small state interface enables complex logic to be composed and interruption policies to be expressed explicitly \parencite{colledanchise2018bt}.
+
+The three-state interface appears simple, but it contains important implementation choices. A running Sequence can remember its current index, whereas a Reactive Selector must recheck high-priority conditions and pre-empt a lower-priority branch. A Random Selector should retain the same choice while its child is running; Parallel requires success and failure thresholds; and Repeat and Wait need to clear their memory when restarted or interrupted. Editor presentation and execution semantics therefore cannot be separated completely: child order, Decorator ownership and node identity all affect execution and must be serialised correctly.
+
+A blackboard provides shared key--value state between perception, conditions and actions. Unreal Engine's workflow demonstrates the value of combining a blackboard, Decorators and runtime observation \parencite{unrealbt}. This project does not, however, need to reproduce every capability of a commercial system. A reasonable baseline is a system that can express meaningful decisions, call project Actor methods, validate blackboard keys, and explain why a branch ran or was rejected.
+
+\section{Node--Link Trees and Scalability}
+
+Node--link diagrams are appropriate for behaviour trees because edges can directly represent ancestry and sibling groups. Classical tidy-tree algorithms seek layouts with consistent levels, non-overlapping subtrees and relative compactness \parencite{reingold1981tidier}. SpaceTree further combined a node--link structure with dynamic layout, zooming and selective expansion; its evaluation showed that representation and interaction jointly affect topology-understanding and revisit tasks \parencite{plaisant2002spacetree}.
+
+The problem is scale. Cards occupy area, and explicit edges become denser as width and depth increase. Song et al. compared traditional, list and multi-column views, finding that the multi-column interface was faster in their browsing and understanding tasks for hierarchies with large fan-outs and was preferred overall \parencite{song2010largefanout}. This result is relevant to Selectors or Sequences containing many alternative behaviours, but it cannot be transferred directly: children in that study were ordered alphabetically, whereas horizontal order in a behaviour tree may determine priority. A multi-column behaviour tree must therefore display order explicitly and must not silently modify the resource during layout.
+
+Bae and Watson proposed the Quilts representation for large layered graphs \parencite{bae2011quilts}. Its value is not necessarily that a behaviour tree should be converted completely into a matrix, but that path tasks may be better supported by a supplementary representation. This project therefore retains an editable node graph while adding a compact textual path and strong active-path encoding for runtime path-location tasks.
+
+\section{Focus, Context and Overview}
+
+Furnas formalised generalised fisheye views with a degree-of-interest function: an element's prior importance and its distance from the focus are combined to determine its display prominence \parencite{furnas1986fisheye}. Lamping et al. used hyperbolic geometry to display a large hierarchy in a bounded region, magnifying the focus while compressing distant context \parencite{lamping1995hyperbolic}. A behaviour-tree editor can use this idea to make the node under the pointer readable while retaining surrounding structure.
+
+Focus+context is not inherently superior to other methods. Distortion can move targets and increase pointing difficulty, while changes in scale can also damage the mental map. Cockburn et al. distinguish overview+detail, zooming and focus+context, and note that effectiveness depends on task, implementation and switching cost \parencite{cockburn2008review}. This project therefore limits maximum fisheye magnification to 1.20, changes the internal card representation rather than applying an unstable whole-graph transform, compensates position around the node centre, and restores all geometry when the feature is disabled. It also provides an independent fixed minimap so that the two types of technique can be compared or combined.
+
+Semantic zoom differs from geometric zoom. Geometric zoom changes physical size, whereas semantic zoom changes displayed attributes. A low-detail card retains type colour, icon and short title; a high-detail card displays the method, parameters, description and Decorators. It trades information completeness for density without changing execution-graph geometry. An earlier version of the plugin coupled the mouse wheel to temporary node scaling, causing nodes to shrink and then grow while scrolling; separating information visibility from graph geometry eliminated this problem.
+
+\section{Complexity Management and the Mental Map}
+
+When all nodes do not need to be viewed at once, expand--collapse and hide--show operations can reduce complexity. Dogrusoz et al. proposed incremental methods for managing the complexity of large networks, including expansion, collapse and layout updates \parencite{dogrusoz2018complexity}. This research is consistent with the mental-map principle: if one edit causes many unrelated nodes to move, users must relearn their positions \parencite{misue1995mentalmap}. Behaviour-tree collapse should retain the collapsed root, report hidden content, and avoid moving unrelated branches where possible.
+
+Subtree collapse and subtree focus address different problems. Collapse replaces descendants with a summary while retaining the rest of the tree; focus displays only the target branch and necessary context. Both may hide a running node, so the plugin provides hidden-node counts, two-level summaries, path indicators, and explicit expand/focus controls instead of removing view information without notice.
+
+Search highlighting and inactive-branch dimming are softer forms of complexity management: geometry remains unchanged and only the prominence of irrelevant content is reduced. This follows Shneiderman's principle of ``overview first, zoom and filter, then details on demand'' \parencite{shneiderman1996eyes}. Shape/icon encoding and a colourblind-safe palette provide redundant channels so that node types are not expressed by colour alone.
+
+\section{Runtime Explanation and Failure Localisation}
+
+Live debugging adds a temporal dimension to a static hierarchy. Highlighting only the leaf node cannot explain the path by which it was reached; highlighting all historical nodes, by contrast, confuses the current state. This project records an ordered Root-to-leaf chain, per-node states and the current failure explanation. Inactive branches can be dimmed, while an independent path summary remains readable when the graph is reduced.
+
+Decorators make failure explanation more important. An Action itself may be correct but never execute because a blackboard comparison, cooldown or time limit prevents it. Displaying a Decorator summary on its owner node and attaching a failure reason connects runtime evidence back to the authoring representation; the live blackboard further displays each Key, runtime type, value and Schema state. This reflects the task-oriented principle from layered-graph research: during debugging, the user is often asking ``why did this branch not run?'' rather than ``what is the complete topology?''

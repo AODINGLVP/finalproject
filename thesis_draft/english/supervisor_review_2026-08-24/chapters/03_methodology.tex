@@ -1,0 +1,55 @@
+\chapter{Research Methodology}
+\label{ch:methodology}
+
+\section{Research Strategy}
+
+This study first implements a Godot 4.6 plugin capable of authoring and running behaviour trees correctly, and then uses that plugin to test display optimisations for large behaviour trees. The research focus is not whether behaviour trees are suitable for making games, but whether these display optimisations can improve measurable interface performance across different node counts and screen sizes.
+
+\section{Experimental Factors and Datasets}
+
+The experiment uses five automatically generated behaviour trees containing 31, 61, 121, 241 and 364 resource nodes. They cover a small behaviour tree, a behaviour tree beyond the approximately 50-node problem raised by the supervisor, and larger stress-test cases. The five trees use the same generation rules, node-type proportions and Decorator proportions, with scale as their principal difference. Decorators are attached to other nodes and are not displayed as separate canvas cards, so the five trees are displayed as 26, 51, 101, 202 and 305 cards respectively.
+
+The project also contains a 241-node behaviour tree that directly controls a game enemy. It includes healing, melee attack, ranged attack, jumping, climbing, pursuit, search, retreat, patrol and idle behaviours. This tree is used only to confirm that the plugin can correctly control a complex enemy; it is not used as a separate display-optimisation experiment.
+
+This dissertation compares only the six display conditions listed in Table \ref{tab:displayconditions}. Before every trial, the same initial state is restored: all nodes are expanded, search is cleared, focus is cancelled, zoom is set to 100\%, and the display optimisations involved in the experiment are disabled. Only the operations specified for the current condition are then applied.
+
+\begin{longtable}{p{0.17\textwidth}p{0.38\textwidth}p{0.32\textwidth}}
+\caption{The six display conditions and the operations performed in the experiment.}\label{tab:displayconditions}\\
+\toprule Condition & Operation performed in the experiment & Interface change and main measurement purpose \\ \midrule\endfirsthead
+\toprule Condition & Operation performed in the experiment & Interface change and main measurement purpose \\ \midrule\endhead
+Baseline & Disable the display optimisations involved in the experiment and show full cards and every branch. & Provide the original display as the comparison baseline for the other conditions.\\
+Compact Cards & Enable only compact cards. Every node remains visible, but cards become smaller and retain only the type and short title. & Measure how much total card area is reduced without hiding nodes.\\
+Optimized Overview & Enable compact cards and low-detail semantic zoom together, and set canvas zoom to 50\%. & Retain every node but reduce the information on each card in order to view the structure of the complete tree.\\
+Optimized Search & In the Overview state, search for a predefined node with a unique name. & Highlight the target, dim other nodes, and check whether the target enters the current viewport.\\
+Subtree Focus & Select a predefined branch as the focus target. & Display only the target branch and necessary context, reducing irrelevant nodes in the current view.\\
+Context Collapse & Retain the path to a fixed target and collapse selected subtrees outside that path. & Retain each collapsed root, replace its descendants with a summary, and reduce the number of simultaneously displayed nodes.\\
+\bottomrule
+\end{longtable}
+
+The six conditions change only card size, information content, prominence or the current display range. Even when Collapse is used, the plugin saves only the collapsed state and does not change parent--child relationships or execution order.
+
+The experiment records the number of displayed cards, total card area, the amount of information retained on cards, the number of non-target nodes dimmed by Search, whether the search target enters the viewport, and how much current context is reduced by Focus and Collapse. Other display functions do not participate in the condition comparison in this dissertation. These data describe only changes in the interface display and cannot directly demonstrate that users understand behaviour trees more easily.
+
+\section{Controlled Multiscale Display Experiment}
+
+The controlled experiment uses an NVIDIA GeForce RTX 5070 Laptop GPU, the Godot 4.6 OpenGL Compatibility renderer, and a fixed \(1600 \times 900\) test canvas. The experiment contains five node scales and six display conditions. Every scale--condition combination is formally tested 30 times, producing \(5 \times 6 \times 30 = 900\) observations in total.
+
+Each group is run three times before formal testing, but these results are not recorded. This warm-up reduces variation caused by first loading and rendering. Formal testing rotates the order of tree scales and display conditions so that one condition is not always executed first or last. Every test starts from the same state: expand every node, clear search, cancel focus, use 100\% zoom, and then apply only the condition currently being tested. Search and Focus use predefined fixed targets to prevent manual selection from affecting the results.
+
+Minimum acceptance criteria were defined before the experiment. Baseline must display every card, and display optimisations must not change saved positions or execution order. Compact must reduce total card area by at least 40\%, and Overview by at least 70\%; from 61 nodes upwards, Search must dim at least 95\% of non-target cards; and from 121 nodes upwards, Focus and Collapse must reduce displayed cards by at least 70\%.
+
+\section{Physical Screen-Size Experiment}
+
+The second experiment compares only physical screen size, not resolution. Windows Extended Display Identification Data (EDID) reported physical dimensions of \(34 \times 22\) cm, \(60 \times 33\) cm and \(70 \times 39\) cm for the three screens. The experiment converts every centimetre to 35 logical units, so the three screens correspond to test canvases of \(1190 \times 770\), \(2100 \times 1155\) and \(2450 \times 1365\). Resolution, refresh rate and operating-system scaling are recorded only as device metadata and do not participate in the comparison.
+
+All five behaviour trees and all six display conditions are tested on each screen. Every screen--scale--condition combination is warmed up twice and then formally recorded three times, producing \(3 \times 5 \times 6 \times 3 = 270\) observations in total.
+
+This experiment principally records the proportion of cards that fit on each screen, the ratio of behaviour-tree area to screen area, card area, whether the search target enters the viewport, and the context reduced by Focus and Collapse. It also checks that node positions and execution order remain unchanged.
+
+\section{Plugin and Playable-Game Validation}
+
+Before the display experiments, the plugin itself is first confirmed to operate correctly. Automated tests are divided into four categories: resource and runtime, editor interface, basic game, and complex arena. They cover node execution, Decorators, Actor method calls, creation and connection, saving and reloading, undo and redo, and basic interactions between the player and enemies.
+
+The playable scene also confirms that the 241-node behaviour tree can actually control enemy detection, defence, melee attack, ranged attack, jumping, climbing, search, retreat and healing. This part shows only that the plugin is functionally correct and can be used in a non-trivial game scenario; it is not an independent experiment on the effect of display optimisation.
+
+If a test produces a non-zero exit code, failure message, script error, memory leak, invalid access or program crash, the entire test group is judged to have failed. Only warnings deliberately triggered by a test and producing the expected result are accepted.

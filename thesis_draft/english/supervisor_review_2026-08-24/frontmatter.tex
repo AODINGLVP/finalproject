@@ -1,0 +1,10 @@
+\frontmatter
+\titlepage[crests/officialmono]
+\tableofcontents
+\clearforchapter\listoffigures
+\clearforchapter\listoftables
+
+\frontchapter{Abstract}
+Visual behaviour trees are commonly used to author game-agent decisions, but traditional node--link editors become difficult to inspect as the number of nodes and runtime information increases. This dissertation designs and evaluates a Godot 4.6 editor plugin that combines a complete, executable behaviour-tree system with resettable display methods for large trees. The runtime supports ordered, reactive, random, parallel, repeating and timed control flow, Actor method calls, a typed blackboard, Decorators, and runtime inspection available only in the editor. The display experiment compares only six conditions: Baseline with the complete display, Compact Cards with reduced cards, Optimized Overview combining compact cards with low-detail semantic zoom, Optimized Search highlighting a fixed target, Subtree Focus showing only a specified branch and necessary context, and Context Collapse collapsing selected subtrees.
+
+Evaluation first used automated tests and a playable 241-node behaviour tree to confirm that the experimental platform was correct. The six conditions were then evaluated through repeated paired measurements on deterministic trees ranging from 31 to 364 nodes and on three physically different screen sizes, examining card occupancy, visible context, target location and display-state reset. Results show that Compact Cards and Optimized Overview reduced card occupancy while retaining every node; Optimized Search reliably located and highlighted the target; and Subtree Focus and Context Collapse reduced irrelevant context currently displayed. All methods preserved node positions, tree structure and execution order in testing.

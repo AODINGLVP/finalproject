@@ -1,0 +1,12 @@
+\chapter{Conclusion}
+\label{ch:conclusion}
+
+\section{Summary}
+
+This dissertation implemented a visual behaviour-tree plugin in Godot 4.6 and studied the display problem of large behaviour trees. Godot provides general graph-editing controls but does not provide a complete behaviour-tree editing and execution workflow. Traditional node graphs also occupy a large amount of canvas space as nodes, parameters and debugging information increase.
+
+The final plugin can create, save, load and execute behaviour trees, and supports a blackboard, Decorators, multiple composite-node types, Actions, Conditions, undo, redo and Live Debug. A complex two-dimensional scene uses a 241-node behaviour tree to control enemy detection, defence, melee attack, ranged attack, jumping, climbing, search, retreat, healing and patrol.
+
+Experiments across five tree scales showed that Compact reduced card area by 61.09--61.35\%, Overview reduced it by 90.27--90.34\%, and Search dimmed 96.15--99.67\% of non-target cards. Focus and Collapse also substantially reduced the context currently displayed, and no condition changed saved positions or execution order.
+
+The three-screen experiment showed that complex-tree coverage on the 31.55-inch screen was 2.54 times that on the 15.94-inch screen. The effects of Compact, Overview and Search remained stable across different screens. Overall, the display optimisations improved some objective display and editing-interaction measures for large behaviour trees.
