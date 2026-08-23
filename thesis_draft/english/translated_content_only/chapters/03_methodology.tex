@@ -34,7 +34,7 @@ The experiment records the number of displayed cards, total card area, the amoun
 
 \section{Controlled Multiscale Display Experiment}
 
-The controlled experiment uses an NVIDIA GeForce RTX 5070 Laptop GPU, the Godot 4.6 OpenGL Compatibility renderer, and a fixed \(1600\times900\) test canvas. The experiment contains five node scales and six display conditions. Every scale--condition combination is formally tested 30 times, producing \(5\times6\times30=900\) observations in total.
+The controlled experiment uses an NVIDIA GeForce RTX 5070 Laptop GPU, the Godot 4.6 OpenGL Compatibility renderer, and a fixed \(1600 \times 900\) test canvas. The experiment contains five node scales and six display conditions. Every scale--condition combination is formally tested 30 times, producing \(5 \times 6 \times 30 = 900\) observations in total.
 
 Each group is run three times before formal testing, but these results are not recorded. This warm-up reduces variation caused by first loading and rendering. Formal testing rotates the order of tree scales and display conditions so that one condition is not always executed first or last. Every test starts from the same state: expand every node, clear search, cancel focus, use 100\% zoom, and then apply only the condition currently being tested. Search and Focus use predefined fixed targets to prevent manual selection from affecting the results.
 
@@ -42,9 +42,9 @@ Minimum acceptance criteria were defined before the experiment. Baseline must di
 
 \section{Physical Screen-Size Experiment}
 
-The second experiment compares only physical screen size, not resolution. Windows Extended Display Identification Data (EDID) reported physical dimensions of \(34\times22\) cm, \(60\times33\) cm and \(70\times39\) cm for the three screens. The experiment converts every centimetre to 35 logical units, so the three screens correspond to test canvases of \(1190\times770\), \(2100\times1155\) and \(2450\times1365\). Resolution, refresh rate and operating-system scaling are recorded only as device metadata and do not participate in the comparison.
+The second experiment compares only physical screen size, not resolution. Windows Extended Display Identification Data (EDID) reported physical dimensions of \(34 \times 22\) cm, \(60 \times 33\) cm and \(70 \times 39\) cm for the three screens. The experiment converts every centimetre to 35 logical units, so the three screens correspond to test canvases of \(1190 \times 770\), \(2100 \times 1155\) and \(2450 \times 1365\). Resolution, refresh rate and operating-system scaling are recorded only as device metadata and do not participate in the comparison.
 
-All five behaviour trees and all six display conditions are tested on each screen. Every screen--scale--condition combination is warmed up twice and then formally recorded three times, producing \(3\times5\times6\times3=270\) observations in total.
+All five behaviour trees and all six display conditions are tested on each screen. Every screen--scale--condition combination is warmed up twice and then formally recorded three times, producing \(3 \times 5 \times 6 \times 3 = 270\) observations in total.
 
 This experiment principally records the proportion of cards that fit on each screen, the ratio of behaviour-tree area to screen area, card area, whether the search target enters the viewport, and the context reduced by Focus and Collapse. It also checks that node positions and execution order remain unchanged. The results can explain only geometric display differences produced by different screen sizes and cannot directly demonstrate that a large screen is easier to use.
 
@@ -55,9 +55,3 @@ Before the display experiments, the plugin itself is first confirmed to operate 
 The playable scene also confirms that the 241-node behaviour tree can actually control enemy detection, defence, melee attack, ranged attack, jumping, climbing, search, retreat and healing. This part shows only that the plugin is functionally correct and can be used in a non-trivial game scenario; it is not an independent experiment on the effect of display optimisation.
 
 If a test produces a non-zero exit code, failure message, script error, memory leak, invalid access or program crash, the entire test group is judged to have failed. Only warnings deliberately triggered by a test and producing the expected result are accepted.
-
-\section{Validity and Reproducibility}
-
-The experiments use fixed behaviour trees, fixed targets and identical initial states, while every display function can be disabled independently. This reduces the effect of test order and manual selection on the results. The 900 multiscale observations and 270 screen observations retain raw CSV files, file checksums and test scripts so that they can be checked again.
-
-The study still has clear limitations. Card area, coverage and field count measure the interface display rather than human understanding. Testing was also conducted only on one Windows computer, Godot 4.6, three available screens and one two-dimensional game. The results therefore cannot be generalised directly to every device, every game or every developer.
