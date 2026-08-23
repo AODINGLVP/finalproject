@@ -41,6 +41,7 @@ var runtime_active := false
 var runtime_leaf := false
 var runtime_status := ""
 var manual_dragging := false
+var manual_drag_moved := false
 var compact_mode := false
 var semantic_detail_level := 2
 var search_matches := true
@@ -183,6 +184,7 @@ func _gui_input(event: InputEvent) -> void:
 			accept_event()
 			return
 		if event.pressed and not manual_dragging and node_resource != null:
+			manual_drag_moved = false
 			drag_started.emit(node_resource.id)
 		if not event.pressed and manual_dragging and node_resource != null:
 			drag_finished.emit(node_resource.id)
@@ -201,6 +203,8 @@ func _gui_input(event: InputEvent) -> void:
 		var parent := get_parent()
 		if parent is GraphEdit:
 			zoom = max(0.01, parent.zoom)
+		if not event.relative.is_zero_approx():
+			manual_drag_moved = true
 		position_offset += event.relative / zoom
 		accept_event()
 
@@ -272,7 +276,10 @@ func set_visual_offset(value: Vector2) -> void:
 
 
 func _apply_render_position() -> void:
-	if node_resource != null:
+	# Card contents may resize while the pointer is held (Semantic Zoom, Compact,
+	# or a deferred GraphNode reset). The live pointer position must win over the
+	# deliberately stale resource coordinate until release.
+	if node_resource != null and not manual_dragging:
 		position_offset = node_resource.position + visual_offset - _fisheye_position_compensation()
 
 
