@@ -255,6 +255,13 @@ func sync_rendered_position_to_resource() -> void:
 	_apply_render_position()
 
 
+func capture_rendered_position_for_manual_drag() -> void:
+	# Auto Spacing is a visual-only offset. Once the user picks this card up, its
+	# rendered location becomes the live drag origin while the resource remains
+	# unchanged until mouse release.
+	visual_offset = Vector2.ZERO
+
+
 func get_logical_position() -> Vector2:
 	return position_offset - visual_offset + _fisheye_position_compensation()
 

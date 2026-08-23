@@ -196,6 +196,8 @@ var visible_failure_annotations: Array[Dictionary] = []
 var auto_spacing_targets: Dictionary = {}
 var auto_spacing_signature := ""
 var pending_auto_spacing_anchor_id := -1
+var drag_auto_spacing_base_targets: Dictionary = {}
+var pending_auto_spacing_seed_targets: Dictionary = {}
 var zoom_anchor_candidate_id := -1
 var zoom_anchor_candidate_screen_position := Vector2.ZERO
 var zoom_anchor_candidate_zoom := 1.0
@@ -1363,6 +1365,8 @@ func _rebuild_graph() -> void:
 	auto_spacing_signature = ""
 	auto_spacing_targets.clear()
 	pending_auto_spacing_anchor_id = -1
+	drag_auto_spacing_base_targets.clear()
+	pending_auto_spacing_seed_targets.clear()
 	_refresh_search_results(true)
 	graph_edit.cancel_manual_connection()
 	graph_edit.clear_connections()
@@ -1506,7 +1510,12 @@ func _on_graph_node_position_changed(graph_node: BTGraphNode) -> void:
 	# Resource mutation emits change notifications into the editor. On a large tree,
 	# doing that for every pointer sample is much more expensive than the visual move.
 	# Keep the card responsive and persist the final logical position on release.
-	if not graph_node.manual_dragging:
+	if graph_node.manual_dragging:
+		pending_auto_spacing_anchor_id = graph_node.node_resource.id
+		# Resource coordinates intentionally stay unchanged during a drag, so the
+		# normal cache key cannot observe pointer movement without this invalidation.
+		auto_spacing_signature = ""
+	else:
 		graph_node.sync_to_resource()
 	graph_edit.queue_redraw()
 
@@ -1516,6 +1525,17 @@ func _on_graph_node_drag_started(node_id: int) -> void:
 	if node == null:
 		return
 	_reset_fisheye()
+	var graph_node := graph_edit.get_node_or_null(NodePath(str(node_id))) as BTGraphNode
+	drag_auto_spacing_base_targets = _capture_current_auto_spacing_offsets()
+	if graph_node != null:
+		# Keep the card exactly where it was rendered when grabbed. The current
+		# temporary offset becomes the live drag origin, not a resource write.
+		graph_node.capture_rendered_position_for_manual_drag()
+		drag_auto_spacing_base_targets[node_id] = Vector2.ZERO
+		auto_spacing_targets = drag_auto_spacing_base_targets.duplicate(true)
+	pending_auto_spacing_seed_targets.clear()
+	pending_auto_spacing_anchor_id = node_id
+	auto_spacing_signature = ""
 	drag_history_snapshot = null
 	drag_history_node_id = node_id
 	drag_history_position = node.position
@@ -1546,6 +1566,10 @@ func _on_graph_node_drag_finished(node_id: int) -> void:
 		_update_history_buttons()
 	drag_history_snapshot = null
 	drag_history_node_id = -1
+	# The live solution already represents the released geometry. Reuse it for
+	# the release-time verification instead of restarting a large-tree solve.
+	pending_auto_spacing_seed_targets = auto_spacing_targets.duplicate(true)
+	drag_auto_spacing_base_targets.clear()
 	# BTGraphNode emits drag_finished immediately before it clears manual_dragging.
 	# Defer one frame so local collision avoidance sees the released position.
 	auto_spacing_signature = ""
@@ -2038,24 +2062,33 @@ func _refresh_auto_spacing_deferred() -> void:
 func _update_auto_spacing(delta: float, immediate := false) -> void:
 	if not is_instance_valid(graph_edit):
 		return
-	for child in graph_edit.get_children():
-		if child is BTGraphNode and child.manual_dragging:
-			return
+	var dragged_node := _active_dragged_graph_node()
+	var dragged_node_id := dragged_node.node_resource.id if dragged_node != null and dragged_node.node_resource != null else -1
 	# Auto Spacing is an independent display feature. Low-detail Semantic Zoom
 	# changes card contents, but it must never disable collision prevention.
 	var enabled := _feature_enabled("auto_spacing") or fisheye_focus_node_id != -1
 	var signature := _auto_spacing_layout_signature() if enabled else "disabled"
 	if signature != auto_spacing_signature:
 		auto_spacing_signature = signature
-		var anchor_node_id := fisheye_focus_node_id if fisheye_focus_node_id != -1 else pending_auto_spacing_anchor_id
-		auto_spacing_targets = _solve_auto_spacing_offsets(anchor_node_id) if enabled else {}
+		var anchor_node_id := dragged_node_id if dragged_node_id != -1 else (fisheye_focus_node_id if fisheye_focus_node_id != -1 else pending_auto_spacing_anchor_id)
+		var seed_targets: Dictionary = {}
+		if dragged_node_id != -1:
+			seed_targets = drag_auto_spacing_base_targets
+		elif not pending_auto_spacing_seed_targets.is_empty():
+			seed_targets = pending_auto_spacing_seed_targets
+		auto_spacing_targets = _solve_auto_spacing_offsets(anchor_node_id, seed_targets) if enabled else {}
 		pending_auto_spacing_anchor_id = -1
-	var blend := 1.0 if immediate or delta <= 0.0 else clampf(delta * AUTO_SPACING_LERP_SPEED, 0.0, 1.0)
+		pending_auto_spacing_seed_targets.clear()
+	# Live avoidance must finish in the same rendered frame as the pointer move;
+	# interpolating here would knowingly display an overlapping intermediate state.
+	var blend := 1.0 if immediate or delta <= 0.0 or dragged_node_id != -1 else clampf(delta * AUTO_SPACING_LERP_SPEED, 0.0, 1.0)
 	var changed := false
 	for child in graph_edit.get_children():
 		if not (child is BTGraphNode):
 			continue
 		var graph_node: BTGraphNode = child
+		if graph_node == dragged_node:
+			continue
 		var target: Vector2 = auto_spacing_targets.get(graph_node.node_resource.id, Vector2.ZERO)
 		var next_offset := graph_node.visual_offset.lerp(target, blend)
 		if next_offset.distance_squared_to(target) <= AUTO_SPACING_EPSILON * AUTO_SPACING_EPSILON:
@@ -2071,11 +2104,12 @@ func _auto_spacing_layout_signature() -> String:
 	var values: Array[String] = [str(semantic_detail_level), "focus:%d" % fisheye_focus_node_id]
 	for child in graph_edit.get_children():
 		if child is BTGraphNode and child.node_resource != null:
+			var layout_position := child.get_logical_position() if child.manual_dragging else child.node_resource.position
 			values.append("%d:%d:%.3f:%.3f:%.3f:%.3f" % [
 				child.node_resource.id,
 				child.node_resource.parent_id,
-				child.node_resource.position.x,
-				child.node_resource.position.y,
+				layout_position.x,
+				layout_position.y,
 				child.size.x,
 				child.size.y,
 			])
@@ -2083,7 +2117,7 @@ func _auto_spacing_layout_signature() -> String:
 	return "|".join(values)
 
 
-func _solve_auto_spacing_offsets(anchor_node_id := -1) -> Dictionary:
+func _solve_auto_spacing_offsets(anchor_node_id := -1, initial_offsets: Dictionary = {}) -> Dictionary:
 	var nodes: Array[BTGraphNode] = []
 	var nodes_by_id: Dictionary = {}
 	var base_positions: Dictionary = {}
@@ -2100,15 +2134,18 @@ func _solve_auto_spacing_offsets(anchor_node_id := -1) -> Dictionary:
 			base_positions[child.node_resource.id] = child.position_offset - child.visual_offset
 	var offsets: Dictionary = {}
 	for graph_node in nodes:
-		offsets[graph_node.node_resource.id] = Vector2.ZERO
+		var node_id: int = graph_node.node_resource.id
+		offsets[node_id] = Vector2(initial_offsets.get(node_id, Vector2.ZERO))
 	var anchor_influence: Dictionary = {}
 	if nodes_by_id.has(anchor_node_id):
+		offsets[anchor_node_id] = Vector2.ZERO
 		anchor_influence[anchor_node_id] = 0
 
 	# Old or damaged resources can contain many cards at the exact same point.
 	# There is no relative layout to preserve in such a group, so seed only that
 	# group into a compact temporary grid before applying normal local avoidance.
-	_seed_identical_auto_spacing_groups(nodes, base_positions, offsets, source_order, anchor_node_id)
+	if initial_offsets.is_empty():
+		_seed_identical_auto_spacing_groups(nodes, base_positions, offsets, source_order, anchor_node_id)
 
 	for _iteration in range(AUTO_SPACING_ITERATIONS):
 		var collision_pairs := _auto_spacing_collision_pairs(nodes, base_positions, offsets, source_order)
@@ -2311,10 +2348,27 @@ func _reset_auto_spacing() -> void:
 	auto_spacing_targets.clear()
 	auto_spacing_signature = ""
 	pending_auto_spacing_anchor_id = -1
+	drag_auto_spacing_base_targets.clear()
+	pending_auto_spacing_seed_targets.clear()
 	for child in graph_edit.get_children():
 		if child is BTGraphNode:
 			child.set_visual_offset(Vector2.ZERO)
 	graph_edit.queue_redraw()
+
+
+func _active_dragged_graph_node() -> BTGraphNode:
+	for child in graph_edit.get_children() if is_instance_valid(graph_edit) else []:
+		if child is BTGraphNode and child.manual_dragging:
+			return child
+	return null
+
+
+func _capture_current_auto_spacing_offsets() -> Dictionary:
+	var result: Dictionary = {}
+	for child in graph_edit.get_children() if is_instance_valid(graph_edit) else []:
+		if child is BTGraphNode and child.node_resource != null:
+			result[child.node_resource.id] = child.visual_offset
+	return result
 
 
 func _on_search_changed(text: String) -> void:
