@@ -1526,7 +1526,7 @@ func _on_graph_node_drag_started(node_id: int) -> void:
 		return
 	_reset_fisheye()
 	var graph_node := graph_edit.get_node_or_null(NodePath(str(node_id))) as BTGraphNode
-	drag_auto_spacing_base_targets = _capture_current_auto_spacing_offsets()
+	drag_auto_spacing_base_targets = _build_drag_auto_spacing_baseline(node_id)
 	if graph_node != null:
 		# Keep the card exactly where it was rendered when grabbed. The current
 		# temporary offset becomes the live drag origin, not a resource write.
@@ -2369,6 +2369,49 @@ func _capture_current_auto_spacing_offsets() -> Dictionary:
 		if child is BTGraphNode and child.node_resource != null:
 			result[child.node_resource.id] = child.visual_offset
 	return result
+
+
+func _build_drag_auto_spacing_baseline(dragged_node_id: int) -> Dictionary:
+	var nodes: Array[BTGraphNode] = []
+	var base_positions: Dictionary = {}
+	var offsets := _capture_current_auto_spacing_offsets()
+	for child in graph_edit.get_children() if is_instance_valid(graph_edit) else []:
+		if child is BTGraphNode and child.node_resource != null:
+			nodes.append(child)
+			base_positions[child.node_resource.id] = child.position_offset - child.visual_offset
+	offsets[dragged_node_id] = Vector2.ZERO
+	# Remove offsets that were needed only because of the card now being dragged.
+	# Testing a zero offset against the still-valid layout is much cheaper than
+	# restarting the 32-iteration global solver on every pointer-down.
+	for _pass_index in range(3):
+		var changed := false
+		for graph_node in nodes:
+			var node_id: int = graph_node.node_resource.id
+			if node_id == dragged_node_id:
+				continue
+			var previous_offset := Vector2(offsets.get(node_id, Vector2.ZERO))
+			if previous_offset.is_zero_approx():
+				continue
+			offsets[node_id] = Vector2.ZERO
+			if _auto_spacing_node_collides(graph_node, nodes, base_positions, offsets, dragged_node_id):
+				offsets[node_id] = previous_offset
+			else:
+				changed = true
+		if not changed:
+			break
+	return offsets
+
+
+func _auto_spacing_node_collides(graph_node: BTGraphNode, nodes: Array[BTGraphNode], base_positions: Dictionary, offsets: Dictionary, excluded_node_id: int) -> bool:
+	var node_id: int = graph_node.node_resource.id
+	var candidate_rect := _auto_spacing_rect(graph_node, base_positions, offsets, true)
+	for other in nodes:
+		var other_id: int = other.node_resource.id
+		if other_id == node_id or other_id == excluded_node_id:
+			continue
+		if candidate_rect.intersects(_auto_spacing_rect(other, base_positions, offsets, true)):
+			return true
+	return false
 
 
 func _on_search_changed(text: String) -> void:
