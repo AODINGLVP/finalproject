@@ -106,7 +106,7 @@ for ($seriesIndex = 0; $seriesIndex -lt $series.Count; $seriesIndex++) {
     $brush.Dispose()
 }
 
-$note = 'All 30 size-condition groups had 0 card-overlap pairs. Source: multiscale_display_trends.csv.'
+$note = 'Source: multiscale_display_trends.csv.'
 $noteSize = $graphics.MeasureString($note, $noteFont)
 $graphics.DrawString($note, $noteFont, $greyBrush, ($width - $noteSize.Width) / 2.0, $height - 28.0)
 
