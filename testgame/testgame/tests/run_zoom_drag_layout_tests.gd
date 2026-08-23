@@ -25,6 +25,8 @@ func _run() -> void:
 	await _test_complete_zoom_range(view)
 	await _test_playable_tree_zoom_sweep(view)
 	await _test_live_drag_avoidance(view)
+	await _test_drag_across_display_density_change(view)
+	await _test_wheel_anchor_disabled_during_drag(view)
 	await _test_drag_previously_displaced_card(view)
 	await _test_large_live_drag_latency(view)
 	await _test_complex_tree_scales(view)
@@ -202,28 +204,94 @@ func _test_playable_tree_zoom_sweep(view: BTEditorView) -> void:
 
 
 func _test_live_drag_avoidance(view: BTEditorView) -> void:
-	for zoom_value in [view.graph_edit.zoom_min, 1.0, view.graph_edit.zoom_max]:
+	var cases: Array[Array] = [
+		[view.graph_edit.zoom_min, false],
+		[0.619, false],
+		[0.620, false],
+		[0.879, false],
+		[0.880, false],
+		[view.graph_edit.zoom_max, false],
+		[view.graph_edit.zoom_max, true],
+	]
+	for case in cases:
+		var zoom_value := clampf(float(case[0]), view.graph_edit.zoom_min, view.graph_edit.zoom_max)
+		var compact_cards := bool(case[1])
 		var tree := _make_local_avoidance_tree()
 		var structure_before := _structure_signature(tree)
 		var order_before := _execution_order_signature(tree)
 		var resource_before := _resource_positions(tree)
-		await _prepare_view(view, tree, zoom_value, true, false)
+		var other_resource_before := _resource_positions_except(tree, 4)
+		await _prepare_view(view, tree, zoom_value, true, compact_cards)
 		var drag_state := _begin_graph_node_drag(view, 4)
-		_expect(not drag_state.is_empty(), "live drag begins at zoom %.3f" % zoom_value)
+		_expect(not drag_state.is_empty(), "live drag begins at zoom %.3f compact=%s" % [zoom_value, compact_cards])
 		if drag_state.is_empty():
 			continue
+		var final_target := Vector2(200.0, 550.0)
 		for target in [Vector2(100.0, 550.0), Vector2(220.0, 550.0), Vector2(280.0, 550.0), Vector2(330.0, 550.0), Vector2(420.0, 550.0), Vector2(200.0, 550.0)]:
 			_move_graph_node_drag(view, drag_state, target)
 			await process_frame
-			var label := "live drag zoom %.3f at %s" % [zoom_value, target]
+			var label := "live drag zoom %.3f compact=%s at %s" % [zoom_value, compact_cards, target]
 			_expect(_graph_node(view, 4).manual_dragging, "%s remains in the active pointer drag" % label)
 			_expect(_graph_node(view, 4).position_offset.distance_to(target) <= POSITION_EPSILON, "%s keeps the dragged card under the pointer" % label)
 			_expect(_rendered_overlaps(view).is_empty() and _screen_overlaps(view).is_empty(), "%s moves colliding neighbours before pointer release" % label)
 			_expect(_resource_positions_equal(tree, resource_before), "%s defers every resource write until pointer release" % label)
 		_end_graph_node_drag(drag_state)
 		await _wait_frames(SETTLE_FRAMES)
-		_expect(_rendered_overlaps(view).is_empty() and _screen_overlaps(view).is_empty(), "live drag release at zoom %.3f remains overlap-free" % zoom_value)
-		_expect(_structure_signature(tree) == structure_before and _execution_order_signature(tree) == order_before, "live drag at zoom %.3f preserves structure and execution order" % zoom_value)
+		var release_label := "live drag release at zoom %.3f compact=%s" % [zoom_value, compact_cards]
+		_expect(tree.find_node(4).position.distance_to(final_target) <= POSITION_EPSILON, "%s stores the visible release point" % release_label)
+		_expect(_resource_positions_except_equal(tree, 4, other_resource_before), "%s leaves every other saved position unchanged" % release_label)
+		_expect(_rendered_overlaps(view).is_empty() and _screen_overlaps(view).is_empty(), "%s remains overlap-free" % release_label)
+		_expect(tree.validate_tree().is_empty() and _structure_signature(tree) == structure_before and _execution_order_signature(tree) == order_before, "%s preserves structure and execution order" % release_label)
+		var stable_positions := _render_positions(view)
+		await _wait_frames(3)
+		_expect(_render_positions_equal(view, stable_positions), "%s reaches a stable layout without jitter" % release_label)
+
+
+func _test_drag_across_display_density_change(view: BTEditorView) -> void:
+	var tree := _make_density_transition_tree()
+	var resources_before := _resource_positions(tree)
+	var structure_before := _structure_signature(tree)
+	var order_before := _execution_order_signature(tree)
+	await _prepare_view(view, tree, view.graph_edit.zoom_min, true, false)
+	_expect(_rendered_overlaps(view).is_empty(), "density-transition fixture starts overlap-free at overview zoom")
+	var drag_state := _begin_graph_node_drag(view, 2)
+	_expect(not drag_state.is_empty(), "click-hold starts before a semantic detail transition")
+	if drag_state.is_empty():
+		return
+	view.graph_edit.zoom = view.graph_edit.zoom_max
+	view._update_semantic_zoom()
+	await _wait_frames(SETTLE_FRAMES)
+	_expect(_graph_node(view, 2).manual_dragging, "semantic detail transition keeps the pointer drag active")
+	_expect(_rendered_overlaps(view).is_empty() and _screen_overlaps(view).is_empty(), "semantic detail transition reflows expanded cards before release")
+	_expect(_resource_positions_equal(tree, resources_before), "semantic detail transition performs no resource writes while held")
+	_end_graph_node_drag(drag_state)
+	await _wait_frames(SETTLE_FRAMES)
+	_expect(_rendered_overlaps(view).is_empty() and _screen_overlaps(view).is_empty(), "click release retains collision-free spacing for the new detail level")
+	_expect(_resource_positions_equal(tree, resources_before), "click without movement changes no saved position across a detail transition")
+	_expect(tree.validate_tree().is_empty() and _structure_signature(tree) == structure_before and _execution_order_signature(tree) == order_before, "detail transition during a click-hold preserves tree semantics")
+
+
+func _test_wheel_anchor_disabled_during_drag(view: BTEditorView) -> void:
+	var tree := _make_local_avoidance_tree()
+	var resources_before := _resource_positions(tree)
+	await _prepare_view(view, tree, 0.50, true, false)
+	view._set_feature_enabled("zoom_anchor", true, false)
+	var drag_state := _begin_graph_node_drag(view, 4)
+	_expect(not drag_state.is_empty(), "wheel-during-drag fixture starts a real pointer drag")
+	if drag_state.is_empty():
+		return
+	view._clear_zoom_layout_anchor()
+	view._on_graph_view_wheel_scrolled(view.graph_edit.size * 0.5)
+	_expect(view.zoom_anchor_candidate_id == -1 and view.zoom_layout_anchor_id == -1, "wheel input does not create a competing viewport anchor during node drag")
+	view.graph_edit.zoom = 1.0
+	var scroll_after_zoom := view.graph_edit.scroll_offset
+	view._prepare_zoom_layout_anchor()
+	view._restore_zoom_layout_anchor()
+	_expect(view.graph_edit.scroll_offset.distance_to(scroll_after_zoom) <= POSITION_EPSILON, "drag-time wheel input does not move the canvas after zoom is applied")
+	_end_graph_node_drag(drag_state)
+	await _wait_frames(SETTLE_FRAMES)
+	_expect(_resource_positions_equal(tree, resources_before), "wheel zoom during click-hold changes no saved position")
+	_expect(_rendered_overlaps(view).is_empty() and _screen_overlaps(view).is_empty(), "wheel zoom during click-hold leaves an overlap-free layout")
 
 
 func _test_drag_previously_displaced_card(view: BTEditorView) -> void:
@@ -616,6 +684,18 @@ func _make_drag_tree() -> BTTreeResource:
 		_make_node(3, BTNodeResource.TYPE_ACTION, 2, Vector2(0.0, 520.0)),
 		_make_node(4, BTNodeResource.TYPE_ACTION, 2, Vector2(360.0, 520.0)),
 		_make_node(5, BTNodeResource.TYPE_ACTION, 2, Vector2(720.0, 520.0)),
+	]
+	return tree
+
+
+func _make_density_transition_tree() -> BTTreeResource:
+	var tree := BTTreeResource.new()
+	tree.tree_name = "Held Drag Density Transition Fixture"
+	tree.root_node_id = 1
+	tree.nodes = [
+		_make_node(1, BTNodeResource.TYPE_ROOT, -1, Vector2(0.0, 0.0)),
+		_make_node(2, BTNodeResource.TYPE_SEQUENCE, 1, Vector2(0.0, 180.0)),
+		_make_node(3, BTNodeResource.TYPE_ACTION, 2, Vector2(0.0, 360.0)),
 	]
 	return tree
 
