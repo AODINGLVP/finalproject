@@ -38,7 +38,7 @@ const LAYOUT_MIN_VERTICAL_CLEARANCE := 60.0
 const OVERVIEW_LAYOUT_HORIZONTAL_GAP := BTGraphNode.NORMAL_CARD_SIZE.x + 24.0
 const OVERVIEW_LAYOUT_VERTICAL_GAP := BTGraphNode.NORMAL_CARD_SIZE.y + 24.0
 const AUTO_SPACING_GAP := 24.0
-const AUTO_SPACING_ITERATIONS := 64
+const AUTO_SPACING_ITERATIONS := 256
 const AUTO_SPACING_SEPARATION_EPSILON := 0.05
 const AUTO_SPACING_IDENTICAL_GROUP_MIN_SIZE := 5
 const AUTO_SPACING_POSITION_BUCKET := 0.05
@@ -2120,12 +2120,12 @@ func _solve_auto_spacing_offsets(anchor_node_id := -1) -> Dictionary:
 			var overlap_y := minf(left_rect.end.y, right_rect.end.y) - maxf(left_rect.position.y, right_rect.position.y)
 			if overlap_x <= 0.0 or overlap_y <= 0.0:
 				continue
-			var axis := Vector2.RIGHT if overlap_x <= overlap_y else Vector2.DOWN
-			var penetration := overlap_x if overlap_x <= overlap_y else overlap_y
 			var left_id: int = left.node_resource.id
 			var right_id: int = right.node_resource.id
 			var left_base_center := Vector2(base_positions[left_id]) + left.size * 0.5
 			var right_base_center := Vector2(base_positions[right_id]) + right.size * 0.5
+			var axis := Vector2.RIGHT if overlap_x <= overlap_y else Vector2.DOWN
+			var penetration := overlap_x if overlap_x <= overlap_y else overlap_y
 			var left_axis_value := left_base_center.x if axis == Vector2.RIGHT else left_base_center.y
 			var right_axis_value := right_base_center.x if axis == Vector2.RIGHT else right_base_center.y
 			var left_precedes_right := left_axis_value < right_axis_value
