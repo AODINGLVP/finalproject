@@ -1,32 +1,21 @@
-\chapter{功能参考}
+\chapter{六种实验条件参考}
 \label{app:features}
 
 \small
-\begin{longtable}{p{0.30\textwidth}p{0.10\textwidth}p{0.45\textwidth}}
-\caption{最终编辑器的独立显示功能。}\\
-\toprule 功能 & 默认 & 作用\\ \midrule\endfirsthead
-\toprule 功能 & 默认 & 作用\\ \midrule\endhead
-Fisheye / Focus+Context & 开 & 鼠标邻域最多放大 1.20x。\\
-Subtree Collapse / Expand & 开 & 隐藏后代并显示数量与两层摘要。\\
-Compact Mode & 关 & 仅保留类型编码和短标题。\\
-Active Path Highlight & 开 & 强调当前运行路径。\\
-Non-active Branch Dimming & 关 & Live Debug 时降低非活动分支 Alpha。\\
-Multi-column Layout & 关 & 平衡宽同级分支并保持顺序提示。\\
-Enhanced Minimap & 开 & 230×150 概览和视口标记。\\
-Semantic Zoom & 关 & 不改变图几何地切换信息细节。\\
-Path Summary View & 开 & 显示 Actor、状态、深度和有序路径。\\
-Decorator Condition Badges & 开 & 在 Owner 卡片总结条件。\\
-Search + Highlight & 开 & 搜索节点/Decorator 并淡化不匹配项。\\
-Orthogonal Edges & 关 & 使用直角连线。\\
-Edge Bundling & 关 & 密集区域共享主干。\\
-Stable Incremental Layout & 关 & 布局时复用无冲突位置。\\
-Breadcrumb Navigation & 开 & 显示并导航祖先。\\
-Failure Reason Annotation & 开 & 显示节点失败标签与摘要。\\
-Shape / Icon Type Encoding & 开 & 使用形状和图标补充颜色。\\
-Accessibility Palette & 关 & 色盲安全配色与键盘导航。\\
-Single Connection Rendering & 开 & 显示一条可命中的自定义持久线。\\
+\begin{longtable}{p{0.24\textwidth}p{0.30\textwidth}p{0.31\textwidth}}
+\caption{论文使用的六种显示实验条件。}\\
+\toprule 条件 & 开关与输入 & 实际显示效果\\ \midrule\endfirsthead
+\toprule 条件 & 开关与输入 & 实际显示效果\\ \midrule\endhead
+Baseline & 关闭实验优化，展开全部节点，清空搜索和聚焦，缩放 100\%。 & 完整卡片和全部分支。\\
+Compact Cards & 只开启 Compact。 & 全部节点保留，卡片只显示类型和短标题。\\
+Optimized Overview & 开启 Compact 与 Semantic Zoom，缩放 50\%。 & 全部节点保留，使用最低细节查看整体结构。\\
+Optimized Search & 在 Overview 上搜索固定唯一标题。 & 目标进入视口并保持显著，其他卡片淡化。\\
+Subtree Focus & 开启 Compact，设置固定 Focus Root。 & 只显示指定分支及必要上下文。\\
+Context Collapse & 开启 Compact，折叠固定目标路径之外的指定分支。 & 保留折叠根与摘要，隐藏其后代卡片。\\
 \bottomrule
 \end{longtable}
+
+六种条件的详细步骤和测量目的见表\ref{tab:displayconditions}。插件中的其他显示功能不属于本论文实验条件。
 
 \chapter{复现与证据索引}
 \label{app:evidence}
@@ -42,9 +31,6 @@ Single Connection Rendering & 开 & 显示一条可命中的自定义持久线�
     \item[多规模汇总：] \path{testgame/testgame/test_results/multiscale_display_summary.csv} 与 \path{multiscale_drag_summary.csv}
     \item[分析与报告：] \path{research/display_optimization/analyze_multiscale_experiment.py} 与 \path{multiscale_experiment_results.md}
     \item[视觉截图：] \path{testgame/testgame/test_results/visual/}
-    \item[人体实验协议：] \path{research/display_optimization/human_comparison_study_protocol.md}
-    \item[人体实验工作簿：] \path{research/display_optimization/behavior_tree_human_comparison_study.xlsx}
-    \item[人体实验分析：] \path{research/display_optimization/analyze_human_study_results.py}
     \item[可玩树原始数据：] \path{testgame/testgame/test_results/complex_display_experiment_raw.csv}
     \item[物理屏幕证据：] 实验根目录为 \path{research/display_optimization/}\ \path{physical_screen_size_experiment/}；其中 \path{data/2026-08-23_three_displays/} Session 包含 \path{combined_raw.csv}、\path{screen_size_comparison.csv} 与 \path{report_zh.md}。
     \item[发布包：] \path{dist/behavior-tree-editor-0.9.0.zip}
@@ -52,11 +38,6 @@ Single Connection Rendering & 开 & 显示一条可命中的自定义持久线�
 
 真实视觉回归必须使用 \texttt{--rendering-method gl\_compatibility}，不能使用 Dummy Headless，因为 Dummy 无法提供所需 SubViewport 纹理。
 
-\chapter{可选未来参与者实验}
-\label{app:study}
-
-协议在可玩 241 节点树上包含六种显示条件和每种三个任务。参与者将先完成三项标准化练习，再进行 18 个平衡正式试验。六组 Action/路径目标和六个 Decorator 目标与条件顺序共同平衡，使 12 名参与者中每个方法--目标组合恰好出现两次。工作簿包含 216 个空行，记录上限完成时间、误选、Zoom、Pan、成功率、可读性和认知负荷。它仅用于可选的未来构念验证，不是当前论文结果来源；使用前必须获得所需伦理许可并与导师确认流程。
-
 \chapter{初稿完成清单}
 
-正式提交前，作者应：替换身份与导师占位符；按学校政策修改声明并如实说明 AI 协助；在 Tabula 核实截止时间和词数规则；与导师确认可选参与者协议是否保留为未来材料；请导师审阅文献、研究问题和证据边界；按院系要求执行 Turnitin；用模板编译并逐页检查；加入最终词数和要求的仓库/归档信息。
+正式提交前，作者应：替换身份与导师占位符；按学校政策修改声明并如实说明 AI 协助；在 Tabula 核实截止时间和词数规则；请导师审阅文献、研究问题和证据边界；按院系要求执行 Turnitin；用模板编译并逐页检查；加入最终词数和要求的仓库/归档信息。

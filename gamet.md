@@ -12,17 +12,16 @@
 
 ## 研究对象
 
-实验比较优化前的 Baseline 与优化后的多种显示方式，包括：
+实验只比较以下六种条件。每次实验开始前先展开全部节点、清空搜索、取消聚焦、将缩放恢复到 100%，并关闭本实验涉及的显示优化，然后执行当前条件的操作。
 
-- Compact Cards；
-- Semantic Zoom 与 Optimized Overview；
-- Fisheye 焦点与上下文；
-- Subtree Collapse 与 Subtree Focus；
-- Search 定位与非目标淡化；
-- Minimap、Fit-to-view、Breadcrumb 与多列布局；
-- Active Path、Branch Dimming 和失败原因等运行时检查显示。
+1. **Baseline**：不打开主要显示优化，显示完整卡片和全部分支，作为共同参照。
+2. **Compact Cards**：只开启 Compact。所有节点仍然显示，但卡片只保留类型标识和短标题。
+3. **Optimized Overview**：同时开启 Compact 与 Semantic Zoom，将画布缩放到 50%，以低细节卡片查看全局结构。
+4. **Optimized Search**：先进入 Optimized Overview，再搜索预先固定且唯一的节点标题。目标进入视口并保持显著，其他节点淡化。
+5. **Subtree Focus**：开启 Compact，选择预先固定的分支作为 Focus Root，只显示该分支及必要上下文。
+6. **Context Collapse**：开启 Compact，保留通向固定目标的路径，折叠路径外的指定子树；折叠根仍显示，其后代由摘要代替。
 
-每种优化必须可以独立开启和关闭，并能安全恢复到基线显示。比较过程中不得改变行为树资源结构、节点保存位置、父子关系和同级从左到右的执行顺序。
+上述条件必须可以安全恢复到 Baseline。比较过程中不得改变行为树资源结构、节点保存位置、父子关系和同级从左到右的执行顺序。插件中的其他显示功能不属于本论文实验，也不参与结果比较。
 
 ## 实验变量
 
@@ -46,7 +45,6 @@
 - 节点重叠数量与最小父子间距；
 - Search 淡化的非目标节点比例和目标是否进入视口；
 - Focus、Collapse 后保留的上下文数量；
-- Minimap 对整棵树的覆盖情况；
 - 固定拖拽路径的处理时间、最终位置同步和执行顺序是否保持；
 - 真实 GPU 截图中的文字裁切、连线、端口、缩放残留和焦点位置。
 
