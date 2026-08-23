@@ -6,9 +6,12 @@
 \addvspace {10pt}
 \addvspace {10pt}
 \addvspace {10pt}
-\contentsline {figure}{\numberline {4.1}{\ignorespaces Godot 编辑器、行为树资源、Runner 与 Actor 之间的插件架构和数据流。}}{10}{figure.4.1}%
-\contentsline {figure}{\numberline {4.2}{\ignorespaces 仅位于编辑器中的活动路径和失败原因显示。}}{12}{figure.4.2}%
-\contentsline {figure}{\numberline {4.3}{\ignorespaces 同一行为树的完整细节基线和紧凑显示。}}{13}{figure.4.3}%
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Godot 编辑器、行为树资源、Runner 与 Actor 之间的插件架构和数据流。}}{9}{figure.4.1}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces 仅位于编辑器中的活动路径和失败原因显示。}}{11}{figure.4.2}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces 同一行为树的完整细节基线和紧凑显示。}}{12}{figure.4.3}%
+\contentsline {figure}{\numberline {4.4}{\ignorespaces 局部放大和结构裁剪的两种实现。}}{12}{figure.4.4}%
+\contentsline {figure}{\numberline {4.5}{\ignorespaces 复杂树中的小地图、路径摘要、导航控件和自动布局。}}{13}{figure.4.5}%
+\contentsline {figure}{\numberline {4.6}{\ignorespaces 连线组织和运行状态表示。}}{14}{figure.4.6}%
 \addvspace {10pt}
 \contentsline {figure}{\numberline {5.1}{\ignorespaces 五种受控规模下的密度、显著性和上下文降低。}}{16}{figure.5.1}%
 \addvspace {10pt}
