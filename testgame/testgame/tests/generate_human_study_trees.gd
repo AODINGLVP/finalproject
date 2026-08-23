@@ -5,6 +5,10 @@ const BTTreeResource = preload("res://addons/behavior_tree_editor/bt_tree_resour
 
 const TREE_SIZES := [121, 364]
 const OUTPUT_PATTERN := "res://behavior_trees/human_study_tree_%d.tres"
+const CARD_SIZE := Vector2(250.0, 150.0)
+const LAYOUT_START := Vector2(120.0, 100.0)
+const LAYOUT_HORIZONTAL_GAP := 80.0
+const LAYOUT_VERTICAL_STEP := 260.0
 
 var failures := 0
 
@@ -36,7 +40,9 @@ func _generate_save_and_verify(node_count: int) -> void:
 	_check(target_action != null and target_action.title == "STUDY_TARGET_ACTION", "%s has target Action #%d" % [output_path, target_action_id])
 	_check(target_action != null and target_action.parameters.get("action_name", "") == "study_target_action", "%s target Action has a stable method" % output_path)
 	_check(target_decorator != null and target_decorator.decorator_parent_id == target_action_id, "%s has target Decorator #%d" % [output_path, node_count])
-	_check(target_decorator != null and target_decorator.parameters.get("key", "") == "study_target_visible", "%s target Decorator has a stable blackboard key" % output_path)
+	_check(target_decorator != null and target_decorator.parameters.get("blackboard_key", "") == "study_target_visible", "%s target Decorator has a stable blackboard key" % output_path)
+	_check(_saved_layout_overlaps(loaded) == 0, "%s has zero saved card overlaps" % output_path)
+	_check(_saved_card_positions_unique(loaded), "%s has distinct saved card coordinates" % output_path)
 
 
 func _generate_tree(node_count: int) -> BTTreeResource:
@@ -80,12 +86,82 @@ func _generate_tree(node_count: int) -> BTTreeResource:
 	decorator.description = "Edit the comparison value from true to false during the study task."
 	decorator.parameters = {
 		"mode": "blackboard",
-		"key": "study_target_visible",
+		"blackboard_key": "study_target_visible",
 		"operator": "equals",
 		"value": true,
 	}
 	tree.nodes.append(decorator)
+	_assign_saved_layout(tree)
 	return tree
+
+
+func _assign_saved_layout(tree: BTTreeResource) -> void:
+	var root_node := tree.find_node(tree.root_node_id)
+	if root_node == null:
+		return
+	var subtree_widths: Dictionary = {}
+	_measure_subtree_width(tree, root_node, subtree_widths)
+	_place_subtree(tree, root_node, 0, LAYOUT_START.x, subtree_widths)
+	for node in tree.nodes:
+		if node == null or node.decorator_parent_id == -1:
+			continue
+		var owner := tree.find_node(node.decorator_parent_id)
+		if owner != null:
+			node.position = owner.position
+
+
+func _measure_subtree_width(tree: BTTreeResource, node: BTNodeResource, widths: Dictionary) -> float:
+	var minimum_width := CARD_SIZE.x + LAYOUT_HORIZONTAL_GAP
+	var children := tree.get_children_of(node.id)
+	if children.is_empty():
+		widths[node.id] = minimum_width
+		return minimum_width
+	var children_width := 0.0
+	for child in children:
+		children_width += _measure_subtree_width(tree, child, widths)
+	var result := maxf(minimum_width, children_width)
+	widths[node.id] = result
+	return result
+
+
+func _place_subtree(tree: BTTreeResource, node: BTNodeResource, depth: int, left: float, widths: Dictionary) -> void:
+	var width := float(widths.get(node.id, CARD_SIZE.x + LAYOUT_HORIZONTAL_GAP))
+	node.position = Vector2(left + (width - CARD_SIZE.x) * 0.5, LAYOUT_START.y + float(depth) * LAYOUT_VERTICAL_STEP)
+	var children := tree.get_children_of(node.id)
+	if children.is_empty():
+		return
+	var children_width := 0.0
+	for child in children:
+		children_width += float(widths.get(child.id, CARD_SIZE.x + LAYOUT_HORIZONTAL_GAP))
+	var child_left := left + (width - children_width) * 0.5
+	for child in children:
+		_place_subtree(tree, child, depth + 1, child_left, widths)
+		child_left += float(widths.get(child.id, CARD_SIZE.x + LAYOUT_HORIZONTAL_GAP))
+
+
+func _saved_layout_overlaps(tree: BTTreeResource) -> int:
+	var cards: Array[BTNodeResource] = []
+	for node in tree.nodes:
+		if node != null and node.decorator_parent_id == -1:
+			cards.append(node)
+	var overlaps := 0
+	for left_index in range(cards.size()):
+		for right_index in range(left_index + 1, cards.size()):
+			if Rect2(cards[left_index].position, CARD_SIZE).intersects(Rect2(cards[right_index].position, CARD_SIZE)):
+				overlaps += 1
+	return overlaps
+
+
+func _saved_card_positions_unique(tree: BTTreeResource) -> bool:
+	var positions := {}
+	for node in tree.nodes:
+		if node == null or node.decorator_parent_id != -1:
+			continue
+		var key := "%.3f,%.3f" % [node.position.x, node.position.y]
+		if positions.has(key):
+			return false
+		positions[key] = true
+	return true
 
 
 func _node(id: int, type_name: String, parent_id: int, title: String) -> BTNodeResource:

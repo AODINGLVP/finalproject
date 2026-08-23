@@ -8,6 +8,7 @@ script = ExtResource("1_f5ifs")
 id = 1
 title = "Root"
 node_type = "Root"
+position = Vector2(13030, 100)
 description = "Human-study benchmark node 1 for controlled display comparison."
 
 [sub_resource type="Resource" id="Resource_kvg1x"]
@@ -15,6 +16,7 @@ script = ExtResource("1_f5ifs")
 id = 2
 title = "Decision Hub"
 node_type = "Selector"
+position = Vector2(13030, 360)
 parent_id = 1
 description = "Human-study benchmark node 2 for controlled display comparison."
 
@@ -23,6 +25,7 @@ script = ExtResource("1_f5ifs")
 id = 3
 title = "Branch_003"
 node_type = "Selector"
+position = Vector2(4450, 620)
 parent_id = 2
 description = "Human-study benchmark node 3 for controlled display comparison."
 
@@ -31,6 +34,7 @@ script = ExtResource("1_f5ifs")
 id = 4
 title = "Branch_004"
 node_type = "Selector"
+position = Vector2(13360, 620)
 parent_id = 2
 description = "Human-study benchmark node 4 for controlled display comparison."
 
@@ -39,6 +43,7 @@ script = ExtResource("1_f5ifs")
 id = 5
 title = "Branch_005"
 node_type = "Selector"
+position = Vector2(21940, 620)
 parent_id = 2
 description = "Human-study benchmark node 5 for controlled display comparison."
 
@@ -47,6 +52,7 @@ script = ExtResource("1_f5ifs")
 id = 6
 title = "Branch_006"
 node_type = "Selector"
+position = Vector2(1480, 880)
 parent_id = 3
 description = "Human-study benchmark node 6 for controlled display comparison."
 
@@ -55,6 +61,7 @@ script = ExtResource("1_f5ifs")
 id = 7
 title = "Branch_007"
 node_type = "Selector"
+position = Vector2(4450, 880)
 parent_id = 3
 description = "Human-study benchmark node 7 for controlled display comparison."
 
@@ -63,6 +70,7 @@ script = ExtResource("1_f5ifs")
 id = 8
 title = "Branch_008"
 node_type = "Selector"
+position = Vector2(7420, 880)
 parent_id = 3
 description = "Human-study benchmark node 8 for controlled display comparison."
 
@@ -71,6 +79,7 @@ script = ExtResource("1_f5ifs")
 id = 9
 title = "Branch_009"
 node_type = "Selector"
+position = Vector2(10390, 880)
 parent_id = 4
 description = "Human-study benchmark node 9 for controlled display comparison."
 
@@ -79,6 +88,7 @@ script = ExtResource("1_f5ifs")
 id = 10
 title = "Branch_010"
 node_type = "Selector"
+position = Vector2(13360, 880)
 parent_id = 4
 description = "Human-study benchmark node 10 for controlled display comparison."
 
@@ -87,6 +97,7 @@ script = ExtResource("1_f5ifs")
 id = 11
 title = "Branch_011"
 node_type = "Selector"
+position = Vector2(16330, 880)
 parent_id = 4
 description = "Human-study benchmark node 11 for controlled display comparison."
 
@@ -95,6 +106,7 @@ script = ExtResource("1_f5ifs")
 id = 12
 title = "Branch_012"
 node_type = "Selector"
+position = Vector2(19300, 880)
 parent_id = 5
 description = "Human-study benchmark node 12 for controlled display comparison."
 
@@ -103,6 +115,7 @@ script = ExtResource("1_f5ifs")
 id = 13
 title = "Branch_013"
 node_type = "Selector"
+position = Vector2(22270, 880)
 parent_id = 5
 description = "Human-study benchmark node 13 for controlled display comparison."
 
@@ -111,6 +124,7 @@ script = ExtResource("1_f5ifs")
 id = 14
 title = "Branch_014"
 node_type = "Selector"
+position = Vector2(24910, 880)
 parent_id = 5
 description = "Human-study benchmark node 14 for controlled display comparison."
 
@@ -119,6 +133,7 @@ script = ExtResource("1_f5ifs")
 id = 15
 title = "Branch_015"
 node_type = "Selector"
+position = Vector2(490, 1140)
 parent_id = 6
 description = "Human-study benchmark node 15 for controlled display comparison."
 
@@ -127,6 +142,7 @@ script = ExtResource("1_f5ifs")
 id = 16
 title = "Branch_016"
 node_type = "Selector"
+position = Vector2(1480, 1140)
 parent_id = 6
 description = "Human-study benchmark node 16 for controlled display comparison."
 
@@ -135,6 +151,7 @@ script = ExtResource("1_f5ifs")
 id = 17
 title = "Branch_017"
 node_type = "Selector"
+position = Vector2(2470, 1140)
 parent_id = 6
 description = "Human-study benchmark node 17 for controlled display comparison."
 
@@ -143,6 +160,7 @@ script = ExtResource("1_f5ifs")
 id = 18
 title = "Branch_018"
 node_type = "Selector"
+position = Vector2(3460, 1140)
 parent_id = 7
 description = "Human-study benchmark node 18 for controlled display comparison."
 
@@ -151,6 +169,7 @@ script = ExtResource("1_f5ifs")
 id = 19
 title = "Branch_019"
 node_type = "Selector"
+position = Vector2(4450, 1140)
 parent_id = 7
 description = "Human-study benchmark node 19 for controlled display comparison."
 
@@ -159,6 +178,7 @@ script = ExtResource("1_f5ifs")
 id = 20
 title = "Branch_020"
 node_type = "Selector"
+position = Vector2(5440, 1140)
 parent_id = 7
 description = "Human-study benchmark node 20 for controlled display comparison."
 
@@ -167,6 +187,7 @@ script = ExtResource("1_f5ifs")
 id = 21
 title = "Branch_021"
 node_type = "Selector"
+position = Vector2(6430, 1140)
 parent_id = 8
 description = "Human-study benchmark node 21 for controlled display comparison."
 
@@ -175,6 +196,7 @@ script = ExtResource("1_f5ifs")
 id = 22
 title = "Branch_022"
 node_type = "Selector"
+position = Vector2(7420, 1140)
 parent_id = 8
 description = "Human-study benchmark node 22 for controlled display comparison."
 
@@ -183,6 +205,7 @@ script = ExtResource("1_f5ifs")
 id = 23
 title = "Branch_023"
 node_type = "Selector"
+position = Vector2(8410, 1140)
 parent_id = 8
 description = "Human-study benchmark node 23 for controlled display comparison."
 
@@ -191,6 +214,7 @@ script = ExtResource("1_f5ifs")
 id = 24
 title = "Branch_024"
 node_type = "Selector"
+position = Vector2(9400, 1140)
 parent_id = 9
 description = "Human-study benchmark node 24 for controlled display comparison."
 
@@ -199,6 +223,7 @@ script = ExtResource("1_f5ifs")
 id = 25
 title = "Branch_025"
 node_type = "Selector"
+position = Vector2(10390, 1140)
 parent_id = 9
 description = "Human-study benchmark node 25 for controlled display comparison."
 
@@ -207,6 +232,7 @@ script = ExtResource("1_f5ifs")
 id = 26
 title = "Branch_026"
 node_type = "Selector"
+position = Vector2(11380, 1140)
 parent_id = 9
 description = "Human-study benchmark node 26 for controlled display comparison."
 
@@ -215,6 +241,7 @@ script = ExtResource("1_f5ifs")
 id = 27
 title = "Branch_027"
 node_type = "Selector"
+position = Vector2(12370, 1140)
 parent_id = 10
 description = "Human-study benchmark node 27 for controlled display comparison."
 
@@ -223,6 +250,7 @@ script = ExtResource("1_f5ifs")
 id = 28
 title = "Branch_028"
 node_type = "Selector"
+position = Vector2(13360, 1140)
 parent_id = 10
 description = "Human-study benchmark node 28 for controlled display comparison."
 
@@ -231,6 +259,7 @@ script = ExtResource("1_f5ifs")
 id = 29
 title = "Branch_029"
 node_type = "Selector"
+position = Vector2(14350, 1140)
 parent_id = 10
 description = "Human-study benchmark node 29 for controlled display comparison."
 
@@ -239,6 +268,7 @@ script = ExtResource("1_f5ifs")
 id = 30
 title = "Branch_030"
 node_type = "Selector"
+position = Vector2(15340, 1140)
 parent_id = 11
 description = "Human-study benchmark node 30 for controlled display comparison."
 
@@ -247,6 +277,7 @@ script = ExtResource("1_f5ifs")
 id = 31
 title = "Branch_031"
 node_type = "Selector"
+position = Vector2(16330, 1140)
 parent_id = 11
 description = "Human-study benchmark node 31 for controlled display comparison."
 
@@ -255,6 +286,7 @@ script = ExtResource("1_f5ifs")
 id = 32
 title = "Branch_032"
 node_type = "Selector"
+position = Vector2(17320, 1140)
 parent_id = 11
 description = "Human-study benchmark node 32 for controlled display comparison."
 
@@ -263,6 +295,7 @@ script = ExtResource("1_f5ifs")
 id = 33
 title = "Branch_033"
 node_type = "Selector"
+position = Vector2(18310, 1140)
 parent_id = 12
 description = "Human-study benchmark node 33 for controlled display comparison."
 
@@ -271,6 +304,7 @@ script = ExtResource("1_f5ifs")
 id = 34
 title = "Branch_034"
 node_type = "Selector"
+position = Vector2(19300, 1140)
 parent_id = 12
 description = "Human-study benchmark node 34 for controlled display comparison."
 
@@ -279,6 +313,7 @@ script = ExtResource("1_f5ifs")
 id = 35
 title = "Branch_035"
 node_type = "Selector"
+position = Vector2(20290, 1140)
 parent_id = 12
 description = "Human-study benchmark node 35 for controlled display comparison."
 
@@ -287,6 +322,7 @@ script = ExtResource("1_f5ifs")
 id = 36
 title = "Branch_036"
 node_type = "Selector"
+position = Vector2(21280, 1140)
 parent_id = 13
 description = "Human-study benchmark node 36 for controlled display comparison."
 
@@ -295,6 +331,7 @@ script = ExtResource("1_f5ifs")
 id = 37
 title = "Branch_037"
 node_type = "Selector"
+position = Vector2(22270, 1140)
 parent_id = 13
 description = "Human-study benchmark node 37 for controlled display comparison."
 
@@ -303,6 +340,7 @@ script = ExtResource("1_f5ifs")
 id = 38
 title = "Branch_038"
 node_type = "Selector"
+position = Vector2(23260, 1140)
 parent_id = 13
 description = "Human-study benchmark node 38 for controlled display comparison."
 
@@ -311,6 +349,7 @@ script = ExtResource("1_f5ifs")
 id = 39
 title = "Branch_039"
 node_type = "Selector"
+position = Vector2(24250, 1140)
 parent_id = 14
 description = "Human-study benchmark node 39 for controlled display comparison."
 
@@ -319,6 +358,7 @@ script = ExtResource("1_f5ifs")
 id = 40
 title = "Branch_040"
 node_type = "Selector"
+position = Vector2(25240, 1140)
 parent_id = 14
 description = "Human-study benchmark node 40 for controlled display comparison."
 
@@ -327,6 +367,7 @@ script = ExtResource("1_f5ifs")
 id = 41
 title = "Branch_041"
 node_type = "Selector"
+position = Vector2(25900, 1140)
 parent_id = 14
 description = "Human-study benchmark node 41 for controlled display comparison."
 
@@ -335,6 +376,7 @@ script = ExtResource("1_f5ifs")
 id = 42
 title = "Branch_042"
 node_type = "Selector"
+position = Vector2(160, 1400)
 parent_id = 15
 description = "Human-study benchmark node 42 for controlled display comparison."
 
@@ -343,6 +385,7 @@ script = ExtResource("1_f5ifs")
 id = 43
 title = "Branch_043"
 node_type = "Selector"
+position = Vector2(490, 1400)
 parent_id = 15
 description = "Human-study benchmark node 43 for controlled display comparison."
 
@@ -351,6 +394,7 @@ script = ExtResource("1_f5ifs")
 id = 44
 title = "Branch_044"
 node_type = "Selector"
+position = Vector2(820, 1400)
 parent_id = 15
 description = "Human-study benchmark node 44 for controlled display comparison."
 
@@ -359,6 +403,7 @@ script = ExtResource("1_f5ifs")
 id = 45
 title = "Branch_045"
 node_type = "Selector"
+position = Vector2(1150, 1400)
 parent_id = 16
 description = "Human-study benchmark node 45 for controlled display comparison."
 
@@ -367,6 +412,7 @@ script = ExtResource("1_f5ifs")
 id = 46
 title = "Branch_046"
 node_type = "Selector"
+position = Vector2(1480, 1400)
 parent_id = 16
 description = "Human-study benchmark node 46 for controlled display comparison."
 
@@ -375,6 +421,7 @@ script = ExtResource("1_f5ifs")
 id = 47
 title = "Branch_047"
 node_type = "Selector"
+position = Vector2(1810, 1400)
 parent_id = 16
 description = "Human-study benchmark node 47 for controlled display comparison."
 
@@ -383,6 +430,7 @@ script = ExtResource("1_f5ifs")
 id = 48
 title = "Branch_048"
 node_type = "Selector"
+position = Vector2(2140, 1400)
 parent_id = 17
 description = "Human-study benchmark node 48 for controlled display comparison."
 
@@ -391,6 +439,7 @@ script = ExtResource("1_f5ifs")
 id = 49
 title = "Branch_049"
 node_type = "Selector"
+position = Vector2(2470, 1400)
 parent_id = 17
 description = "Human-study benchmark node 49 for controlled display comparison."
 
@@ -399,6 +448,7 @@ script = ExtResource("1_f5ifs")
 id = 50
 title = "Branch_050"
 node_type = "Selector"
+position = Vector2(2800, 1400)
 parent_id = 17
 description = "Human-study benchmark node 50 for controlled display comparison."
 
@@ -407,6 +457,7 @@ script = ExtResource("1_f5ifs")
 id = 51
 title = "Branch_051"
 node_type = "Selector"
+position = Vector2(3130, 1400)
 parent_id = 18
 description = "Human-study benchmark node 51 for controlled display comparison."
 
@@ -415,6 +466,7 @@ script = ExtResource("1_f5ifs")
 id = 52
 title = "Branch_052"
 node_type = "Selector"
+position = Vector2(3460, 1400)
 parent_id = 18
 description = "Human-study benchmark node 52 for controlled display comparison."
 
@@ -423,6 +475,7 @@ script = ExtResource("1_f5ifs")
 id = 53
 title = "Branch_053"
 node_type = "Selector"
+position = Vector2(3790, 1400)
 parent_id = 18
 description = "Human-study benchmark node 53 for controlled display comparison."
 
@@ -431,6 +484,7 @@ script = ExtResource("1_f5ifs")
 id = 54
 title = "Branch_054"
 node_type = "Selector"
+position = Vector2(4120, 1400)
 parent_id = 19
 description = "Human-study benchmark node 54 for controlled display comparison."
 
@@ -439,6 +493,7 @@ script = ExtResource("1_f5ifs")
 id = 55
 title = "Branch_055"
 node_type = "Selector"
+position = Vector2(4450, 1400)
 parent_id = 19
 description = "Human-study benchmark node 55 for controlled display comparison."
 
@@ -447,6 +502,7 @@ script = ExtResource("1_f5ifs")
 id = 56
 title = "Branch_056"
 node_type = "Selector"
+position = Vector2(4780, 1400)
 parent_id = 19
 description = "Human-study benchmark node 56 for controlled display comparison."
 
@@ -455,6 +511,7 @@ script = ExtResource("1_f5ifs")
 id = 57
 title = "Branch_057"
 node_type = "Selector"
+position = Vector2(5110, 1400)
 parent_id = 20
 description = "Human-study benchmark node 57 for controlled display comparison."
 
@@ -463,6 +520,7 @@ script = ExtResource("1_f5ifs")
 id = 58
 title = "Branch_058"
 node_type = "Selector"
+position = Vector2(5440, 1400)
 parent_id = 20
 description = "Human-study benchmark node 58 for controlled display comparison."
 
@@ -471,6 +529,7 @@ script = ExtResource("1_f5ifs")
 id = 59
 title = "Branch_059"
 node_type = "Selector"
+position = Vector2(5770, 1400)
 parent_id = 20
 description = "Human-study benchmark node 59 for controlled display comparison."
 
@@ -479,6 +538,7 @@ script = ExtResource("1_f5ifs")
 id = 60
 title = "Branch_060"
 node_type = "Selector"
+position = Vector2(6100, 1400)
 parent_id = 21
 description = "Human-study benchmark node 60 for controlled display comparison."
 
@@ -487,6 +547,7 @@ script = ExtResource("1_f5ifs")
 id = 61
 title = "Branch_061"
 node_type = "Selector"
+position = Vector2(6430, 1400)
 parent_id = 21
 description = "Human-study benchmark node 61 for controlled display comparison."
 
@@ -495,6 +556,7 @@ script = ExtResource("1_f5ifs")
 id = 62
 title = "Branch_062"
 node_type = "Selector"
+position = Vector2(6760, 1400)
 parent_id = 21
 description = "Human-study benchmark node 62 for controlled display comparison."
 
@@ -503,6 +565,7 @@ script = ExtResource("1_f5ifs")
 id = 63
 title = "Branch_063"
 node_type = "Selector"
+position = Vector2(7090, 1400)
 parent_id = 22
 description = "Human-study benchmark node 63 for controlled display comparison."
 
@@ -511,6 +574,7 @@ script = ExtResource("1_f5ifs")
 id = 64
 title = "Branch_064"
 node_type = "Selector"
+position = Vector2(7420, 1400)
 parent_id = 22
 description = "Human-study benchmark node 64 for controlled display comparison."
 
@@ -519,6 +583,7 @@ script = ExtResource("1_f5ifs")
 id = 65
 title = "Branch_065"
 node_type = "Selector"
+position = Vector2(7750, 1400)
 parent_id = 22
 description = "Human-study benchmark node 65 for controlled display comparison."
 
@@ -527,6 +592,7 @@ script = ExtResource("1_f5ifs")
 id = 66
 title = "Branch_066"
 node_type = "Selector"
+position = Vector2(8080, 1400)
 parent_id = 23
 description = "Human-study benchmark node 66 for controlled display comparison."
 
@@ -535,6 +601,7 @@ script = ExtResource("1_f5ifs")
 id = 67
 title = "Branch_067"
 node_type = "Selector"
+position = Vector2(8410, 1400)
 parent_id = 23
 description = "Human-study benchmark node 67 for controlled display comparison."
 
@@ -543,6 +610,7 @@ script = ExtResource("1_f5ifs")
 id = 68
 title = "Branch_068"
 node_type = "Selector"
+position = Vector2(8740, 1400)
 parent_id = 23
 description = "Human-study benchmark node 68 for controlled display comparison."
 
@@ -551,6 +619,7 @@ script = ExtResource("1_f5ifs")
 id = 69
 title = "Branch_069"
 node_type = "Selector"
+position = Vector2(9070, 1400)
 parent_id = 24
 description = "Human-study benchmark node 69 for controlled display comparison."
 
@@ -559,6 +628,7 @@ script = ExtResource("1_f5ifs")
 id = 70
 title = "Branch_070"
 node_type = "Selector"
+position = Vector2(9400, 1400)
 parent_id = 24
 description = "Human-study benchmark node 70 for controlled display comparison."
 
@@ -567,6 +637,7 @@ script = ExtResource("1_f5ifs")
 id = 71
 title = "Branch_071"
 node_type = "Selector"
+position = Vector2(9730, 1400)
 parent_id = 24
 description = "Human-study benchmark node 71 for controlled display comparison."
 
@@ -575,6 +646,7 @@ script = ExtResource("1_f5ifs")
 id = 72
 title = "Branch_072"
 node_type = "Selector"
+position = Vector2(10060, 1400)
 parent_id = 25
 description = "Human-study benchmark node 72 for controlled display comparison."
 
@@ -583,6 +655,7 @@ script = ExtResource("1_f5ifs")
 id = 73
 title = "Branch_073"
 node_type = "Selector"
+position = Vector2(10390, 1400)
 parent_id = 25
 description = "Human-study benchmark node 73 for controlled display comparison."
 
@@ -591,6 +664,7 @@ script = ExtResource("1_f5ifs")
 id = 74
 title = "Branch_074"
 node_type = "Selector"
+position = Vector2(10720, 1400)
 parent_id = 25
 description = "Human-study benchmark node 74 for controlled display comparison."
 
@@ -599,6 +673,7 @@ script = ExtResource("1_f5ifs")
 id = 75
 title = "Branch_075"
 node_type = "Selector"
+position = Vector2(11050, 1400)
 parent_id = 26
 description = "Human-study benchmark node 75 for controlled display comparison."
 
@@ -607,6 +682,7 @@ script = ExtResource("1_f5ifs")
 id = 76
 title = "Branch_076"
 node_type = "Selector"
+position = Vector2(11380, 1400)
 parent_id = 26
 description = "Human-study benchmark node 76 for controlled display comparison."
 
@@ -615,6 +691,7 @@ script = ExtResource("1_f5ifs")
 id = 77
 title = "Branch_077"
 node_type = "Selector"
+position = Vector2(11710, 1400)
 parent_id = 26
 description = "Human-study benchmark node 77 for controlled display comparison."
 
@@ -623,6 +700,7 @@ script = ExtResource("1_f5ifs")
 id = 78
 title = "Branch_078"
 node_type = "Selector"
+position = Vector2(12040, 1400)
 parent_id = 27
 description = "Human-study benchmark node 78 for controlled display comparison."
 
@@ -631,6 +709,7 @@ script = ExtResource("1_f5ifs")
 id = 79
 title = "Branch_079"
 node_type = "Selector"
+position = Vector2(12370, 1400)
 parent_id = 27
 description = "Human-study benchmark node 79 for controlled display comparison."
 
@@ -639,6 +718,7 @@ script = ExtResource("1_f5ifs")
 id = 80
 title = "Branch_080"
 node_type = "Selector"
+position = Vector2(12700, 1400)
 parent_id = 27
 description = "Human-study benchmark node 80 for controlled display comparison."
 
@@ -647,6 +727,7 @@ script = ExtResource("1_f5ifs")
 id = 81
 title = "Branch_081"
 node_type = "Selector"
+position = Vector2(13030, 1400)
 parent_id = 28
 description = "Human-study benchmark node 81 for controlled display comparison."
 
@@ -655,6 +736,7 @@ script = ExtResource("1_f5ifs")
 id = 82
 title = "Branch_082"
 node_type = "Selector"
+position = Vector2(13360, 1400)
 parent_id = 28
 description = "Human-study benchmark node 82 for controlled display comparison."
 
@@ -663,6 +745,7 @@ script = ExtResource("1_f5ifs")
 id = 83
 title = "Branch_083"
 node_type = "Selector"
+position = Vector2(13690, 1400)
 parent_id = 28
 description = "Human-study benchmark node 83 for controlled display comparison."
 
@@ -671,6 +754,7 @@ script = ExtResource("1_f5ifs")
 id = 84
 title = "Branch_084"
 node_type = "Selector"
+position = Vector2(14020, 1400)
 parent_id = 29
 description = "Human-study benchmark node 84 for controlled display comparison."
 
@@ -679,6 +763,7 @@ script = ExtResource("1_f5ifs")
 id = 85
 title = "Branch_085"
 node_type = "Selector"
+position = Vector2(14350, 1400)
 parent_id = 29
 description = "Human-study benchmark node 85 for controlled display comparison."
 
@@ -687,6 +772,7 @@ script = ExtResource("1_f5ifs")
 id = 86
 title = "Branch_086"
 node_type = "Selector"
+position = Vector2(14680, 1400)
 parent_id = 29
 description = "Human-study benchmark node 86 for controlled display comparison."
 
@@ -695,6 +781,7 @@ script = ExtResource("1_f5ifs")
 id = 87
 title = "Branch_087"
 node_type = "Selector"
+position = Vector2(15010, 1400)
 parent_id = 30
 description = "Human-study benchmark node 87 for controlled display comparison."
 
@@ -703,6 +790,7 @@ script = ExtResource("1_f5ifs")
 id = 88
 title = "Branch_088"
 node_type = "Selector"
+position = Vector2(15340, 1400)
 parent_id = 30
 description = "Human-study benchmark node 88 for controlled display comparison."
 
@@ -711,6 +799,7 @@ script = ExtResource("1_f5ifs")
 id = 89
 title = "Branch_089"
 node_type = "Selector"
+position = Vector2(15670, 1400)
 parent_id = 30
 description = "Human-study benchmark node 89 for controlled display comparison."
 
@@ -719,6 +808,7 @@ script = ExtResource("1_f5ifs")
 id = 90
 title = "Branch_090"
 node_type = "Selector"
+position = Vector2(16000, 1400)
 parent_id = 31
 description = "Human-study benchmark node 90 for controlled display comparison."
 
@@ -727,6 +817,7 @@ script = ExtResource("1_f5ifs")
 id = 91
 title = "Branch_091"
 node_type = "Selector"
+position = Vector2(16330, 1400)
 parent_id = 31
 description = "Human-study benchmark node 91 for controlled display comparison."
 
@@ -735,6 +826,7 @@ script = ExtResource("1_f5ifs")
 id = 92
 title = "Branch_092"
 node_type = "Selector"
+position = Vector2(16660, 1400)
 parent_id = 31
 description = "Human-study benchmark node 92 for controlled display comparison."
 
@@ -743,6 +835,7 @@ script = ExtResource("1_f5ifs")
 id = 93
 title = "Branch_093"
 node_type = "Selector"
+position = Vector2(16990, 1400)
 parent_id = 32
 description = "Human-study benchmark node 93 for controlled display comparison."
 
@@ -751,6 +844,7 @@ script = ExtResource("1_f5ifs")
 id = 94
 title = "Branch_094"
 node_type = "Selector"
+position = Vector2(17320, 1400)
 parent_id = 32
 description = "Human-study benchmark node 94 for controlled display comparison."
 
@@ -759,6 +853,7 @@ script = ExtResource("1_f5ifs")
 id = 95
 title = "Branch_095"
 node_type = "Selector"
+position = Vector2(17650, 1400)
 parent_id = 32
 description = "Human-study benchmark node 95 for controlled display comparison."
 
@@ -767,6 +862,7 @@ script = ExtResource("1_f5ifs")
 id = 96
 title = "Branch_096"
 node_type = "Selector"
+position = Vector2(17980, 1400)
 parent_id = 33
 description = "Human-study benchmark node 96 for controlled display comparison."
 
@@ -775,6 +871,7 @@ script = ExtResource("1_f5ifs")
 id = 97
 title = "Branch_097"
 node_type = "Selector"
+position = Vector2(18310, 1400)
 parent_id = 33
 description = "Human-study benchmark node 97 for controlled display comparison."
 
@@ -783,6 +880,7 @@ script = ExtResource("1_f5ifs")
 id = 98
 title = "Branch_098"
 node_type = "Selector"
+position = Vector2(18640, 1400)
 parent_id = 33
 description = "Human-study benchmark node 98 for controlled display comparison."
 
@@ -791,6 +889,7 @@ script = ExtResource("1_f5ifs")
 id = 99
 title = "Branch_099"
 node_type = "Selector"
+position = Vector2(18970, 1400)
 parent_id = 34
 description = "Human-study benchmark node 99 for controlled display comparison."
 
@@ -799,6 +898,7 @@ script = ExtResource("1_f5ifs")
 id = 100
 title = "Branch_100"
 node_type = "Selector"
+position = Vector2(19300, 1400)
 parent_id = 34
 description = "Human-study benchmark node 100 for controlled display comparison."
 
@@ -807,6 +907,7 @@ script = ExtResource("1_f5ifs")
 id = 101
 title = "Branch_101"
 node_type = "Selector"
+position = Vector2(19630, 1400)
 parent_id = 34
 description = "Human-study benchmark node 101 for controlled display comparison."
 
@@ -815,6 +916,7 @@ script = ExtResource("1_f5ifs")
 id = 102
 title = "Branch_102"
 node_type = "Selector"
+position = Vector2(19960, 1400)
 parent_id = 35
 description = "Human-study benchmark node 102 for controlled display comparison."
 
@@ -823,6 +925,7 @@ script = ExtResource("1_f5ifs")
 id = 103
 title = "Branch_103"
 node_type = "Selector"
+position = Vector2(20290, 1400)
 parent_id = 35
 description = "Human-study benchmark node 103 for controlled display comparison."
 
@@ -831,6 +934,7 @@ script = ExtResource("1_f5ifs")
 id = 104
 title = "Branch_104"
 node_type = "Selector"
+position = Vector2(20620, 1400)
 parent_id = 35
 description = "Human-study benchmark node 104 for controlled display comparison."
 
@@ -839,6 +943,7 @@ script = ExtResource("1_f5ifs")
 id = 105
 title = "Branch_105"
 node_type = "Selector"
+position = Vector2(20950, 1400)
 parent_id = 36
 description = "Human-study benchmark node 105 for controlled display comparison."
 
@@ -847,6 +952,7 @@ script = ExtResource("1_f5ifs")
 id = 106
 title = "Branch_106"
 node_type = "Selector"
+position = Vector2(21280, 1400)
 parent_id = 36
 description = "Human-study benchmark node 106 for controlled display comparison."
 
@@ -855,6 +961,7 @@ script = ExtResource("1_f5ifs")
 id = 107
 title = "Branch_107"
 node_type = "Selector"
+position = Vector2(21610, 1400)
 parent_id = 36
 description = "Human-study benchmark node 107 for controlled display comparison."
 
@@ -863,6 +970,7 @@ script = ExtResource("1_f5ifs")
 id = 108
 title = "Branch_108"
 node_type = "Selector"
+position = Vector2(21940, 1400)
 parent_id = 37
 description = "Human-study benchmark node 108 for controlled display comparison."
 
@@ -871,6 +979,7 @@ script = ExtResource("1_f5ifs")
 id = 109
 title = "Branch_109"
 node_type = "Selector"
+position = Vector2(22270, 1400)
 parent_id = 37
 description = "Human-study benchmark node 109 for controlled display comparison."
 
@@ -879,6 +988,7 @@ script = ExtResource("1_f5ifs")
 id = 110
 title = "Branch_110"
 node_type = "Selector"
+position = Vector2(22600, 1400)
 parent_id = 37
 description = "Human-study benchmark node 110 for controlled display comparison."
 
@@ -886,6 +996,7 @@ description = "Human-study benchmark node 110 for controlled display comparison.
 script = ExtResource("1_f5ifs")
 id = 111
 title = "Branch_111"
+position = Vector2(22930, 1400)
 parent_id = 38
 description = "Human-study benchmark node 111 for controlled display comparison."
 parameters = {
@@ -896,6 +1007,7 @@ parameters = {
 script = ExtResource("1_f5ifs")
 id = 112
 title = "Branch_112"
+position = Vector2(23260, 1400)
 parent_id = 38
 description = "Human-study benchmark node 112 for controlled display comparison."
 parameters = {
@@ -906,6 +1018,7 @@ parameters = {
 script = ExtResource("1_f5ifs")
 id = 113
 title = "Branch_113"
+position = Vector2(23590, 1400)
 parent_id = 38
 description = "Human-study benchmark node 113 for controlled display comparison."
 parameters = {
@@ -916,6 +1029,7 @@ parameters = {
 script = ExtResource("1_f5ifs")
 id = 114
 title = "Branch_114"
+position = Vector2(23920, 1400)
 parent_id = 39
 description = "Human-study benchmark node 114 for controlled display comparison."
 parameters = {
@@ -926,6 +1040,7 @@ parameters = {
 script = ExtResource("1_f5ifs")
 id = 115
 title = "Branch_115"
+position = Vector2(24250, 1400)
 parent_id = 39
 description = "Human-study benchmark node 115 for controlled display comparison."
 parameters = {
@@ -936,6 +1051,7 @@ parameters = {
 script = ExtResource("1_f5ifs")
 id = 116
 title = "Branch_116"
+position = Vector2(24580, 1400)
 parent_id = 39
 description = "Human-study benchmark node 116 for controlled display comparison."
 parameters = {
@@ -946,6 +1062,7 @@ parameters = {
 script = ExtResource("1_f5ifs")
 id = 117
 title = "Branch_117"
+position = Vector2(24910, 1400)
 parent_id = 40
 description = "Human-study benchmark node 117 for controlled display comparison."
 parameters = {
@@ -956,6 +1073,7 @@ parameters = {
 script = ExtResource("1_f5ifs")
 id = 118
 title = "Branch_118"
+position = Vector2(25240, 1400)
 parent_id = 40
 description = "Human-study benchmark node 118 for controlled display comparison."
 parameters = {
@@ -966,6 +1084,7 @@ parameters = {
 script = ExtResource("1_f5ifs")
 id = 119
 title = "Branch_119"
+position = Vector2(25570, 1400)
 parent_id = 40
 description = "Human-study benchmark node 119 for controlled display comparison."
 parameters = {
@@ -976,6 +1095,7 @@ parameters = {
 script = ExtResource("1_f5ifs")
 id = 120
 title = "STUDY_TARGET_ACTION"
+position = Vector2(25900, 1400)
 parent_id = 41
 description = "Stable target used by the controlled human comparison study."
 parameters = {
@@ -987,10 +1107,11 @@ script = ExtResource("1_f5ifs")
 id = 121
 title = "STUDY_TARGET_DECORATOR"
 node_type = "Decorator"
+position = Vector2(25900, 1400)
 decorator_parent_id = 120
 description = "Edit the comparison value from true to false during the study task."
 parameters = {
-"key": "study_target_visible",
+"blackboard_key": "study_target_visible",
 "mode": "blackboard",
 "operator": "equals",
 "value": true

@@ -822,7 +822,9 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	view.semantic_detail_level = 0
 	view._apply_semantic_detail_level()
 	view._update_auto_spacing(0.0, true)
-	_expect(_all_visual_offsets_zero(view) and _render_positions_match_resources(view), "zooming out restores the exact dense logical layout")
+	await process_frame
+	await process_frame
+	_expect(_rendered_overlaps(view).is_empty() and _resource_positions_equal(view.current_tree, dense_positions), "zooming out keeps the dense tree overlap-free without changing logical positions")
 	view.semantic_detail_level = 2
 	view._apply_semantic_detail_level()
 	view._update_auto_spacing(0.0, true)

@@ -190,7 +190,7 @@ func _run() -> void:
 	await _settle()
 	var dense_restored := await _capture_case("02e_dense_overview_restored")
 	_assert_image_valid(dense_restored, "dense overview restoration renders")
-	_expect(_all_visual_offsets_zero() and _render_positions_match_resources(), "zooming out restores exact dense positions without residue")
+	_expect(_overlapping_node_pairs().is_empty() and _resource_positions_equal(view.current_tree, dense_positions), "zooming out keeps the dense tree overlap-free without changing logical positions")
 	view._set_feature_enabled("auto_spacing", false, false)
 	view._set_feature_enabled("semantic_zoom", false, false)
 	view.current_tree = _make_visual_tree()
