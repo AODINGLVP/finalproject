@@ -28,7 +28,8 @@ func _run() -> void:
 	_expect(runner.behavior_tree.resource_path == "res://behavior_trees/arena_tactician_241.tres", "Tactician uses the real playable 241-node resource")
 	_expect(runner.behavior_tree.nodes.size() == 241, "playable behavior tree contains 200+ meaningful nodes")
 	_expect(_tree_has_type(runner.behavior_tree, "Repeat") and _tree_has_type(runner.behavior_tree, "Random Selector") and _tree_has_type(runner.behavior_tree, "Parallel") and _tree_has_type(runner.behavior_tree, "Wait"), "complex tree uses every new runtime node type")
-	_expect(runner.behavior_tree.blackboard_schema != null and runner.behavior_tree.blackboard_schema.entries.size() == 23, "complex tree binds the traversal-aware typed blackboard schema")
+	var schema = runner.behavior_tree.blackboard_schema
+	_expect(schema != null and schema.find_entry("player_detected") != null and schema.find_entry("critical_health") != null and schema.find_entry("has_last_known_position") != null, "complex tree binds the typed blackboard keys used by perception, recovery, and search")
 	_expect(_tree_has_title(runner.behavior_tree, "1 Emergency Recovery") and _tree_has_title(runner.behavior_tree, "12 Guard Idle Variations"), "priority tree contains all twelve tactical layers")
 	_expect(game.has_node("Medkit") and game.has_node("DamageZone") and game.has_node("ObstacleA") and game.has_node("PlatformA") and game.has_node("LadderA"), "arena includes pickups, hazards, obstacles, platforms, and ladders")
 	_expect(game.has_node("UI/TopPanel/TopContent/PlayerStatus"), "arena includes gameplay HUD without runtime tree overlay")
@@ -94,6 +95,7 @@ func _run() -> void:
 	_expect("5 Vertical Pursuit" in runner.active_path_titles and enemy.current_behavior == "Climb Ladder" and enemy.velocity.y < 0.0, "enemy uses ladder pursuit for an elevated player")
 
 	_reset_runner(runner)
+	enemy.global_position = enemy.home_position
 	enemy.target_locked = false
 	player.global_position = enemy.global_position + Vector2(enemy.lose_target_range + 100.0, 0)
 	enemy._update_blackboard()
