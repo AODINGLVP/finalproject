@@ -47,6 +47,7 @@ ENGLISH_MASTER = ROOT / "thesis_draft" / "english" / "uwthesis.tex"
 
 FIGURE_PATHS = {
     "architecture.png": THESIS_FIGURES / "architecture.png",
+    "architecture_en.png": ROOT / "thesis_draft" / "english" / "figures" / "architecture_en.png",
     "optimization_ratios.png": THESIS_FIGURES / "optimization_ratios.png",
     "01_baseline.png": CURRENT_VISUALS / "01_baseline.png",
     "02_compact.png": CURRENT_VISUALS / "02_compact.png",
@@ -521,7 +522,8 @@ def add_all_visuals(document: Document, *, chinese: bool) -> None:
     }
 
     insert_after(find_paragraph(document, anchors["t3.1"]), table_block(document, captions["t3.1"], tables["3.1"], font_size=8.2))
-    insert_after(find_paragraph(document, anchors["f4.1"]), single_figure_block(document, "architecture.png", captions["f4.1"], width_cm=12.5))
+    architecture = "architecture.png" if chinese else "architecture_en.png"
+    insert_after(find_paragraph(document, anchors["f4.1"]), single_figure_block(document, architecture, captions["f4.1"], width_cm=12.5))
     insert_after(find_paragraph(document, anchors["t4.1"]), table_block(document, captions["t4.1"], tables["4.1"], font_size=8.5))
     insert_after(find_paragraph(document, anchors["f4.2"]), single_figure_block(document, "07_runtime_failure.png", captions["f4.2"], width_cm=12.0))
     insert_after(find_paragraph(document, anchors["f4.3"]), pair_figure_block(
