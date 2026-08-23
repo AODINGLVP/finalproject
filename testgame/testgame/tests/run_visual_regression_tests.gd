@@ -181,6 +181,8 @@ func _run() -> void:
 	print("VISUAL_METRIC auto_spacing_overlap_before=%d auto_spacing_overlap_after=%d" % [overlap_before, overlap_after])
 	_expect(overlap_after == 0, "dense detail auto-spacing removes visible overlap")
 	_expect(_relative_axis_order_preserved(dense_positions), "dense detail auto-spacing preserves the user's relative node placement")
+	_expect(_rendered_tree_order_is_valid(), "dense detail local avoidance preserves the fixture's parent and sibling order")
+	_expect(_visual_offset_sum().length() <= 0.1, "unanchored local avoidance does not translate the complete layout")
 	_expect(_resource_positions_equal(view.current_tree, dense_positions), "dense detail auto-spacing preserves resource coordinates")
 	view.semantic_detail_level = 0
 	view._apply_semantic_detail_level()
@@ -343,6 +345,10 @@ func _run() -> void:
 	var complex_overview_overlap_count := _overlapping_node_pairs().size()
 	_expect(complex_overview_overlap_count == 0 and _resource_positions_equal(view.current_tree, complex_positions), "complex overview is overlap-free without changing saved coordinates")
 	var complex_anchor := _graph_node(view, 24)
+	_expect(complex_anchor != null, "complex zoom test has a visible branch target")
+	if complex_anchor != null:
+		view._focus_graph_node(complex_anchor.node_resource.id)
+		await _settle()
 	var real_zoom_metrics := await _real_wheel_zoom_session(MOUSE_BUTTON_WHEEL_UP, 16, 0.95)
 	print("VISUAL_METRIC real_wheel_final_zoom=%.3f detail_level=%d center_relation_drift=%.3f screen_formula_error=%.3f" % [float(real_zoom_metrics.get("final_zoom", 0.0)), view.semantic_detail_level, float(real_zoom_metrics.get("max_relation_drift", INF)), float(real_zoom_metrics.get("max_screen_formula_error", INF))])
 	_expect(int(real_zoom_metrics.get("anchor_id", -1)) != -1, "real wheel zoom captures a valid viewport-center neighborhood")
@@ -366,6 +372,7 @@ func _run() -> void:
 	print("VISUAL_METRIC complex_zoom_center_relation_drift=%.3f" % float(real_zoom_metrics.get("max_relation_drift", INF)))
 	_expect(float(real_zoom_metrics.get("max_relation_drift", INF)) <= 1.0, "complex zoom-in reflow preserves the same center-relative node neighborhood")
 	_expect(_relative_axis_order_preserved(complex_positions), "complex detail auto-spacing preserves relative node placement")
+	_expect(_rendered_tree_order_is_valid(), "complex detail local avoidance preserves direct parent and sibling order")
 	_expect(_resource_positions_equal(view.current_tree, complex_positions), "complex auto-spacing preserves every saved overview coordinate")
 	var real_zoom_out_metrics := await _real_wheel_zoom_session(MOUSE_BUTTON_WHEEL_DOWN, 16, 0.52)
 	print("VISUAL_METRIC real_wheel_zoom_out_final=%.3f center_relation_drift=%.3f screen_formula_error=%.3f" % [float(real_zoom_out_metrics.get("final_zoom", 0.0)), float(real_zoom_out_metrics.get("max_relation_drift", INF)), float(real_zoom_out_metrics.get("max_screen_formula_error", INF))])
@@ -651,6 +658,14 @@ func _all_visual_offsets_nonnegative_y() -> bool:
 		if child is BTGraphNode and child.visual_offset.y < -0.01:
 			return false
 	return true
+
+
+func _visual_offset_sum() -> Vector2:
+	var result := Vector2.ZERO
+	for child in view.graph_edit.get_children():
+		if child is BTGraphNode:
+			result += child.visual_offset
+	return result
 
 
 func _relative_axis_order_preserved(saved_positions: Dictionary) -> bool:
