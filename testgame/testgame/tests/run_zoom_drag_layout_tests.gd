@@ -22,6 +22,7 @@ func _run() -> void:
 	var view := await _make_view()
 	await _test_complete_zoom_range(view)
 	await _test_complex_tree_scales(view)
+	await _test_zero_coordinate_recovery(view)
 	await _test_drag_undo_redo(view)
 	await _test_save_reload_reflow(view)
 	await _test_topology_cache_invalidation(view)
@@ -101,6 +102,29 @@ func _test_complex_tree_scales(view: BTEditorView) -> void:
 			_expect(_rendered_overlaps(view).is_empty(), "%s reflows a collision without overlap" % label)
 			_expect(_structure_signature(tree) == structure_before and tree.validate_tree().is_empty(), "%s keeps the generated behavior tree valid" % label)
 			_expect(_execution_order_signature(tree) == order_after_release, "%s keeps execution order after automatic reflow" % label)
+
+
+func _test_zero_coordinate_recovery(view: BTEditorView) -> void:
+	var cases: Array[Array] = []
+	for node_count in SCALE_COUNTS:
+		cases.append([node_count, view.graph_edit.zoom_min])
+	for zoom_value in [0.619, 0.620, 0.621, view.graph_edit.zoom_max]:
+		cases.append([364, zoom_value])
+	for case in cases:
+		var node_count := int(case[0])
+		var zoom_value := float(case[1])
+		var tree := TreeFactory.generate(node_count) as BTTreeResource
+		var positions_before := _resource_positions(tree)
+		var structure_before := _structure_signature(tree)
+		var order_before := _execution_order_signature(tree)
+		var label := "%d-node all-zero layout at zoom %.3f" % [node_count, zoom_value]
+		await _prepare_view(view, tree, zoom_value, true, false)
+		await _wait_frames(SETTLE_FRAMES)
+		_expect(_rendered_overlaps(view).is_empty(), "%s automatically recovers without overlap" % label)
+		_expect(_screen_overlaps(view).is_empty(), "%s is readable in screen space" % label)
+		_expect(_resource_positions_equal(tree, positions_before), "%s uses temporary offsets only" % label)
+		_expect(_structure_signature(tree) == structure_before and tree.validate_tree().is_empty(), "%s preserves a valid tree" % label)
+		_expect(_execution_order_signature(tree) == order_before, "%s preserves execution order" % label)
 
 
 func _test_drag_undo_redo(view: BTEditorView) -> void:
