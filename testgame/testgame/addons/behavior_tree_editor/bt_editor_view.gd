@@ -903,14 +903,20 @@ func _set_feature_enabled(key: String, enabled: bool, persist := true) -> void:
 				branch_dimming_toggle.set_pressed_no_signal(enabled)
 		"compact":
 			compact_mode_enabled = enabled
+			auto_spacing_signature = ""
+			_refresh_auto_spacing_deferred.call_deferred()
 		"semantic_zoom":
 			semantic_zoom_enabled = enabled
 			if not enabled:
 				semantic_detail_level = 2
-				_reset_auto_spacing()
+			auto_spacing_signature = ""
+			_refresh_auto_spacing_deferred.call_deferred()
 		"auto_spacing":
 			if not enabled:
 				_reset_auto_spacing()
+			else:
+				auto_spacing_signature = ""
+				_refresh_auto_spacing_deferred.call_deferred()
 		"zoom_anchor":
 			if not enabled:
 				_clear_zoom_layout_anchor()
@@ -1352,6 +1358,8 @@ func _refresh_entire_ui() -> void:
 func _rebuild_graph() -> void:
 	minimap_status_signature = ""
 	last_runtime_visual_signature = ""
+	auto_spacing_signature = ""
+	auto_spacing_targets.clear()
 	_refresh_search_results(true)
 	graph_edit.cancel_manual_connection()
 	graph_edit.clear_connections()
@@ -1531,6 +1539,11 @@ func _on_graph_node_drag_finished(node_id: int) -> void:
 		_update_history_buttons()
 	drag_history_snapshot = null
 	drag_history_node_id = -1
+	# BTGraphNode emits drag_finished immediately before it clears manual_dragging.
+	# Defer one frame so the solver sees the released logical position and can
+	# restore collision-free visual spacing at every zoom level.
+	auto_spacing_signature = ""
+	_refresh_auto_spacing_deferred.call_deferred()
 
 
 func _on_graph_node_collapse_toggled(node_id: int) -> void:
@@ -2022,7 +2035,9 @@ func _update_auto_spacing(delta: float, immediate := false) -> void:
 	for child in graph_edit.get_children():
 		if child is BTGraphNode and child.manual_dragging:
 			return
-	var enabled := (_feature_enabled("auto_spacing") and _feature_enabled("semantic_zoom") and semantic_detail_level > 0) or fisheye_focus_node_id != -1
+	# Auto Spacing is an independent display feature. Low-detail Semantic Zoom
+	# changes card contents, but it must never disable collision prevention.
+	var enabled := _feature_enabled("auto_spacing") or fisheye_focus_node_id != -1
 	var signature := _auto_spacing_layout_signature() if enabled else "disabled"
 	if signature != auto_spacing_signature:
 		auto_spacing_signature = signature
@@ -2048,8 +2063,9 @@ func _auto_spacing_layout_signature() -> String:
 	var values: Array[String] = [str(semantic_detail_level), "focus:%d" % fisheye_focus_node_id]
 	for child in graph_edit.get_children():
 		if child is BTGraphNode and child.node_resource != null:
-			values.append("%d:%.3f:%.3f:%.3f:%.3f" % [
+			values.append("%d:%d:%.3f:%.3f:%.3f:%.3f" % [
 				child.node_resource.id,
+				child.node_resource.parent_id,
 				child.node_resource.position.x,
 				child.node_resource.position.y,
 				child.size.x,
