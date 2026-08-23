@@ -38,7 +38,8 @@ const LAYOUT_MIN_VERTICAL_CLEARANCE := 60.0
 const OVERVIEW_LAYOUT_HORIZONTAL_GAP := BTGraphNode.NORMAL_CARD_SIZE.x + 24.0
 const OVERVIEW_LAYOUT_VERTICAL_GAP := BTGraphNode.NORMAL_CARD_SIZE.y + 24.0
 const AUTO_SPACING_GAP := 24.0
-const AUTO_SPACING_ITERATIONS := 128
+const AUTO_SPACING_ITERATIONS := 32
+const AUTO_SPACING_COLLISION_CLEANUP_ITERATIONS := 32
 const AUTO_SPACING_SEPARATION_EPSILON := 0.05
 const AUTO_SPACING_IDENTICAL_GROUP_MIN_SIZE := 5
 const AUTO_SPACING_POSITION_BUCKET := 0.05
@@ -2166,46 +2167,58 @@ func _solve_auto_spacing_offsets(anchor_node_id := -1, initial_offsets: Dictiona
 		for pair in collision_pairs:
 			var left := pair[0] as BTGraphNode
 			var right := pair[1] as BTGraphNode
-			var left_rect := _auto_spacing_rect(left, base_positions, offsets, true)
-			var right_rect := _auto_spacing_rect(right, base_positions, offsets, true)
-			if not left_rect.intersects(right_rect):
-				continue
-			var overlap_x := minf(left_rect.end.x, right_rect.end.x) - maxf(left_rect.position.x, right_rect.position.x)
-			var overlap_y := minf(left_rect.end.y, right_rect.end.y) - maxf(left_rect.position.y, right_rect.position.y)
-			if overlap_x <= 0.0 or overlap_y <= 0.0:
-				continue
-			var left_id: int = left.node_resource.id
-			var right_id: int = right.node_resource.id
-			var left_base_center := Vector2(base_positions[left_id]) + left.size * 0.5
-			var right_base_center := Vector2(base_positions[right_id]) + right.size * 0.5
-			var axis := Vector2.RIGHT if overlap_x <= overlap_y else Vector2.DOWN
-			var left_axis_value := left_base_center.x if axis == Vector2.RIGHT else left_base_center.y
-			var right_axis_value := right_base_center.x if axis == Vector2.RIGHT else right_base_center.y
-			var left_precedes_right := left_axis_value < right_axis_value
-			if is_equal_approx(left_axis_value, right_axis_value):
-				left_precedes_right = int(source_order.get(left_id, left_id)) < int(source_order.get(right_id, right_id))
-			# Use the distance to the required ordered boundary, not only the current
-			# intersection width. If earlier avoidance has carried two cards across
-			# one another, this restores their saved order in one correction.
-			var penetration := 0.0
-			if axis == Vector2.RIGHT:
-				penetration = left_rect.end.x - right_rect.position.x if left_precedes_right else right_rect.end.x - left_rect.position.x
-			else:
-				penetration = left_rect.end.y - right_rect.position.y if left_precedes_right else right_rect.end.y - left_rect.position.y
-			var direction := axis if left_precedes_right else -axis
-			var weights := _auto_spacing_pair_weights(left_id, right_id, anchor_influence)
-			var left_weight := weights.x
-			var right_weight := weights.y
-			var weight_sum := left_weight + right_weight
-			if weight_sum <= 0.0:
-				continue
-			var correction := direction * (penetration + AUTO_SPACING_SEPARATION_EPSILON)
-			offsets[left_id] = Vector2(offsets[left_id]) - correction * (left_weight / weight_sum)
-			offsets[right_id] = Vector2(offsets[right_id]) + correction * (right_weight / weight_sum)
+			_apply_auto_spacing_collision_pair(left, right, base_positions, offsets, source_order, anchor_influence)
 		var order_changed := _preserve_auto_spacing_order(nodes, nodes_by_id, base_positions, offsets, source_order, anchor_influence)
 		if collision_pairs.is_empty() and not order_changed:
 			break
+	# Topology constraints can reintroduce a few sub-pixel or end-of-chain card
+	# intersections after the main pass. Finish with collision-only projection;
+	# it keeps the same saved axis order without repeatedly scanning all topology.
+	for _cleanup_iteration in range(AUTO_SPACING_COLLISION_CLEANUP_ITERATIONS):
+		var collision_pairs := _auto_spacing_collision_pairs(nodes, base_positions, offsets, source_order)
+		if collision_pairs.is_empty():
+			break
+		for pair in collision_pairs:
+			_apply_auto_spacing_collision_pair(pair[0] as BTGraphNode, pair[1] as BTGraphNode, base_positions, offsets, source_order, anchor_influence)
 	return offsets
+
+
+func _apply_auto_spacing_collision_pair(left: BTGraphNode, right: BTGraphNode, base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary, anchor_influence: Dictionary) -> bool:
+	var left_rect := _auto_spacing_rect(left, base_positions, offsets, true)
+	var right_rect := _auto_spacing_rect(right, base_positions, offsets, true)
+	if not left_rect.intersects(right_rect):
+		return false
+	var overlap_x := minf(left_rect.end.x, right_rect.end.x) - maxf(left_rect.position.x, right_rect.position.x)
+	var overlap_y := minf(left_rect.end.y, right_rect.end.y) - maxf(left_rect.position.y, right_rect.position.y)
+	if overlap_x <= 0.0 or overlap_y <= 0.0:
+		return false
+	var left_id: int = left.node_resource.id
+	var right_id: int = right.node_resource.id
+	var left_base_center := Vector2(base_positions[left_id]) + left.size * 0.5
+	var right_base_center := Vector2(base_positions[right_id]) + right.size * 0.5
+	var axis := Vector2.RIGHT if overlap_x <= overlap_y else Vector2.DOWN
+	var left_axis_value := left_base_center.x if axis == Vector2.RIGHT else left_base_center.y
+	var right_axis_value := right_base_center.x if axis == Vector2.RIGHT else right_base_center.y
+	var left_precedes_right := left_axis_value < right_axis_value
+	if is_equal_approx(left_axis_value, right_axis_value):
+		left_precedes_right = int(source_order.get(left_id, left_id)) < int(source_order.get(right_id, right_id))
+	# Use the distance to the required ordered boundary, not only the current
+	# intersection width. If earlier avoidance carried two cards across one
+	# another, this restores their saved order in one correction.
+	var penetration := 0.0
+	if axis == Vector2.RIGHT:
+		penetration = left_rect.end.x - right_rect.position.x if left_precedes_right else right_rect.end.x - left_rect.position.x
+	else:
+		penetration = left_rect.end.y - right_rect.position.y if left_precedes_right else right_rect.end.y - left_rect.position.y
+	var direction := axis if left_precedes_right else -axis
+	var weights := _auto_spacing_pair_weights(left_id, right_id, anchor_influence)
+	var weight_sum := weights.x + weights.y
+	if weight_sum <= 0.0:
+		return false
+	var correction := direction * (penetration + AUTO_SPACING_SEPARATION_EPSILON)
+	offsets[left_id] = Vector2(offsets[left_id]) - correction * (weights.x / weight_sum)
+	offsets[right_id] = Vector2(offsets[right_id]) + correction * (weights.y / weight_sum)
+	return true
 
 
 func _seed_identical_auto_spacing_groups(nodes: Array[BTGraphNode], base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary, anchor_node_id: int) -> void:
