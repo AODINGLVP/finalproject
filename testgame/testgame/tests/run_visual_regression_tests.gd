@@ -407,7 +407,9 @@ func _run() -> void:
 	view._update_semantic_zoom()
 	await _settle()
 	var playable_max_zoom_pairs := _overlapping_node_pairs()
-	print("VISUAL_METRIC playable_max_zoom_overlaps=%d pairs=%s" % [playable_max_zoom_pairs.size(), playable_max_zoom_pairs.slice(0, mini(12, playable_max_zoom_pairs.size()))])
+	var playable_max_zoom_target_pairs := _target_overlapping_node_pairs()
+	print("VISUAL_METRIC playable_max_zoom_overlaps=%d target_overlaps=%d pairs=%s target_pairs=%s" % [playable_max_zoom_pairs.size(), playable_max_zoom_target_pairs.size(), playable_max_zoom_pairs.slice(0, mini(12, playable_max_zoom_pairs.size())), playable_max_zoom_target_pairs.slice(0, mini(12, playable_max_zoom_target_pairs.size()))])
+	_print_overlap_geometry("playable_max", playable_max_zoom_pairs)
 	_expect(playable_max_zoom_pairs.is_empty(), "playable 241-node full-detail layout is overlap-free at maximum zoom")
 	var playable_leaf_ids := _last_visible_leaf_ids(2)
 	_expect(playable_leaf_ids.size() == 2, "playable 241-node live visual test has two leaf cards")
@@ -630,6 +632,34 @@ func _overlapping_node_pairs() -> Array[String]:
 			if left_rect.intersects(right_rect):
 				overlaps.append("%s:%s" % [nodes[left_index].name, nodes[right_index].name])
 	return overlaps
+
+
+func _target_overlapping_node_pairs() -> Array[String]:
+	var nodes: Array[BTGraphNode] = []
+	for child in view.graph_edit.get_children():
+		if child is BTGraphNode:
+			nodes.append(child)
+	var overlaps: Array[String] = []
+	for left_index in range(nodes.size()):
+		for right_index in range(left_index + 1, nodes.size()):
+			var left := nodes[left_index]
+			var right := nodes[right_index]
+			var left_base := left.position_offset - left.visual_offset
+			var right_base := right.position_offset - right.visual_offset
+			var left_target := Vector2(view.auto_spacing_targets.get(left.node_resource.id, Vector2.ZERO))
+			var right_target := Vector2(view.auto_spacing_targets.get(right.node_resource.id, Vector2.ZERO))
+			if Rect2(left_base + left_target, left.size).grow(-2.0).intersects(Rect2(right_base + right_target, right.size).grow(-2.0)):
+				overlaps.append("%s:%s" % [left.name, right.name])
+	return overlaps
+
+
+func _print_overlap_geometry(label: String, pairs: Array[String]) -> void:
+	for pair_variant in pairs.slice(0, mini(4, pairs.size())):
+		var pair := str(pair_variant)
+		var ids := pair.split(":")
+		var left := _graph_node(view, int(ids[0]))
+		var right := _graph_node(view, int(ids[1]))
+		print("VISUAL_OVERLAP %s pair=%s left_pos=%s left_size=%s left_offset=%s right_pos=%s right_size=%s right_offset=%s" % [label, pair, left.position_offset, left.size, left.visual_offset, right.position_offset, right.size, right.visual_offset])
 
 
 func _graph_node_count() -> int:
