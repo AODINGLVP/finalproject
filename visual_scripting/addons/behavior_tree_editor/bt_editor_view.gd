@@ -2104,7 +2104,7 @@ func _auto_spacing_layout_signature() -> String:
 	var values: Array[String] = [str(semantic_detail_level), "focus:%d" % fisheye_focus_node_id]
 	for child in graph_edit.get_children():
 		if child is BTGraphNode and child.node_resource != null:
-			var layout_position := child.get_logical_position() if child.manual_dragging else child.node_resource.position
+			var layout_position: Vector2 = child.get_logical_position() if child.manual_dragging else child.node_resource.position
 			values.append("%d:%d:%.3f:%.3f:%.3f:%.3f" % [
 				child.node_resource.id,
 				child.node_resource.parent_id,
