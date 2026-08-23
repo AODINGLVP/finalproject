@@ -109,6 +109,16 @@ Search matches title, type, description, method and decorator parameters; non-ma
 
 Orthogonal routing replaces curves with right-angle segments. Edge bundling allows connections with a common direction to share a trunk, reducing repeated parallel geometry. Active-path highlighting, inactive-branch dimming, decorator badges, path summaries and failure annotations add execution-specific information without modifying the resource. Each of these remains optional because highlighting and edge styles can interact differently with tree density and user preference.
 
+\section{Physical display experiment infrastructure}
+
+The screen-size harness separates EDID physical surface from native resolution. A PowerShell inventory maps each active Windows display device to its EDID width and height, current desktop device and validated Godot screen index. For a display of width \(W_{cm}\) and height \(H_{cm}\), the controlled canvas is
+\[
+W_c=35W_{cm}, \qquad H_c=35H_{cm},
+\]
+where \(W_c\) and \(H_c\) are logical canvas units. The graph cards retain the same logical dimensions, so a larger physical surface supplies proportionally more controlled canvas rather than inheriting a device's arbitrary pixel density.
+
+The real-renderer harness moves the experiment window to the requested display, instantiates the editor in the normalised \texttt{SubViewport}, applies the same deterministic tree and display conditions, and records physical metadata with every row. Each session has an immutable device inventory and separate per-device raw CSV, summary, manifest, log and screenshots. A combined analysis regenerates the paired screen-size table and input SHA-256 manifest; a new monitor is recorded under a new session rather than replacing existing evidence.
+
 \section{Runtime topology cache}
 
 Uncached runtime queries repeatedly scan the node array to find an identifier, gather a parent's children and gather an owner's decorators. The optional cache builds three indexes: node ID to resource, parent ID to ordered children, and owner ID to ordered decorators. Dynamic condition and action results are never cached.

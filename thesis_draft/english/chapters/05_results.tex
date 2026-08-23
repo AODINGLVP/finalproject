@@ -66,6 +66,32 @@ Fit-to-view exposed an important limit rather than an unqualified improvement. A
 
 The fisheye result is intentionally modest. The target increased by 20\%, enough to make local content more prominent without the severe relocation associated with stronger distortion. Unlike collapse or focus, fisheye did not reduce visible-node count. It is therefore complementary rather than directly comparable on that metric.
 
+\section{Physical screen-size results}
+
+The three-display experiment completed all 270 observations, saved all 18 planned screenshots and recorded zero failed assertions. \Cref{tab:physicalscreens} reports the two complex controlled trees. Coverage is the proportion of rendered card centres inside the canvas after fit-to-view; graph/screen is the Baseline graph-bounds area divided by the EDID physical surface after conversion at 35 logical units per centimetre.
+
+\begin{table}[htbp]
+\centering
+\caption{Complex-tree coverage across three physical display sizes. Resolution is audit metadata, not the treatment.}
+\label{tab:physicalscreens}
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Display & Surface (cm) & Canvas & 241 coverage & 364 coverage & 241 graph/screen & 364 graph/screen \\
+\midrule
+BOE0CD1, 15.94 in & 34 by 22 & 1190 by 770 & 18.32\% & 12.13\% & 116.38x & 184.13x \\
+H27T22S, 26.96 in & 60 by 33 & 2100 by 1155 & 38.61\% & 25.57\% & 43.96x & 69.56x \\
+U32G3X, 31.55 in & 70 by 39 & 2450 by 1365 & 46.53\% & 30.82\% & 31.89x & 50.45x \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+From 15.94 to 31.55 inches, Baseline coverage increased from 18.32\% to 46.53\% at 241 nodes and from 12.13\% to 30.82\% at 364 nodes. Both are 2.54 times their small-display values. Over the same physical-area change, the graph/screen ratio fell by 72.60\% for both complex sizes. These results quantify the additional context available on the larger surface; they do not measure whether a developer reads that context more effectively.
+
+Compact area reduction remained 61.09--61.35\% and Overview remained 90.27--90.34\% across all display--size cells. Search framed its target in all 15 display--size combinations, every condition retained zero overlap, and saved positions and execution order remained unchanged. Nevertheless, Baseline and Overview at 241 and 364 nodes reached the 0.10x minimum on all three displays. The largest surface therefore raised visible coverage substantially but still did not place the complete wide tree in one view; local context mechanisms remained necessary. Timing was not ranked across displays.
+
 \section{Versioned drag interaction results}
 
 The A1--B1--B2--A2 experiment produced 200 recorded drags, with 20 observations per version and tree size after block-level warm-ups. All trials moved the target more than 150 pixels, synchronised the final resource position and preserved execution order. \Cref{tab:dragscale} reports total time for the identical 240-sample input path. Bootstrap intervals use 10,000 fixed-seed resamples within each version--size group.
@@ -208,4 +234,4 @@ The optional participant workbook contains 216 pre-generated rows but zero obser
 
 \section{Summary against research questions}
 
-RQ1 is supported by the complete test matrix and complex game: the plugin authors, serialises, validates, executes and debugs non-trivial agent behaviour. RQ2 is answered at the defined instrumented level: five controlled sizes and the playable resource show repeatable density, context and salience effects with no overlap or semantic mutation, while fixed-path processing improved most clearly at 241 and 364 nodes and did not improve at every scale. Human usability is outside that answered construct and remains unverified. RQ3 is supported for the tested workload: exact-signature topology caching preserved semantics and substantially reduced median tick cost, especially on larger trees.
+RQ1 is supported by the complete test matrix and complex game: the plugin authors, serialises, validates, executes and debugs non-trivial agent behaviour. RQ2 is answered at the defined instrumented level: five controlled tree sizes, three physical display sizes and the playable resource show repeatable density, context, coverage and salience effects with no overlap or semantic mutation, while fixed-path processing improved most clearly at 241 and 364 nodes and did not improve at every scale. Human usability is outside that answered construct and remains unverified. RQ3 is supported for the tested workload: exact-signature topology caching preserved semantics and substantially reduced median tick cost, especially on larger trees.

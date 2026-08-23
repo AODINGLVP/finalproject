@@ -25,11 +25,11 @@ The study addresses three research questions:
 
 \begin{description}
     \item[RQ1:] Can a Godot editor plugin provide the core authoring, runtime, blackboard, decorator and live-debug capabilities required to control a non-trivial 2D game agent?
-    \item[RQ2:] Across controlled tree sizes, how do independently switchable visualisation techniques change measurable presentation properties and fixed-path authoring interaction while preserving saved structure and execution order?
+    \item[RQ2:] Across controlled tree sizes and physical display sizes, how do independently switchable visualisation techniques change measurable presentation properties and fixed-path authoring interaction while preserving saved structure and execution order?
     \item[RQ3:] Can topology caching reduce behaviour-tree tick cost across tree sizes and actor counts without changing execution results or becoming unsafe when a resource is mutated in place?
 \end{description}
 
-RQ2 deliberately concerns instrumented presentation and interaction evidence. Geometry, salience, overlap and fixed-input processing time can establish what the editor changes as scale increases. They cannot establish whether people understand the tree faster, make fewer errors or experience lower cognitive load. A balanced participant protocol is retained as optional future construct validation, but it is not treated as completed evidence and no participant outcome is fabricated.
+RQ2 deliberately concerns instrumented presentation and interaction evidence. Geometry, salience, overlap, physical-surface coverage and fixed-input processing time can establish what the editor changes as tree scale or available display area increases. They cannot establish whether people understand the tree faster, make fewer errors or experience lower cognitive load. A balanced participant protocol is retained as optional future construct validation, but it is not treated as completed evidence and no participant outcome is fabricated.
 
 \section{Objectives and success criteria}
 
@@ -43,7 +43,7 @@ The project objectives are to:
     \item show the current path, node status, blackboard and failure reason only inside the Godot editor;
     \item implement large-tree presentation methods behind independent persisted switches and safe reset paths;
     \item create deterministic trees and a sufficiently complex 2D scenario to test real decision changes;
-    \item evaluate correctness, visual geometry, visual regressions, cross-scale drag interaction and clean installation with reproducible raw data, while retaining a balanced developer-task protocol for optional future human validation.
+    \item evaluate correctness, visual geometry, physical-display-size robustness, visual regressions, cross-scale drag interaction and clean installation with reproducible raw data, while retaining a balanced developer-task protocol for optional future human validation.
 \end{enumerate}
 
 Success requires more than launching the plugin. Every runtime node must have focused semantic tests; editor operations must survive save/reload and history operations; the game scenario must demonstrate detection, pursuit, attack, search, retreat and recovery; visual features must be checked with a real renderer; and cached and uncached execution must return identical terminal states. Logs are treated as failed if they contain script errors, leaks, native crashes or illegal memory access, even if an assertion counter reports success.
@@ -56,7 +56,7 @@ The main contributions of this work are:
     \item a distributable Godot 4.6 behaviour-tree plugin with executable composite, leaf and decorator semantics, actor-method integration and a typed blackboard;
     \item an editor-only live-debug bridge that reports active paths, blackboard values and failure causes without coupling debugging presentation to the running game;
     \item an integrated set of 19 independently switchable display features, including compact and semantic representations, focus+context, subtree reduction, navigation, path emphasis, accessibility encodings and alternative edge rendering;
-    \item a reproducible evaluation corpus containing deterministic 31-, 61-, 121-, 241- and 364-node resources, a playable 241-node tree, real-\ac{GPU} screenshots, 900 repeated display observations, 200 versioned drag observations, raw CSV files and a deterministic analysis script;
+    \item a reproducible evaluation corpus containing deterministic 31-, 61-, 121-, 241- and 364-node resources, a playable 241-node tree, real-\ac{GPU} screenshots, 900 repeated display observations, 200 versioned drag observations and 270 physical-screen observations across three connected displays, together with raw CSV files and deterministic analysis scripts;
     \item a topology cache whose exact signature detects same-size reordering, reparenting, decorator reassignment and resource-instance replacement, together with measurements over nine size/load combinations.
 \end{itemize}
 
