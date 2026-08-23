@@ -25,6 +25,7 @@ func _ready() -> void:
 		var defeated_callable := Callable(self, "_on_enemy_defeated")
 		if enemy.has_signal("defeated") and not enemy.is_connected("defeated", defeated_callable):
 			enemy.connect("defeated", defeated_callable)
+		_attach_identity_label(enemy)
 	total_enemy_count = tracked_enemies.size()
 	remaining_enemy_count = total_enemy_count
 	victory_panel.visible = false
@@ -66,12 +67,29 @@ func _draw() -> void:
 		var origin: Vector2 = enemy.global_position + Vector2(-28, -54)
 		draw_rect(Rect2(origin, Vector2(56, 7)), Color(0.08, 0.1, 0.12, 0.9), true)
 		draw_rect(Rect2(origin + Vector2(1, 1), Vector2(54.0 * ratio, 5)), Color(0.25, 0.92, 0.58), true)
-		var runner := enemy.get_node_or_null("BehaviorTreeComponent")
-		var tree_size := 0
-		if runner != null and runner.behavior_tree != null:
-			tree_size = runner.behavior_tree.nodes.size()
-		var identity := "%s  %d nodes" % [str(enemy.archetype_name), tree_size]
-		draw_string(font, origin + Vector2(-6, -5), identity, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.82, 0.94, 1.0, 0.95))
+
+
+func _attach_identity_label(enemy: Node) -> void:
+	if enemy.has_node("BehaviorTreeIdentity"):
+		return
+	var runner := enemy.get_node_or_null("BehaviorTreeComponent")
+	var tree_size := 0
+	if runner != null and runner.behavior_tree != null:
+		tree_size = int(runner.behavior_tree.nodes.size())
+	var identity := Label.new()
+	identity.name = "BehaviorTreeIdentity"
+	identity.position = Vector2(-84.0, -112.0 if tree_size == 61 else -90.0)
+	identity.size = Vector2(168.0, 22.0)
+	identity.text = "%s  %d nodes" % [str(enemy.get("archetype_name")), tree_size]
+	identity.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	identity.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	identity.z_index = 20
+	identity.add_theme_font_size_override("font_size", 12)
+	identity.add_theme_color_override("font_color", Color(0.82, 0.94, 1.0, 0.98))
+	identity.add_theme_color_override("font_shadow_color", Color(0.01, 0.03, 0.05, 0.95))
+	identity.add_theme_constant_override("shadow_offset_x", 1)
+	identity.add_theme_constant_override("shadow_offset_y", 1)
+	enemy.add_child(identity)
 
 
 func _update_hud() -> void:
