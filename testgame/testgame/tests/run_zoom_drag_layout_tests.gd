@@ -25,6 +25,7 @@ func _run() -> void:
 	await _test_complete_zoom_range(view)
 	await _test_playable_tree_zoom_sweep(view)
 	await _test_live_drag_avoidance(view)
+	await _test_drag_previously_displaced_card(view)
 	await _test_large_live_drag_latency(view)
 	await _test_complex_tree_scales(view)
 	await _test_complex_tree_drag_locality(view)
@@ -225,6 +226,35 @@ func _test_live_drag_avoidance(view: BTEditorView) -> void:
 		_expect(_structure_signature(tree) == structure_before and _execution_order_signature(tree) == order_before, "live drag at zoom %.3f preserves structure and execution order" % zoom_value)
 
 
+func _test_drag_previously_displaced_card(view: BTEditorView) -> void:
+	for zoom_value in [view.graph_edit.zoom_min, view.graph_edit.zoom_max]:
+		var tree := _make_local_avoidance_tree()
+		await _prepare_view(view, tree, zoom_value, true, false)
+		_drag_graph_node_to(view, 4, Vector2(330.0, 550.0))
+		await _wait_frames(SETTLE_FRAMES)
+		var displaced := _graph_node(view, 5)
+		_expect(displaced != null and not displaced.visual_offset.is_zero_approx(), "zoom %.3f creates a temporarily displaced neighbour" % zoom_value)
+		if displaced == null:
+			continue
+		var rendered_start := displaced.position_offset
+		var resources_before := _resource_positions(tree)
+		var structure_before := _structure_signature(tree)
+		var order_before := _execution_order_signature(tree)
+		var drag_state := _begin_graph_node_drag(view, 5)
+		_expect(displaced.position_offset.distance_to(rendered_start) <= POSITION_EPSILON, "zoom %.3f grabs a displaced card without snapping it back" % zoom_value)
+		var free_target := Vector2(500.0, 900.0)
+		_move_graph_node_drag(view, drag_state, free_target)
+		await process_frame
+		_expect(displaced.position_offset.distance_to(free_target) <= POSITION_EPSILON, "zoom %.3f keeps the previously displaced card under the pointer" % zoom_value)
+		_expect(_rendered_overlaps(view).is_empty() and _screen_overlaps(view).is_empty(), "zoom %.3f keeps a previously displaced card overlap-free during its drag" % zoom_value)
+		_expect(_resource_positions_equal(tree, resources_before), "zoom %.3f does not write the displaced card or neighbours before release" % zoom_value)
+		_end_graph_node_drag(drag_state)
+		await _wait_frames(SETTLE_FRAMES)
+		_expect(tree.find_node(5).position.distance_to(free_target) <= POSITION_EPSILON, "zoom %.3f stores the visible release point of a previously displaced card" % zoom_value)
+		_expect(_rendered_overlaps(view).is_empty() and _screen_overlaps(view).is_empty(), "zoom %.3f remains overlap-free after releasing a previously displaced card" % zoom_value)
+		_expect(_structure_signature(tree) == structure_before and _execution_order_signature(tree) == order_before, "zoom %.3f preserves semantics when dragging a previously displaced card" % zoom_value)
+
+
 func _test_large_live_drag_latency(view: BTEditorView) -> void:
 	var tree := TreeFactory.generate(364) as BTTreeResource
 	_assign_layered_positions(tree)
@@ -242,7 +272,9 @@ func _test_large_live_drag_latency(view: BTEditorView) -> void:
 	var structure_before := _structure_signature(tree)
 	var order_before := _execution_order_signature(tree)
 	await _prepare_view(view, tree, view.graph_edit.zoom_max, true, false)
+	var drag_begin_usec := Time.get_ticks_usec()
 	var drag_state := _begin_graph_node_drag(view, source_id)
+	var drag_begin_ms := float(Time.get_ticks_usec() - drag_begin_usec) / 1000.0
 	_expect(not drag_state.is_empty(), "364-node live-drag timing starts a real drag")
 	if drag_state.is_empty():
 		return
@@ -256,7 +288,8 @@ func _test_large_live_drag_latency(view: BTEditorView) -> void:
 	samples_ms.sort()
 	var p95_index := clampi(ceili(float(samples_ms.size()) * 0.95) - 1, 0, samples_ms.size() - 1)
 	var p95_ms := samples_ms[p95_index]
-	print("BT_LIVE_DRAG_METRIC cards=%d samples=%d p95_ms=%.3f max_ms=%.3f" % [_graph_nodes(view).size(), samples_ms.size(), p95_ms, samples_ms[-1]])
+	print("BT_LIVE_DRAG_METRIC cards=%d samples=%d begin_ms=%.3f p95_ms=%.3f max_ms=%.3f" % [_graph_nodes(view).size(), samples_ms.size(), drag_begin_ms, p95_ms, samples_ms[-1]])
+	_expect(drag_begin_ms <= 50.0, "364-node drag-start baseline pruning stays below the 50 ms interaction safety limit at maximum zoom")
 	_expect(p95_ms <= 50.0, "364-node live collision avoidance stays below the 50 ms interaction safety limit at maximum zoom")
 	_expect(_resource_positions_equal(tree, resource_before), "364-node live drag performs no resource writes before release")
 	_expect(_structure_signature(tree) == structure_before and _execution_order_signature(tree) == order_before, "364-node live drag preserves structure and execution order")
