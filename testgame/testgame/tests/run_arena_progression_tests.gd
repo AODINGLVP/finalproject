@@ -95,7 +95,7 @@ func _run() -> void:
 	_expect(runtime_paths.size() == ACTOR_SPECS.size(), "each actor uses a unique behavior-tree resource path")
 
 	if actors.size() == ACTOR_SPECS.size():
-		await _defeat_actors_in_order(arena, actors)
+		await _defeat_actors_in_order(arena, player, actors)
 		await _verify_defeat_is_permanent(actors)
 		_verify_completed_state(arena, victory_panel, actors)
 		await _reset_and_verify(arena, victory_panel, actors, initial_positions)
@@ -187,17 +187,16 @@ func _test_infinite_player_health(player: Node) -> void:
 	_expect((player as Node2D).global_position == position_before, "large damage cannot respawn or move infinite-health Player")
 
 
-func _defeat_actors_in_order(arena: Node, actors: Array[Node]) -> void:
+func _defeat_actors_in_order(arena: Node, player: Node, actors: Array[Node]) -> void:
 	for index in range(actors.size()):
 		var actor := actors[index]
 		var runner := actor.get_node_or_null("BehaviorTreeComponent")
-		_expect(actor.has_method("take_damage"), "%s can receive real damage" % actor.name)
-		if not actor.has_method("take_damage"):
+		_expect(actor.has_method("take_damage"), "%s can receive Player attack damage" % actor.name)
+		if not actor.has_method("take_damage") or player == null:
 			continue
-		var lethal_damage := int(actor.get("max_health")) + 10_000
-		actor.call("take_damage", lethal_damage)
+		await _attack_until_defeated(player, actor)
 		await process_frame
-		_expect(bool(actor.get("is_defeated")), "%s is defeated by take_damage" % actor.name)
+		_expect(bool(actor.get("is_defeated")), "%s is defeated through the Player attack area" % actor.name)
 		_expect(not actor.visible, "%s is hidden after defeat" % actor.name)
 		if runner != null:
 			_expect(not bool(runner.get("is_running")), "%s behavior tree stops after defeat" % actor.name)
@@ -213,6 +212,21 @@ func _defeat_actors_in_order(arena: Node, actors: Array[Node]) -> void:
 	final_actor.call("take_damage", int(final_actor.get("max_health")) + 10_000)
 	await process_frame
 	_expect(arena_completed_emissions == 1, "repeated damage cannot emit arena_completed twice")
+
+
+func _attack_until_defeated(player: Node, actor: Node) -> void:
+	var attacks_used := 0
+	while not bool(actor.get("is_defeated")) and attacks_used < 10:
+		var health_before := int(actor.get("health"))
+		(player as Node2D).global_position = (actor as Node2D).global_position + Vector2(-40.0, 0.0)
+		player.set("facing", 1)
+		player.call("_start_attack")
+		await physics_frame
+		player.call("_update_attack", float(player.get("attack_duration")) + 0.01)
+		await process_frame
+		attacks_used += 1
+		_expect(int(actor.get("health")) < health_before or bool(actor.get("is_defeated")), "%s loses health to Player attack %d" % [actor.name, attacks_used])
+	_expect(attacks_used < 10, "%s can be defeated with the configured Player attack" % actor.name)
 
 
 func _verify_defeat_is_permanent(actors: Array[Node]) -> void:
