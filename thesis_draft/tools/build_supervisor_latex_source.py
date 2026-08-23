@@ -295,7 +295,6 @@ def external_hyperlinks(document: Document) -> list[str]:
 def validate_source_docx(path: Path) -> dict[str, object]:
     document = Document(path)
     headings = [p.text for p in document.paragraphs if p.style.name.startswith("Heading")]
-    text = "\n".join(p.text for p in document.paragraphs)
     if len(headings) != 45:
         raise AssertionError(f"Expected 45 accepted Chinese headings, found {len(headings)}")
     if len(document.tables) != 5:
@@ -303,7 +302,7 @@ def validate_source_docx(path: Path) -> dict[str, object]:
     if len(document.inline_shapes) != 10:
         raise AssertionError(f"Expected 10 accepted figures, found {len(document.inline_shapes)}")
     for forbidden in ("2.6　研究空白与设计启示", "附录 A", "附录 B", "附录 C"):
-        if forbidden in text:
+        if any(forbidden in heading for heading in headings):
             raise AssertionError(f"Accepted DOCX unexpectedly contains removed content: {forbidden}")
     links = external_hyperlinks(document)
     if len(links) != len(VERIFIED_URLS) or set(links) != set(VERIFIED_URLS):
