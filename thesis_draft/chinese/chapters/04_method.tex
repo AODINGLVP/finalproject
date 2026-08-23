@@ -70,10 +70,12 @@ Inspector 使用与字段类型对应的控件。例如，Action 直接填写方
 
 \section{大型树显示机制}
 
-论文只比较第三章定义的六种显示条件。Compact、Semantic Zoom、Search、Subtree Focus 和 Collapse 都可以单独开启和关闭；Baseline 关闭这些实验功能。切换条件时，插件会清除上一个条件留下的卡片尺寸、搜索、聚焦和折叠状态，再重建画布。
+大型行为树的问题不只来自节点数量，还来自卡片信息、连线密度、导航距离和运行状态同时增加。为此，插件从信息密度、焦点与结构裁剪、导航与概览、连线与运行表示四个方面提供显示功能。
 
 \subsection{信息密度控制}
-Compact 缩小卡片，但不隐藏节点。Semantic Zoom 根据当前缩放比例决定显示多少字段，不改变树的结构。Optimized Overview 同时使用这两项功能，并在 50\% 缩放下显示最低限度的信息。
+Compact 缩小卡片，但不隐藏节点。卡片保留节点类型和短标题，参数、描述和 Decorator 摘要可以在需要时再显示。Semantic Zoom 根据画布缩放比例切换信息层级：近距离显示完整字段，中距离保留标题和关键参数，远距离只保留识别节点所需的信息。这两项功能都不会改变行为树资源。
+
+节点类型还使用颜色、图标和形状进行重复编码。即使颜色不容易区分，用户仍可通过图标和轮廓识别 Root、复合节点、任务和 Decorator。插件同时提供色盲友好配色，减少只依赖单一颜色通道的问题。
 
 \begin{figure}[htbp]
 \centering
@@ -82,8 +84,39 @@ Compact 缩小卡片，但不隐藏节点。Semantic Zoom 根据当前缩放比�
 \caption{同一行为树的完整细节基线和紧凑显示。}\label{fig:compact}
 \end{figure}
 
-\subsection{目标定位与上下文控制}
-Optimized Search 在 Overview 状态下搜索唯一的节点标题，淡化其他卡片，并把目标移入当前视口。Subtree Focus 只显示指定分支和必要上下文。Context Collapse 保留折叠根和摘要，但暂时不显示其后代。Focus 和 Collapse 都不会删除资源节点或改变父子关系。
+\subsection{焦点与结构裁剪}
+鱼眼 Focus+Context 会放大指针附近的卡片，同时保留周围节点作为位置参考。最大放大倍率限制为 1.20 倍，卡片以自身中心补偿位置，避免放大后整体布局持续漂移。关闭鱼眼后，卡片恢复原来的尺寸和位置。
+
+Search 支持标题、类型、描述、Action、Condition 和 Decorator 参数搜索，并提供上一个、下一个和清除操作。匹配节点保持明显，其他节点淡化，选定目标可以移动到当前视口。Subtree Focus 只显示指定分支和必要上下文；Context Collapse 保留折叠根和隐藏节点摘要，但暂时不绘制后代。展开后仍使用原有节点位置和父子关系。
+
+\begin{figure}[htbp]
+\centering
+\begin{minipage}{0.48\textwidth}\centering\includegraphics[width=\linewidth]{figures/03_fisheye.png}\\[-1mm]\small (a) 鱼眼焦点与上下文\end{minipage}\hfill
+\begin{minipage}{0.48\textwidth}\centering\includegraphics[width=\linewidth]{figures/05_collapsed.png}\\[-1mm]\small (b) 子树折叠与摘要\end{minipage}
+\caption{局部放大和结构裁剪的两种实现。}\label{fig:focuscollapse}
+\end{figure}
+
+\subsection{导航与概览}
+增强小地图使用固定区域显示整棵树的缩略结构，并标出当前视口位置。Fit 用于把当前图形移动到可查看范围，Focus 用于定位选中节点，Show All 用于取消局部显示并返回完整树。Breadcrumb 显示从 Root 到当前节点的层级路径，路径摘要则以文字形式给出当前执行或选择路径，因此在卡片缩小时仍可确认所处位置。
+
+搜索结果可以使用按钮或键盘在前后目标之间移动。多列布局把拥有大量子节点的分支分成多列，避免单层无限向横向扩展；稳定布局尽量保留未修改分支的位置，减少一次编辑造成的大范围移动。自动排列仍保持同级节点从左到右的执行顺序。
+
+\begin{figure}[htbp]
+\centering\includegraphics[width=0.92\textwidth]{figures/10_complex_tree.png}
+\caption{复杂树中的小地图、路径摘要、导航控件和自动布局。}\label{fig:navigation}
+\end{figure}
+
+\subsection{连线与运行表示}
+插件使用节点下方的输出端口和上方的输入端口表达父子关系。正式连线由插件自行绘制，拖动预览仍使用 Godot 的 GraphEdit 输入处理。正交连线使用水平和垂直线段减少曲线交叉；边捆绑让具有共同父级的连线先共享一段主干，再分向各个子节点。两种方式都保留连线点击、断开、撤销和重做。
+
+运行时表示在同一画布上显示活动路径、当前节点、成功或失败状态、非活动分支淡化和失败原因。路径颜色沿父子关系连续传播，Decorator 失败会显示在所属节点附近。这样，用户既能看到静态结构，也能看到本次 Tick 实际经过的分支。
+
+\begin{figure}[htbp]
+\centering
+\begin{minipage}{0.48\textwidth}\centering\includegraphics[width=\linewidth]{figures/08_orthogonal_edges.png}\\[-1mm]\small (a) 正交连线与活动路径\end{minipage}\hfill
+\begin{minipage}{0.48\textwidth}\centering\includegraphics[width=\linewidth]{figures/09_bundled_edges.png}\\[-1mm]\small (b) 边捆绑与失败标注\end{minipage}
+\caption{连线组织和运行状态表示。}\label{fig:edgesruntime}
+\end{figure}
 
 \section{物理屏幕实验基础设施}
 
