@@ -705,8 +705,7 @@ def build_english(output_path: Path) -> None:
         paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
         paragraph.paragraph_format.first_line_indent = Pt(0)
     document.add_page_break()
-    for element in make_front_matter_elements(document, chinese=False):
-        document.element.body.append(element)
+    make_front_matter_elements(document, chinese=False)
 
     blocks = english_source_blocks()
     reference_inserted = False
@@ -756,6 +755,23 @@ def verify_complete_docx(path: Path, *, chinese: bool, expected_headings: int) -
     headings = [p.text for p in document.paragraphs if p.style.name.startswith("Heading")]
     if len(headings) != expected_headings:
         raise AssertionError(f"Expected {expected_headings} headings, found {len(headings)}")
+
+    paragraph_texts = [paragraph.text for paragraph in document.paragraphs]
+    front_labels = ("目录", "图目录", "表目录") if chinese else ("Contents", "List of Figures", "List of Tables")
+    first_body_label = "致谢" if chinese else "Abstract"
+    front_indices = []
+    for label in front_labels:
+        matches = [index for index, text in enumerate(paragraph_texts) if text == label]
+        if len(matches) != 1:
+            raise AssertionError(f"Expected one front-matter heading {label!r}, found {len(matches)}")
+        front_indices.append(matches[0])
+    body_matches = [index for index, text in enumerate(paragraph_texts) if text == first_body_label]
+    if len(body_matches) != 1:
+        raise AssertionError(f"Expected one first body heading {first_body_label!r}, found {len(body_matches)}")
+    if front_indices != sorted(front_indices) or front_indices[-1] >= body_matches[0]:
+        raise AssertionError(
+            f"Front-matter order is invalid: front={front_indices}, first_body={body_matches[0]}"
+        )
 
     xml_text = path.read_bytes()
     with ZipFile(path) as archive:
