@@ -21,21 +21,21 @@
 \contentsline {chapter}{\chapternumberline {3}研究方法}{6}{chapter.3}%
 \contentsline {section}{\numberline {3.1}研究策略}{6}{section.3.1}%
 \contentsline {section}{\numberline {3.2}实验因素与数据集}{6}{section.3.2}%
-\contentsline {section}{\numberline {3.3}受控多规模显示实验}{8}{section.3.3}%
+\contentsline {section}{\numberline {3.3}受控多规模显示实验}{7}{section.3.3}%
 \contentsline {section}{\numberline {3.4}物理屏幕尺寸实验}{8}{section.3.4}%
 \contentsline {section}{\numberline {3.5}插件功能与可玩游戏验证}{8}{section.3.5}%
-\contentsline {section}{\numberline {3.6}有效性与可复现性}{9}{section.3.6}%
+\contentsline {section}{\numberline {3.6}有效性与可复现性}{8}{section.3.6}%
 \contentsline {chapter}{\chapternumberline {4}系统设计与实现}{10}{chapter.4}%
 \contentsline {section}{\numberline {4.1}架构与项目边界}{10}{section.4.1}%
 \contentsline {section}{\numberline {4.2}资源模型与校验}{10}{section.4.2}%
 \contentsline {section}{\numberline {4.3}运行时语义}{11}{section.4.3}%
 \contentsline {section}{\numberline {4.4}编辑器编写工作流}{11}{section.4.4}%
 \contentsline {section}{\numberline {4.5}Live Debug 与黑板检查}{12}{section.4.5}%
-\contentsline {section}{\numberline {4.6}大型树显示机制}{13}{section.4.6}%
+\contentsline {section}{\numberline {4.6}大型树显示机制}{12}{section.4.6}%
 \contentsline {subsection}{\numberline {4.6.1}信息密度控制}{13}{subsection.4.6.1}%
 \contentsline {subsection}{\numberline {4.6.2}目标定位与上下文控制}{13}{subsection.4.6.2}%
 \contentsline {section}{\numberline {4.7}物理屏幕实验基础设施}{13}{section.4.7}%
-\contentsline {section}{\numberline {4.8}演示游戏}{14}{section.4.8}%
+\contentsline {section}{\numberline {4.8}演示游戏}{13}{section.4.8}%
 \contentsline {chapter}{\chapternumberline {5}结果与分析}{15}{chapter.5}%
 \contentsline {section}{\numberline {5.1}插件功能与可玩游戏验证}{15}{section.5.1}%
 \contentsline {section}{\numberline {5.2}受控多规模显示结果}{15}{section.5.2}%
@@ -47,7 +47,7 @@
 \contentsline {section}{\numberline {6.3}可靠性与发布}{19}{section.6.3}%
 \contentsline {section}{\numberline {6.4}有效性威胁}{19}{section.6.4}%
 \contentsline {subsection}{\numberline {6.4.1}构念有效性}{19}{subsection.6.4.1}%
-\contentsline {subsection}{\numberline {6.4.2}内部有效性}{20}{subsection.6.4.2}%
+\contentsline {subsection}{\numberline {6.4.2}内部有效性}{19}{subsection.6.4.2}%
 \contentsline {subsection}{\numberline {6.4.3}外部有效性}{20}{subsection.6.4.3}%
 \contentsline {subsection}{\numberline {6.4.4}研究者与人体有效性边界}{20}{subsection.6.4.4}%
 \contentsline {section}{\numberline {6.5}实践启示}{20}{section.6.5}%
