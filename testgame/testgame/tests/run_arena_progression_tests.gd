@@ -215,12 +215,17 @@ func _defeat_actors_in_order(arena: Node, player: Node, actors: Array[Node]) -> 
 
 
 func _attack_until_defeated(player: Node, actor: Node) -> void:
+	actor.set_physics_process(false)
 	var attacks_used := 0
 	while not bool(actor.get("is_defeated")) and attacks_used < 10:
 		var health_before := int(actor.get("health"))
+		actor.set("velocity", Vector2.ZERO)
 		(player as Node2D).global_position = (actor as Node2D).global_position + Vector2(-40.0, 0.0)
+		player.set("velocity", Vector2.ZERO)
 		player.set("facing", 1)
+		await physics_frame
 		player.call("_start_attack")
+		await physics_frame
 		await physics_frame
 		player.call("_update_attack", float(player.get("attack_duration")) + 0.01)
 		await process_frame
