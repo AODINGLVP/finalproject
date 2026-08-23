@@ -278,6 +278,7 @@ func _test_editor_mutations(view: BTEditorView) -> void:
 	view._on_graph_node_drag_started(action_id)
 	graph_node.manual_dragging = true
 	graph_node.position_offset = old_position + Vector2(137.0, 59.0)
+	graph_node.manual_drag_moved = true
 	view._on_graph_node_position_changed(graph_node)
 	_expect(view.current_tree.find_node(action_id).position.is_equal_approx(old_position), "large-tree drag defers resource writes until pointer release")
 	view._on_graph_node_drag_finished(action_id)
