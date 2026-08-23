@@ -2178,7 +2178,7 @@ func _solve_auto_spacing_offsets(anchor_node_id := -1, initial_offsets: Dictiona
 	return offsets
 
 
-func _apply_auto_spacing_collision_pair(left: BTGraphNode, right: BTGraphNode, base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary, anchor_influence: Dictionary) -> bool:
+func _apply_auto_spacing_collision_pair(left: BTGraphNode, right: BTGraphNode, base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary, anchor_influence: Dictionary, one_sided := false) -> bool:
 	var left_rect := _auto_spacing_rect(left, base_positions, offsets, true)
 	var right_rect := _auto_spacing_rect(right, base_positions, offsets, true)
 	if not left_rect.intersects(right_rect):
@@ -2207,6 +2207,11 @@ func _apply_auto_spacing_collision_pair(left: BTGraphNode, right: BTGraphNode, b
 		penetration = left_rect.end.y - right_rect.position.y if left_precedes_right else right_rect.end.y - left_rect.position.y
 	var direction := axis if left_precedes_right else -axis
 	var weights := _auto_spacing_pair_weights(left_id, right_id, anchor_influence)
+	if one_sided and weights.is_equal_approx(Vector2.ONE):
+		# The normal balanced correction preserves a component's centre, but a long
+		# residual chain can converge asymptotically. At this final local stage,
+		# keep the earlier saved card fixed and move only its ordered successor.
+		weights = Vector2(0.0, 1.0) if left_precedes_right else Vector2(1.0, 0.0)
 	var weight_sum := weights.x + weights.y
 	if weight_sum <= 0.0:
 		return false
@@ -2234,7 +2239,7 @@ func _resolve_auto_spacing_residual_collisions(nodes: Array[BTGraphNode], base_p
 			if local_pairs.is_empty():
 				break
 			for pair in local_pairs:
-				_apply_auto_spacing_collision_pair(pair[0] as BTGraphNode, pair[1] as BTGraphNode, base_positions, offsets, source_order, anchor_influence)
+				_apply_auto_spacing_collision_pair(pair[0] as BTGraphNode, pair[1] as BTGraphNode, base_positions, offsets, source_order, anchor_influence, true)
 
 
 func _seed_identical_auto_spacing_groups(nodes: Array[BTGraphNode], base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary, anchor_node_id: int) -> void:
