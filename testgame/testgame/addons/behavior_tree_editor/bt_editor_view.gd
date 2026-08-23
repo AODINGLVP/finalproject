@@ -40,7 +40,6 @@ const OVERVIEW_LAYOUT_VERTICAL_GAP := BTGraphNode.NORMAL_CARD_SIZE.y + 24.0
 const AUTO_SPACING_GAP := 24.0
 const AUTO_SPACING_CONNECTION_GAP := 56.0
 const AUTO_SPACING_CONNECTION_MARGIN := 1.0
-const AUTO_SPACING_ITERATIONS := 24
 const AUTO_SPACING_LERP_SPEED := 14.0
 const AUTO_SPACING_EPSILON := 0.1
 const ZOOM_LAYOUT_ANCHOR_STABLE_FRAMES := 8
@@ -2077,121 +2076,116 @@ func _auto_spacing_layout_signature() -> String:
 
 func _solve_auto_spacing_offsets(anchor_node_id := -1) -> Dictionary:
 	var nodes: Array[BTGraphNode] = []
-	var node_depths: Dictionary = {}
+	var nodes_by_id: Dictionary = {}
+	var base_positions: Dictionary = {}
+	var source_order: Dictionary = {}
+	if current_tree != null:
+		for source_index in range(current_tree.nodes.size()):
+			var source_node := current_tree.nodes[source_index]
+			if source_node != null:
+				source_order[source_node.id] = source_index
 	for child in graph_edit.get_children():
 		if child is BTGraphNode and child.node_resource != null:
 			nodes.append(child)
-			node_depths[child.node_resource.id] = _auto_spacing_node_depth(child.node_resource.id)
-	nodes.sort_custom(func(left: BTGraphNode, right: BTGraphNode) -> bool:
+			nodes_by_id[child.node_resource.id] = child
+			base_positions[child.node_resource.id] = child.position_offset - child.visual_offset
+	var node_depths: Dictionary = {}
+	for graph_node in nodes:
+		_auto_spacing_cached_depth(graph_node.node_resource.id, nodes_by_id, node_depths, {})
+	var topology_order: Array[BTGraphNode] = nodes.duplicate()
+	topology_order.sort_custom(func(left: BTGraphNode, right: BTGraphNode) -> bool:
 		var left_depth := int(node_depths.get(left.node_resource.id, 0))
 		var right_depth := int(node_depths.get(right.node_resource.id, 0))
 		if left_depth != right_depth:
 			return left_depth < right_depth
-		if not is_equal_approx(left.node_resource.position.x, right.node_resource.position.x):
-			return left.node_resource.position.x < right.node_resource.position.x
-		return left.node_resource.id < right.node_resource.id
+		return int(source_order.get(left.node_resource.id, left.node_resource.id)) < int(source_order.get(right.node_resource.id, right.node_resource.id))
 	)
+	var target_positions: Dictionary = {}
+	# First establish a monotonic top-to-bottom channel for every visible edge.
+	# A child can move down, but an unrelated saved position is never pulled up.
+	for graph_node in topology_order:
+		var node_id: int = graph_node.node_resource.id
+		var target := Vector2(base_positions[node_id])
+		var parent_id: int = graph_node.node_resource.parent_id
+		if nodes_by_id.has(parent_id) and target_positions.has(parent_id):
+			var parent_graph_node := nodes_by_id[parent_id] as BTGraphNode
+			var parent_target := Vector2(target_positions[parent_id])
+			target.y = maxf(
+				target.y,
+				parent_target.y + parent_graph_node.size.y + AUTO_SPACING_CONNECTION_GAP + AUTO_SPACING_CONNECTION_MARGIN
+			)
+		target_positions[node_id] = target
+
+	# The stable rank mirrors the resource's left-to-right ordering. For every
+	# pair whose padded vertical spans intersect, place the later card to the
+	# right of the earlier one. All constraints point forward, so one pass is
+	# sufficient and cannot oscillate, even when every saved position is equal.
+	var horizontal_order: Array[BTGraphNode] = nodes.duplicate()
+	horizontal_order.sort_custom(func(left: BTGraphNode, right: BTGraphNode) -> bool:
+		var left_position: Vector2 = left.node_resource.position
+		var right_position: Vector2 = right.node_resource.position
+		if not is_equal_approx(left_position.x, right_position.x):
+			return left_position.x < right_position.x
+		if not is_equal_approx(left_position.y, right_position.y):
+			return left_position.y < right_position.y
+		return int(source_order.get(left.node_resource.id, left.node_resource.id)) < int(source_order.get(right.node_resource.id, right.node_resource.id))
+	)
+	var total_x_shift := 0.0
+	for right_index in range(horizontal_order.size()):
+		var right: BTGraphNode = horizontal_order[right_index]
+		var right_id: int = right.node_resource.id
+		var right_target := Vector2(target_positions[right_id])
+		for left_index in range(right_index):
+			var left: BTGraphNode = horizontal_order[left_index]
+			var left_id: int = left.node_resource.id
+			var left_target := Vector2(target_positions[left_id])
+			if not _auto_spacing_y_intervals_overlap(left_target.y, left.size.y, right_target.y, right.size.y):
+				continue
+			right_target.x = maxf(
+				right_target.x,
+				left_target.x + left.size.x + AUTO_SPACING_GAP + AUTO_SPACING_CONNECTION_MARGIN
+			)
+		target_positions[right_id] = right_target
+		total_x_shift += right_target.x - Vector2(base_positions[right_id]).x
+
+	# Center normal reflows around their saved coordinates. During fisheye, keep
+	# the focused card fixed and translate the complete temporary layout instead.
+	var translate_x := 0.0
+	if nodes_by_id.has(anchor_node_id):
+		translate_x = Vector2(base_positions[anchor_node_id]).x - Vector2(target_positions[anchor_node_id]).x
+	elif not horizontal_order.is_empty():
+		translate_x = -total_x_shift / float(horizontal_order.size())
+	var translate_y := 0.0
+	if nodes_by_id.has(anchor_node_id):
+		translate_y = Vector2(base_positions[anchor_node_id]).y - Vector2(target_positions[anchor_node_id]).y
+
 	var offsets: Dictionary = {}
 	for graph_node in nodes:
-		offsets[graph_node.node_resource.id] = Vector2.ZERO
-	for _iteration in range(AUTO_SPACING_ITERATIONS):
-		var layout_changed := false
-		# Reserve a stable vertical channel for every parent-child edge. Moving the
-		# complete child subtree down preserves topology and never pulls lower rows up.
-		for child_node in nodes:
-			var child_resource := child_node.node_resource
-			if child_resource.parent_id == -1:
-				continue
-			var parent_node := graph_edit.get_node_or_null(NodePath(str(child_resource.parent_id))) as BTGraphNode
-			if parent_node == null:
-				continue
-			var parent_rect := _auto_spacing_rect(parent_node, offsets)
-			var child_rect := _auto_spacing_rect(child_node, offsets)
-			var required_drop := parent_rect.end.y + AUTO_SPACING_CONNECTION_GAP + AUTO_SPACING_CONNECTION_MARGIN - child_rect.position.y
-			if required_drop > 0.01:
-				if _auto_spacing_subtree_contains(child_resource.id, anchor_node_id):
-					_shift_auto_spacing_ancestor_chain(offsets, parent_node.node_resource.id, Vector2(0.0, -required_drop))
-				else:
-					_shift_auto_spacing_subtree(offsets, child_resource.id, Vector2(0.0, required_drop))
-				layout_changed = true
-		for left_index in range(nodes.size()):
-			var left := nodes[left_index]
-			for right_index in range(left_index + 1, nodes.size()):
-				var right := nodes[right_index]
-				var left_rect := _auto_spacing_rect(left, offsets).grow(AUTO_SPACING_GAP * 0.5)
-				var right_rect := _auto_spacing_rect(right, offsets).grow(AUTO_SPACING_GAP * 0.5)
-				if not left_rect.intersects(right_rect):
-					continue
-				layout_changed = true
-				var left_depth := int(node_depths.get(left.node_resource.id, 0))
-				var right_depth := int(node_depths.get(right.node_resource.id, 0))
-				var overlap_x := minf(left_rect.end.x, right_rect.end.x) - maxf(left_rect.position.x, right_rect.position.x)
-				if left_depth == right_depth:
-					var direction_x := -1.0 if left_rect.get_center().x <= right_rect.get_center().x else 1.0
-					var total_shift_x := overlap_x + 0.01
-					var left_contains_anchor := _auto_spacing_subtree_contains(left.node_resource.id, anchor_node_id)
-					var right_contains_anchor := _auto_spacing_subtree_contains(right.node_resource.id, anchor_node_id)
-					if left_contains_anchor:
-						_shift_auto_spacing_subtree(offsets, right.node_resource.id, -Vector2(direction_x * total_shift_x, 0.0))
-					elif right_contains_anchor:
-						_shift_auto_spacing_subtree(offsets, left.node_resource.id, Vector2(direction_x * total_shift_x, 0.0))
-					else:
-						var shift_x := total_shift_x * 0.5
-						_shift_auto_spacing_subtree(offsets, left.node_resource.id, Vector2(direction_x * shift_x, 0.0))
-						_shift_auto_spacing_subtree(offsets, right.node_resource.id, -Vector2(direction_x * shift_x, 0.0))
-				else:
-					var shallow := left if left_depth < right_depth else right
-					var deep := right if left_depth < right_depth else left
-					var shallow_rect := _auto_spacing_rect(shallow, offsets)
-					var deep_rect := _auto_spacing_rect(deep, offsets)
-					var required_drop := shallow_rect.end.y + AUTO_SPACING_CONNECTION_GAP + AUTO_SPACING_CONNECTION_MARGIN - deep_rect.position.y
-					if _auto_spacing_subtree_contains(deep.node_resource.id, anchor_node_id):
-						_shift_auto_spacing_ancestor_chain(offsets, shallow.node_resource.id, Vector2(0.0, -maxf(required_drop, 0.01)))
-					else:
-						_shift_auto_spacing_subtree(offsets, deep.node_resource.id, Vector2(0.0, maxf(required_drop, 0.01)))
-		if not layout_changed:
-			break
+		var node_id := graph_node.node_resource.id
+		var target := Vector2(target_positions[node_id]) + Vector2(translate_x, translate_y)
+		offsets[node_id] = target - Vector2(base_positions[node_id])
 	return offsets
 
 
-func _auto_spacing_rect(graph_node: BTGraphNode, offsets: Dictionary) -> Rect2:
-	var base_position := graph_node.position_offset - graph_node.visual_offset
-	return Rect2(base_position + Vector2(offsets.get(graph_node.node_resource.id, Vector2.ZERO)), graph_node.size)
-
-
-func _auto_spacing_node_depth(node_id: int) -> int:
+func _auto_spacing_cached_depth(node_id: int, nodes_by_id: Dictionary, cache: Dictionary, visiting: Dictionary) -> int:
+	if cache.has(node_id):
+		return int(cache[node_id])
+	if visiting.has(node_id) or not nodes_by_id.has(node_id):
+		return 0
+	visiting[node_id] = true
+	var graph_node := nodes_by_id[node_id] as BTGraphNode
+	var parent_id := graph_node.node_resource.parent_id
 	var depth := 0
-	var cursor := current_tree.find_node(node_id) if current_tree != null else null
-	var visited: Dictionary = {}
-	while cursor != null and cursor.parent_id != -1 and not visited.has(cursor.id):
-		visited[cursor.id] = true
-		depth += 1
-		cursor = current_tree.find_node(cursor.parent_id)
+	if nodes_by_id.has(parent_id):
+		depth = _auto_spacing_cached_depth(parent_id, nodes_by_id, cache, visiting) + 1
+	visiting.erase(node_id)
+	cache[node_id] = depth
 	return depth
 
 
-func _auto_spacing_subtree_contains(root_id: int, candidate_id: int) -> bool:
-	if candidate_id == -1:
-		return false
-	return root_id == candidate_id or _collect_descendant_ids(root_id).has(candidate_id)
-
-
-func _shift_auto_spacing_subtree(offsets: Dictionary, root_id: int, delta: Vector2) -> void:
-	var ids: Array[int] = [root_id]
-	ids.append_array(_collect_descendant_ids(root_id))
-	for node_id in ids:
-		if offsets.has(node_id):
-			offsets[node_id] = Vector2(offsets[node_id]) + delta
-
-
-func _shift_auto_spacing_ancestor_chain(offsets: Dictionary, node_id: int, delta: Vector2) -> void:
-	var cursor := current_tree.find_node(node_id) if current_tree != null else null
-	var visited: Dictionary = {}
-	while cursor != null and not visited.has(cursor.id):
-		visited[cursor.id] = true
-		if offsets.has(cursor.id):
-			offsets[cursor.id] = Vector2(offsets[cursor.id]) + delta
-		cursor = current_tree.find_node(cursor.parent_id)
+func _auto_spacing_y_intervals_overlap(left_y: float, left_height: float, right_y: float, right_height: float) -> bool:
+	var padding := AUTO_SPACING_GAP * 0.5
+	return left_y - padding < right_y + right_height + padding and right_y - padding < left_y + left_height + padding
 
 
 func _reset_auto_spacing() -> void:
