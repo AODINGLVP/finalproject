@@ -401,6 +401,31 @@ func _run() -> void:
 	_expect(view.graph_edit.zoom <= 0.35 and view.graph_edit.minimap_enabled, "zoomed-out 241-node screenshot includes the complete minimap context")
 	_expect(_resource_positions_equal(view.current_tree, playable_positions), "zooming the 241-node tree preserves every saved coordinate")
 
+	view._set_feature_enabled("compact", false, false)
+	view._set_feature_enabled("auto_spacing", true, false)
+	view.graph_edit.zoom = view.graph_edit.zoom_max
+	view._update_semantic_zoom()
+	await _settle()
+	_expect(_overlapping_node_pairs().is_empty(), "playable 241-node full-detail layout is overlap-free at maximum zoom")
+	var playable_leaf_ids := _last_visible_leaf_ids(2)
+	_expect(playable_leaf_ids.size() == 2, "playable 241-node live visual test has two leaf cards")
+	if playable_leaf_ids.size() == 2:
+		var live_source := _graph_node(playable_leaf_ids[0])
+		var live_target := _graph_node(playable_leaf_ids[1])
+		var live_drag_state := _begin_live_visual_drag(live_source)
+		_move_live_visual_drag(live_drag_state, live_target.position_offset + Vector2.ONE)
+		await process_frame
+		view._focus_graph_node(live_source.node_resource.id)
+		await _settle()
+		var playable_live_drag := await _capture_case("11b_playable_241_max_zoom_live_drag")
+		_assert_image_valid(playable_live_drag, "playable 241-node maximum-zoom live drag renders")
+		_expect(live_source.manual_dragging, "playable 241-node screenshot is captured before pointer release")
+		_expect(_overlapping_node_pairs().is_empty(), "playable 241-node live drag avoids every overlap at maximum zoom")
+		_expect(_resource_positions_equal(view.current_tree, playable_positions), "playable 241-node live drag keeps resources unchanged before release")
+		_end_live_visual_drag(live_drag_state)
+		await _settle()
+		_expect(_overlapping_node_pairs().is_empty(), "playable 241-node maximum-zoom layout remains overlap-free after release")
+
 	print("BT_VISUAL_TEST_SUMMARY passed=%d failed=%d output=%s" % [passed, failed, OUTPUT_DIR])
 	view.free()
 	viewport.free()
@@ -543,6 +568,47 @@ func _rendered_tree_order_is_valid() -> bool:
 func _restore_overview() -> void:
 	view.graph_edit.zoom = 0.52
 	view.graph_edit.scroll_offset = Vector2(-100.0, 35.0)
+
+
+func _last_visible_leaf_ids(count: int) -> Array[int]:
+	var result: Array[int] = []
+	for index in range(view.current_tree.nodes.size() - 1, -1, -1):
+		var node := view.current_tree.nodes[index]
+		if node == null or node.decorator_parent_id != -1 or not view.current_tree.get_children_of(node.id).is_empty() or _graph_node(node.id) == null:
+			continue
+		result.append(node.id)
+		if result.size() == count:
+			break
+	return result
+
+
+func _begin_live_visual_drag(source: BTGraphNode) -> Dictionary:
+	var local_pointer := Vector2(38.0, source.size.y * 0.5)
+	var press := InputEventMouseButton.new()
+	press.button_index = MOUSE_BUTTON_LEFT
+	press.pressed = true
+	press.position = local_pointer
+	source._gui_input(press)
+	return {"source": source, "local_pointer": local_pointer}
+
+
+func _move_live_visual_drag(drag_state: Dictionary, logical_target: Vector2) -> void:
+	var source := drag_state.get("source") as BTGraphNode
+	var local_pointer := Vector2(drag_state.get("local_pointer", Vector2.ZERO))
+	var graph_delta := logical_target - source.get_logical_position()
+	var motion := InputEventMouseMotion.new()
+	motion.position = local_pointer + graph_delta * view.graph_edit.zoom
+	motion.relative = graph_delta * view.graph_edit.zoom
+	source._gui_input(motion)
+
+
+func _end_live_visual_drag(drag_state: Dictionary) -> void:
+	var source := drag_state.get("source") as BTGraphNode
+	var release := InputEventMouseButton.new()
+	release.button_index = MOUSE_BUTTON_LEFT
+	release.pressed = false
+	release.position = Vector2(drag_state.get("local_pointer", Vector2.ZERO))
+	source._gui_input(release)
 
 
 func _overlapping_node_pairs() -> Array[String]:
