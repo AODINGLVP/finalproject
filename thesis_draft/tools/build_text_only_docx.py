@@ -151,6 +151,13 @@ def render_inline(
     citations: dict[str, str],
     labels: dict[str, str],
 ) -> str:
+    protected_literals: list[str] = []
+
+    def protect_literal(value: str) -> str:
+        token = f"@@PROTECTED_LITERAL_{len(protected_literals)}@@"
+        protected_literals.append(value)
+        return token
+
     def citation_replacement(match: re.Match[str]) -> str:
         keys = [key.strip() for key in match.group(1).split(",")]
         missing = [key for key in keys if key not in citations]
@@ -166,9 +173,11 @@ def render_inline(
 
     text = re.sub(r"\\(?:parencite|citep)\{([^}]+)}", citation_replacement, text)
     text = re.sub(r"\\ref\{([^}]+)}", reference_replacement, text)
+    text = re.sub(r"\\url\{([^{}]*)}", lambda match: protect_literal(match.group(1)), text)
+    text = re.sub(r"\\path\{([^{}]*)}", lambda match: protect_literal(match.group(1)), text)
     text = re.sub(r"\\href\{([^{}]*)}\{([^{}]*)}", lambda match: match.group(2), text)
 
-    unwrap_pattern = re.compile(r"\\(?:emph|texttt|textsc|mathrm|path|url)\{([^{}]*)}")
+    unwrap_pattern = re.compile(r"\\(?:emph|texttt|textsc|mathrm)\{([^{}]*)}")
     previous = None
     while previous != text:
         previous = text
@@ -176,7 +185,7 @@ def render_inline(
 
     replacements = {
         r"\times": "×",
-        r"\qquad": "，",
+        r"\qquad": " ",
         r"\%": "%",
         r"\_": "_",
         r"\&": "&",
@@ -199,6 +208,8 @@ def render_inline(
     if unknown:
         raise ValueError(f"Unrendered LaTeX commands {unknown} in: {text}")
     text = re.sub(r"\s+", " ", text).strip()
+    for index, value in enumerate(protected_literals):
+        text = text.replace(f"@@PROTECTED_LITERAL_{index}@@", value)
     return text
 
 
@@ -528,6 +539,7 @@ def main() -> None:
         "摘要正文": "可视化行为树常用于编写游戏智能体的决策",
         "3.6": "3.6　有效性与可复现性",
         "完整参考文献": "Godot Engine contributors (2026b)",
+        "未改写的参考文献 URL": "behavior-tree-in-unreal-engine---overview",
         "附录证据": "多规模显示汇总：",
     }
     all_text = "\n".join(visible_texts(metadata, blocks))
