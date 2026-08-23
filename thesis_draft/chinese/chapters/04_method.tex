@@ -93,6 +93,16 @@ Search 匹配标题、类型、描述、方法和 Decorator 参数，并用 F3/S
 \subsection{连线与运行表示}
 Orthogonal 使用直角边，Bundling 让同方向连线共享主干。Active Path、Branch Dimming、Decorator Badge、Path Summary 和 Failure Annotation 提供运行解释，但不修改行为树资源。它们保持可选，因为不同密度和任务对高亮与连线的偏好不同。
 
+\section{物理屏幕实验基础设施}
+
+屏幕尺寸 Harness 将 EDID 物理表面与原生分辨率分离。PowerShell 设备清单把每台活动 Windows 显示设备映射到 EDID 宽高、当前桌面设备和经过验证的 Godot 屏幕索引。对于宽 \(W_{\mathrm{cm}}\)、高 \(H_{\mathrm{cm}}\) 的屏幕，受控画布为
+\[
+W_c=35W_{\mathrm{cm}}, \qquad H_c=35H_{\mathrm{cm}},
+\]
+其中 \(W_c\) 与 \(H_c\) 为逻辑画布单位。图卡片保持相同逻辑尺寸，因此更大的物理表面会提供成比例增加的受控画布，而不是继承设备任意的像素密度。
+
+真实渲染器 Harness 将实验窗口移动到指定显示器，在归一化 \texttt{SubViewport} 中实例化编辑器，应用同一确定性树和显示条件，并在每行记录物理元数据。每个 Session 保存不可变设备清单，以及按设备分离的原始 CSV、汇总、清单、日志和截图。组合分析会重新生成配对屏幕尺寸表与输入 SHA-256 清单；以后新增显示器时创建新 Session，不覆盖已有证据。
+
 \section{运行时拓扑缓存}
 
 无缓存时，Runner 会反复线性扫描数组以按 ID 找节点、查父级子节点和查所属 Decorator。可选缓存建立 ID 到节点、父 ID 到有序子节点、Owner ID 到有序 Decorator 三种索引，Condition、Action 和黑板动态结果从不缓存。
