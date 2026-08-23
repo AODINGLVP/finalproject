@@ -341,7 +341,8 @@ def validate_latex(output_dir: Path) -> dict[str, object]:
 
     if chapter_text.count(r"\chapter{") != 7:
         raise AssertionError("Expected seven dissertation chapters")
-    if chapter_text.count(r"\begin{table}") != 5:
+    data_table_count = chapter_text.count(r"\begin{table}") + chapter_text.count(r"\begin{longtable}")
+    if data_table_count != 5:
         raise AssertionError("Expected five data tables")
     if chapter_text.count(r"\begin{figure}") != 7:
         raise AssertionError("Expected seven numbered figures")
