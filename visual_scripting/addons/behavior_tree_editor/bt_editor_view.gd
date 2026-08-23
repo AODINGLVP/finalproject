@@ -2085,6 +2085,7 @@ func _auto_spacing_layout_signature() -> String:
 
 func _solve_auto_spacing_offsets(anchor_node_id := -1) -> Dictionary:
 	var nodes: Array[BTGraphNode] = []
+	var nodes_by_id: Dictionary = {}
 	var base_positions: Dictionary = {}
 	var source_order: Dictionary = {}
 	if current_tree != null:
@@ -2095,6 +2096,7 @@ func _solve_auto_spacing_offsets(anchor_node_id := -1) -> Dictionary:
 	for child in graph_edit.get_children():
 		if child is BTGraphNode and child.node_resource != null:
 			nodes.append(child)
+			nodes_by_id[child.node_resource.id] = child
 			base_positions[child.node_resource.id] = child.position_offset - child.visual_offset
 	var offsets: Dictionary = {}
 	for graph_node in nodes:
@@ -2107,8 +2109,6 @@ func _solve_auto_spacing_offsets(anchor_node_id := -1) -> Dictionary:
 
 	for _iteration in range(AUTO_SPACING_ITERATIONS):
 		var collision_pairs := _auto_spacing_collision_pairs(nodes, base_positions, offsets, source_order)
-		if collision_pairs.is_empty():
-			break
 		for pair in collision_pairs:
 			var left := pair[0] as BTGraphNode
 			var right := pair[1] as BTGraphNode
@@ -2140,6 +2140,9 @@ func _solve_auto_spacing_offsets(anchor_node_id := -1) -> Dictionary:
 			var correction := direction * (penetration + AUTO_SPACING_SEPARATION_EPSILON)
 			offsets[left_id] = Vector2(offsets[left_id]) - correction * (left_weight / weight_sum)
 			offsets[right_id] = Vector2(offsets[right_id]) + correction * (right_weight / weight_sum)
+		var order_changed := _preserve_auto_spacing_order(nodes, nodes_by_id, base_positions, offsets, source_order, anchor_node_id)
+		if collision_pairs.is_empty() and not order_changed:
+			break
 	return offsets
 
 
@@ -2215,6 +2218,60 @@ func _auto_spacing_rect(graph_node: BTGraphNode, base_positions: Dictionary, off
 	var node_id: int = graph_node.node_resource.id
 	var rect := Rect2(Vector2(base_positions[node_id]) + Vector2(offsets.get(node_id, Vector2.ZERO)), graph_node.size)
 	return rect.grow(AUTO_SPACING_GAP * 0.5) if padded else rect
+
+
+func _preserve_auto_spacing_order(nodes: Array[BTGraphNode], nodes_by_id: Dictionary, base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary, anchor_node_id: int) -> bool:
+	var changed := false
+	var children_by_parent: Dictionary = {}
+	for graph_node in nodes:
+		var parent_id: int = graph_node.node_resource.parent_id
+		if nodes_by_id.has(parent_id):
+			var parent := nodes_by_id[parent_id] as BTGraphNode
+			var parent_base := Vector2(base_positions[parent_id])
+			var child_base := Vector2(base_positions[graph_node.node_resource.id])
+			var base_vertical_delta := child_base.y - parent_base.y
+			if base_vertical_delta > AUTO_SPACING_SEPARATION_EPSILON:
+				changed = _apply_auto_spacing_order_constraint(parent, graph_node, Vector2.DOWN, base_positions, offsets, anchor_node_id) or changed
+			elif base_vertical_delta < -AUTO_SPACING_SEPARATION_EPSILON:
+				changed = _apply_auto_spacing_order_constraint(graph_node, parent, Vector2.DOWN, base_positions, offsets, anchor_node_id) or changed
+			if not children_by_parent.has(parent_id):
+				children_by_parent[parent_id] = []
+			children_by_parent[parent_id].append(graph_node)
+	for parent_id in children_by_parent:
+		var siblings: Array = children_by_parent[parent_id]
+		siblings.sort_custom(func(left: BTGraphNode, right: BTGraphNode) -> bool:
+			var left_x := Vector2(base_positions[left.node_resource.id]).x
+			var right_x := Vector2(base_positions[right.node_resource.id]).x
+			if not is_equal_approx(left_x, right_x):
+				return left_x < right_x
+			return int(source_order.get(left.node_resource.id, left.node_resource.id)) < int(source_order.get(right.node_resource.id, right.node_resource.id))
+		)
+		for index in range(siblings.size() - 1):
+			var left := siblings[index] as BTGraphNode
+			var right := siblings[index + 1] as BTGraphNode
+			var base_horizontal_delta := Vector2(base_positions[right.node_resource.id]).x - Vector2(base_positions[left.node_resource.id]).x
+			if base_horizontal_delta > AUTO_SPACING_SEPARATION_EPSILON:
+				changed = _apply_auto_spacing_order_constraint(left, right, Vector2.RIGHT, base_positions, offsets, anchor_node_id) or changed
+	return changed
+
+
+func _apply_auto_spacing_order_constraint(first: BTGraphNode, second: BTGraphNode, axis: Vector2, base_positions: Dictionary, offsets: Dictionary, anchor_node_id: int) -> bool:
+	var first_id: int = first.node_resource.id
+	var second_id: int = second.node_resource.id
+	var first_position := Vector2(base_positions[first_id]) + Vector2(offsets[first_id])
+	var second_position := Vector2(base_positions[second_id]) + Vector2(offsets[second_id])
+	var current_delta := (second_position - first_position).dot(axis)
+	if current_delta >= AUTO_SPACING_SEPARATION_EPSILON:
+		return false
+	var first_weight := 0.0 if first_id == anchor_node_id else 1.0
+	var second_weight := 0.0 if second_id == anchor_node_id else 1.0
+	var weight_sum := first_weight + second_weight
+	if weight_sum <= 0.0:
+		return false
+	var correction := axis * (AUTO_SPACING_SEPARATION_EPSILON - current_delta)
+	offsets[first_id] = Vector2(offsets[first_id]) - correction * (first_weight / weight_sum)
+	offsets[second_id] = Vector2(offsets[second_id]) + correction * (second_weight / weight_sum)
+	return true
 
 
 func _reset_auto_spacing() -> void:
