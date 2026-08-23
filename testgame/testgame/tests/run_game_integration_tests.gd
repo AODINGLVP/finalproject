@@ -1,6 +1,12 @@
 extends SceneTree
 
-const BTStatus = preload("res://addons/behavior_tree_editor/runtime/bt_status.gd")
+const ENEMY_SPECS := [
+	["EnemyScout", "res://behavior_trees/arena_scout_31.tres", 31],
+	["EnemySkirmisher", "res://behavior_trees/arena_skirmisher_61.tres", 61],
+	["EnemyHunter", "res://behavior_trees/arena_hunter_121.tres", 121],
+	["EnemyTactician", "res://behavior_trees/arena_tactician_241.tres", 241],
+	["EnemyCommander", "res://behavior_trees/arena_commander_364.tres", 364],
+]
 
 var passed := 0
 var failed := 0
@@ -20,38 +26,47 @@ func _run() -> void:
 	root.add_child(game)
 	await process_frame
 	var player := game.get_node("Player")
-	var enemies := [game.get_node("EnemyA"), game.get_node("EnemyB"), game.get_node("EnemyC")]
-	_expect(enemies.size() == 3, "test game has three enemies")
-	for enemy_value in enemies:
-		var enemy_node: Node = enemy_value
+	var enemies: Array[Node] = []
+	var assigned_paths: Dictionary = {}
+	for spec_variant in ENEMY_SPECS:
+		var spec: Array = spec_variant
+		var enemy_node := game.get_node_or_null(String(spec[0]))
+		_expect(enemy_node != null, "%s exists" % String(spec[0]))
+		if enemy_node == null:
+			continue
+		enemies.append(enemy_node)
 		var component: Node = enemy_node.get_node_or_null("BehaviorTreeComponent")
 		_expect(component != null and component.behavior_tree != null, "%s has behavior tree component" % enemy_node.name)
+		if component == null or component.behavior_tree == null:
+			continue
+		var expected_path := String(spec[1])
+		var expected_nodes := int(spec[2])
+		_expect(component.behavior_tree.resource_path == expected_path, "%s uses its real %d-node tree" % [enemy_node.name, expected_nodes])
+		_expect(component.behavior_tree.nodes.size() == expected_nodes, "%s tree contains exactly %d resource nodes" % [enemy_node.name, expected_nodes])
+		_expect(not assigned_paths.has(component.behavior_tree.resource_path), "%s does not reuse another enemy's behavior tree" % enemy_node.name)
+		assigned_paths[component.behavior_tree.resource_path] = true
+		_expect(component.agent == enemy_node, "%s behavior tree is bound to the correct Actor" % enemy_node.name)
+	_expect(enemies.size() == ENEMY_SPECS.size() and assigned_paths.size() == ENEMY_SPECS.size(), "test game has five enemies with five distinct tree scales")
+	_expect(game.total_enemy_count == 5 and game.remaining_enemy_count == 5 and not game.game_completed, "arena begins with five finite enemies and no completion state")
 
-	var enemy: Node = enemies[0]
-	var runner: Node = enemy.get_node("BehaviorTreeComponent")
-	runner.tick_on_physics = false
-	runner.stop_tree()
-	player.global_position = enemy.global_position + Vector2(40.0, 0.0)
 	var health_before: int = player.health
-	enemy._update_blackboard()
-	var attack_status: int = runner.tick(0.1)
-	_expect(attack_status == BTStatus.RUNNING, "nearby player starts attack action")
-	_expect("Attack Right" in runner.active_path_titles, "behavior tree selects attack-right branch")
-	_expect(player.health == health_before - enemy.attack_damage, "behavior-tree attack damages player")
+	var player_position_before: Vector2 = player.global_position
+	player.invulnerability_timer = 0.0
+	player.take_damage(1_000_000)
+	_expect(player.infinite_health and player.health == health_before, "infinite-health player cannot lose health")
+	_expect(player.global_position == player_position_before, "infinite-health player is not respawned or moved by lethal damage")
 
-	runner.restart_tree()
-	runner.stop_tree()
-	player.global_position = enemy.global_position + Vector2(500.0, 0.0)
-	enemy._update_blackboard()
-	var patrol_status: int = runner.tick(0.1)
-	_expect(patrol_status == BTStatus.RUNNING, "distant player starts patrol action")
-	_expect("Patrol Sequence" in runner.active_path_titles, "behavior tree falls back to patrol branch")
-	_expect("Move Left" in runner.active_path_titles, "patrol begins with leftmost action")
-	var home_position: Vector2 = enemy.home_position
-	enemy.take_damage(enemy.max_health)
-	_expect(not enemy.visible and enemy.respawn_remaining > 0.0 and not runner.is_running, "enemy death stops its behavior tree and starts local respawn state")
-	enemy._physics_process(2.1)
-	_expect(enemy.visible and enemy.health == enemy.max_health and enemy.global_position == home_position and runner.is_running, "enemy respawns and restarts its behavior tree without SceneTreeTimer")
+	if not enemies.is_empty():
+		var enemy: Node = enemies[0]
+		var runner: Node = enemy.get_node("BehaviorTreeComponent")
+		_expect(not enemy.respawns_enabled and not enemy.is_defeated, "arena enemy begins alive with automatic respawn disabled")
+		enemy.take_damage(enemy.max_health)
+		await process_frame
+		await physics_frame
+		_expect(enemy.is_defeated and not enemy.visible and not runner.is_running, "lethal damage permanently defeats the enemy and stops its tree")
+		_expect(game.remaining_enemy_count == 4 and not game.game_completed, "one defeat reduces the finite enemy count without completing the arena")
+		enemy._physics_process(2.1)
+		_expect(enemy.is_defeated and not enemy.visible and enemy.health == 0 and not runner.is_running, "defeated enemy cannot automatically revive after the former respawn delay")
 	game.free()
 	await process_frame
 	await process_frame

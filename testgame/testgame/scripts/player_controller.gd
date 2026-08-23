@@ -1,10 +1,13 @@
 extends CharacterBody2D
 
+signal damage_received(amount: int)
+
 @export var speed := 260.0
 @export var gravity := 900.0
 @export var attack_duration := 0.18
 @export var attack_damage := 1
 @export var max_health := 8
+@export var infinite_health := false
 @export var dash_speed := 620.0
 @export var dash_duration := 0.16
 @export var dash_cost := 35.0
@@ -130,21 +133,39 @@ func _update_attack(delta: float) -> void:
 
 
 func take_damage(amount: int) -> void:
-	if invulnerability_timer > 0.0:
+	if amount <= 0 or invulnerability_timer > 0.0:
 		return
-	health -= amount
+	damage_received.emit(amount)
 	invulnerability_timer = 0.35
 	modulate = Color(1.0, 0.65, 0.65)
-	if health <= 0:
+	if infinite_health:
 		health = max_health
-		stamina = 100.0
-		healing_charges = 2
-		cloaked = false
-		self_modulate = Color.WHITE
-		global_position = spawn_position
+	else:
+		health -= amount
+		if health <= 0:
+			reset_for_round()
 	damage_flash_remaining = 0.08
 
 
 func collect_medkit(amount: int = 3) -> void:
 	health = mini(max_health, health + amount)
 	healing_charges = mini(3, healing_charges + 1)
+
+
+func reset_for_round() -> void:
+	health = max_health
+	stamina = 100.0
+	healing_charges = 2
+	attack_timer = 0.0
+	dash_timer = 0.0
+	invulnerability_timer = 0.0
+	cloak_timer = 0.0
+	cloak_cooldown = 0.0
+	cloaked = false
+	hit_targets.clear()
+	velocity = Vector2.ZERO
+	modulate = Color.WHITE
+	self_modulate = Color.WHITE
+	global_position = spawn_position
+	attack_area.monitoring = false
+	sprite.texture = idle_texture

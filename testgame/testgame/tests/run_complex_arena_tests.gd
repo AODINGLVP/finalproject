@@ -21,11 +21,11 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	var player = game.get_node("Player")
-	var enemy = game.get_node("EnemyB")
+	var enemy = game.get_node("EnemyTactician")
 	var runner = enemy.get_node("BehaviorTreeComponent")
 	runner.tick_on_physics = false
 	runner.stop_tree()
-	_expect(runner.behavior_tree.tree_name == "Playable Complex Tactical Enemy (241 Nodes)", "unified playable 241-node tactical tree is assigned")
+	_expect(runner.behavior_tree.resource_path == "res://behavior_trees/arena_tactician_241.tres", "Tactician uses the real playable 241-node resource")
 	_expect(runner.behavior_tree.nodes.size() == 241, "playable behavior tree contains 200+ meaningful nodes")
 	_expect(_tree_has_type(runner.behavior_tree, "Repeat") and _tree_has_type(runner.behavior_tree, "Random Selector") and _tree_has_type(runner.behavior_tree, "Parallel") and _tree_has_type(runner.behavior_tree, "Wait"), "complex tree uses every new runtime node type")
 	_expect(runner.behavior_tree.blackboard_schema != null and runner.behavior_tree.blackboard_schema.entries.size() == 23, "complex tree binds the traversal-aware typed blackboard schema")

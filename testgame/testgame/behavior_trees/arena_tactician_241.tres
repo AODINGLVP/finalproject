@@ -1,0 +1,2712 @@
+[gd_resource type="Resource" script_class="BTTreeResource" format=3]
+
+[ext_resource type="Resource" path="res://behavior_trees/complex_guard_blackboard_schema.tres" id="1_w07bh"]
+[ext_resource type="Script" path="res://addons/behavior_tree_editor/bt_node_resource.gd" id="2_w8dxp"]
+[ext_resource type="Script" path="res://addons/behavior_tree_editor/bt_tree_resource.gd" id="3_rykn1"]
+
+[sub_resource type="Resource" id="Resource_hsal7"]
+script = ExtResource("2_w8dxp")
+id = 1
+title = "Root"
+node_type = "Root"
+position = Vector2(20000, 100)
+description = "Runtime entry point for this playable arena enemy."
+
+[sub_resource type="Resource" id="Resource_b882u"]
+script = ExtResource("2_w8dxp")
+id = 2
+title = "Continuous Arena Decisions"
+node_type = "Repeat"
+position = Vector2(20000, 330)
+parent_id = 1
+description = "Continuously reevaluate the highest-priority useful behavior."
+parameters = {
+"repeat_count": -1
+}
+
+[sub_resource type="Resource" id="Resource_stxso"]
+script = ExtResource("2_w8dxp")
+id = 3
+title = "Arena Tactical Priority"
+node_type = "Selector"
+position = Vector2(20000, 560)
+parent_id = 2
+description = "Select the safest valid response before lower-priority patrol behavior."
+parameters = {
+"reactive": true
+}
+
+[sub_resource type="Resource" id="Resource_wrak3"]
+script = ExtResource("2_w8dxp")
+id = 4
+title = "1 Emergency Recovery"
+node_type = "Sequence"
+position = Vector2(18020, 790)
+parent_id = 3
+description = "Critical health overrides every offensive plan."
+
+[sub_resource type="Resource" id="Resource_sjb5s"]
+script = ExtResource("2_w8dxp")
+id = 5
+title = "Critical and Threatened?"
+node_type = "Condition"
+position = Vector2(15500, 1020)
+parent_id = 4
+description = "Require both critical health and a detected player."
+parameters = {
+"condition_name": "is_critical_and_threatened"
+}
+
+[sub_resource type="Resource" id="Resource_o8ljo"]
+script = ExtResource("2_w8dxp")
+id = 6
+title = "Choose Safe Recovery Route"
+node_type = "Random Selector"
+position = Vector2(15860, 1020)
+parent_id = 4
+description = "Vary retreat timing while preserving the recovery goal."
+parameters = {
+"seed": 101
+}
+
+[sub_resource type="Resource" id="Resource_daywa"]
+script = ExtResource("2_w8dxp")
+id = 7
+title = "Recovery Route 1"
+node_type = "Sequence"
+position = Vector2(12620, 1250)
+parent_id = 6
+description = "Create distance, stabilize, then heal."
+
+[sub_resource type="Resource" id="Resource_ini36"]
+script = ExtResource("2_w8dxp")
+id = 8
+title = "Retreat Burst 1"
+position = Vector2(6320, 1480)
+parent_id = 7
+description = "Move away from the player."
+parameters = {
+"action_name": "retreat_from_player"
+}
+
+[sub_resource type="Resource" id="Resource_b2gg4"]
+script = ExtResource("2_w8dxp")
+id = 9
+title = "Recovery Breathing 1"
+node_type = "Wait"
+position = Vector2(6680, 1480)
+parent_id = 7
+description = "Pause briefly before healing."
+parameters = {
+"duration": 0.05
+}
+
+[sub_resource type="Resource" id="Resource_n4nt7"]
+script = ExtResource("2_w8dxp")
+id = 10
+title = "Heal Safely 1"
+position = Vector2(7040, 1480)
+parent_id = 7
+description = "Restore health after reaching safer spacing."
+parameters = {
+"action_name": "heal_self"
+}
+
+[sub_resource type="Resource" id="Resource_spky4"]
+script = ExtResource("2_w8dxp")
+id = 11
+title = "Healing Cooldown 1"
+node_type = "Decorator"
+position = Vector2(6950, 1605)
+decorator_parent_id = 10
+description = "Attached cooldown constraint for a bounded tactical response."
+parameters = {
+"duration": 2.2,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_ayb8b"]
+script = ExtResource("2_w8dxp")
+id = 12
+title = "Recovery Time Limit 1"
+node_type = "Decorator"
+position = Vector2(12530, 1375)
+decorator_parent_id = 7
+description = "Attached time_limit constraint for a bounded tactical response."
+parameters = {
+"duration": 1.8,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_6migd"]
+script = ExtResource("2_w8dxp")
+id = 13
+title = "Recovery Route 2"
+node_type = "Sequence"
+position = Vector2(12980, 1250)
+parent_id = 6
+description = "Create distance, stabilize, then heal."
+
+[sub_resource type="Resource" id="Resource_y48bm"]
+script = ExtResource("2_w8dxp")
+id = 14
+title = "Retreat Burst 2"
+position = Vector2(7400, 1480)
+parent_id = 13
+description = "Move away from the player."
+parameters = {
+"action_name": "retreat_from_player"
+}
+
+[sub_resource type="Resource" id="Resource_cgsuc"]
+script = ExtResource("2_w8dxp")
+id = 15
+title = "Recovery Breathing 2"
+node_type = "Wait"
+position = Vector2(7760, 1480)
+parent_id = 13
+description = "Pause briefly before healing."
+parameters = {
+"duration": 0.09
+}
+
+[sub_resource type="Resource" id="Resource_w65gs"]
+script = ExtResource("2_w8dxp")
+id = 16
+title = "Heal Safely 2"
+position = Vector2(8120, 1480)
+parent_id = 13
+description = "Restore health after reaching safer spacing."
+parameters = {
+"action_name": "heal_self"
+}
+
+[sub_resource type="Resource" id="Resource_8hr8l"]
+script = ExtResource("2_w8dxp")
+id = 17
+title = "Healing Cooldown 2"
+node_type = "Decorator"
+position = Vector2(8030, 1605)
+decorator_parent_id = 16
+description = "Attached cooldown constraint for a bounded tactical response."
+parameters = {
+"duration": 2.4000000000000004,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_ugaym"]
+script = ExtResource("2_w8dxp")
+id = 18
+title = "Recovery Time Limit 2"
+node_type = "Decorator"
+position = Vector2(12890, 1375)
+decorator_parent_id = 13
+description = "Attached time_limit constraint for a bounded tactical response."
+parameters = {
+"duration": 1.8,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_7302l"]
+script = ExtResource("2_w8dxp")
+id = 19
+title = "Recovery Route 3"
+node_type = "Sequence"
+position = Vector2(13340, 1250)
+parent_id = 6
+description = "Create distance, stabilize, then heal."
+
+[sub_resource type="Resource" id="Resource_2ixpa"]
+script = ExtResource("2_w8dxp")
+id = 20
+title = "Retreat Burst 3"
+position = Vector2(8480, 1480)
+parent_id = 19
+description = "Move away from the player."
+parameters = {
+"action_name": "retreat_from_player"
+}
+
+[sub_resource type="Resource" id="Resource_lotw8"]
+script = ExtResource("2_w8dxp")
+id = 21
+title = "Recovery Breathing 3"
+node_type = "Wait"
+position = Vector2(8840, 1480)
+parent_id = 19
+description = "Pause briefly before healing."
+parameters = {
+"duration": 0.13
+}
+
+[sub_resource type="Resource" id="Resource_7vmkx"]
+script = ExtResource("2_w8dxp")
+id = 22
+title = "Heal Safely 3"
+position = Vector2(9200, 1480)
+parent_id = 19
+description = "Restore health after reaching safer spacing."
+parameters = {
+"action_name": "heal_self"
+}
+
+[sub_resource type="Resource" id="Resource_xuxwj"]
+script = ExtResource("2_w8dxp")
+id = 23
+title = "Healing Cooldown 3"
+node_type = "Decorator"
+position = Vector2(9110, 1605)
+decorator_parent_id = 22
+description = "Attached cooldown constraint for a bounded tactical response."
+parameters = {
+"duration": 2.6,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_i6i35"]
+script = ExtResource("2_w8dxp")
+id = 24
+title = "Recovery Time Limit 3"
+node_type = "Decorator"
+position = Vector2(13250, 1375)
+decorator_parent_id = 19
+description = "Attached time_limit constraint for a bounded tactical response."
+parameters = {
+"duration": 1.8,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_v4hf8"]
+script = ExtResource("2_w8dxp")
+id = 25
+title = "2 Reactive Defense"
+node_type = "Sequence"
+position = Vector2(18380, 790)
+parent_id = 3
+description = "Evade when the nearby player begins an attack."
+
+[sub_resource type="Resource" id="Resource_u48k1"]
+script = ExtResource("2_w8dxp")
+id = 26
+title = "Incoming Attack?"
+node_type = "Condition"
+position = Vector2(16220, 1020)
+parent_id = 25
+description = "Read the player's live attack window."
+parameters = {
+"condition_name": "should_dodge"
+}
+
+[sub_resource type="Resource" id="Resource_scnwf"]
+script = ExtResource("2_w8dxp")
+id = 27
+title = "Defensive Response"
+node_type = "Random Selector"
+position = Vector2(16580, 1020)
+parent_id = 25
+description = "Choose a lateral dodge or stationary brace."
+parameters = {
+"seed": 202
+}
+
+[sub_resource type="Resource" id="Resource_0ahk0"]
+script = ExtResource("2_w8dxp")
+id = 28
+title = "Dodge Left Response"
+node_type = "Sequence"
+position = Vector2(13700, 1250)
+parent_id = 27
+description = "A complete reaction with recovery frames."
+
+[sub_resource type="Resource" id="Resource_blbjp"]
+script = ExtResource("2_w8dxp")
+id = 29
+title = "Dodge Left"
+position = Vector2(9560, 1480)
+parent_id = 28
+description = "Avoid or absorb the incoming strike."
+parameters = {
+"action_name": "dodge_left"
+}
+
+[sub_resource type="Resource" id="Resource_ceskq"]
+script = ExtResource("2_w8dxp")
+id = 30
+title = "Defense Recovery 1"
+node_type = "Wait"
+position = Vector2(9920, 1480)
+parent_id = 28
+description = "Prevent an instantaneous attack after defense."
+parameters = {
+"duration": 0.06
+}
+
+[sub_resource type="Resource" id="Resource_5hpyx"]
+script = ExtResource("2_w8dxp")
+id = 31
+title = "Defense Cooldown 1"
+node_type = "Decorator"
+position = Vector2(9470, 1605)
+decorator_parent_id = 29
+description = "Attached cooldown constraint for a bounded tactical response."
+parameters = {
+"duration": 0.45,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_t6457"]
+script = ExtResource("2_w8dxp")
+id = 32
+title = "Dodge Right Response"
+node_type = "Sequence"
+position = Vector2(14060, 1250)
+parent_id = 27
+description = "A complete reaction with recovery frames."
+
+[sub_resource type="Resource" id="Resource_ljdga"]
+script = ExtResource("2_w8dxp")
+id = 33
+title = "Dodge Right"
+position = Vector2(10280, 1480)
+parent_id = 32
+description = "Avoid or absorb the incoming strike."
+parameters = {
+"action_name": "dodge_right"
+}
+
+[sub_resource type="Resource" id="Resource_5n322"]
+script = ExtResource("2_w8dxp")
+id = 34
+title = "Defense Recovery 2"
+node_type = "Wait"
+position = Vector2(10640, 1480)
+parent_id = 32
+description = "Prevent an instantaneous attack after defense."
+parameters = {
+"duration": 0.09
+}
+
+[sub_resource type="Resource" id="Resource_rsa36"]
+script = ExtResource("2_w8dxp")
+id = 35
+title = "Defense Cooldown 2"
+node_type = "Decorator"
+position = Vector2(10190, 1605)
+decorator_parent_id = 33
+description = "Attached cooldown constraint for a bounded tactical response."
+parameters = {
+"duration": 0.55,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_tewf2"]
+script = ExtResource("2_w8dxp")
+id = 36
+title = "Brace Impact Response"
+node_type = "Sequence"
+position = Vector2(14420, 1250)
+parent_id = 27
+description = "A complete reaction with recovery frames."
+
+[sub_resource type="Resource" id="Resource_32lcc"]
+script = ExtResource("2_w8dxp")
+id = 37
+title = "Brace Impact"
+position = Vector2(11000, 1480)
+parent_id = 36
+description = "Avoid or absorb the incoming strike."
+parameters = {
+"action_name": "brace"
+}
+
+[sub_resource type="Resource" id="Resource_crarl"]
+script = ExtResource("2_w8dxp")
+id = 38
+title = "Defense Recovery 3"
+node_type = "Wait"
+position = Vector2(11360, 1480)
+parent_id = 36
+description = "Prevent an instantaneous attack after defense."
+parameters = {
+"duration": 0.12
+}
+
+[sub_resource type="Resource" id="Resource_u1t0m"]
+script = ExtResource("2_w8dxp")
+id = 39
+title = "Defense Cooldown 3"
+node_type = "Decorator"
+position = Vector2(10910, 1605)
+decorator_parent_id = 37
+description = "Attached cooldown constraint for a bounded tactical response."
+parameters = {
+"duration": 0.65,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_ayoqx"]
+script = ExtResource("2_w8dxp")
+id = 40
+title = "3 Directional Melee Combat"
+node_type = "Sequence"
+position = Vector2(18740, 790)
+parent_id = 3
+description = "Use direction-aware light and heavy combinations in melee range."
+
+[sub_resource type="Resource" id="Resource_xotfm"]
+script = ExtResource("2_w8dxp")
+id = 41
+title = "Inside Melee Range?"
+node_type = "Condition"
+position = Vector2(16940, 1020)
+parent_id = 40
+description = "Only enter combo selection when the player can be hit."
+parameters = {
+"condition_name": "can_melee"
+}
+
+[sub_resource type="Resource" id="Resource_m4sgn"]
+script = ExtResource("2_w8dxp")
+id = 42
+title = "Resolve Attack Direction"
+node_type = "Selector"
+position = Vector2(17300, 1020)
+parent_id = 40
+description = "Left is evaluated before right using current position."
+
+[sub_resource type="Resource" id="Resource_eqvi2"]
+script = ExtResource("2_w8dxp")
+id = 43
+title = "Left Combat"
+node_type = "Sequence"
+position = Vector2(14780, 1250)
+parent_id = 42
+description = "Direction gate followed by a varied combo."
+
+[sub_resource type="Resource" id="Resource_p44bu"]
+script = ExtResource("2_w8dxp")
+id = 44
+title = "Can Attack Left?"
+node_type = "Condition"
+position = Vector2(11720, 1480)
+parent_id = 43
+description = "Check range and side together."
+parameters = {
+"condition_name": "can_attack_left"
+}
+
+[sub_resource type="Resource" id="Resource_ad272"]
+script = ExtResource("2_w8dxp")
+id = 45
+title = "Left Combo Choice"
+node_type = "Random Selector"
+position = Vector2(12080, 1480)
+parent_id = 43
+description = "Choose a complete direction-correct attack pattern."
+parameters = {
+"seed": 310
+}
+
+[sub_resource type="Resource" id="Resource_31ays"]
+script = ExtResource("2_w8dxp")
+id = 46
+title = "Left Combo 1"
+node_type = "Sequence"
+position = Vector2(15860, 1710)
+parent_id = 45
+description = "Light/heavy ordering creates a distinct commitment window."
+
+[sub_resource type="Resource" id="Resource_8l0et"]
+script = ExtResource("2_w8dxp")
+id = 47
+title = "Left Opening 1"
+position = Vector2(16940, 1940)
+parent_id = 46
+description = "First strike of the combo."
+parameters = {
+"action_name": "light_attack_left"
+}
+
+[sub_resource type="Resource" id="Resource_8qf0a"]
+script = ExtResource("2_w8dxp")
+id = 48
+title = "Left Combo Link 1"
+node_type = "Wait"
+position = Vector2(17300, 1940)
+parent_id = 46
+description = "Telegraph the link between strikes."
+parameters = {
+"duration": 0.05
+}
+
+[sub_resource type="Resource" id="Resource_7k0om"]
+script = ExtResource("2_w8dxp")
+id = 49
+title = "Left Finisher 1"
+position = Vector2(17660, 1940)
+parent_id = 46
+description = "Second strike completes the pattern."
+parameters = {
+"action_name": "heavy_attack_left"
+}
+
+[sub_resource type="Resource" id="Resource_jj70t"]
+script = ExtResource("2_w8dxp")
+id = 50
+title = "Left Combo Cooldown 1"
+node_type = "Decorator"
+position = Vector2(17570, 2065)
+decorator_parent_id = 49
+description = "Attached cooldown constraint for a bounded tactical response."
+parameters = {
+"duration": 0.55,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_foec6"]
+script = ExtResource("2_w8dxp")
+id = 51
+title = "Left Combo 2"
+node_type = "Sequence"
+position = Vector2(16220, 1710)
+parent_id = 45
+description = "Light/heavy ordering creates a distinct commitment window."
+
+[sub_resource type="Resource" id="Resource_hrm4y"]
+script = ExtResource("2_w8dxp")
+id = 52
+title = "Left Opening 2"
+position = Vector2(18020, 1940)
+parent_id = 51
+description = "First strike of the combo."
+parameters = {
+"action_name": "heavy_attack_left"
+}
+
+[sub_resource type="Resource" id="Resource_4p8f0"]
+script = ExtResource("2_w8dxp")
+id = 53
+title = "Left Combo Link 2"
+node_type = "Wait"
+position = Vector2(18380, 1940)
+parent_id = 51
+description = "Telegraph the link between strikes."
+parameters = {
+"duration": 0.08
+}
+
+[sub_resource type="Resource" id="Resource_sos8p"]
+script = ExtResource("2_w8dxp")
+id = 54
+title = "Left Finisher 2"
+position = Vector2(18740, 1940)
+parent_id = 51
+description = "Second strike completes the pattern."
+parameters = {
+"action_name": "light_attack_left"
+}
+
+[sub_resource type="Resource" id="Resource_dywxe"]
+script = ExtResource("2_w8dxp")
+id = 55
+title = "Left Combo Cooldown 2"
+node_type = "Decorator"
+position = Vector2(18650, 2065)
+decorator_parent_id = 54
+description = "Attached cooldown constraint for a bounded tactical response."
+parameters = {
+"duration": 0.67,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_4th6a"]
+script = ExtResource("2_w8dxp")
+id = 56
+title = "Left Combo 3"
+node_type = "Sequence"
+position = Vector2(16580, 1710)
+parent_id = 45
+description = "Light/heavy ordering creates a distinct commitment window."
+
+[sub_resource type="Resource" id="Resource_nvb8v"]
+script = ExtResource("2_w8dxp")
+id = 57
+title = "Left Opening 3"
+position = Vector2(19100, 1940)
+parent_id = 56
+description = "First strike of the combo."
+parameters = {
+"action_name": "light_attack_left"
+}
+
+[sub_resource type="Resource" id="Resource_hafey"]
+script = ExtResource("2_w8dxp")
+id = 58
+title = "Left Combo Link 3"
+node_type = "Wait"
+position = Vector2(19460, 1940)
+parent_id = 56
+description = "Telegraph the link between strikes."
+parameters = {
+"duration": 0.11
+}
+
+[sub_resource type="Resource" id="Resource_ijq7c"]
+script = ExtResource("2_w8dxp")
+id = 59
+title = "Left Finisher 3"
+position = Vector2(19820, 1940)
+parent_id = 56
+description = "Second strike completes the pattern."
+parameters = {
+"action_name": "heavy_attack_left"
+}
+
+[sub_resource type="Resource" id="Resource_qkwmu"]
+script = ExtResource("2_w8dxp")
+id = 60
+title = "Left Combo Cooldown 3"
+node_type = "Decorator"
+position = Vector2(19730, 2065)
+decorator_parent_id = 59
+description = "Attached cooldown constraint for a bounded tactical response."
+parameters = {
+"duration": 0.79,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_kiqih"]
+script = ExtResource("2_w8dxp")
+id = 61
+title = "Right Combat"
+node_type = "Sequence"
+position = Vector2(15140, 1250)
+parent_id = 42
+description = "Direction gate followed by a varied combo."
+
+[sub_resource type="Resource" id="Resource_6jpfp"]
+script = ExtResource("2_w8dxp")
+id = 62
+title = "Can Attack Right?"
+node_type = "Condition"
+position = Vector2(12440, 1480)
+parent_id = 61
+description = "Check range and side together."
+parameters = {
+"condition_name": "can_attack_right"
+}
+
+[sub_resource type="Resource" id="Resource_kx8ca"]
+script = ExtResource("2_w8dxp")
+id = 63
+title = "Right Combo Choice"
+node_type = "Random Selector"
+position = Vector2(12800, 1480)
+parent_id = 61
+description = "Choose a complete direction-correct attack pattern."
+parameters = {
+"seed": 311
+}
+
+[sub_resource type="Resource" id="Resource_kefft"]
+script = ExtResource("2_w8dxp")
+id = 64
+title = "Right Combo 1"
+node_type = "Sequence"
+position = Vector2(16940, 1710)
+parent_id = 63
+description = "Light/heavy ordering creates a distinct commitment window."
+
+[sub_resource type="Resource" id="Resource_8xqoe"]
+script = ExtResource("2_w8dxp")
+id = 65
+title = "Right Opening 1"
+position = Vector2(20180, 1940)
+parent_id = 64
+description = "First strike of the combo."
+parameters = {
+"action_name": "light_attack_right"
+}
+
+[sub_resource type="Resource" id="Resource_6ni6m"]
+script = ExtResource("2_w8dxp")
+id = 66
+title = "Right Combo Link 1"
+node_type = "Wait"
+position = Vector2(20540, 1940)
+parent_id = 64
+description = "Telegraph the link between strikes."
+parameters = {
+"duration": 0.05
+}
+
+[sub_resource type="Resource" id="Resource_w5u1j"]
+script = ExtResource("2_w8dxp")
+id = 67
+title = "Right Finisher 1"
+position = Vector2(20900, 1940)
+parent_id = 64
+description = "Second strike completes the pattern."
+parameters = {
+"action_name": "heavy_attack_right"
+}
+
+[sub_resource type="Resource" id="Resource_giagg"]
+script = ExtResource("2_w8dxp")
+id = 68
+title = "Right Combo Cooldown 1"
+node_type = "Decorator"
+position = Vector2(20810, 2065)
+decorator_parent_id = 67
+description = "Attached cooldown constraint for a bounded tactical response."
+parameters = {
+"duration": 0.55,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_8okqq"]
+script = ExtResource("2_w8dxp")
+id = 69
+title = "Right Combo 2"
+node_type = "Sequence"
+position = Vector2(17300, 1710)
+parent_id = 63
+description = "Light/heavy ordering creates a distinct commitment window."
+
+[sub_resource type="Resource" id="Resource_5yv2l"]
+script = ExtResource("2_w8dxp")
+id = 70
+title = "Right Opening 2"
+position = Vector2(21260, 1940)
+parent_id = 69
+description = "First strike of the combo."
+parameters = {
+"action_name": "heavy_attack_right"
+}
+
+[sub_resource type="Resource" id="Resource_kp8j1"]
+script = ExtResource("2_w8dxp")
+id = 71
+title = "Right Combo Link 2"
+node_type = "Wait"
+position = Vector2(21620, 1940)
+parent_id = 69
+description = "Telegraph the link between strikes."
+parameters = {
+"duration": 0.08
+}
+
+[sub_resource type="Resource" id="Resource_bdy86"]
+script = ExtResource("2_w8dxp")
+id = 72
+title = "Right Finisher 2"
+position = Vector2(21980, 1940)
+parent_id = 69
+description = "Second strike completes the pattern."
+parameters = {
+"action_name": "light_attack_right"
+}
+
+[sub_resource type="Resource" id="Resource_mnlxh"]
+script = ExtResource("2_w8dxp")
+id = 73
+title = "Right Combo Cooldown 2"
+node_type = "Decorator"
+position = Vector2(21890, 2065)
+decorator_parent_id = 72
+description = "Attached cooldown constraint for a bounded tactical response."
+parameters = {
+"duration": 0.67,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_c0gjd"]
+script = ExtResource("2_w8dxp")
+id = 74
+title = "Right Combo 3"
+node_type = "Sequence"
+position = Vector2(17660, 1710)
+parent_id = 63
+description = "Light/heavy ordering creates a distinct commitment window."
+
+[sub_resource type="Resource" id="Resource_s3pql"]
+script = ExtResource("2_w8dxp")
+id = 75
+title = "Right Opening 3"
+position = Vector2(22340, 1940)
+parent_id = 74
+description = "First strike of the combo."
+parameters = {
+"action_name": "light_attack_right"
+}
+
+[sub_resource type="Resource" id="Resource_mtxo4"]
+script = ExtResource("2_w8dxp")
+id = 76
+title = "Right Combo Link 3"
+node_type = "Wait"
+position = Vector2(22700, 1940)
+parent_id = 74
+description = "Telegraph the link between strikes."
+parameters = {
+"duration": 0.11
+}
+
+[sub_resource type="Resource" id="Resource_pgqsr"]
+script = ExtResource("2_w8dxp")
+id = 77
+title = "Right Finisher 3"
+position = Vector2(23060, 1940)
+parent_id = 74
+description = "Second strike completes the pattern."
+parameters = {
+"action_name": "heavy_attack_right"
+}
+
+[sub_resource type="Resource" id="Resource_l0536"]
+script = ExtResource("2_w8dxp")
+id = 78
+title = "Right Combo Cooldown 3"
+node_type = "Decorator"
+position = Vector2(22970, 2065)
+decorator_parent_id = 77
+description = "Attached cooldown constraint for a bounded tactical response."
+parameters = {
+"duration": 0.79,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_11lx5"]
+script = ExtResource("2_w8dxp")
+id = 79
+title = "4 Obstacle Traversal"
+node_type = "Sequence"
+position = Vector2(19100, 790)
+parent_id = 3
+description = "Jump over a blocking crate instead of pushing against it."
+
+[sub_resource type="Resource" id="Resource_qroon"]
+script = ExtResource("2_w8dxp")
+id = 80
+title = "Obstacle Ahead?"
+node_type = "Condition"
+position = Vector2(17660, 1020)
+parent_id = 79
+description = "Use the horizontal obstacle sensor."
+parameters = {
+"condition_name": "has_obstacle_ahead"
+}
+
+[sub_resource type="Resource" id="Resource_8qab6"]
+script = ExtResource("2_w8dxp")
+id = 81
+title = "Obstacle Solution"
+node_type = "Random Selector"
+position = Vector2(18020, 1020)
+parent_id = 79
+description = "Choose a direct or guarded vault cadence."
+parameters = {
+"seed": 505
+}
+
+[sub_resource type="Resource" id="Resource_erhi3"]
+script = ExtResource("2_w8dxp")
+id = 82
+title = "Vault Route 1"
+node_type = "Sequence"
+position = Vector2(15500, 1250)
+parent_id = 81
+description = "Commit to one complete obstacle crossing."
+
+[sub_resource type="Resource" id="Resource_j11sx"]
+script = ExtResource("2_w8dxp")
+id = 83
+title = "Jump Obstacle 1"
+position = Vector2(13160, 1480)
+parent_id = 82
+description = "Apply vertical impulse and forward movement until landing."
+parameters = {
+"action_name": "jump_over_obstacle"
+}
+
+[sub_resource type="Resource" id="Resource_k1ema"]
+script = ExtResource("2_w8dxp")
+id = 84
+title = "Vault Route 2"
+node_type = "Sequence"
+position = Vector2(15860, 1250)
+parent_id = 81
+description = "Commit to one complete obstacle crossing."
+
+[sub_resource type="Resource" id="Resource_hktt3"]
+script = ExtResource("2_w8dxp")
+id = 85
+title = "Jump Obstacle 2"
+position = Vector2(13520, 1480)
+parent_id = 84
+description = "Apply vertical impulse and forward movement until landing."
+parameters = {
+"action_name": "jump_over_obstacle"
+}
+
+[sub_resource type="Resource" id="Resource_tyo6c"]
+script = ExtResource("2_w8dxp")
+id = 86
+title = "Obstacle Traversal Limit"
+node_type = "Decorator"
+position = Vector2(19010, 915)
+decorator_parent_id = 79
+description = "Attached time_limit constraint for a bounded tactical response."
+parameters = {
+"duration": 1.8,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_4wcup"]
+script = ExtResource("2_w8dxp")
+id = 87
+title = "5 Vertical Pursuit"
+node_type = "Sequence"
+position = Vector2(19460, 790)
+parent_id = 3
+description = "Use ladders when the player occupies an elevated platform."
+
+[sub_resource type="Resource" id="Resource_u20x1"]
+script = ExtResource("2_w8dxp")
+id = 88
+title = "Player Above Near Ladder?"
+node_type = "Condition"
+position = Vector2(18380, 1020)
+parent_id = 87
+description = "Check vertical separation and a nearby ladder trigger."
+parameters = {
+"condition_name": "should_climb_to_player"
+}
+
+[sub_resource type="Resource" id="Resource_ceaaj"]
+script = ExtResource("2_w8dxp")
+id = 89
+title = "Climb Approach"
+node_type = "Random Selector"
+position = Vector2(18740, 1020)
+parent_id = 87
+description = "Choose a direct or guarded ladder approach."
+parameters = {
+"seed": 707
+}
+
+[sub_resource type="Resource" id="Resource_ebapb"]
+script = ExtResource("2_w8dxp")
+id = 90
+title = "Climb Route 1"
+node_type = "Sequence"
+position = Vector2(16220, 1250)
+parent_id = 89
+description = "Align with the ladder and climb toward the platform."
+
+[sub_resource type="Resource" id="Resource_8u85y"]
+script = ExtResource("2_w8dxp")
+id = 91
+title = "Climb Ladder 1"
+position = Vector2(13880, 1480)
+parent_id = 90
+description = "Move to the ladder and climb toward the player."
+parameters = {
+"action_name": "climb_toward_player"
+}
+
+[sub_resource type="Resource" id="Resource_fay3o"]
+script = ExtResource("2_w8dxp")
+id = 92
+title = "Climb Route 2"
+node_type = "Sequence"
+position = Vector2(16580, 1250)
+parent_id = 89
+description = "Align with the ladder and climb toward the platform."
+
+[sub_resource type="Resource" id="Resource_ud4yg"]
+script = ExtResource("2_w8dxp")
+id = 93
+title = "Climb Ladder 2"
+position = Vector2(14240, 1480)
+parent_id = 92
+description = "Move to the ladder and climb toward the player."
+parameters = {
+"action_name": "climb_toward_player"
+}
+
+[sub_resource type="Resource" id="Resource_l1fkg"]
+script = ExtResource("2_w8dxp")
+id = 94
+title = "Vertical Pursuit Limit"
+node_type = "Decorator"
+position = Vector2(19370, 915)
+decorator_parent_id = 87
+description = "Attached time_limit constraint for a bounded tactical response."
+parameters = {
+"duration": 3.0,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_6wdtu"]
+script = ExtResource("2_w8dxp")
+id = 95
+title = "6 Ranged Suppression"
+node_type = "Sequence"
+position = Vector2(19820, 790)
+parent_id = 3
+description = "Fire visible projectiles when the player is beyond melee range."
+
+[sub_resource type="Resource" id="Resource_tv37m"]
+script = ExtResource("2_w8dxp")
+id = 96
+title = "Clear Ranged Shot?"
+node_type = "Condition"
+position = Vector2(19100, 1020)
+parent_id = 95
+description = "Require a detected target at a useful projectile distance."
+parameters = {
+"condition_name": "can_use_ranged_attack"
+}
+
+[sub_resource type="Resource" id="Resource_34fe8"]
+script = ExtResource("2_w8dxp")
+id = 97
+title = "Ranged Firing Pattern"
+node_type = "Random Selector"
+position = Vector2(19460, 1020)
+parent_id = 95
+description = "Alternate between quick and carefully aimed shots."
+parameters = {
+"seed": 404
+}
+
+[sub_resource type="Resource" id="Resource_xua76"]
+script = ExtResource("2_w8dxp")
+id = 98
+title = "Ranged Pattern 1"
+node_type = "Sequence"
+position = Vector2(16940, 1250)
+parent_id = 97
+description = "Aim, telegraph, and release one projectile."
+
+[sub_resource type="Resource" id="Resource_eqh8i"]
+script = ExtResource("2_w8dxp")
+id = 99
+title = "Aim Projectile 1"
+position = Vector2(14600, 1480)
+parent_id = 98
+description = "Face and track the current player position."
+parameters = {
+"action_name": "aim_at_player"
+}
+
+[sub_resource type="Resource" id="Resource_r7kvo"]
+script = ExtResource("2_w8dxp")
+id = 100
+title = "Ranged Telegraph 1"
+node_type = "Wait"
+position = Vector2(14960, 1480)
+parent_id = 98
+description = "Give the player a readable reaction window."
+parameters = {
+"duration": 0.08
+}
+
+[sub_resource type="Resource" id="Resource_lvw6x"]
+script = ExtResource("2_w8dxp")
+id = 101
+title = "Fire Projectile 1"
+position = Vector2(15320, 1480)
+parent_id = 98
+description = "Spawn a damaging projectile toward the tracked target."
+parameters = {
+"action_name": "fire_projectile"
+}
+
+[sub_resource type="Resource" id="Resource_isdn5"]
+script = ExtResource("2_w8dxp")
+id = 102
+title = "Ranged Pattern 2"
+node_type = "Sequence"
+position = Vector2(17300, 1250)
+parent_id = 97
+description = "Aim, telegraph, and release one projectile."
+
+[sub_resource type="Resource" id="Resource_5cxml"]
+script = ExtResource("2_w8dxp")
+id = 103
+title = "Aim Projectile 2"
+position = Vector2(15680, 1480)
+parent_id = 102
+description = "Face and track the current player position."
+parameters = {
+"action_name": "aim_at_player"
+}
+
+[sub_resource type="Resource" id="Resource_m7gm5"]
+script = ExtResource("2_w8dxp")
+id = 104
+title = "Ranged Telegraph 2"
+node_type = "Wait"
+position = Vector2(16040, 1480)
+parent_id = 102
+description = "Give the player a readable reaction window."
+parameters = {
+"duration": 0.15000000000000002
+}
+
+[sub_resource type="Resource" id="Resource_qlsdh"]
+script = ExtResource("2_w8dxp")
+id = 105
+title = "Fire Projectile 2"
+position = Vector2(16400, 1480)
+parent_id = 102
+description = "Spawn a damaging projectile toward the tracked target."
+parameters = {
+"action_name": "fire_projectile"
+}
+
+[sub_resource type="Resource" id="Resource_hi266"]
+script = ExtResource("2_w8dxp")
+id = 106
+title = "Ranged Attack Cooldown"
+node_type = "Decorator"
+position = Vector2(19730, 915)
+decorator_parent_id = 95
+description = "Attached cooldown constraint for a bounded tactical response."
+parameters = {
+"duration": 0.9,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_1ycbk"]
+script = ExtResource("2_w8dxp")
+id = 107
+title = "7 Mid-Range Pressure"
+node_type = "Sequence"
+position = Vector2(20180, 790)
+parent_id = 3
+description = "Reposition instead of running straight at a nearby target."
+
+[sub_resource type="Resource" id="Resource_j1tun"]
+script = ExtResource("2_w8dxp")
+id = 108
+title = "Pressure Range?"
+node_type = "Condition"
+position = Vector2(19820, 1020)
+parent_id = 107
+description = "Require a detected target outside melee but still nearby."
+parameters = {
+"condition_name": "should_apply_pressure"
+}
+
+[sub_resource type="Resource" id="Resource_jed2g"]
+script = ExtResource("2_w8dxp")
+id = 109
+title = "Pressure Pattern"
+node_type = "Random Selector"
+position = Vector2(20180, 1020)
+parent_id = 107
+description = "Mix lateral steps with cautious or aggressive advances."
+parameters = {
+"seed": 404
+}
+
+[sub_resource type="Resource" id="Resource_a8s0f"]
+script = ExtResource("2_w8dxp")
+id = 110
+title = "Pressure Pattern 1"
+node_type = "Sequence"
+position = Vector2(17660, 1250)
+parent_id = 109
+description = "Create a readable approach pattern."
+
+[sub_resource type="Resource" id="Resource_0wpkr"]
+script = ExtResource("2_w8dxp")
+id = 111
+title = "Pressure Reposition 1"
+position = Vector2(16760, 1480)
+parent_id = 110
+description = "Use a lateral step or brief guard."
+parameters = {
+"action_name": "strafe_left"
+}
+
+[sub_resource type="Resource" id="Resource_8u0m7"]
+script = ExtResource("2_w8dxp")
+id = 112
+title = "Pressure Read 1"
+node_type = "Wait"
+position = Vector2(17120, 1480)
+parent_id = 110
+description = "Briefly reassess the player."
+parameters = {
+"duration": 0.05
+}
+
+[sub_resource type="Resource" id="Resource_sas4n"]
+script = ExtResource("2_w8dxp")
+id = 113
+title = "Pressure Advance 1"
+position = Vector2(17480, 1480)
+parent_id = 110
+description = "Close distance after repositioning."
+parameters = {
+"action_name": "advance_cautiously"
+}
+
+[sub_resource type="Resource" id="Resource_r5dcm"]
+script = ExtResource("2_w8dxp")
+id = 114
+title = "Pressure Cooldown 1"
+node_type = "Decorator"
+position = Vector2(16670, 1605)
+decorator_parent_id = 111
+description = "Attached cooldown constraint for a bounded tactical response."
+parameters = {
+"duration": 0.35,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_a8ng6"]
+script = ExtResource("2_w8dxp")
+id = 115
+title = "Pressure Pattern 2"
+node_type = "Sequence"
+position = Vector2(18020, 1250)
+parent_id = 109
+description = "Create a readable approach pattern."
+
+[sub_resource type="Resource" id="Resource_g4ts3"]
+script = ExtResource("2_w8dxp")
+id = 116
+title = "Pressure Reposition 2"
+position = Vector2(17840, 1480)
+parent_id = 115
+description = "Use a lateral step or brief guard."
+parameters = {
+"action_name": "strafe_right"
+}
+
+[sub_resource type="Resource" id="Resource_8fr6f"]
+script = ExtResource("2_w8dxp")
+id = 117
+title = "Pressure Read 2"
+node_type = "Wait"
+position = Vector2(18200, 1480)
+parent_id = 115
+description = "Briefly reassess the player."
+parameters = {
+"duration": 0.05
+}
+
+[sub_resource type="Resource" id="Resource_dwdof"]
+script = ExtResource("2_w8dxp")
+id = 118
+title = "Pressure Advance 2"
+position = Vector2(18560, 1480)
+parent_id = 115
+description = "Close distance after repositioning."
+parameters = {
+"action_name": "advance_cautiously"
+}
+
+[sub_resource type="Resource" id="Resource_eyig8"]
+script = ExtResource("2_w8dxp")
+id = 119
+title = "Pressure Cooldown 2"
+node_type = "Decorator"
+position = Vector2(17750, 1605)
+decorator_parent_id = 116
+description = "Attached cooldown constraint for a bounded tactical response."
+parameters = {
+"duration": 0.44999999999999996,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_np6qa"]
+script = ExtResource("2_w8dxp")
+id = 120
+title = "Pressure Pattern 3"
+node_type = "Sequence"
+position = Vector2(18380, 1250)
+parent_id = 109
+description = "Create a readable approach pattern."
+
+[sub_resource type="Resource" id="Resource_4jw47"]
+script = ExtResource("2_w8dxp")
+id = 121
+title = "Pressure Reposition 3"
+position = Vector2(18920, 1480)
+parent_id = 120
+description = "Use a lateral step or brief guard."
+parameters = {
+"action_name": "brace"
+}
+
+[sub_resource type="Resource" id="Resource_2sgs2"]
+script = ExtResource("2_w8dxp")
+id = 122
+title = "Pressure Read 3"
+node_type = "Wait"
+position = Vector2(19280, 1480)
+parent_id = 120
+description = "Briefly reassess the player."
+parameters = {
+"duration": 0.05
+}
+
+[sub_resource type="Resource" id="Resource_ag48k"]
+script = ExtResource("2_w8dxp")
+id = 123
+title = "Pressure Advance 3"
+position = Vector2(19640, 1480)
+parent_id = 120
+description = "Close distance after repositioning."
+parameters = {
+"action_name": "advance_aggressively"
+}
+
+[sub_resource type="Resource" id="Resource_vor17"]
+script = ExtResource("2_w8dxp")
+id = 124
+title = "Pressure Cooldown 3"
+node_type = "Decorator"
+position = Vector2(18830, 1605)
+decorator_parent_id = 121
+description = "Attached cooldown constraint for a bounded tactical response."
+parameters = {
+"duration": 0.55,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_q28bf"]
+script = ExtResource("2_w8dxp")
+id = 125
+title = "8 Coordinated Chase"
+node_type = "Sequence"
+position = Vector2(20540, 790)
+parent_id = 3
+description = "Pursue a visible target outside close pressure range."
+
+[sub_resource type="Resource" id="Resource_rq7kw"]
+script = ExtResource("2_w8dxp")
+id = 126
+title = "Should Chase?"
+node_type = "Condition"
+position = Vector2(20540, 1020)
+parent_id = 125
+description = "Require detection outside attack and pressure range."
+parameters = {
+"condition_name": "should_chase"
+}
+
+[sub_resource type="Resource" id="Resource_itgk8"]
+script = ExtResource("2_w8dxp")
+id = 127
+title = "Chase Strategy"
+node_type = "Random Selector"
+position = Vector2(20900, 1020)
+parent_id = 125
+description = "Choose direct, cautious, or lateral pursuit."
+parameters = {
+"seed": 505
+}
+
+[sub_resource type="Resource" id="Resource_ms03k"]
+script = ExtResource("2_w8dxp")
+id = 128
+title = "Chase Strategy 1"
+node_type = "Sequence"
+position = Vector2(18740, 1250)
+parent_id = 127
+description = "Move and publish alert state together, then reassess."
+
+[sub_resource type="Resource" id="Resource_q8o0p"]
+script = ExtResource("2_w8dxp")
+id = 129
+title = "Chase Preparation 1"
+node_type = "Parallel"
+position = Vector2(20000, 1480)
+parent_id = 128
+description = "Run movement and ally signalling concurrently."
+parameters = {
+"failure_policy": "any",
+"success_policy": "all"
+}
+
+[sub_resource type="Resource" id="Resource_5dt86"]
+script = ExtResource("2_w8dxp")
+id = 130
+title = "Chase Movement 1"
+position = Vector2(18020, 1710)
+parent_id = 129
+description = "Execute the selected pursuit movement."
+parameters = {
+"action_name": "chase_player"
+}
+
+[sub_resource type="Resource" id="Resource_1wxhv"]
+script = ExtResource("2_w8dxp")
+id = 131
+title = "Signal Contact 1"
+position = Vector2(18380, 1710)
+parent_id = 129
+description = "Tell nearby guards the player is visible."
+parameters = {
+"action_name": "signal_allies"
+}
+
+[sub_resource type="Resource" id="Resource_fot1c"]
+script = ExtResource("2_w8dxp")
+id = 132
+title = "Chase Reassessment 1"
+node_type = "Wait"
+position = Vector2(20360, 1480)
+parent_id = 128
+description = "Yield before the reactive selector checks distance again."
+parameters = {
+"duration": 0.04
+}
+
+[sub_resource type="Resource" id="Resource_ynpo4"]
+script = ExtResource("2_w8dxp")
+id = 133
+title = "Chase Step Limit 1"
+node_type = "Decorator"
+position = Vector2(17930, 1835)
+decorator_parent_id = 130
+description = "Attached time_limit constraint for a bounded tactical response."
+parameters = {
+"duration": 0.8,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_2rhtp"]
+script = ExtResource("2_w8dxp")
+id = 134
+title = "Chase Strategy 2"
+node_type = "Sequence"
+position = Vector2(19100, 1250)
+parent_id = 127
+description = "Move and publish alert state together, then reassess."
+
+[sub_resource type="Resource" id="Resource_hhck3"]
+script = ExtResource("2_w8dxp")
+id = 135
+title = "Chase Preparation 2"
+node_type = "Parallel"
+position = Vector2(20720, 1480)
+parent_id = 134
+description = "Run movement and ally signalling concurrently."
+parameters = {
+"failure_policy": "any",
+"success_policy": "all"
+}
+
+[sub_resource type="Resource" id="Resource_75pv2"]
+script = ExtResource("2_w8dxp")
+id = 136
+title = "Chase Movement 2"
+position = Vector2(18740, 1710)
+parent_id = 135
+description = "Execute the selected pursuit movement."
+parameters = {
+"action_name": "advance_cautiously"
+}
+
+[sub_resource type="Resource" id="Resource_esgkg"]
+script = ExtResource("2_w8dxp")
+id = 137
+title = "Signal Contact 2"
+position = Vector2(19100, 1710)
+parent_id = 135
+description = "Tell nearby guards the player is visible."
+parameters = {
+"action_name": "signal_allies"
+}
+
+[sub_resource type="Resource" id="Resource_2kc88"]
+script = ExtResource("2_w8dxp")
+id = 138
+title = "Chase Reassessment 2"
+node_type = "Wait"
+position = Vector2(21080, 1480)
+parent_id = 134
+description = "Yield before the reactive selector checks distance again."
+parameters = {
+"duration": 0.06
+}
+
+[sub_resource type="Resource" id="Resource_58tpq"]
+script = ExtResource("2_w8dxp")
+id = 139
+title = "Chase Step Limit 2"
+node_type = "Decorator"
+position = Vector2(18650, 1835)
+decorator_parent_id = 136
+description = "Attached time_limit constraint for a bounded tactical response."
+parameters = {
+"duration": 0.8,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_eh26q"]
+script = ExtResource("2_w8dxp")
+id = 140
+title = "Chase Strategy 3"
+node_type = "Sequence"
+position = Vector2(19460, 1250)
+parent_id = 127
+description = "Move and publish alert state together, then reassess."
+
+[sub_resource type="Resource" id="Resource_ti5ax"]
+script = ExtResource("2_w8dxp")
+id = 141
+title = "Chase Preparation 3"
+node_type = "Parallel"
+position = Vector2(21440, 1480)
+parent_id = 140
+description = "Run movement and ally signalling concurrently."
+parameters = {
+"failure_policy": "any",
+"success_policy": "all"
+}
+
+[sub_resource type="Resource" id="Resource_8tqj4"]
+script = ExtResource("2_w8dxp")
+id = 142
+title = "Chase Movement 3"
+position = Vector2(19460, 1710)
+parent_id = 141
+description = "Execute the selected pursuit movement."
+parameters = {
+"action_name": "strafe_left"
+}
+
+[sub_resource type="Resource" id="Resource_5p2sb"]
+script = ExtResource("2_w8dxp")
+id = 143
+title = "Signal Contact 3"
+position = Vector2(19820, 1710)
+parent_id = 141
+description = "Tell nearby guards the player is visible."
+parameters = {
+"action_name": "signal_allies"
+}
+
+[sub_resource type="Resource" id="Resource_unhu1"]
+script = ExtResource("2_w8dxp")
+id = 144
+title = "Chase Reassessment 3"
+node_type = "Wait"
+position = Vector2(21800, 1480)
+parent_id = 140
+description = "Yield before the reactive selector checks distance again."
+parameters = {
+"duration": 0.08
+}
+
+[sub_resource type="Resource" id="Resource_h8oq5"]
+script = ExtResource("2_w8dxp")
+id = 145
+title = "Chase Step Limit 3"
+node_type = "Decorator"
+position = Vector2(19370, 1835)
+decorator_parent_id = 142
+description = "Attached time_limit constraint for a bounded tactical response."
+parameters = {
+"duration": 0.8,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_ker7t"]
+script = ExtResource("2_w8dxp")
+id = 146
+title = "Chase Strategy 4"
+node_type = "Sequence"
+position = Vector2(19820, 1250)
+parent_id = 127
+description = "Move and publish alert state together, then reassess."
+
+[sub_resource type="Resource" id="Resource_asr0f"]
+script = ExtResource("2_w8dxp")
+id = 147
+title = "Chase Preparation 4"
+node_type = "Parallel"
+position = Vector2(22160, 1480)
+parent_id = 146
+description = "Run movement and ally signalling concurrently."
+parameters = {
+"failure_policy": "any",
+"success_policy": "all"
+}
+
+[sub_resource type="Resource" id="Resource_a6nbx"]
+script = ExtResource("2_w8dxp")
+id = 148
+title = "Chase Movement 4"
+position = Vector2(20180, 1710)
+parent_id = 147
+description = "Execute the selected pursuit movement."
+parameters = {
+"action_name": "strafe_right"
+}
+
+[sub_resource type="Resource" id="Resource_yg7e0"]
+script = ExtResource("2_w8dxp")
+id = 149
+title = "Signal Contact 4"
+position = Vector2(20540, 1710)
+parent_id = 147
+description = "Tell nearby guards the player is visible."
+parameters = {
+"action_name": "signal_allies"
+}
+
+[sub_resource type="Resource" id="Resource_xhgkc"]
+script = ExtResource("2_w8dxp")
+id = 150
+title = "Chase Reassessment 4"
+node_type = "Wait"
+position = Vector2(22520, 1480)
+parent_id = 146
+description = "Yield before the reactive selector checks distance again."
+parameters = {
+"duration": 0.1
+}
+
+[sub_resource type="Resource" id="Resource_msiko"]
+script = ExtResource("2_w8dxp")
+id = 151
+title = "Chase Step Limit 4"
+node_type = "Decorator"
+position = Vector2(20090, 1835)
+decorator_parent_id = 148
+description = "Attached time_limit constraint for a bounded tactical response."
+parameters = {
+"duration": 0.8,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_m8f8y"]
+script = ExtResource("2_w8dxp")
+id = 152
+title = "9 Last-Known-Position Search"
+node_type = "Sequence"
+position = Vector2(20900, 790)
+parent_id = 3
+description = "Search after loss of sight instead of forgetting immediately."
+
+[sub_resource type="Resource" id="Resource_y6mb4"]
+script = ExtResource("2_w8dxp")
+id = 153
+title = "Has Last Known Position?"
+node_type = "Condition"
+position = Vector2(21260, 1020)
+parent_id = 152
+description = "Use memory retained after visual detection is lost."
+parameters = {
+"condition_name": "has_last_known_position"
+}
+
+[sub_resource type="Resource" id="Resource_dvrvn"]
+script = ExtResource("2_w8dxp")
+id = 154
+title = "Search Pattern"
+node_type = "Random Selector"
+position = Vector2(21620, 1020)
+parent_id = 152
+description = "Use directional and direct search paths."
+parameters = {
+"seed": 606
+}
+
+[sub_resource type="Resource" id="Resource_ofle7"]
+script = ExtResource("2_w8dxp")
+id = 155
+title = "Search Pattern 1"
+node_type = "Sequence"
+position = Vector2(20180, 1250)
+parent_id = 154
+description = "Sweep, pause, and scan before giving up memory."
+
+[sub_resource type="Resource" id="Resource_dvi7w"]
+script = ExtResource("2_w8dxp")
+id = 156
+title = "Search Movement 1"
+position = Vector2(22880, 1480)
+parent_id = 155
+description = "Move through the last-known area."
+parameters = {
+"action_name": "search_sweep_left"
+}
+
+[sub_resource type="Resource" id="Resource_cqqvv"]
+script = ExtResource("2_w8dxp")
+id = 157
+title = "Listen During Search 1"
+node_type = "Wait"
+position = Vector2(23240, 1480)
+parent_id = 155
+description = "Pause so the search remains readable in play."
+parameters = {
+"duration": 0.08
+}
+
+[sub_resource type="Resource" id="Resource_8w54j"]
+script = ExtResource("2_w8dxp")
+id = 158
+title = "Scan Search Area 1"
+position = Vector2(23600, 1480)
+parent_id = 155
+description = "Stationary scan completes this search leg."
+parameters = {
+"action_name": "scan_for_player"
+}
+
+[sub_resource type="Resource" id="Resource_smsoe"]
+script = ExtResource("2_w8dxp")
+id = 159
+title = "Search Leg Limit 1"
+node_type = "Decorator"
+position = Vector2(22790, 1605)
+decorator_parent_id = 156
+description = "Attached time_limit constraint for a bounded tactical response."
+parameters = {
+"duration": 1.25,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_mhgle"]
+script = ExtResource("2_w8dxp")
+id = 160
+title = "Search Pattern 2"
+node_type = "Sequence"
+position = Vector2(20540, 1250)
+parent_id = 154
+description = "Sweep, pause, and scan before giving up memory."
+
+[sub_resource type="Resource" id="Resource_bvbxc"]
+script = ExtResource("2_w8dxp")
+id = 161
+title = "Search Movement 2"
+position = Vector2(23960, 1480)
+parent_id = 160
+description = "Move through the last-known area."
+parameters = {
+"action_name": "search_last_known"
+}
+
+[sub_resource type="Resource" id="Resource_n835w"]
+script = ExtResource("2_w8dxp")
+id = 162
+title = "Listen During Search 2"
+node_type = "Wait"
+position = Vector2(24320, 1480)
+parent_id = 160
+description = "Pause so the search remains readable in play."
+parameters = {
+"duration": 0.1
+}
+
+[sub_resource type="Resource" id="Resource_5y6f6"]
+script = ExtResource("2_w8dxp")
+id = 163
+title = "Scan Search Area 2"
+position = Vector2(24680, 1480)
+parent_id = 160
+description = "Stationary scan completes this search leg."
+parameters = {
+"action_name": "scan_for_player"
+}
+
+[sub_resource type="Resource" id="Resource_hrbmn"]
+script = ExtResource("2_w8dxp")
+id = 164
+title = "Search Leg Limit 2"
+node_type = "Decorator"
+position = Vector2(23870, 1605)
+decorator_parent_id = 161
+description = "Attached time_limit constraint for a bounded tactical response."
+parameters = {
+"duration": 1.25,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_2oa2b"]
+script = ExtResource("2_w8dxp")
+id = 165
+title = "Search Pattern 3"
+node_type = "Sequence"
+position = Vector2(20900, 1250)
+parent_id = 154
+description = "Sweep, pause, and scan before giving up memory."
+
+[sub_resource type="Resource" id="Resource_rxhgb"]
+script = ExtResource("2_w8dxp")
+id = 166
+title = "Search Movement 3"
+position = Vector2(25040, 1480)
+parent_id = 165
+description = "Move through the last-known area."
+parameters = {
+"action_name": "search_sweep_right"
+}
+
+[sub_resource type="Resource" id="Resource_np60e"]
+script = ExtResource("2_w8dxp")
+id = 167
+title = "Listen During Search 3"
+node_type = "Wait"
+position = Vector2(25400, 1480)
+parent_id = 165
+description = "Pause so the search remains readable in play."
+parameters = {
+"duration": 0.12
+}
+
+[sub_resource type="Resource" id="Resource_aokjf"]
+script = ExtResource("2_w8dxp")
+id = 168
+title = "Scan Search Area 3"
+position = Vector2(25760, 1480)
+parent_id = 165
+description = "Stationary scan completes this search leg."
+parameters = {
+"action_name": "scan_for_player"
+}
+
+[sub_resource type="Resource" id="Resource_d8csf"]
+script = ExtResource("2_w8dxp")
+id = 169
+title = "Search Leg Limit 3"
+node_type = "Decorator"
+position = Vector2(24950, 1605)
+decorator_parent_id = 166
+description = "Attached time_limit constraint for a bounded tactical response."
+parameters = {
+"duration": 1.25,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_6tdh2"]
+script = ExtResource("2_w8dxp")
+id = 170
+title = "Search Pattern 4"
+node_type = "Sequence"
+position = Vector2(21260, 1250)
+parent_id = 154
+description = "Sweep, pause, and scan before giving up memory."
+
+[sub_resource type="Resource" id="Resource_ltgb8"]
+script = ExtResource("2_w8dxp")
+id = 171
+title = "Search Movement 4"
+position = Vector2(26120, 1480)
+parent_id = 170
+description = "Move through the last-known area."
+parameters = {
+"action_name": "search_last_known"
+}
+
+[sub_resource type="Resource" id="Resource_tb8hw"]
+script = ExtResource("2_w8dxp")
+id = 172
+title = "Listen During Search 4"
+node_type = "Wait"
+position = Vector2(26480, 1480)
+parent_id = 170
+description = "Pause so the search remains readable in play."
+parameters = {
+"duration": 0.14
+}
+
+[sub_resource type="Resource" id="Resource_vovh3"]
+script = ExtResource("2_w8dxp")
+id = 173
+title = "Scan Search Area 4"
+position = Vector2(26840, 1480)
+parent_id = 170
+description = "Stationary scan completes this search leg."
+parameters = {
+"action_name": "scan_for_player"
+}
+
+[sub_resource type="Resource" id="Resource_bkcmi"]
+script = ExtResource("2_w8dxp")
+id = 174
+title = "Search Leg Limit 4"
+node_type = "Decorator"
+position = Vector2(26030, 1605)
+decorator_parent_id = 171
+description = "Attached time_limit constraint for a bounded tactical response."
+parameters = {
+"duration": 1.25,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_sx2rf"]
+script = ExtResource("2_w8dxp")
+id = 175
+title = "10 Return to Guard Post"
+node_type = "Sequence"
+position = Vector2(21260, 790)
+parent_id = 3
+description = "Prevent patrol drift after the target is gone."
+
+[sub_resource type="Resource" id="Resource_qslsr"]
+script = ExtResource("2_w8dxp")
+id = 176
+title = "Too Far From Home?"
+node_type = "Condition"
+position = Vector2(21980, 1020)
+parent_id = 175
+description = "Return only when no target memory remains."
+parameters = {
+"condition_name": "should_return_home"
+}
+
+[sub_resource type="Resource" id="Resource_7r8hx"]
+script = ExtResource("2_w8dxp")
+id = 177
+title = "Return Formation"
+node_type = "Random Selector"
+position = Vector2(22340, 1020)
+parent_id = 175
+description = "Choose a guarded return cadence."
+parameters = {
+"seed": 707
+}
+
+[sub_resource type="Resource" id="Resource_b1r38"]
+script = ExtResource("2_w8dxp")
+id = 178
+title = "Return Route 1"
+node_type = "Sequence"
+position = Vector2(21620, 1250)
+parent_id = 177
+description = "Move home, pause, and verify the area."
+
+[sub_resource type="Resource" id="Resource_673mr"]
+script = ExtResource("2_w8dxp")
+id = 179
+title = "Return Movement 1"
+position = Vector2(27200, 1480)
+parent_id = 178
+description = "Move toward the original spawn position."
+parameters = {
+"action_name": "return_home"
+}
+
+[sub_resource type="Resource" id="Resource_ejb6v"]
+script = ExtResource("2_w8dxp")
+id = 180
+title = "Return Pause 1"
+node_type = "Wait"
+position = Vector2(27560, 1480)
+parent_id = 178
+description = "Break a long return into observable decisions."
+parameters = {
+"duration": 0.05
+}
+
+[sub_resource type="Resource" id="Resource_5c5o2"]
+script = ExtResource("2_w8dxp")
+id = 181
+title = "Verify Guard Post 1"
+position = Vector2(27920, 1480)
+parent_id = 178
+description = "Observe before resuming patrol."
+parameters = {
+"action_name": "observe_area"
+}
+
+[sub_resource type="Resource" id="Resource_t71rg"]
+script = ExtResource("2_w8dxp")
+id = 182
+title = "Return Step Limit 1"
+node_type = "Decorator"
+position = Vector2(27110, 1605)
+decorator_parent_id = 179
+description = "Attached time_limit constraint for a bounded tactical response."
+parameters = {
+"duration": 0.9,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_pr60m"]
+script = ExtResource("2_w8dxp")
+id = 183
+title = "Return Route 2"
+node_type = "Sequence"
+position = Vector2(21980, 1250)
+parent_id = 177
+description = "Move home, pause, and verify the area."
+
+[sub_resource type="Resource" id="Resource_eo4bk"]
+script = ExtResource("2_w8dxp")
+id = 184
+title = "Return Movement 2"
+position = Vector2(28280, 1480)
+parent_id = 183
+description = "Move toward the original spawn position."
+parameters = {
+"action_name": "return_home"
+}
+
+[sub_resource type="Resource" id="Resource_eusyg"]
+script = ExtResource("2_w8dxp")
+id = 185
+title = "Return Pause 2"
+node_type = "Wait"
+position = Vector2(28640, 1480)
+parent_id = 183
+description = "Break a long return into observable decisions."
+parameters = {
+"duration": 0.08
+}
+
+[sub_resource type="Resource" id="Resource_oxnod"]
+script = ExtResource("2_w8dxp")
+id = 186
+title = "Verify Guard Post 2"
+position = Vector2(29000, 1480)
+parent_id = 183
+description = "Observe before resuming patrol."
+parameters = {
+"action_name": "observe_area"
+}
+
+[sub_resource type="Resource" id="Resource_ii4qw"]
+script = ExtResource("2_w8dxp")
+id = 187
+title = "Return Step Limit 2"
+node_type = "Decorator"
+position = Vector2(28190, 1605)
+decorator_parent_id = 184
+description = "Attached time_limit constraint for a bounded tactical response."
+parameters = {
+"duration": 0.9,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_gxsuq"]
+script = ExtResource("2_w8dxp")
+id = 188
+title = "Return Route 3"
+node_type = "Sequence"
+position = Vector2(22340, 1250)
+parent_id = 177
+description = "Move home, pause, and verify the area."
+
+[sub_resource type="Resource" id="Resource_tij0d"]
+script = ExtResource("2_w8dxp")
+id = 189
+title = "Return Movement 3"
+position = Vector2(29360, 1480)
+parent_id = 188
+description = "Move toward the original spawn position."
+parameters = {
+"action_name": "return_home"
+}
+
+[sub_resource type="Resource" id="Resource_3wuq0"]
+script = ExtResource("2_w8dxp")
+id = 190
+title = "Return Pause 3"
+node_type = "Wait"
+position = Vector2(29720, 1480)
+parent_id = 188
+description = "Break a long return into observable decisions."
+parameters = {
+"duration": 0.11
+}
+
+[sub_resource type="Resource" id="Resource_rfnwx"]
+script = ExtResource("2_w8dxp")
+id = 191
+title = "Verify Guard Post 3"
+position = Vector2(30080, 1480)
+parent_id = 188
+description = "Observe before resuming patrol."
+parameters = {
+"action_name": "observe_area"
+}
+
+[sub_resource type="Resource" id="Resource_2xd1b"]
+script = ExtResource("2_w8dxp")
+id = 192
+title = "Return Step Limit 3"
+node_type = "Decorator"
+position = Vector2(29270, 1605)
+decorator_parent_id = 189
+description = "Attached time_limit constraint for a bounded tactical response."
+parameters = {
+"duration": 0.9,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_46yes"]
+script = ExtResource("2_w8dxp")
+id = 193
+title = "11 Layered Patrol"
+node_type = "Sequence"
+position = Vector2(21620, 790)
+parent_id = 3
+description = "Fallback patrol only when the player is not detected."
+
+[sub_resource type="Resource" id="Resource_b1b8x"]
+script = ExtResource("2_w8dxp")
+id = 194
+title = "No Visible Player"
+node_type = "Decorator"
+position = Vector2(22700, 1020)
+parent_id = 193
+description = "Invert the perception condition."
+parameters = {
+"mode": "invert"
+}
+
+[sub_resource type="Resource" id="Resource_64plx"]
+script = ExtResource("2_w8dxp")
+id = 195
+title = "Player Detected?"
+node_type = "Condition"
+position = Vector2(22700, 1250)
+parent_id = 194
+description = "Read current arena perception."
+parameters = {
+"condition_name": "is_player_detected"
+}
+
+[sub_resource type="Resource" id="Resource_kje6s"]
+script = ExtResource("2_w8dxp")
+id = 196
+title = "Patrol Route Choice"
+node_type = "Random Selector"
+position = Vector2(23060, 1020)
+parent_id = 193
+description = "Route variation avoids one mechanical loop."
+parameters = {
+"seed": 808
+}
+
+[sub_resource type="Resource" id="Resource_netar"]
+script = ExtResource("2_w8dxp")
+id = 197
+title = "Patrol Route 1"
+node_type = "Sequence"
+position = Vector2(23060, 1250)
+parent_id = 196
+description = "Move for a timed leg and observe the endpoint."
+
+[sub_resource type="Resource" id="Resource_w2ivv"]
+script = ExtResource("2_w8dxp")
+id = 198
+title = "Patrol Motion 1"
+node_type = "Parallel"
+position = Vector2(30440, 1480)
+parent_id = 197
+description = "Pair movement with its route timer."
+parameters = {
+"failure_policy": "any",
+"success_policy": "all"
+}
+
+[sub_resource type="Resource" id="Resource_4d5wx"]
+script = ExtResource("2_w8dxp")
+id = 199
+title = "Patrol Movement 1"
+position = Vector2(20900, 1710)
+parent_id = 198
+description = "Traverse one patrol leg."
+parameters = {
+"action_name": "move_left"
+}
+
+[sub_resource type="Resource" id="Resource_e50kf"]
+script = ExtResource("2_w8dxp")
+id = 200
+title = "Patrol Leg Timer 1"
+node_type = "Wait"
+position = Vector2(21260, 1710)
+parent_id = 198
+description = "Minimum time spent on this leg."
+parameters = {
+"duration": 0.2
+}
+
+[sub_resource type="Resource" id="Resource_61m3d"]
+script = ExtResource("2_w8dxp")
+id = 201
+title = "Observe Patrol Point 1"
+position = Vector2(30800, 1480)
+parent_id = 197
+description = "Scan at the end of the leg."
+parameters = {
+"action_name": "observe_area"
+}
+
+[sub_resource type="Resource" id="Resource_jiyhx"]
+script = ExtResource("2_w8dxp")
+id = 202
+title = "Patrol Leg Limit 1"
+node_type = "Decorator"
+position = Vector2(20810, 1835)
+decorator_parent_id = 199
+description = "Attached time_limit constraint for a bounded tactical response."
+parameters = {
+"duration": 1.5,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_0s6ng"]
+script = ExtResource("2_w8dxp")
+id = 203
+title = "Patrol Route 2"
+node_type = "Sequence"
+position = Vector2(23420, 1250)
+parent_id = 196
+description = "Move for a timed leg and observe the endpoint."
+
+[sub_resource type="Resource" id="Resource_xrwcj"]
+script = ExtResource("2_w8dxp")
+id = 204
+title = "Patrol Motion 2"
+node_type = "Parallel"
+position = Vector2(31160, 1480)
+parent_id = 203
+description = "Pair movement with its route timer."
+parameters = {
+"failure_policy": "any",
+"success_policy": "all"
+}
+
+[sub_resource type="Resource" id="Resource_y73fy"]
+script = ExtResource("2_w8dxp")
+id = 205
+title = "Patrol Movement 2"
+position = Vector2(21620, 1710)
+parent_id = 204
+description = "Traverse one patrol leg."
+parameters = {
+"action_name": "move_right"
+}
+
+[sub_resource type="Resource" id="Resource_eavpi"]
+script = ExtResource("2_w8dxp")
+id = 206
+title = "Patrol Leg Timer 2"
+node_type = "Wait"
+position = Vector2(21980, 1710)
+parent_id = 204
+description = "Minimum time spent on this leg."
+parameters = {
+"duration": 0.24000000000000002
+}
+
+[sub_resource type="Resource" id="Resource_g48jq"]
+script = ExtResource("2_w8dxp")
+id = 207
+title = "Observe Patrol Point 2"
+position = Vector2(31520, 1480)
+parent_id = 203
+description = "Scan at the end of the leg."
+parameters = {
+"action_name": "observe_area"
+}
+
+[sub_resource type="Resource" id="Resource_sjpu5"]
+script = ExtResource("2_w8dxp")
+id = 208
+title = "Patrol Leg Limit 2"
+node_type = "Decorator"
+position = Vector2(21530, 1835)
+decorator_parent_id = 205
+description = "Attached time_limit constraint for a bounded tactical response."
+parameters = {
+"duration": 1.5,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_0eyhd"]
+script = ExtResource("2_w8dxp")
+id = 209
+title = "Patrol Route 3"
+node_type = "Sequence"
+position = Vector2(23780, 1250)
+parent_id = 196
+description = "Move for a timed leg and observe the endpoint."
+
+[sub_resource type="Resource" id="Resource_gketh"]
+script = ExtResource("2_w8dxp")
+id = 210
+title = "Patrol Motion 3"
+node_type = "Parallel"
+position = Vector2(31880, 1480)
+parent_id = 209
+description = "Pair movement with its route timer."
+parameters = {
+"failure_policy": "any",
+"success_policy": "all"
+}
+
+[sub_resource type="Resource" id="Resource_pdi8r"]
+script = ExtResource("2_w8dxp")
+id = 211
+title = "Patrol Movement 3"
+position = Vector2(22340, 1710)
+parent_id = 210
+description = "Traverse one patrol leg."
+parameters = {
+"action_name": "strafe_left"
+}
+
+[sub_resource type="Resource" id="Resource_82bqj"]
+script = ExtResource("2_w8dxp")
+id = 212
+title = "Patrol Leg Timer 3"
+node_type = "Wait"
+position = Vector2(22700, 1710)
+parent_id = 210
+description = "Minimum time spent on this leg."
+parameters = {
+"duration": 0.28
+}
+
+[sub_resource type="Resource" id="Resource_5mcgj"]
+script = ExtResource("2_w8dxp")
+id = 213
+title = "Observe Patrol Point 3"
+position = Vector2(32240, 1480)
+parent_id = 209
+description = "Scan at the end of the leg."
+parameters = {
+"action_name": "observe_area"
+}
+
+[sub_resource type="Resource" id="Resource_3j21p"]
+script = ExtResource("2_w8dxp")
+id = 214
+title = "Patrol Leg Limit 3"
+node_type = "Decorator"
+position = Vector2(22250, 1835)
+decorator_parent_id = 211
+description = "Attached time_limit constraint for a bounded tactical response."
+parameters = {
+"duration": 1.5,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_vt1rk"]
+script = ExtResource("2_w8dxp")
+id = 215
+title = "Patrol Route 4"
+node_type = "Sequence"
+position = Vector2(24140, 1250)
+parent_id = 196
+description = "Move for a timed leg and observe the endpoint."
+
+[sub_resource type="Resource" id="Resource_ftdo5"]
+script = ExtResource("2_w8dxp")
+id = 216
+title = "Patrol Motion 4"
+node_type = "Parallel"
+position = Vector2(32600, 1480)
+parent_id = 215
+description = "Pair movement with its route timer."
+parameters = {
+"failure_policy": "any",
+"success_policy": "all"
+}
+
+[sub_resource type="Resource" id="Resource_qmlys"]
+script = ExtResource("2_w8dxp")
+id = 217
+title = "Patrol Movement 4"
+position = Vector2(23060, 1710)
+parent_id = 216
+description = "Traverse one patrol leg."
+parameters = {
+"action_name": "strafe_right"
+}
+
+[sub_resource type="Resource" id="Resource_wq76s"]
+script = ExtResource("2_w8dxp")
+id = 218
+title = "Patrol Leg Timer 4"
+node_type = "Wait"
+position = Vector2(23420, 1710)
+parent_id = 216
+description = "Minimum time spent on this leg."
+parameters = {
+"duration": 0.32
+}
+
+[sub_resource type="Resource" id="Resource_tt64f"]
+script = ExtResource("2_w8dxp")
+id = 219
+title = "Observe Patrol Point 4"
+position = Vector2(32960, 1480)
+parent_id = 215
+description = "Scan at the end of the leg."
+parameters = {
+"action_name": "observe_area"
+}
+
+[sub_resource type="Resource" id="Resource_m4oq8"]
+script = ExtResource("2_w8dxp")
+id = 220
+title = "Patrol Leg Limit 4"
+node_type = "Decorator"
+position = Vector2(22970, 1835)
+decorator_parent_id = 217
+description = "Attached time_limit constraint for a bounded tactical response."
+parameters = {
+"duration": 1.5,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_wgfvu"]
+script = ExtResource("2_w8dxp")
+id = 221
+title = "Patrol Route 5"
+node_type = "Sequence"
+position = Vector2(24500, 1250)
+parent_id = 196
+description = "Move for a timed leg and observe the endpoint."
+
+[sub_resource type="Resource" id="Resource_y101i"]
+script = ExtResource("2_w8dxp")
+id = 222
+title = "Patrol Motion 5"
+node_type = "Parallel"
+position = Vector2(33320, 1480)
+parent_id = 221
+description = "Pair movement with its route timer."
+parameters = {
+"failure_policy": "any",
+"success_policy": "all"
+}
+
+[sub_resource type="Resource" id="Resource_u4cxm"]
+script = ExtResource("2_w8dxp")
+id = 223
+title = "Patrol Movement 5"
+position = Vector2(23780, 1710)
+parent_id = 222
+description = "Traverse one patrol leg."
+parameters = {
+"action_name": "move_left"
+}
+
+[sub_resource type="Resource" id="Resource_c8cbs"]
+script = ExtResource("2_w8dxp")
+id = 224
+title = "Patrol Leg Timer 5"
+node_type = "Wait"
+position = Vector2(24140, 1710)
+parent_id = 222
+description = "Minimum time spent on this leg."
+parameters = {
+"duration": 0.36
+}
+
+[sub_resource type="Resource" id="Resource_alnrc"]
+script = ExtResource("2_w8dxp")
+id = 225
+title = "Observe Patrol Point 5"
+position = Vector2(33680, 1480)
+parent_id = 221
+description = "Scan at the end of the leg."
+parameters = {
+"action_name": "observe_area"
+}
+
+[sub_resource type="Resource" id="Resource_7d2gk"]
+script = ExtResource("2_w8dxp")
+id = 226
+title = "Patrol Leg Limit 5"
+node_type = "Decorator"
+position = Vector2(23690, 1835)
+decorator_parent_id = 223
+description = "Attached time_limit constraint for a bounded tactical response."
+parameters = {
+"duration": 1.5,
+"mode": "time_limit"
+}
+
+[sub_resource type="Resource" id="Resource_vw37p"]
+script = ExtResource("2_w8dxp")
+id = 227
+title = "12 Guard Idle Variations"
+node_type = "Random Selector"
+position = Vector2(21980, 790)
+parent_id = 3
+description = "Always-available fallback with varied observation."
+parameters = {
+"seed": 909
+}
+
+[sub_resource type="Resource" id="Resource_21vup"]
+script = ExtResource("2_w8dxp")
+id = 228
+title = "Idle Variation 1"
+node_type = "Sequence"
+position = Vector2(23420, 1020)
+parent_id = 227
+description = "Hold a guard stance and wait before reevaluating."
+
+[sub_resource type="Resource" id="Resource_gtpbm"]
+script = ExtResource("2_w8dxp")
+id = 229
+title = "Guard Stance 1"
+position = Vector2(24860, 1250)
+parent_id = 228
+description = "Hold position without disabling perception."
+parameters = {
+"action_name": "idle_guard"
+}
+
+[sub_resource type="Resource" id="Resource_iv0hj"]
+script = ExtResource("2_w8dxp")
+id = 230
+title = "Idle Wait 1"
+node_type = "Wait"
+position = Vector2(25220, 1250)
+parent_id = 228
+description = "Keep the fallback visible long enough to observe."
+parameters = {
+"duration": 0.12
+}
+
+[sub_resource type="Resource" id="Resource_m7677"]
+script = ExtResource("2_w8dxp")
+id = 231
+title = "Idle Cooldown 1"
+node_type = "Decorator"
+position = Vector2(24770, 1375)
+decorator_parent_id = 229
+description = "Attached cooldown constraint for a bounded tactical response."
+parameters = {
+"duration": 0.25,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_qjd88"]
+script = ExtResource("2_w8dxp")
+id = 232
+title = "Idle Variation 2"
+node_type = "Sequence"
+position = Vector2(23780, 1020)
+parent_id = 227
+description = "Hold a guard stance and wait before reevaluating."
+
+[sub_resource type="Resource" id="Resource_1cdcf"]
+script = ExtResource("2_w8dxp")
+id = 233
+title = "Guard Stance 2"
+position = Vector2(25580, 1250)
+parent_id = 232
+description = "Hold position without disabling perception."
+parameters = {
+"action_name": "observe_area"
+}
+
+[sub_resource type="Resource" id="Resource_2ppci"]
+script = ExtResource("2_w8dxp")
+id = 234
+title = "Idle Wait 2"
+node_type = "Wait"
+position = Vector2(25940, 1250)
+parent_id = 232
+description = "Keep the fallback visible long enough to observe."
+parameters = {
+"duration": 0.16
+}
+
+[sub_resource type="Resource" id="Resource_qbpgt"]
+script = ExtResource("2_w8dxp")
+id = 235
+title = "Idle Cooldown 2"
+node_type = "Decorator"
+position = Vector2(25490, 1375)
+decorator_parent_id = 233
+description = "Attached cooldown constraint for a bounded tactical response."
+parameters = {
+"duration": 0.35,
+"mode": "cooldown"
+}
+
+[sub_resource type="Resource" id="Resource_bf15b"]
+script = ExtResource("2_w8dxp")
+id = 236
+title = "Idle Variation 3"
+node_type = "Sequence"
+position = Vector2(24140, 1020)
+parent_id = 227
+description = "Hold a guard stance and wait before reevaluating."
+
+[sub_resource type="Resource" id="Resource_nxjj8"]
+script = ExtResource("2_w8dxp")
+id = 237
+title = "Guard Stance 3"
+position = Vector2(26300, 1250)
+parent_id = 236
+description = "Hold position without disabling perception."
+parameters = {
+"action_name": "idle_guard"
+}
+
+[sub_resource type="Resource" id="Resource_vmp4l"]
+script = ExtResource("2_w8dxp")
+id = 238
+title = "Idle Wait 3"
+node_type = "Wait"
+position = Vector2(26660, 1250)
+parent_id = 236
+description = "Keep the fallback visible long enough to observe."
+parameters = {
+"duration": 0.2
+}
+
+[sub_resource type="Resource" id="Resource_fcoya"]
+script = ExtResource("2_w8dxp")
+id = 239
+title = "Idle Variation 4"
+node_type = "Sequence"
+position = Vector2(24500, 1020)
+parent_id = 227
+description = "Hold a guard stance and wait before reevaluating."
+
+[sub_resource type="Resource" id="Resource_abntv"]
+script = ExtResource("2_w8dxp")
+id = 240
+title = "Guard Stance 4"
+position = Vector2(27020, 1250)
+parent_id = 239
+description = "Hold position without disabling perception."
+parameters = {
+"action_name": "observe_area"
+}
+
+[sub_resource type="Resource" id="Resource_8a5ad"]
+script = ExtResource("2_w8dxp")
+id = 241
+title = "Idle Wait 4"
+node_type = "Wait"
+position = Vector2(27380, 1250)
+parent_id = 239
+description = "Keep the fallback visible long enough to observe."
+parameters = {
+"duration": 0.24
+}
+
+[resource]
+script = ExtResource("3_rykn1")
+tree_name = "Arena Tactician (241 Nodes)"
+root_node_id = 1
+nodes = Array[ExtResource("2_w8dxp")]([SubResource("Resource_hsal7"), SubResource("Resource_b882u"), SubResource("Resource_stxso"), SubResource("Resource_wrak3"), SubResource("Resource_sjb5s"), SubResource("Resource_o8ljo"), SubResource("Resource_daywa"), SubResource("Resource_ini36"), SubResource("Resource_b2gg4"), SubResource("Resource_n4nt7"), SubResource("Resource_spky4"), SubResource("Resource_ayb8b"), SubResource("Resource_6migd"), SubResource("Resource_y48bm"), SubResource("Resource_cgsuc"), SubResource("Resource_w65gs"), SubResource("Resource_8hr8l"), SubResource("Resource_ugaym"), SubResource("Resource_7302l"), SubResource("Resource_2ixpa"), SubResource("Resource_lotw8"), SubResource("Resource_7vmkx"), SubResource("Resource_xuxwj"), SubResource("Resource_i6i35"), SubResource("Resource_v4hf8"), SubResource("Resource_u48k1"), SubResource("Resource_scnwf"), SubResource("Resource_0ahk0"), SubResource("Resource_blbjp"), SubResource("Resource_ceskq"), SubResource("Resource_5hpyx"), SubResource("Resource_t6457"), SubResource("Resource_ljdga"), SubResource("Resource_5n322"), SubResource("Resource_rsa36"), SubResource("Resource_tewf2"), SubResource("Resource_32lcc"), SubResource("Resource_crarl"), SubResource("Resource_u1t0m"), SubResource("Resource_ayoqx"), SubResource("Resource_xotfm"), SubResource("Resource_m4sgn"), SubResource("Resource_eqvi2"), SubResource("Resource_p44bu"), SubResource("Resource_ad272"), SubResource("Resource_31ays"), SubResource("Resource_8l0et"), SubResource("Resource_8qf0a"), SubResource("Resource_7k0om"), SubResource("Resource_jj70t"), SubResource("Resource_foec6"), SubResource("Resource_hrm4y"), SubResource("Resource_4p8f0"), SubResource("Resource_sos8p"), SubResource("Resource_dywxe"), SubResource("Resource_4th6a"), SubResource("Resource_nvb8v"), SubResource("Resource_hafey"), SubResource("Resource_ijq7c"), SubResource("Resource_qkwmu"), SubResource("Resource_kiqih"), SubResource("Resource_6jpfp"), SubResource("Resource_kx8ca"), SubResource("Resource_kefft"), SubResource("Resource_8xqoe"), SubResource("Resource_6ni6m"), SubResource("Resource_w5u1j"), SubResource("Resource_giagg"), SubResource("Resource_8okqq"), SubResource("Resource_5yv2l"), SubResource("Resource_kp8j1"), SubResource("Resource_bdy86"), SubResource("Resource_mnlxh"), SubResource("Resource_c0gjd"), SubResource("Resource_s3pql"), SubResource("Resource_mtxo4"), SubResource("Resource_pgqsr"), SubResource("Resource_l0536"), SubResource("Resource_11lx5"), SubResource("Resource_qroon"), SubResource("Resource_8qab6"), SubResource("Resource_erhi3"), SubResource("Resource_j11sx"), SubResource("Resource_k1ema"), SubResource("Resource_hktt3"), SubResource("Resource_tyo6c"), SubResource("Resource_4wcup"), SubResource("Resource_u20x1"), SubResource("Resource_ceaaj"), SubResource("Resource_ebapb"), SubResource("Resource_8u85y"), SubResource("Resource_fay3o"), SubResource("Resource_ud4yg"), SubResource("Resource_l1fkg"), SubResource("Resource_6wdtu"), SubResource("Resource_tv37m"), SubResource("Resource_34fe8"), SubResource("Resource_xua76"), SubResource("Resource_eqh8i"), SubResource("Resource_r7kvo"), SubResource("Resource_lvw6x"), SubResource("Resource_isdn5"), SubResource("Resource_5cxml"), SubResource("Resource_m7gm5"), SubResource("Resource_qlsdh"), SubResource("Resource_hi266"), SubResource("Resource_1ycbk"), SubResource("Resource_j1tun"), SubResource("Resource_jed2g"), SubResource("Resource_a8s0f"), SubResource("Resource_0wpkr"), SubResource("Resource_8u0m7"), SubResource("Resource_sas4n"), SubResource("Resource_r5dcm"), SubResource("Resource_a8ng6"), SubResource("Resource_g4ts3"), SubResource("Resource_8fr6f"), SubResource("Resource_dwdof"), SubResource("Resource_eyig8"), SubResource("Resource_np6qa"), SubResource("Resource_4jw47"), SubResource("Resource_2sgs2"), SubResource("Resource_ag48k"), SubResource("Resource_vor17"), SubResource("Resource_q28bf"), SubResource("Resource_rq7kw"), SubResource("Resource_itgk8"), SubResource("Resource_ms03k"), SubResource("Resource_q8o0p"), SubResource("Resource_5dt86"), SubResource("Resource_1wxhv"), SubResource("Resource_fot1c"), SubResource("Resource_ynpo4"), SubResource("Resource_2rhtp"), SubResource("Resource_hhck3"), SubResource("Resource_75pv2"), SubResource("Resource_esgkg"), SubResource("Resource_2kc88"), SubResource("Resource_58tpq"), SubResource("Resource_eh26q"), SubResource("Resource_ti5ax"), SubResource("Resource_8tqj4"), SubResource("Resource_5p2sb"), SubResource("Resource_unhu1"), SubResource("Resource_h8oq5"), SubResource("Resource_ker7t"), SubResource("Resource_asr0f"), SubResource("Resource_a6nbx"), SubResource("Resource_yg7e0"), SubResource("Resource_xhgkc"), SubResource("Resource_msiko"), SubResource("Resource_m8f8y"), SubResource("Resource_y6mb4"), SubResource("Resource_dvrvn"), SubResource("Resource_ofle7"), SubResource("Resource_dvi7w"), SubResource("Resource_cqqvv"), SubResource("Resource_8w54j"), SubResource("Resource_smsoe"), SubResource("Resource_mhgle"), SubResource("Resource_bvbxc"), SubResource("Resource_n835w"), SubResource("Resource_5y6f6"), SubResource("Resource_hrbmn"), SubResource("Resource_2oa2b"), SubResource("Resource_rxhgb"), SubResource("Resource_np60e"), SubResource("Resource_aokjf"), SubResource("Resource_d8csf"), SubResource("Resource_6tdh2"), SubResource("Resource_ltgb8"), SubResource("Resource_tb8hw"), SubResource("Resource_vovh3"), SubResource("Resource_bkcmi"), SubResource("Resource_sx2rf"), SubResource("Resource_qslsr"), SubResource("Resource_7r8hx"), SubResource("Resource_b1r38"), SubResource("Resource_673mr"), SubResource("Resource_ejb6v"), SubResource("Resource_5c5o2"), SubResource("Resource_t71rg"), SubResource("Resource_pr60m"), SubResource("Resource_eo4bk"), SubResource("Resource_eusyg"), SubResource("Resource_oxnod"), SubResource("Resource_ii4qw"), SubResource("Resource_gxsuq"), SubResource("Resource_tij0d"), SubResource("Resource_3wuq0"), SubResource("Resource_rfnwx"), SubResource("Resource_2xd1b"), SubResource("Resource_46yes"), SubResource("Resource_b1b8x"), SubResource("Resource_64plx"), SubResource("Resource_kje6s"), SubResource("Resource_netar"), SubResource("Resource_w2ivv"), SubResource("Resource_4d5wx"), SubResource("Resource_e50kf"), SubResource("Resource_61m3d"), SubResource("Resource_jiyhx"), SubResource("Resource_0s6ng"), SubResource("Resource_xrwcj"), SubResource("Resource_y73fy"), SubResource("Resource_eavpi"), SubResource("Resource_g48jq"), SubResource("Resource_sjpu5"), SubResource("Resource_0eyhd"), SubResource("Resource_gketh"), SubResource("Resource_pdi8r"), SubResource("Resource_82bqj"), SubResource("Resource_5mcgj"), SubResource("Resource_3j21p"), SubResource("Resource_vt1rk"), SubResource("Resource_ftdo5"), SubResource("Resource_qmlys"), SubResource("Resource_wq76s"), SubResource("Resource_tt64f"), SubResource("Resource_m4oq8"), SubResource("Resource_wgfvu"), SubResource("Resource_y101i"), SubResource("Resource_u4cxm"), SubResource("Resource_c8cbs"), SubResource("Resource_alnrc"), SubResource("Resource_7d2gk"), SubResource("Resource_vw37p"), SubResource("Resource_21vup"), SubResource("Resource_gtpbm"), SubResource("Resource_iv0hj"), SubResource("Resource_m7677"), SubResource("Resource_qjd88"), SubResource("Resource_1cdcf"), SubResource("Resource_2ppci"), SubResource("Resource_qbpgt"), SubResource("Resource_bf15b"), SubResource("Resource_nxjj8"), SubResource("Resource_vmp4l"), SubResource("Resource_fcoya"), SubResource("Resource_abntv"), SubResource("Resource_8a5ad")])
+blackboard_schema = ExtResource("1_w07bh")

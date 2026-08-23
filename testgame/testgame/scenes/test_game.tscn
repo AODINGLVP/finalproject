@@ -1,17 +1,20 @@
-[gd_scene load_steps=22 format=3]
+[gd_scene load_steps=25 format=3]
 
 [ext_resource type="Script" path="res://scripts/player_controller.gd" id="1_player_script"]
 [ext_resource type="Script" path="res://scripts/enemy_actor.gd" id="2_enemy_script"]
 [ext_resource type="Script" path="res://addons/behavior_tree_editor/runtime/behavior_tree_component.gd" id="3_bt_component"]
-[ext_resource type="Resource" path="res://behavior_trees/enemy_patrol_combat.tres" id="4_enemy_tree"]
+[ext_resource type="Resource" path="res://behavior_trees/arena_scout_31.tres" id="4_tree_scout"]
 [ext_resource type="Texture2D" path="res://assets/player_idle.svg" id="5_player_idle"]
 [ext_resource type="Texture2D" path="res://assets/player_attack.svg" id="6_player_attack"]
 [ext_resource type="Texture2D" path="res://assets/enemy_idle.svg" id="7_enemy_idle"]
 [ext_resource type="Texture2D" path="res://assets/enemy_attack.svg" id="8_enemy_attack"]
 [ext_resource type="Script" path="res://scripts/arena_controller.gd" id="9_arena_script"]
-[ext_resource type="Resource" path="res://behavior_trees/complex_display_tree_241.tres" id="10_complex_tree"]
+[ext_resource type="Resource" path="res://behavior_trees/arena_skirmisher_61.tres" id="10_tree_skirmisher"]
 [ext_resource type="Script" path="res://scripts/medkit_pickup.gd" id="11_medkit_script"]
 [ext_resource type="Script" path="res://scripts/damage_zone.gd" id="12_damage_script"]
+[ext_resource type="Resource" path="res://behavior_trees/arena_hunter_121.tres" id="13_tree_hunter"]
+[ext_resource type="Resource" path="res://behavior_trees/arena_tactician_241.tres" id="14_tree_tactician"]
+[ext_resource type="Resource" path="res://behavior_trees/arena_commander_364.tres" id="15_tree_commander"]
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
 size = Vector2(34, 54)
 
@@ -75,6 +78,8 @@ shape = SubResource("RectangleShape2D_ground")
 [node name="Player" type="CharacterBody2D" parent="."]
 position = Vector2(180, 520)
 script = ExtResource("1_player_script")
+attack_damage = 2
+infinite_health = true
 idle_texture = ExtResource("5_player_idle")
 attack_texture = ExtResource("6_player_attack")
 
@@ -94,57 +99,118 @@ shape = SubResource("RectangleShape2D_attack")
 position = Vector2(220, -120)
 enabled = true
 
-[node name="EnemyA" type="CharacterBody2D" parent="."]
-position = Vector2(560, 520)
+[node name="EnemyScout" type="CharacterBody2D" parent="."]
+position = Vector2(390, 520)
 script = ExtResource("2_enemy_script")
+max_health = 2
+respawns_enabled = false
+archetype_name = "Scout"
+detection_range = 250.0
 idle_texture = ExtResource("7_enemy_idle")
 attack_texture = ExtResource("8_enemy_attack")
 
-[node name="Sprite2D" type="Sprite2D" parent="EnemyA"]
+[node name="Sprite2D" type="Sprite2D" parent="EnemyScout"]
 texture = ExtResource("7_enemy_idle")
+modulate = Color(0.62, 1, 0.72, 1)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyA"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyScout"]
 shape = SubResource("RectangleShape2D_enemy")
 
-[node name="BehaviorTreeComponent" type="Node" parent="EnemyA"]
+[node name="BehaviorTreeComponent" type="Node" parent="EnemyScout"]
 script = ExtResource("3_bt_component")
-behavior_tree = ExtResource("4_enemy_tree")
+behavior_tree = ExtResource("4_tree_scout")
 tick_on_process = false
 tick_on_physics = true
 
-[node name="EnemyB" type="CharacterBody2D" parent="."]
-position = Vector2(780, 520)
+[node name="EnemySkirmisher" type="CharacterBody2D" parent="."]
+position = Vector2(555, 520)
 script = ExtResource("2_enemy_script")
+max_health = 3
+respawns_enabled = false
+archetype_name = "Skirmisher"
+detection_range = 275.0
 idle_texture = ExtResource("7_enemy_idle")
 attack_texture = ExtResource("8_enemy_attack")
 
-[node name="Sprite2D" type="Sprite2D" parent="EnemyB"]
+[node name="Sprite2D" type="Sprite2D" parent="EnemySkirmisher"]
 texture = ExtResource("7_enemy_idle")
+modulate = Color(1, 0.76, 0.42, 1)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyB"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemySkirmisher"]
 shape = SubResource("RectangleShape2D_enemy")
 
-[node name="BehaviorTreeComponent" type="Node" parent="EnemyB"]
+[node name="BehaviorTreeComponent" type="Node" parent="EnemySkirmisher"]
 script = ExtResource("3_bt_component")
-behavior_tree = ExtResource("10_complex_tree")
+behavior_tree = ExtResource("10_tree_skirmisher")
 tick_on_process = false
 tick_on_physics = true
 
-[node name="EnemyC" type="CharacterBody2D" parent="."]
-position = Vector2(1000, 520)
+[node name="EnemyHunter" type="CharacterBody2D" parent="."]
+position = Vector2(790, 365)
 script = ExtResource("2_enemy_script")
+max_health = 4
+respawns_enabled = false
+archetype_name = "Hunter"
+detection_range = 300.0
 idle_texture = ExtResource("7_enemy_idle")
 attack_texture = ExtResource("8_enemy_attack")
 
-[node name="Sprite2D" type="Sprite2D" parent="EnemyC"]
+[node name="Sprite2D" type="Sprite2D" parent="EnemyHunter"]
 texture = ExtResource("7_enemy_idle")
+modulate = Color(0.48, 0.9, 1, 1)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyC"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyHunter"]
 shape = SubResource("RectangleShape2D_enemy")
 
-[node name="BehaviorTreeComponent" type="Node" parent="EnemyC"]
+[node name="BehaviorTreeComponent" type="Node" parent="EnemyHunter"]
 script = ExtResource("3_bt_component")
-behavior_tree = ExtResource("10_complex_tree")
+behavior_tree = ExtResource("13_tree_hunter")
+tick_on_process = false
+tick_on_physics = true
+
+[node name="EnemyTactician" type="CharacterBody2D" parent="."]
+position = Vector2(970, 520)
+script = ExtResource("2_enemy_script")
+max_health = 5
+respawns_enabled = false
+archetype_name = "Tactician"
+detection_range = 325.0
+idle_texture = ExtResource("7_enemy_idle")
+attack_texture = ExtResource("8_enemy_attack")
+
+[node name="Sprite2D" type="Sprite2D" parent="EnemyTactician"]
+texture = ExtResource("7_enemy_idle")
+modulate = Color(0.82, 0.62, 1, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyTactician"]
+shape = SubResource("RectangleShape2D_enemy")
+
+[node name="BehaviorTreeComponent" type="Node" parent="EnemyTactician"]
+script = ExtResource("3_bt_component")
+behavior_tree = ExtResource("14_tree_tactician")
+tick_on_process = false
+tick_on_physics = true
+
+[node name="EnemyCommander" type="CharacterBody2D" parent="."]
+position = Vector2(1080, 275)
+script = ExtResource("2_enemy_script")
+max_health = 6
+respawns_enabled = false
+archetype_name = "Commander"
+detection_range = 350.0
+idle_texture = ExtResource("7_enemy_idle")
+attack_texture = ExtResource("8_enemy_attack")
+
+[node name="Sprite2D" type="Sprite2D" parent="EnemyCommander"]
+texture = ExtResource("7_enemy_idle")
+modulate = Color(1, 0.48, 0.48, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyCommander"]
+shape = SubResource("RectangleShape2D_enemy")
+
+[node name="BehaviorTreeComponent" type="Node" parent="EnemyCommander"]
+script = ExtResource("3_bt_component")
+behavior_tree = ExtResource("15_tree_commander")
 tick_on_process = false
 tick_on_physics = true
 
@@ -265,7 +331,7 @@ shape = SubResource("RectangleShape2D_ladder")
 [node name="TopPanel" type="PanelContainer" parent="UI"]
 offset_left = 20.0
 offset_top = 16.0
-offset_right = 980.0
+offset_right = 1260.0
 offset_bottom = 86.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_top")
 
@@ -284,3 +350,24 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.96, 0.8, 0.3, 1)
 theme_override_font_sizes/font_size = 17
 text = "PLAYER"
+
+[node name="VictoryPanel" type="PanelContainer" parent="UI"]
+visible = false
+offset_left = 390.0
+offset_top = 245.0
+offset_right = 890.0
+offset_bottom = 410.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_top")
+
+[node name="VictoryContent" type="VBoxContainer" parent="UI/VictoryPanel"]
+layout_mode = 2
+alignment = 1
+
+[node name="VictoryLabel" type="Label" parent="UI/VictoryPanel/VictoryContent"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 1, 0.68, 1)
+theme_override_font_sizes/font_size = 24
+text = "VICTORY"
+horizontal_alignment = 1
+vertical_alignment = 1

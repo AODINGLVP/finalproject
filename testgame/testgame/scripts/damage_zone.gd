@@ -11,5 +11,5 @@ func _physics_process(delta: float) -> void:
 		return
 	elapsed = damage_interval
 	for body in get_overlapping_bodies():
-		if body.has_method("take_damage"):
+		if body.is_in_group("player") and body.has_method("take_damage"):
 			body.take_damage(1)

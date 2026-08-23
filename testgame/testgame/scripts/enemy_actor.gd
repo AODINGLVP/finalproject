@@ -1,5 +1,7 @@
 extends CharacterBody2D
 
+signal defeated(enemy: Node)
+
 const BTStatus = preload("res://addons/behavior_tree_editor/runtime/bt_status.gd")
 const EnemyProjectileScene = preload("res://scenes/enemy_projectile.tscn")
 
@@ -10,6 +12,8 @@ const EnemyProjectileScene = preload("res://scenes/enemy_projectile.tscn")
 @export var attack_range := 70.0
 @export var attack_damage := 1
 @export var max_health := 6
+@export var respawns_enabled := true
+@export var archetype_name := "Guard"
 @export var detection_range := 330.0
 @export var lose_target_range := 460.0
 @export var chase_speed := 145.0
@@ -32,6 +36,7 @@ var target_locked := false
 var damage_flash_remaining := 0.0
 var respawn_remaining := 0.0
 var alert_level := 0.0
+var is_defeated := false
 
 
 func _ready() -> void:
@@ -42,6 +47,8 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if is_defeated and not respawns_enabled:
+		return
 	if respawn_remaining > 0.0:
 		respawn_remaining = maxf(0.0, respawn_remaining - delta)
 		if respawn_remaining <= 0.0:
@@ -318,28 +325,48 @@ func search_last_known(blackboard: Dictionary, delta: float, node: Resource) -> 
 
 
 func take_damage(amount: int) -> void:
-	health -= amount
+	if amount <= 0 or is_defeated:
+		return
+	health = maxi(0, health - amount)
 	modulate = Color(1.0, 0.6, 0.6)
 	if health <= 0:
+		is_defeated = true
+		current_behavior = "Defeated"
 		visible = false
 		$CollisionShape2D.set_deferred("disabled", true)
 		var component := get_node_or_null("BehaviorTreeComponent")
 		if component != null:
 			component.stop_tree()
 		velocity = Vector2.ZERO
-		respawn_remaining = 2.0
+		respawn_remaining = 2.0 if respawns_enabled else 0.0
+		if not respawns_enabled:
+			set_physics_process(false)
+		defeated.emit(self)
 		return
 	damage_flash_remaining = 0.08
 
 
 func _finish_respawn() -> void:
+	reset_for_round()
+
+
+func reset_for_round() -> void:
+	is_defeated = false
+	respawn_remaining = 0.0
 	health = max_health
 	global_position = home_position
 	visible = true
 	modulate = Color.WHITE
+	velocity = Vector2.ZERO
+	target_locked = false
+	damage_flash_remaining = 0.0
+	alert_level = 0.0
+	current_behavior = "Initialize"
 	$CollisionShape2D.set_deferred("disabled", false)
+	set_physics_process(true)
 	var component := get_node_or_null("BehaviorTreeComponent")
 	if component != null:
+		component.blackboard.clear()
 		component.restart_tree()
 
 
