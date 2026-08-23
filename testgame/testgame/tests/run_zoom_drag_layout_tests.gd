@@ -25,6 +25,7 @@ func _run() -> void:
 	await _test_complete_zoom_range(view)
 	await _test_complex_tree_scales(view)
 	await _test_complex_tree_drag_locality(view)
+	await _test_large_local_solver_latency(view)
 	await _test_zero_coordinate_recovery(view)
 	await _test_drag_undo_redo(view)
 	await _test_save_reload_reflow(view)
@@ -230,6 +231,24 @@ func _test_complex_tree_drag_locality(view: BTEditorView) -> void:
 		_expect(_rendered_overlaps(view).is_empty() and _screen_overlaps(view).is_empty(), "%s resolves the isolated collision without overlap" % label)
 		_expect(_resource_positions_except_equal(tree, source_id, other_resource_positions), "%s does not write avoidance movement into other resources" % label)
 		_expect(_structure_signature(tree) == structure_before and _execution_order_signature(tree) == order_before, "%s preserves tree semantics and execution order" % label)
+
+
+func _test_large_local_solver_latency(view: BTEditorView) -> void:
+	var tree := TreeFactory.generate(364) as BTTreeResource
+	_assign_layered_positions(tree)
+	await _prepare_view(view, tree, 1.0, true, false)
+	var leaf_ids := _last_leaf_ids(tree, 2)
+	_expect(leaf_ids.size() == 2, "364-node solver timing has an isolated collision target")
+	if leaf_ids.size() != 2:
+		return
+	_drag_graph_node_onto(view, leaf_ids[0], leaf_ids[1])
+	await _wait_frames(SETTLE_FRAMES)
+	var started_usec := Time.get_ticks_usec()
+	var solved_offsets := view._solve_auto_spacing_offsets(leaf_ids[0])
+	var elapsed_ms := float(Time.get_ticks_usec() - started_usec) / 1000.0
+	print("BT_LOCAL_AVOIDANCE_METRIC cards=%d solve_ms=%.3f" % [_graph_nodes(view).size(), elapsed_ms])
+	_expect(solved_offsets.size() == _graph_nodes(view).size(), "364-node local solver returns one deterministic offset per visible card")
+	_expect(elapsed_ms <= 250.0, "364-node collision-chain solve stays below the 250 ms release-time safety limit")
 
 
 func _test_zero_coordinate_recovery(view: BTEditorView) -> void:
