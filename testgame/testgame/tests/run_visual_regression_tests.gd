@@ -410,8 +410,8 @@ func _run() -> void:
 	var playable_leaf_ids := _last_visible_leaf_ids(2)
 	_expect(playable_leaf_ids.size() == 2, "playable 241-node live visual test has two leaf cards")
 	if playable_leaf_ids.size() == 2:
-		var live_source := _graph_node(playable_leaf_ids[0])
-		var live_target := _graph_node(playable_leaf_ids[1])
+		var live_source := _graph_node(view, playable_leaf_ids[0])
+		var live_target := _graph_node(view, playable_leaf_ids[1])
 		var live_drag_state := _begin_live_visual_drag(live_source)
 		_move_live_visual_drag(live_drag_state, live_target.position_offset + Vector2.ONE)
 		await process_frame
@@ -574,7 +574,7 @@ func _last_visible_leaf_ids(count: int) -> Array[int]:
 	var result: Array[int] = []
 	for index in range(view.current_tree.nodes.size() - 1, -1, -1):
 		var node := view.current_tree.nodes[index]
-		if node == null or node.decorator_parent_id != -1 or not view.current_tree.get_children_of(node.id).is_empty() or _graph_node(node.id) == null:
+		if node == null or node.decorator_parent_id != -1 or not view.current_tree.get_children_of(node.id).is_empty() or _graph_node(view, node.id) == null:
 			continue
 		result.append(node.id)
 		if result.size() == count:
