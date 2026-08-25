@@ -1,0 +1,755 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>导师会议后续任务看板 · 2026-08-25</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --text: #18202b;
+      --muted: #637083;
+      --line: #dbe3ed;
+      --blue: #2366d1;
+      --blue-soft: #eaf2ff;
+      --green: #167a50;
+      --green-soft: #e8f7f0;
+      --amber: #a35a00;
+      --amber-soft: #fff4df;
+      --red: #aa3040;
+      --red-soft: #ffedf0;
+      --shadow: 0 12px 34px rgba(37, 54, 75, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+      line-height: 1.58;
+    }
+
+    button, input, select, textarea { font: inherit; }
+
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 28px auto 56px;
+    }
+
+    .hero {
+      color: #fff;
+      background: linear-gradient(125deg, #143d74 0%, #2366d1 58%, #4d87de 100%);
+      border-radius: 22px;
+      padding: 30px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero h1 { margin: 0 0 8px; font-size: clamp(1.6rem, 4vw, 2.35rem); }
+    .hero p { max-width: 850px; margin: 8px 0 0; color: rgba(255,255,255,.88); }
+
+    .hero-actions, .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .hero-actions { margin-top: 20px; }
+
+    .button, button {
+      border: 1px solid transparent;
+      border-radius: 10px;
+      padding: 9px 13px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+
+    button:hover, .button:hover { transform: translateY(-1px); }
+    .button-light { color: #143d74; background: #fff; }
+    .button-ghost { color: #fff; border-color: rgba(255,255,255,.45); background: rgba(255,255,255,.10); }
+    .button-main { color: #fff; background: var(--blue); }
+    .button-neutral { color: var(--text); border-color: var(--line); background: #fff; }
+    .button-danger { color: var(--red); border-color: #f3c4cb; background: var(--red-soft); }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin: 18px 0;
+    }
+
+    .summary-card, .controls, .notice {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .summary-card { padding: 18px; }
+    .summary-label { color: var(--muted); font-size: .9rem; }
+    .summary-value { margin: 4px 0 9px; font-size: 1.65rem; font-weight: 760; }
+
+    .progress {
+      height: 8px;
+      overflow: hidden;
+      background: #e9eef5;
+      border-radius: 999px;
+    }
+
+    .progress > span {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #2366d1, #40a576);
+      border-radius: inherit;
+      transition: width .2s ease;
+    }
+
+    .notice {
+      margin: 18px 0;
+      padding: 16px 18px;
+      border-left: 5px solid var(--amber);
+    }
+
+    .notice strong { color: var(--amber); }
+
+    .controls {
+      position: sticky;
+      top: 10px;
+      z-index: 5;
+      padding: 14px;
+      margin-bottom: 20px;
+    }
+
+    .toolbar label { color: var(--muted); font-size: .86rem; }
+    .field { display: grid; gap: 4px; }
+
+    input[type="search"], select {
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--text);
+      background: #fff;
+      padding: 8px 10px;
+    }
+
+    input[type="search"] { width: min(330px, 70vw); }
+
+    .group { margin: 30px 0; }
+    .group-heading { display: flex; gap: 10px; align-items: baseline; margin-bottom: 12px; }
+    .group-heading h2 { margin: 0; font-size: 1.35rem; }
+    .group-heading span { color: var(--muted); font-size: .9rem; }
+
+    .task-list { display: grid; gap: 12px; }
+
+    .task {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      padding: 17px;
+      box-shadow: 0 7px 20px rgba(35, 53, 76, .055);
+    }
+
+    .task.done { border-color: #acd8c3; background: #fbfffd; }
+    .task.done .task-title { text-decoration: line-through; color: #63776d; }
+
+    .task-top { display: grid; grid-template-columns: auto 1fr; gap: 13px; align-items: start; }
+    .task-check { width: 22px; height: 22px; margin-top: 2px; accent-color: var(--green); cursor: pointer; }
+    .task-title { margin: 0; font-size: 1.08rem; }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 7px; margin: 8px 0 0; }
+    .tag { border-radius: 999px; padding: 3px 8px; font-size: .77rem; font-weight: 700; }
+    .tag-id { color: #315072; background: #edf3f9; }
+    .tag-p0 { color: var(--red); background: var(--red-soft); }
+    .tag-p1 { color: var(--amber); background: var(--amber-soft); }
+    .tag-p2 { color: var(--muted); background: #eef1f4; }
+    .tag-source { color: var(--blue); background: var(--blue-soft); }
+
+    details { margin: 13px 0 0 35px; }
+    summary { cursor: pointer; color: #2f5f99; font-weight: 700; }
+    details ul { margin: 9px 0 8px; padding-left: 22px; }
+    .criteria { padding: 11px 12px; background: #f6f8fb; border-radius: 10px; }
+
+    .notes {
+      display: grid;
+      gap: 5px;
+      margin: 13px 0 0 35px;
+      color: var(--muted);
+      font-size: .86rem;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 66px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--text);
+      background: #fff;
+      padding: 9px 10px;
+    }
+
+    .empty { padding: 34px; text-align: center; color: var(--muted); background: #fff; border-radius: 15px; }
+    .footer { margin-top: 35px; color: var(--muted); font-size: .88rem; text-align: center; }
+    .hidden-input { display: none; }
+
+    @media (max-width: 860px) {
+      .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .controls { position: static; }
+    }
+
+    @media (max-width: 540px) {
+      .page { width: min(100% - 18px, 1180px); margin-top: 10px; }
+      .hero { padding: 21px; border-radius: 16px; }
+      .summary-grid { grid-template-columns: 1fr; }
+      .toolbar, .hero-actions { align-items: stretch; flex-direction: column; }
+      input[type="search"], select, .button, button { width: 100%; }
+      details, .notes { margin-left: 0; }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .page { width: 100%; margin: 0; }
+      .hero { color: #000; background: #fff; box-shadow: none; border: 1px solid #aaa; }
+      .hero p { color: #333; }
+      .hero-actions, .controls, .notes { display: none !important; }
+      .summary-card, .notice, .task { box-shadow: none; break-inside: avoid; }
+      details { display: block; }
+      details > summary { list-style: none; }
+      details[open] > * { display: block; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <h1>导师会议后续任务看板</h1>
+      <p>依据 2026-08-25 会议整理。项目改进与论文改进分开记录，任务状态和备注会自动保存在当前浏览器中。</p>
+      <div class="hero-actions">
+        <a class="button button-light" href="supervisor-meeting-2026-08-25-action-checklist-zh.md">打开详细 Markdown 清单</a>
+        <button class="button-ghost" id="printButton" type="button">打印／保存为 PDF</button>
+        <button class="button-ghost" id="exportButton" type="button">导出进度备份</button>
+        <label class="button button-ghost" for="importInput">导入进度备份</label>
+        <input class="hidden-input" id="importInput" type="file" accept="application/json,.json">
+      </div>
+    </header>
+
+    <section class="summary-grid" aria-label="完成进度">
+      <article class="summary-card">
+        <div class="summary-label">本次提交总进度</div>
+        <div class="summary-value" id="currentSummary">0 / 0</div>
+        <div class="progress"><span id="currentBar"></span></div>
+      </article>
+      <article class="summary-card">
+        <div class="summary-label">项目改进</div>
+        <div class="summary-value" id="projectSummary">0 / 0</div>
+        <div class="progress"><span id="projectBar"></span></div>
+      </article>
+      <article class="summary-card">
+        <div class="summary-label">论文改进</div>
+        <div class="summary-value" id="paperSummary">0 / 0</div>
+        <div class="progress"><span id="paperBar"></span></div>
+      </article>
+      <article class="summary-card">
+        <div class="summary-label">提交与复核</div>
+        <div class="summary-value" id="submissionSummary">0 / 0</div>
+        <div class="progress"><span id="submissionBar"></span></div>
+      </article>
+    </section>
+
+    <aside class="notice">
+      <strong>当前边界：</strong>不编造参与者数据；不把曲线或透明卡片强行写成正面结果；不再以性能优化为重点；公开发布和正式真人研究可以留到提交之后。
+    </aside>
+
+    <section class="controls" aria-label="任务筛选">
+      <div class="toolbar">
+        <div class="field">
+          <label for="categoryFilter">类别</label>
+          <select id="categoryFilter">
+            <option value="all">全部类别</option>
+            <option value="project">项目需要改进</option>
+            <option value="paper">论文需要改进</option>
+            <option value="submission">提交与复核</option>
+            <option value="later">提交后再做</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="statusFilter">状态</label>
+          <select id="statusFilter">
+            <option value="all">全部状态</option>
+            <option value="open">未完成</option>
+            <option value="done">已完成</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="searchInput">搜索</label>
+          <input id="searchInput" type="search" placeholder="输入任务、编号或关键词">
+        </div>
+        <button class="button-neutral" id="expandButton" type="button">展开全部说明</button>
+        <button class="button-danger" id="resetButton" type="button">清空勾选和备注</button>
+      </div>
+    </section>
+
+    <div id="taskRoot"></div>
+
+    <footer class="footer">
+      本文件不需要安装软件，也不连接网络。若更换浏览器或电脑，请先使用“导出进度备份”。
+    </footer>
+  </main>
+
+  <script>
+    const tasks = [
+      {
+        id: "PRJ-P0-01", category: "project", priority: "P0", source: "导师明确要求",
+        title: "复现并界定树形布局问题",
+        details: [
+          "在完整卡片、紧凑卡片和语义缩放状态下检查同一棵复杂树。",
+          "覆盖最小、中间和最大缩放，记录子节点上移、层级混合、重叠或漂移。",
+          "保存固定复现步骤与修改前截图；不把会议视频卡顿直接算作插件性能问题。"
+        ],
+        criteria: "能够稳定回答问题是否存在；如存在，可用固定树、固定状态和固定操作重复出现。"
+      },
+      {
+        id: "PRJ-P0-02", category: "project", priority: "P0", source: "导师要求 + 用户交互要求",
+        title: "自动避让保持树层级，同时保留自由拖动",
+        details: [
+          "保留自由拖动，不把每次移动都强制恢复为固定整齐排列。",
+          "子节点不能被推到父节点上方；相邻深度保持上下层级和可读间距。",
+          "保持兄弟顺序；缩放或卡片尺寸变化后用实际边界重新计算。",
+          "如提供明确自动布局，采用成熟层次树布局思想并保证结果稳定。"
+        ],
+        criteria: "31、61、121、241、364 节点树在多种缩放下无重叠，层级与兄弟顺序正确，树结构和执行语义不变，用户仍能自由调整。"
+      },
+      {
+        id: "PRJ-P0-03", category: "project", priority: "P0", source: "导师明确要求",
+        title: "检查并改善连线可读性",
+        details: [
+          "检查连线是否穿过无关卡片、完全重合或被卡片遮住。",
+          "检查不同缩放和卡片尺寸下连线端点是否仍对应端口。",
+          "为 241 节点树保留同内容、同视角的修改前后截图。"
+        ],
+        criteria: "主要父子连线不穿过无关卡片，也不会被完全遮住，父子关系可以沿线追踪。"
+      },
+      {
+        id: "PRJ-P1-04", category: "project", priority: "P1", source: "导师探索性建议",
+        title: "尝试始终使用曲线的连线方案",
+        details: [
+          "用同一树、节点位置、缩放和视口比较当前连线与始终曲线。",
+          "记录曲线是否减少重合、是否更容易追踪、是否反而占用空间。",
+          "查找直接相关文献，并决定采用、可选保留或放弃。"
+        ],
+        criteria: "具有可复现对照截图和诚实结论；负面结果同样有效。"
+      },
+      {
+        id: "PRJ-P1-05", category: "project", priority: "P1", source: "导师探索性建议",
+        title: "尝试半透明节点卡片",
+        details: [
+          "比较同内容的不透明和固定透明度卡片。",
+          "同时检查后方连线可见度以及文字、端口、状态色和选中状态可读性。",
+          "查找相关资料，并决定采用、可选保留或放弃。"
+        ],
+        criteria: "有同内容对照截图和明确结论；允许因损害文字可读性而放弃。"
+      },
+      {
+        id: "PRJ-P0-06", category: "project", priority: "P0", source: "回归验证要求",
+        title: "对所有项目修改进行回归验证",
+        details: [
+          "运行运行时、资源、编辑器、基础游戏和复杂场景测试。",
+          "对图形显示修改进行真实渲染器视觉检查。",
+          "检查保存、重载、撤销、重做、执行顺序和语义不变；同步可分发模板。",
+          "只处理正确性和可读性，除非阻塞，不继续优化耗时。"
+        ],
+        criteria: "相关测试全部通过，日志无脚本错误、非零退出、崩溃、泄漏或非法内存访问，人工检查无新问题。"
+      },
+      {
+        id: "PRJ-P1-07", category: "project", priority: "P1", source: "导师明确要求",
+        title: "整理可玩游戏和复杂 NPC 的功能证据",
+        details: [
+          "选定简短、可重复的游戏演示流程。",
+          "保存行为树、运行场景和实时调试状态的代表性证据。",
+          "把它作为插件正确工作的功能验证，不增加新的研究问题。"
+        ],
+        criteria: "足以证明插件能控制真实游戏行为，但不会抢走大型行为树显示评价的重点。"
+      },
+      {
+        id: "DIS-P0-01", category: "paper", priority: "P0", source: "导师明确要求",
+        title: "扩充相关研究和参考文献",
+        details: [
+          "覆盖大型树/图、层次布局、可变节点、边路由、焦点与上下文、鱼眼、语义缩放、折叠、聚焦、搜索和概览。",
+          "说明已有研究解决什么、本项目如何采用或取舍，不只罗列名称。",
+          "不把固定引用数量写成导师要求。"
+        ],
+        criteria: "每个主要显示机制都有可信依据，相关工作能自然引出项目设计。"
+      },
+      {
+        id: "DIS-P0-02", category: "paper", priority: "P0", source: "导师明确要求",
+        title: "完整说明所有已实现的显示功能",
+        details: [
+          "说明每项功能解决什么、怎样操作、画面怎样变化、能否独立开关。",
+          "覆盖紧凑卡片、语义缩放、搜索、聚焦、折叠、鱼眼、概览图、导航、布局和连线等。",
+          "区分系统完整功能与主要受控实验的六种条件。"
+        ],
+        criteria: "没有看过项目的读者仅阅读系统设计章节就能理解各项功能。"
+      },
+      {
+        id: "DIS-P0-03", category: "paper", priority: "P0", source: "导师明确要求",
+        title: "加入同内容、开关前后的成对截图",
+        details: [
+          "每对截图使用相同树、视口、缩放、节点位置和目标。",
+          "使用当前项目版本，图注直接指出需要观察的变化。",
+          "截图服务于解释，不重复堆砌。"
+        ],
+        criteria: "读者不运行插件也能直接看出每项主要功能改变了什么。"
+      },
+      {
+        id: "DIS-P0-04", category: "paper", priority: "P0", source: "导师认可并要求扩展解释",
+        title: "保留并清楚解释现有定量实验",
+        details: [
+          "说明节点规模实验和物理屏幕尺寸实验分别回答什么。",
+          "只保留有助于理解显示与编辑效果的指标。",
+          "分别讨论复杂度增加和不同屏幕尺寸下优化效果，不把几何缩减直接当作真人可用性证明。"
+        ],
+        criteria: "方法、变量、条件和数据含义表达直白，并与唯一研究问题直接对应。"
+      },
+      {
+        id: "DIS-P0-05", category: "paper", priority: "P0", source: "导师明确允许",
+        title: "增加结构化开发者评价方法",
+        details: [
+          "明确评价者是项目开发者本人，不伪装为参与者实验。",
+          "固定寻找节点、理解路径、聚焦分支、编辑 Decorator、观察活动路径等任务。",
+          "每项功能统一回答帮助、问题、适用规模和是否应默认开启。",
+          "以截图、数据和操作观察为依据，不编造评分。"
+        ],
+        criteria: "评价步骤可重复，结论来源透明，不含虚构参与者或问卷数据。"
+      },
+      {
+        id: "DIS-P0-06", category: "paper", priority: "P0", source: "导师明确要求",
+        title: "逐项评价功能的优点、缺点和适用场景",
+        details: [
+          "记录每项功能最明显的帮助与问题。",
+          "比较它在小、中、大树上的作用，并判断默认开启还是按需使用。",
+          "诚实记录效果有限、不自然或失败的功能。"
+        ],
+        criteria: "所有重要显示功能都使用同一评价框架，而不是只列名称。"
+      },
+      {
+        id: "DIS-P0-07", category: "paper", priority: "P0", source: "导师明确要求",
+        title: "根据证据确定最有价值的功能",
+        details: [
+          "在定量结果与结构化评价完成后再判断。",
+          "说明判断标准，并给出一个功能或组合。",
+          "解释其他功能为何没有排第一；不要提前声称导师认定语义缩放最好。"
+        ],
+        criteria: "结论能追溯到数据、截图和结构化评价，而不只是个人偏好。"
+      },
+      {
+        id: "DIS-P1-08", category: "paper", priority: "P1", source: "导师探索性建议",
+        title: "写入曲线连线和半透明卡片的小型尝试",
+        details: [
+          "分别说明动机、做法、观察、文献依据和最终决定。",
+          "加入同内容对照截图。",
+          "允许把负面结果写成设计发现。"
+        ],
+        criteria: "两项尝试都有短小、完整、可核对且不夸大的记录。"
+      },
+      {
+        id: "DIS-P0-09", category: "paper", priority: "P0", source: "导师明确要求",
+        title: "补充树布局和连线可读性的设计解释",
+        details: [
+          "解释局部避让与真正树形布局的区别。",
+          "解释父子层级、兄弟顺序、卡片尺寸变化和边路由为何重要。",
+          "说明系统如何兼顾自由拖动、避让和明确自动布局，并用真实文献支持。"
+        ],
+        criteria: "设计章节与真实项目一致，读者能理解问题、方案和取舍。"
+      },
+      {
+        id: "DIS-P0-10", category: "paper", priority: "P0", source: "导师意见 + 论文主旨",
+        title: "把可玩游戏放在功能验证中",
+        details: [
+          "说明复杂行为树如何控制游戏敌人。",
+          "用测试和场景证明节点、运行时、黑板、Decorator 和实时调试正确工作。",
+          "不把行为树基础功能是否有用另设为研究问题。"
+        ],
+        criteria: "游戏证据证明平台可用，同时保持大型树显示优化为论文中心。"
+      },
+      {
+        id: "DIS-P0-11", category: "paper", priority: "P0", source: "导师明确要求",
+        title: "重写评价、讨论和结论",
+        details: [
+          "把定量实验与结构化开发者评价写成两类互补证据。",
+          "从节点规模和物理屏幕尺寸两个方向讨论优化效果。",
+          "区分测量结果、开发者观察和推论；讨论最有价值、有限和失败的功能。",
+          "表达保持直白，术语首次出现立即解释。"
+        ],
+        criteria: "读者能回答项目做了什么、怎样评价、数据说明什么、最终推荐什么。"
+      },
+      {
+        id: "DIS-P0-12", category: "paper", priority: "P0", source: "论文可靠性要求",
+        title: "逐条核验引用和链接",
+        details: [
+          "确认资料真实存在，优先核对 DOI、出版方、正式会议或期刊页面。",
+          "检查作者、标题、年份、出处、链接和正文支持关系。",
+          "保证正文引用与参考文献表双向对应。"
+        ],
+        criteria: "所有引用真实可追溯、链接可打开、内容支持对应论述。"
+      },
+      {
+        id: "DIS-P0-13", category: "paper", priority: "P0", source: "用户确定的流程",
+        title: "保持 DOCX、LaTeX 和 PDF 内容一致",
+        details: [
+          "每轮先更新 DOCX，确认后同步 LaTeX，再由同版 LaTeX 生成 PDF。",
+          "核对标题、正文、图表编号、引用和参考文献。",
+          "使用日期或版本号保存可回退版本。"
+        ],
+        criteria: "同一版本的三种文件在结构、文字意义、编号和引用上保持一致。"
+      },
+      {
+        id: "DIS-P0-14", category: "paper", priority: "P0", source: "导师明确允许",
+        title: "准备并发送导师审阅稿",
+        details: [
+          "完成论文 P0 后生成编号明确的导师审阅 PDF。",
+          "发送时请求优先检查实验方法、评价和讨论。",
+          "预留修改时间并保存导师实际收到的版本。"
+        ],
+        criteria: "导师收到可独立阅读且版本明确的审阅稿。"
+      },
+      {
+        id: "SUB-P0-01", category: "submission", priority: "P0", source: "学校提交要求",
+        title: "按华威要求进行最终检查",
+        details: [
+          "对照 DISSERTATION_REQUIREMENTS.md 检查结构、格式、字数、图表、声明和提交要求。",
+          "检查研究问题在各章一致，图表均被正文引用。",
+          "确认没有把作者评价写成参与者实验，也没有把几何指标直接写成真人可用性证明。"
+        ],
+        criteria: "学校格式与学术表达检查全部完成，没有关键不一致。"
+      },
+      {
+        id: "SUB-P0-02", category: "submission", priority: "P0", source: "版本与备份要求",
+        title: "保存最终证据包和可回退版本",
+        details: [
+          "保存最终 DOCX、LaTeX、PDF、截图、原始数据和分析结果。",
+          "文件名包含版本或日期，在 Git 中单独提交重要修改。",
+          "确认远程备份不包含隐私会议资料或其他不应上传的文件。"
+        ],
+        criteria: "最终材料完整、命名清楚、能够恢复，且没有误上传隐私内容。"
+      },
+      {
+        id: "LATER-P2-01", category: "later", priority: "P2", source: "提交后可选",
+        title: "招募参与者进行正式用户研究",
+        details: ["当前论文不编造参与者数据；提交后若继续研究，可使用已准备的协议开展真人实验。"],
+        criteria: "不影响当前提交；只有真实招募和真实数据才可报告。"
+      },
+      {
+        id: "LATER-P2-02", category: "later", priority: "P2", source: "提交后可选",
+        title: "公开发布插件并收集外部反馈",
+        details: ["可在提交后准备 Godot Asset Library 发布，根据真实用户反馈修复问题并决定保留哪些功能。"],
+        criteria: "不占用当前论文 P0 工作时间。"
+      },
+      {
+        id: "LATER-P2-03", category: "later", priority: "P2", source: "当前不作为重点",
+        title: "扩大兼容性与性能优化",
+        details: ["除非正确性被阻塞，否则当前不继续追求布局耗时；跨版本测试和进一步优化留到提交后。"],
+        criteria: "仅在毕业论文提交后或出现明确需求时启动。"
+      }
+    ];
+
+    const groups = {
+      project: { title: "项目需要改进", description: "代码、交互、布局、连线和功能证据" },
+      paper: { title: "论文需要改进", description: "相关研究、方法、截图、评价、讨论与引用" },
+      submission: { title: "提交与复核", description: "学校要求、版本一致性和最终备份" },
+      later: { title: "提交后再做", description: "不计入本次提交进度" }
+    };
+
+    const storageKey = "bt-supervisor-actions-2026-08-25-v1";
+    let state = loadState();
+    let allExpanded = false;
+
+    function emptyState() {
+      return { completed: {}, notes: {}, savedAt: null };
+    }
+
+    function loadState() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(storageKey));
+        return parsed && parsed.completed && parsed.notes ? parsed : emptyState();
+      } catch (error) {
+        return emptyState();
+      }
+    }
+
+    function saveState() {
+      state.savedAt = new Date().toISOString();
+      localStorage.setItem(storageKey, JSON.stringify(state));
+      updateProgress();
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function filteredTasks() {
+      const category = document.getElementById("categoryFilter").value;
+      const status = document.getElementById("statusFilter").value;
+      const query = document.getElementById("searchInput").value.trim().toLowerCase();
+      return tasks.filter(task => {
+        const done = Boolean(state.completed[task.id]);
+        const haystack = [task.id, task.title, task.source, task.priority, task.criteria, ...task.details].join(" ").toLowerCase();
+        return (category === "all" || task.category === category)
+          && (status === "all" || (status === "done" ? done : !done))
+          && (!query || haystack.includes(query));
+      });
+    }
+
+    function taskMarkup(task) {
+      const done = Boolean(state.completed[task.id]);
+      const detailItems = task.details.map(item => `<li>${escapeHtml(item)}</li>`).join("");
+      return `
+        <article class="task${done ? " done" : ""}" data-task-id="${escapeHtml(task.id)}">
+          <div class="task-top">
+            <input class="task-check" type="checkbox" ${done ? "checked" : ""} aria-label="标记 ${escapeHtml(task.title)} 为完成">
+            <div>
+              <h3 class="task-title">${escapeHtml(task.title)}</h3>
+              <div class="tags">
+                <span class="tag tag-id">${escapeHtml(task.id)}</span>
+                <span class="tag tag-${task.priority.toLowerCase()}">${escapeHtml(task.priority)}</span>
+                <span class="tag tag-source">${escapeHtml(task.source)}</span>
+              </div>
+            </div>
+          </div>
+          <details ${allExpanded ? "open" : ""}>
+            <summary>查看具体操作和完成标准</summary>
+            <ul>${detailItems}</ul>
+            <div class="criteria"><strong>完成标准：</strong>${escapeHtml(task.criteria)}</div>
+          </details>
+          <label class="notes">
+            完成日期、证据文件、测试结果、论文页码或备注
+            <textarea placeholder="例如：2026-08-27；截图路径；测试 250/250；论文第 4.3 节"></textarea>
+          </label>
+        </article>`;
+    }
+
+    function render() {
+      const visible = filteredTasks();
+      const root = document.getElementById("taskRoot");
+      if (!visible.length) {
+        root.innerHTML = '<div class="empty">当前筛选条件下没有任务。</div>';
+        updateProgress();
+        return;
+      }
+
+      root.innerHTML = Object.keys(groups).map(category => {
+        const items = visible.filter(task => task.category === category);
+        if (!items.length) return "";
+        const completed = items.filter(task => state.completed[task.id]).length;
+        return `
+          <section class="group" data-group="${category}">
+            <div class="group-heading">
+              <h2>${groups[category].title}</h2>
+              <span>${completed}/${items.length} · ${groups[category].description}</span>
+            </div>
+            <div class="task-list">${items.map(taskMarkup).join("")}</div>
+          </section>`;
+      }).join("");
+
+      root.querySelectorAll(".task").forEach(card => {
+        const id = card.dataset.taskId;
+        const checkbox = card.querySelector(".task-check");
+        const textarea = card.querySelector("textarea");
+        textarea.value = state.notes[id] || "";
+        checkbox.addEventListener("change", () => {
+          state.completed[id] = checkbox.checked;
+          saveState();
+          render();
+        });
+        textarea.addEventListener("input", () => {
+          state.notes[id] = textarea.value;
+          saveState();
+        });
+      });
+      updateProgress();
+    }
+
+    function setProgress(category, summaryId, barId) {
+      const subset = tasks.filter(task => task.category === category);
+      const done = subset.filter(task => state.completed[task.id]).length;
+      document.getElementById(summaryId).textContent = `${done} / ${subset.length}`;
+      document.getElementById(barId).style.width = subset.length ? `${done / subset.length * 100}%` : "0%";
+    }
+
+    function updateProgress() {
+      const current = tasks.filter(task => task.category !== "later");
+      const currentDone = current.filter(task => state.completed[task.id]).length;
+      document.getElementById("currentSummary").textContent = `${currentDone} / ${current.length}`;
+      document.getElementById("currentBar").style.width = current.length ? `${currentDone / current.length * 100}%` : "0%";
+      setProgress("project", "projectSummary", "projectBar");
+      setProgress("paper", "paperSummary", "paperBar");
+      setProgress("submission", "submissionSummary", "submissionBar");
+    }
+
+    function exportState() {
+      const payload = {
+        tracker: "supervisor-meeting-2026-08-25",
+        exportedAt: new Date().toISOString(),
+        state
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `supervisor-action-progress-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }
+
+    function importState(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const payload = JSON.parse(reader.result);
+          const incoming = payload.state || payload;
+          if (!incoming.completed || !incoming.notes) throw new Error("invalid");
+          state = { completed: incoming.completed, notes: incoming.notes, savedAt: incoming.savedAt || null };
+          saveState();
+          render();
+          alert("进度备份已导入。");
+        } catch (error) {
+          alert("无法导入：这不是本看板生成的有效进度文件。");
+        }
+      };
+      reader.readAsText(file, "utf-8");
+    }
+
+    document.getElementById("categoryFilter").addEventListener("change", render);
+    document.getElementById("statusFilter").addEventListener("change", render);
+    document.getElementById("searchInput").addEventListener("input", render);
+    document.getElementById("printButton").addEventListener("click", () => window.print());
+    document.getElementById("exportButton").addEventListener("click", exportState);
+    document.getElementById("importInput").addEventListener("change", event => {
+      if (event.target.files[0]) importState(event.target.files[0]);
+      event.target.value = "";
+    });
+    document.getElementById("expandButton").addEventListener("click", event => {
+      allExpanded = !allExpanded;
+      event.target.textContent = allExpanded ? "收起全部说明" : "展开全部说明";
+      render();
+    });
+    document.getElementById("resetButton").addEventListener("click", () => {
+      if (!confirm("确定要清空所有勾选和备注吗？建议先导出进度备份。")) return;
+      state = emptyState();
+      saveState();
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
