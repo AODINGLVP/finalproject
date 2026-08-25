@@ -1153,7 +1153,7 @@ func _test_compact_display_toolbar(view: BTEditorView) -> void:
 	_expect(legacy_creation != null and not legacy_creation.visible, "duplicate node creation toolbar stays hidden in favor of the canvas context menu")
 	_expect(layout_popup.item_count == 9 and layout_popup.get_item_index(view.LAYOUT_MENU_FIT_ID) >= 0, "layout actions are consolidated into one menu")
 	_expect(view.feature_menu_button.text == "Display", "display options use a compact menu label")
-	_expect(popup.item_count == 6 and view.advanced_display_menu.item_count == 7 and grid_index == -1, "Display shows five user choices plus seven remaining advanced choices")
+	_expect(popup.item_count == 5 and view.advanced_display_menu.item_count == 0 and grid_index == -1, "Display exposes exactly the five consolidated user choices")
 	var display_labels: Array[String] = []
 	for item_index in range(popup.item_count):
 		display_labels.append(popup.get_item_text(item_index))
@@ -1179,10 +1179,8 @@ func _test_compact_display_toolbar(view: BTEditorView) -> void:
 	for label in hidden_default_labels:
 		default_labels_are_hidden = default_labels_are_hidden and not display_labels.has(label) and not advanced_labels.has(label)
 	_expect(default_labels_are_hidden, "fixed display capabilities and hidden alternatives have no Display switch")
-	var expected_advanced_labels := ["Accessibility / Colorblind Palette", "Single Connection Rendering", "Translucent Cards (Experiment)", "Zoom-Aware Auto Spacing", "Zoom View Anchor", "Stable Incremental Layout", "Breadcrumb Navigation"]
-	expected_advanced_labels.sort()
-	advanced_labels.sort()
-	_expect(advanced_labels == expected_advanced_labels, "Advanced Display contains exactly the seven remaining user choices")
+	var expected_display_labels := ["Smart Drag Reflow", "Adaptive Zoom Detail", "Readable Edge Overlay", "Selection Context Highlight", "Fisheye Focus"]
+	_expect(display_labels == expected_display_labels and advanced_labels.is_empty(), "Display presents the five consolidated features in a stable order")
 	var fixed_menu_callbacks_are_inert := true
 	for definition_index in range(view.FEATURE_DEFINITIONS.size()):
 		var key := str(view.FEATURE_DEFINITIONS[definition_index][0])

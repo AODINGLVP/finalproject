@@ -59,6 +59,9 @@ const BUILT_IN_FEATURE_KEYS := [
 	"failure_reason",
 	"decorator_badges",
 	"straight_connections",
+	"subtree_collapse",
+	"single_connection",
+	"zoom_anchor",
 ]
 const HIDDEN_DISABLED_FEATURE_KEYS := [
 	"always_curved_edges",
@@ -66,6 +69,17 @@ const HIDDEN_DISABLED_FEATURE_KEYS := [
 	"path_summary",
 	"edge_bundling",
 	"orthogonal_edges",
+	"compact",
+	"type_encoding",
+	"accessibility",
+	"stable_layout",
+]
+const FINAL_DISPLAY_FEATURE_KEYS := [
+	"auto_spacing",
+	"semantic_zoom",
+	"translucent_cards",
+	"breadcrumb",
+	"fisheye",
 ]
 const DEBUG_MENU_LIVE_ID := 0
 const DEBUG_MENU_DIM_ID := 1
@@ -80,7 +94,7 @@ const LAYOUT_MENU_FOCUS_ID := 4
 const LAYOUT_MENU_SHOW_ALL_ID := 5
 const LAYOUT_MENU_FIT_ID := 6
 const FEATURE_DEFINITIONS := [
-	["fisheye", "Fisheye / Focus+Context", true],
+	["fisheye", "Fisheye Focus", true],
 	["subtree_collapse", "Subtree Collapse / Expand", true],
 	["compact", "Compact Mode", false],
 	["type_encoding", "Shape / Icon Type Encoding", false],
@@ -88,13 +102,13 @@ const FEATURE_DEFINITIONS := [
 	["single_connection", "Single Connection Rendering", true],
 	["straight_connections", "Straight Connections", true],
 	["always_curved_edges", "Always Curved Edges (Experiment)", false],
-	["translucent_cards", "Translucent Cards (Experiment)", false],
+	["translucent_cards", "Readable Edge Overlay", false],
 	["active_path", "Active Path Highlight", true],
 	["branch_dimming", "Non-active Branch Dimming", true],
 	["multi_column", "Multi-column Layout", false],
 	["enhanced_minimap", "Overview + Detail / Enhanced Minimap", true],
-	["semantic_zoom", "Semantic Zoom", false],
-	["auto_spacing", "Zoom-Aware Auto Spacing", true],
+	["semantic_zoom", "Adaptive Zoom Detail", true],
+	["auto_spacing", "Smart Drag Reflow", true],
 	["zoom_anchor", "Zoom View Anchor", true],
 	["path_summary", "Path Summary View", false],
 	["decorator_badges", "Decorator Condition Badges", true],
@@ -102,7 +116,7 @@ const FEATURE_DEFINITIONS := [
 	["orthogonal_edges", "Orthogonal Edges", false],
 	["edge_bundling", "Edge Bundling", false],
 	["stable_layout", "Stable Incremental Layout", false],
-	["breadcrumb", "Breadcrumb Navigation", false],
+	["breadcrumb", "Selection Context Highlight", true],
 	["failure_reason", "Failure Reason Annotation", true],
 ]
 
@@ -823,19 +837,13 @@ func _build_feature_menu() -> void:
 	popup.clear()
 	advanced_display_menu = PopupMenu.new()
 	advanced_display_menu.name = "AdvancedDisplayMenu"
-	var common_features := ["fisheye", "subtree_collapse", "compact", "type_encoding", "semantic_zoom"]
-	for index in range(FEATURE_DEFINITIONS.size()):
-		var definition: Array = FEATURE_DEFINITIONS[index]
-		var key := str(definition[0])
-		if BUILT_IN_FEATURE_KEYS.has(key) or HIDDEN_DISABLED_FEATURE_KEYS.has(key):
-			continue
-		if common_features.has(key):
-			popup.add_check_item(str(definition[1]), index)
-		else:
-			advanced_display_menu.add_check_item(str(definition[1]), index)
-	popup.add_submenu_node_item("Advanced Display", advanced_display_menu)
+	for feature_key in FINAL_DISPLAY_FEATURE_KEYS:
+		for index in range(FEATURE_DEFINITIONS.size()):
+			var definition: Array = FEATURE_DEFINITIONS[index]
+			if str(definition[0]) == feature_key:
+				popup.add_check_item(str(definition[1]), index)
+				break
 	popup.id_pressed.connect(_on_feature_menu_pressed)
-	advanced_display_menu.id_pressed.connect(_on_feature_menu_pressed)
 
 
 func _build_layout_menu() -> void:
