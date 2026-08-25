@@ -67,14 +67,17 @@ func _run() -> void:
 	_expect(_graph_node(view, 2).custom_minimum_size.x == BTGraphNode.COMPACT_CARD_SIZE.x, "compact mode reduces card width")
 	view._on_compact_toggled(false)
 
-	view.semantic_zoom_enabled = true
+	view._set_feature_enabled("semantic_zoom", true, false)
 	view.graph_edit.zoom = 0.5
 	view._update_semantic_zoom()
-	_expect(view.semantic_detail_level == 0, "semantic zoom chooses overview detail")
-	_expect(not _graph_node(view, 2).type_badge.visible, "semantic overview hides secondary labels")
+	_expect(view.semantic_detail_level == 0 and _graph_node(view, 2).compact_mode, "Adaptive Zoom Detail uses compact overview cards below 62 percent")
+	_expect(not _graph_node(view, 2).type_badge.visible and _graph_node(view, 2).custom_minimum_size.x == BTGraphNode.COMPACT_CARD_SIZE.x, "adaptive overview combines minimum information with compact geometry")
+	view.graph_edit.zoom = 0.75
+	view._update_semantic_zoom()
+	_expect(view.semantic_detail_level == 1 and not _graph_node(view, 2).compact_mode and _graph_node(view, 2).type_badge.visible and not _graph_node(view, 2).description_label.visible, "Adaptive Zoom Detail restores normal cards with medium information between 62 and 88 percent")
 	view.graph_edit.zoom = 1.0
 	view._update_semantic_zoom()
-	_expect(view.semantic_detail_level == 2 and _graph_node(view, 2).description_label.visible, "semantic zoom restores full detail")
+	_expect(view.semantic_detail_level == 2 and not _graph_node(view, 2).compact_mode and _graph_node(view, 2).description_label.visible, "Adaptive Zoom Detail restores normal cards and full information at 88 percent or above")
 
 	view._on_search_changed("attack")
 	_expect(_graph_node(view, 4).search_matches, "search finds node title and parameters")
@@ -815,19 +818,21 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	view._set_feature_enabled("semantic_zoom", true, false)
 	view.graph_edit.zoom = 0.5
 	view._update_semantic_zoom()
-	_expect(view.semantic_detail_level == 0, "semantic zoom switch selects overview detail")
+	_expect(view.semantic_detail_level == 0 and view.compact_mode_enabled, "Adaptive Zoom Detail selects compact overview density")
 	view._set_feature_enabled("semantic_zoom", false, false)
-	_expect(view.semantic_detail_level == 2, "disabling semantic zoom restores full detail")
+	_expect(view.semantic_detail_level == 2 and not view.compact_mode_enabled and not _graph_node(view, 1).compact_mode, "disabling Adaptive Zoom Detail restores full normal cards")
 
 	view.current_tree = _make_dense_zoom_tree()
 	view._rebuild_graph()
 	var dense_positions := _resource_positions(view.current_tree)
 	view._set_feature_enabled("semantic_zoom", true, false)
-	view._set_feature_enabled("auto_spacing", true, false)
+	view._set_feature_enabled("auto_spacing", false, false)
 	view.semantic_detail_level = 0
+	view.compact_mode_enabled = true
 	view._apply_semantic_detail_level()
 	view._update_auto_spacing(0.0, true)
-	_expect(_rendered_overlaps(view).is_empty(), "dense overview is readable without expanding logical spacing")
+	_expect(_rendered_overlaps(view).is_empty(), "Adaptive Zoom Detail keeps a dense overview readable even when Smart Drag Reflow is off")
+	view._set_feature_enabled("auto_spacing", true, false)
 	view.graph_edit.zoom = 1.0
 	view.semantic_detail_level = 2
 	view._apply_semantic_detail_level()
@@ -1174,6 +1179,9 @@ func _test_compact_display_toolbar(view: BTEditorView) -> void:
 		"Edge Bundling",
 		"Orthogonal Edges",
 		"Grid",
+		"Compact Mode",
+		"Semantic Zoom",
+		"Shape / Icon Type Encoding",
 	]
 	var default_labels_are_hidden := true
 	for label in hidden_default_labels:

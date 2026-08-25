@@ -20,6 +20,12 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var view := await _make_view()
+	if OS.get_cmdline_user_args().has("density-transition-quick"):
+		await _test_drag_across_display_density_change(view)
+		print("BT_ZOOM_DENSITY_QUICK_SUMMARY passed=%d failed=%d" % [passed, failed])
+		view.free()
+		quit(0 if failed == 0 else 1)
+		return
 	if OS.get_cmdline_user_args().has("drag-rules-quick"):
 		await _test_drag_reflow_deadzone(view)
 		await _test_conditional_parent_child_clearance(view)

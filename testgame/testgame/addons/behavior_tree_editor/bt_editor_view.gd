@@ -28,6 +28,8 @@ const FISHEYE_CONTEXT_SCALE := 0.78
 const FISHEYE_LERP_SPEED := 12.0
 const FISHEYE_WHEEL_PAUSE := 0.2
 const FISHEYE_RESUME_POINTER_DISTANCE := 6.0
+const ADAPTIVE_COMPACT_ZOOM_THRESHOLD := 0.62
+const ADAPTIVE_FULL_DETAIL_ZOOM_THRESHOLD := 0.88
 const VIEW_SETTINGS_PATH := "user://behavior_tree_editor_view.cfg"
 const MULTI_COLUMN_THRESHOLD := 5
 const MULTI_COLUMN_COUNT := 4
@@ -230,6 +232,7 @@ var minimap_total_node_count := 0
 var visible_failure_annotations: Array[Dictionary] = []
 var auto_spacing_targets: Dictionary = {}
 var auto_spacing_signature := ""
+var auto_spacing_density_signature := ""
 var pending_auto_spacing_anchor_id := -1
 var drag_auto_spacing_base_targets: Dictionary = {}
 var drag_auto_spacing_original_targets: Dictionary = {}
@@ -284,7 +287,7 @@ func _process(delta: float) -> void:
 
 
 func _gui_input(event: InputEvent) -> void:
-	if not _feature_enabled("accessibility") or not (event is InputEventKey) or not event.pressed or event.echo:
+	if not (event is InputEventKey) or not event.pressed or event.echo:
 		return
 	if event.keycode == KEY_F and event.ctrl_pressed:
 		search_edit.grab_focus()
@@ -949,12 +952,16 @@ func _set_feature_enabled(key: String, enabled: bool, persist := true) -> void:
 			_refresh_auto_spacing_deferred.call_deferred()
 		"semantic_zoom":
 			semantic_zoom_enabled = enabled
-			if not enabled:
+			if enabled:
+				_update_semantic_zoom(true)
+			else:
+				compact_mode_enabled = _feature_enabled("compact")
 				semantic_detail_level = 2
+				_apply_semantic_detail_level()
 			auto_spacing_signature = ""
 			_refresh_auto_spacing_deferred.call_deferred()
 		"auto_spacing":
-			if not enabled:
+			if not enabled and not semantic_zoom_enabled and fisheye_focus_node_id == -1:
 				_reset_auto_spacing()
 			else:
 				auto_spacing_signature = ""
@@ -1032,12 +1039,12 @@ func _apply_feature_states() -> void:
 		if not (child is BTGraphNode):
 			continue
 		var graph_node: BTGraphNode = child
-		graph_node.set_compact_mode(_feature_enabled("compact"))
+		graph_node.set_compact_mode(_effective_compact_mode())
 		graph_node.set_type_encoding_enabled(_feature_enabled("type_encoding"))
 		graph_node.set_accessible_palette_enabled(_feature_enabled("accessibility"))
 		graph_node.set_single_connection_rendering_enabled(_feature_enabled("single_connection"))
 		graph_node.set_translucent_cards_enabled(_feature_enabled("translucent_cards"))
-		graph_node.set_semantic_detail_level(semantic_detail_level if _feature_enabled("semantic_zoom") else 2)
+		graph_node.set_semantic_detail_level(semantic_detail_level if semantic_zoom_enabled else 2)
 		graph_node.set_subtree_collapse_enabled(_feature_enabled("subtree_collapse"))
 		graph_node.set_decorator_badges_enabled(_feature_enabled("decorator_badges"))
 		var node_id := graph_node.node_resource.id
@@ -1447,11 +1454,11 @@ func _rebuild_graph() -> void:
 			_count_collapsible_descendants(node_resource.id),
 			_build_collapsed_preview(node_resource.id)
 		)
-		graph_node.set_compact_mode(compact_mode_enabled)
+		graph_node.set_compact_mode(_effective_compact_mode())
 		graph_node.set_type_encoding_enabled(_feature_enabled("type_encoding"))
 		graph_node.set_accessible_palette_enabled(_feature_enabled("accessibility"))
 		graph_node.set_single_connection_rendering_enabled(_feature_enabled("single_connection"))
-		graph_node.set_semantic_detail_level(semantic_detail_level)
+		graph_node.set_semantic_detail_level(semantic_detail_level if semantic_zoom_enabled else 2)
 		graph_node.set_subtree_collapse_enabled(_feature_enabled("subtree_collapse"))
 		graph_node.set_decorator_badges_enabled(_feature_enabled("decorator_badges"))
 		graph_node.set_search_state(not search_query.is_empty(), search_result_ids.has(node_resource.id), _current_search_result_id() == node_resource.id)
@@ -1578,7 +1585,7 @@ func _on_graph_node_position_changed(graph_node: BTGraphNode) -> void:
 		_accumulate_drag_screen_offset(graph_node.position_offset)
 		_claim_dragged_render_position(graph_node)
 		var total_screen_distance := drag_reflow_screen_offset.length()
-		if not drag_auto_spacing_active and total_screen_distance >= DRAG_REFLOW_ACTIVATION_SCREEN_DISTANCE:
+		if _feature_enabled("auto_spacing") and not drag_auto_spacing_active and total_screen_distance >= DRAG_REFLOW_ACTIVATION_SCREEN_DISTANCE:
 			_activate_drag_auto_spacing(graph_node)
 		elif drag_auto_spacing_active:
 			var refresh_screen_distance := drag_reflow_screen_offset.distance_to(drag_reflow_last_refresh_screen_offset)
@@ -1619,7 +1626,7 @@ func _claim_dragged_render_position(graph_node: BTGraphNode) -> void:
 
 
 func _activate_drag_auto_spacing(graph_node: BTGraphNode) -> void:
-	if drag_auto_spacing_active or graph_node == null or graph_node.node_resource == null:
+	if not _feature_enabled("auto_spacing") or drag_auto_spacing_active or graph_node == null or graph_node.node_resource == null:
 		return
 	drag_auto_spacing_active = true
 	_claim_dragged_render_position(graph_node)
@@ -1671,6 +1678,7 @@ func _on_graph_node_drag_started(node_id: int) -> void:
 		drag_reflow_last_observed_position = node.position
 	drag_reflow_screen_offset = Vector2.ZERO
 	drag_reflow_last_refresh_screen_offset = Vector2.ZERO
+	auto_spacing_density_signature = _auto_spacing_density_signature()
 	drag_auto_spacing_active = false
 	drag_visual_offset_claimed = false
 	pending_auto_spacing_seed_targets.clear()
@@ -2219,25 +2227,34 @@ func _refresh_minimap_node_counts() -> void:
 				minimap_total_node_count += 1
 
 
-func _update_semantic_zoom() -> void:
+func _update_semantic_zoom(force := false) -> void:
 	if not semantic_zoom_enabled or not is_instance_valid(graph_edit):
 		return
 	var next_level := 2
-	if graph_edit.zoom < 0.62:
+	var next_compact := false
+	if graph_edit.zoom < ADAPTIVE_COMPACT_ZOOM_THRESHOLD:
 		next_level = 0
-	elif graph_edit.zoom < 0.88:
+		next_compact = true
+	elif graph_edit.zoom < ADAPTIVE_FULL_DETAIL_ZOOM_THRESHOLD:
 		next_level = 1
-	if next_level == semantic_detail_level:
+	if not force and next_level == semantic_detail_level and next_compact == compact_mode_enabled:
 		return
 	semantic_detail_level = next_level
+	compact_mode_enabled = next_compact
 	_apply_semantic_detail_level()
 
 
 func _apply_semantic_detail_level() -> void:
 	for child in graph_edit.get_children():
 		if child is BTGraphNode:
+			child.set_compact_mode(_effective_compact_mode())
 			child.set_semantic_detail_level(semantic_detail_level)
+	auto_spacing_signature = ""
 	_refresh_auto_spacing_deferred.call_deferred()
+
+
+func _effective_compact_mode() -> bool:
+	return _feature_enabled("compact") or (semantic_zoom_enabled and compact_mode_enabled)
 
 
 func _refresh_auto_spacing_deferred() -> void:
@@ -2251,9 +2268,13 @@ func _update_auto_spacing(delta: float, immediate := false) -> void:
 		return
 	var dragged_node := _active_dragged_graph_node()
 	var dragged_node_id := dragged_node.node_resource.id if dragged_node != null and dragged_node.node_resource != null else -1
-	# Auto Spacing is an independent display feature. Low-detail Semantic Zoom
-	# changes card contents, but it must never disable collision prevention.
-	var enabled := _feature_enabled("auto_spacing") or fisheye_focus_node_id != -1
+	# A sub-threshold drag keeps the user's exact placement. Adaptive zoom may still
+	# own existing offsets. Only a real density transition may bypass the drag deadzone.
+	var density_signature := _auto_spacing_density_signature()
+	if dragged_node_id != -1 and not drag_auto_spacing_active and density_signature == auto_spacing_density_signature:
+		return
+	auto_spacing_density_signature = density_signature
+	var enabled := _feature_enabled("auto_spacing") or semantic_zoom_enabled or fisheye_focus_node_id != -1
 	var signature := _auto_spacing_layout_signature() if enabled else "disabled"
 	var overlap_repair_required := false
 	if signature != auto_spacing_signature:
@@ -2290,7 +2311,7 @@ func _update_auto_spacing(delta: float, immediate := false) -> void:
 
 
 func _auto_spacing_layout_signature() -> String:
-	var values: Array[String] = [str(semantic_detail_level), "focus:%d" % fisheye_focus_node_id]
+	var values: Array[String] = [str(semantic_detail_level), "compact:%s" % str(_effective_compact_mode()), "focus:%d" % fisheye_focus_node_id]
 	for child in graph_edit.get_children():
 		if child is BTGraphNode and child.node_resource != null:
 			var layout_position: Vector2 = child.get_logical_position() if child.manual_dragging else child.node_resource.position
@@ -2304,6 +2325,10 @@ func _auto_spacing_layout_signature() -> String:
 			])
 	values.sort()
 	return "|".join(values)
+
+
+func _auto_spacing_density_signature() -> String:
+	return "%d:%s:%d" % [semantic_detail_level, str(_effective_compact_mode()), fisheye_focus_node_id]
 
 
 func _solve_auto_spacing_offsets(anchor_node_id := -1, initial_offsets: Dictionary = {}) -> Dictionary:
@@ -2553,10 +2578,9 @@ func _enforce_layered_parent_child_clearance(nodes: Array[BTGraphNode], nodes_by
 func _saved_parent_child_vertical_gap(parent: BTGraphNode, child: BTGraphNode) -> float:
 	if parent == null or child == null or parent.node_resource == null or child.node_resource == null:
 		return -INF
-	# Resource positions are authored against the card's nominal mode, before
-	# Fisheye or dynamic rows expand its rendered height.
-	var authored_parent_height := BTGraphNode.COMPACT_CARD_SIZE.y if parent.compact_mode else BTGraphNode.NORMAL_CARD_SIZE.y
-	return child.node_resource.position.y - (parent.node_resource.position.y + authored_parent_height)
+	# Whether the authored tree was top-to-bottom must not change when Adaptive Zoom
+	# temporarily switches card density. Use the stable full-card boundary here.
+	return child.node_resource.position.y - (parent.node_resource.position.y + BTGraphNode.NORMAL_CARD_SIZE.y)
 
 
 func _auto_spacing_collision_pairs(nodes: Array[BTGraphNode], base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary) -> Array[Array]:
@@ -2687,6 +2711,7 @@ func _reset_auto_spacing() -> void:
 	var held_node := _active_dragged_graph_node()
 	auto_spacing_targets.clear()
 	auto_spacing_signature = ""
+	auto_spacing_density_signature = _auto_spacing_density_signature()
 	pending_auto_spacing_anchor_id = -1
 	drag_auto_spacing_base_targets.clear()
 	drag_auto_spacing_original_targets.clear()
@@ -4176,13 +4201,19 @@ func _load_view_settings() -> void:
 			elif key == "enhanced_minimap":
 				legacy_default = bool(config.get_value("view", "minimap", legacy_default))
 			feature_states[key] = bool(config.get_value("features", key, legacy_default))
-		fisheye_enabled = _feature_enabled("fisheye")
-		compact_mode_enabled = _feature_enabled("compact")
-		semantic_zoom_enabled = _feature_enabled("semantic_zoom")
 		if is_instance_valid(grid_toggle):
 			grid_toggle.set_pressed_no_signal(false)
 		if is_instance_valid(minimap_toggle):
 			minimap_toggle.set_pressed_no_signal(true)
+	fisheye_enabled = _feature_enabled("fisheye")
+	compact_mode_enabled = _feature_enabled("compact")
+	semantic_zoom_enabled = _feature_enabled("semantic_zoom")
+	if semantic_zoom_enabled and is_instance_valid(graph_edit):
+		var loaded_zoom := graph_edit.zoom
+		compact_mode_enabled = loaded_zoom < ADAPTIVE_COMPACT_ZOOM_THRESHOLD
+		semantic_detail_level = 0 if compact_mode_enabled else (1 if loaded_zoom < ADAPTIVE_FULL_DETAIL_ZOOM_THRESHOLD else 2)
+	else:
+		semantic_detail_level = 2
 	if is_instance_valid(fisheye_toggle):
 		fisheye_toggle.set_pressed_no_signal(fisheye_enabled)
 	if is_instance_valid(branch_dimming_toggle):
@@ -4219,7 +4250,7 @@ func _populate_view_config(config: ConfigFile) -> void:
 			persisted_value = false
 		config.set_value("features", key, persisted_value)
 	config.set_value("view", "fisheye", fisheye_enabled)
-	config.set_value("view", "compact", compact_mode_enabled)
+	config.set_value("view", "compact", false)
 	config.set_value("view", "semantic_zoom", semantic_zoom_enabled)
 	config.set_value("view", "grid", false)
 	config.set_value("view", "minimap", true)
