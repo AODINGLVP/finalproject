@@ -49,6 +49,7 @@ func _run() -> void:
 	view._refresh_entire_ui()
 	_restore_overview()
 	await _settle()
+	_expect(view.graph_edit.minimap_enabled and not view.graph_edit.show_grid, "visual baseline keeps the built-in overview on and hidden Grid off")
 
 	var baseline := await _capture_case("01_baseline")
 	var diagnostic_child := _graph_node(view, 2)
@@ -86,7 +87,14 @@ func _run() -> void:
 	await _settle()
 	var display_menu := await _capture_case("01a_display_menu")
 	_assert_image_valid(display_menu, "compact Display menu renders")
-	_expect(display_popup.visible and display_popup.item_count == 10 and view.advanced_display_menu.item_count == 17, "Display popup keeps common options concise and exposes advanced options in a submenu")
+	var display_labels: Array[String] = []
+	for item_index in range(display_popup.item_count):
+		display_labels.append(display_popup.get_item_text(item_index))
+	var advanced_labels: Array[String] = []
+	for item_index in range(view.advanced_display_menu.item_count):
+		advanced_labels.append(view.advanced_display_menu.get_item_text(item_index))
+	_expect(display_popup.visible and display_popup.item_count == 6 and view.advanced_display_menu.item_count == 15, "Display popup keeps only five user choices and its advanced submenu")
+	_expect(not display_labels.has("Grid") and not display_labels.has("Search + Highlight") and not display_labels.has("Overview + Detail / Enhanced Minimap") and not advanced_labels.has("Active Path Highlight") and not advanced_labels.has("Non-active Branch Dimming"), "Display popup omits built-in capabilities and the hidden Grid setting")
 	display_popup.hide()
 	await _settle()
 	var debug_popup := view.debug_menu_button.get_popup()
@@ -95,7 +103,10 @@ func _run() -> void:
 	await _settle()
 	var debug_menu := await _capture_case("01aa_debug_menu")
 	_assert_image_valid(debug_menu, "compact Debug menu renders")
-	_expect(debug_popup.visible and debug_popup.item_count == 6 and not view.live_debug_toggle.visible and not view.blackboard_toggle.visible, "Debug popup exposes runtime options without expanding the toolbar")
+	var debug_labels: Array[String] = []
+	for item_index in range(debug_popup.item_count):
+		debug_labels.append(debug_popup.get_item_text(item_index))
+	_expect(debug_popup.visible and debug_popup.item_count == 5 and not debug_labels.has("Dim Inactive Branches") and not view.live_debug_toggle.visible and not view.blackboard_toggle.visible, "Debug popup treats branch dimming as built in without expanding the toolbar")
 	debug_popup.hide()
 	await _settle()
 

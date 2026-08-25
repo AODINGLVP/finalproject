@@ -12,8 +12,8 @@
 
 ## Display Tools
 
-- Open the compact `Display` menu to enable or disable every optimization and the graph grid independently. The toolbar keeps only common navigation actions visible.
-- Open the compact `Debug` menu to toggle `Live Debug`, inactive-branch dimming, failure annotations, the Live Blackboard panel, and Blackboard Schema authoring. `Failures` remains beside it as a clickable node-location list.
+- Open the compact `Display` menu for the remaining user-selectable appearance and layout aids. Search, the enhanced minimap, active-path highlighting, and inactive-branch dimming are built in and therefore have no menu switches. Grid rendering remains implemented internally but is hidden and off by default.
+- Open the compact `Debug` menu to toggle `Live Debug`, failure annotations, the Live Blackboard panel, and Blackboard Schema authoring. When Live Debug supplies an active path, the editor automatically highlights it and dims inactive branches. `Failures` remains beside the menu as a clickable node-location list.
 - `Fisheye`: enlarges only the card directly under the pointer, shrinks surrounding cards, and temporarily reflows them without changing saved positions.
 - `Compact`: reduces card size and keeps only the essential node identity.
 - `Semantic Zoom`: hides secondary information at low zoom while keeping card geometry stable.
@@ -24,8 +24,8 @@
 - `Arrange for Overview`: right-click the canvas and choose this command to save a compact low-detail layout; zooming in then demonstrates Auto Spacing, while zooming out restores the dense arrangement.
 - `Collapse` / `Expand`: summarizes or restores all child subtrees.
 - `Focus`: keeps the selected subtree and its ancestor path; `All` restores the full tree.
-- `Find Node`: highlights matches in titles, types, descriptions, action names, condition names, and decorators. Enable or disable highlighting through `Display > Search + Highlight`.
-- `Minimap`, `Grid`, and `Fit`: support navigation in large trees.
+- `Find Node`: the always-available search field highlights matches in titles, types, descriptions, action names, condition names, and decorators. Clear the query to remove the search effect.
+- The enhanced `Minimap` is always available; `Fit` frames the visible tree. Grid has no user-facing control and starts disabled.
 - `Runtime Path` and `Selection` show clickable path buttons for Live Debug and the selected node.
 - `Active Path Highlight`, `Non-active Branch Dimming`, and `Failure Reason Annotation` explain runtime decisions in the editor.
 - `Multi-column Layout` wraps wide fan-outs while preserving left-to-right execution order.
@@ -34,7 +34,7 @@
 - `Orthogonal Edges` and `Edge Bundling` provide alternative connection routing for dense trees.
 - `Always Curved Edges (Experiment)` and `Translucent Cards (Experiment)` are optional, default-off comparison modes. They are not the recommended baseline.
 
-Display options are saved in `user://behavior_tree_editor_view.cfg`. Experimental or potentially expensive options such as Compact, Semantic Zoom, branch dimming, multi-column layout, orthogonal edges, edge bundling, and stable layout are disabled by default. Disabling a feature restores its baseline visual state without changing behavior-tree execution data.
+Display options are saved in `user://behavior_tree_editor_view.cfg`. The four built-in capabilities are persisted as enabled and legacy Grid settings are normalized to off. Experimental or potentially expensive choices such as Compact, Semantic Zoom, multi-column layout, orthogonal edges, edge bundling, and stable layout remain disabled by default.
 
 `complex_guard_validation_tree.tres` uses the compact overview arrangement by default. Enable both `Semantic Zoom` and `Zoom-Aware Auto Spacing` to compare its dense overview coordinates with the temporary expanded detail layout.
 

@@ -38,7 +38,7 @@ Godot GraphEdit的槽位负责拖拽请求，但原生持久线是侧面端口�
 
 ## 5. 显示优化架构
 
-`FEATURE_DEFINITIONS`登记24个独立开关，统一由`_set_feature_enabled()`、`_apply_feature_states()`和ConfigFile持久化。所有功能必须有关闭复位路径。新增类型图标由`BTTypeIcon`使用Canvas绘制圆、菱形、六边形、三角形、盾形和内部符号，不依赖外部纹理；无障碍配色采用色盲友好的蓝、橙、绿、朱红、黄和紫红，并与形状形成冗余编码。
+`FEATURE_DEFINITIONS`登记24个内部显示状态，统一由`_set_feature_enabled()`、`_apply_feature_states()`和ConfigFile管理。其中Enhanced Minimap、Search、Active Path Highlight和Non-active Branch Dimming列入`BUILT_IN_FEATURE_KEYS`：正常界面固定启用且不生成菜单项，内部测试仍可临时覆盖以构造对照。Grid不属于该数组，其绘制实现保留，但创建和旧配置加载后均固定为关闭且不生成菜单项。新增类型图标由`BTTypeIcon`使用Canvas绘制圆、菱形、六边形、三角形、盾形和内部符号，不依赖外部纹理；无障碍配色采用色盲友好的蓝、橙、绿、朱红、黄和紫红，并与形状形成冗余编码。
 
 Semantic Zoom只改变信息可见性，不改变节点尺寸，避免滚轮时卡片异常缩放。Fisheye独立修改节点倍率并在关闭时重建清理Transform。Collapse、Focus、Search、Minimap、Path Summary、Breadcrumb、Branch Dimming和Failure Annotation分别处理结构、导航和运行解释，不混用运行数据。
 

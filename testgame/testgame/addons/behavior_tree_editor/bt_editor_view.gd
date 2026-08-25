@@ -51,6 +51,7 @@ const ZOOM_LAYOUT_ANCHOR_RELEASE_DELAY := 0.65
 const ZOOM_CENTER_SAMPLE_LIMIT := 12
 const ZOOM_CENTER_SAMPLE_RADIUS_FACTOR := 1.25
 const DISPLAY_MENU_GRID_ID := 1000
+const BUILT_IN_FEATURE_KEYS := ["enhanced_minimap", "search", "active_path", "branch_dimming"]
 const DEBUG_MENU_LIVE_ID := 0
 const DEBUG_MENU_DIM_ID := 1
 const DEBUG_MENU_FAILURE_ID := 2
@@ -74,7 +75,7 @@ const FEATURE_DEFINITIONS := [
 	["always_curved_edges", "Always Curved Edges (Experiment)", false],
 	["translucent_cards", "Translucent Cards (Experiment)", false],
 	["active_path", "Active Path Highlight", true],
-	["branch_dimming", "Non-active Branch Dimming", false],
+	["branch_dimming", "Non-active Branch Dimming", true],
 	["multi_column", "Multi-column Layout", false],
 	["enhanced_minimap", "Overview + Detail / Enhanced Minimap", true],
 	["semantic_zoom", "Semantic Zoom", false],
@@ -494,7 +495,7 @@ func _build_ui() -> void:
 
 	grid_toggle = CheckBox.new()
 	grid_toggle.text = "Grid"
-	grid_toggle.button_pressed = true
+	grid_toggle.button_pressed = false
 	grid_toggle.toggled.connect(_on_grid_toggled)
 	grid_toggle.visible = false
 	view_row.add_child(grid_toggle)
@@ -792,7 +793,9 @@ func _add_palette_group(parent: Control, title: String, types: Array) -> void:
 func _initialize_feature_states() -> void:
 	for definition in FEATURE_DEFINITIONS:
 		var key := str(definition[0])
-		if not feature_states.has(key):
+		if BUILT_IN_FEATURE_KEYS.has(key):
+			feature_states[key] = true
+		elif not feature_states.has(key):
 			feature_states[key] = bool(definition[2])
 
 
@@ -803,16 +806,16 @@ func _build_feature_menu() -> void:
 	popup.clear()
 	advanced_display_menu = PopupMenu.new()
 	advanced_display_menu.name = "AdvancedDisplayMenu"
-	var common_features := ["fisheye", "subtree_collapse", "compact", "type_encoding", "enhanced_minimap", "semantic_zoom", "search"]
+	var common_features := ["fisheye", "subtree_collapse", "compact", "type_encoding", "semantic_zoom"]
 	for index in range(FEATURE_DEFINITIONS.size()):
 		var definition: Array = FEATURE_DEFINITIONS[index]
+		if BUILT_IN_FEATURE_KEYS.has(str(definition[0])):
+			continue
 		if common_features.has(str(definition[0])):
 			popup.add_check_item(str(definition[1]), index)
 		else:
 			advanced_display_menu.add_check_item(str(definition[1]), index)
 	popup.add_submenu_node_item("Advanced Display", advanced_display_menu)
-	popup.add_separator()
-	popup.add_check_item("Grid", DISPLAY_MENU_GRID_ID)
 	popup.id_pressed.connect(_on_feature_menu_pressed)
 	advanced_display_menu.id_pressed.connect(_on_feature_menu_pressed)
 
@@ -855,7 +858,6 @@ func _build_debug_menu() -> void:
 	var popup := debug_menu_button.get_popup()
 	popup.clear()
 	popup.add_check_item("Live Debug", DEBUG_MENU_LIVE_ID)
-	popup.add_check_item("Dim Inactive Branches", DEBUG_MENU_DIM_ID)
 	popup.add_check_item("Failure Reasons", DEBUG_MENU_FAILURE_ID)
 	popup.add_separator()
 	popup.add_check_item("Live Blackboard", DEBUG_MENU_BLACKBOARD_ID)
@@ -868,8 +870,6 @@ func _on_debug_menu_pressed(index: int) -> void:
 	match index:
 		DEBUG_MENU_LIVE_ID:
 			_on_live_debug_toggled(not runtime_debug_enabled)
-		DEBUG_MENU_DIM_ID:
-			_set_feature_enabled("branch_dimming", not _feature_enabled("branch_dimming"))
 		DEBUG_MENU_FAILURE_ID:
 			_set_feature_enabled("failure_reason", not _feature_enabled("failure_reason"))
 		DEBUG_MENU_BLACKBOARD_ID:
@@ -884,7 +884,6 @@ func _update_debug_menu_checks() -> void:
 		return
 	var popup := debug_menu_button.get_popup()
 	popup.set_item_checked(popup.get_item_index(DEBUG_MENU_LIVE_ID), runtime_debug_enabled)
-	popup.set_item_checked(popup.get_item_index(DEBUG_MENU_DIM_ID), _feature_enabled("branch_dimming"))
 	popup.set_item_checked(popup.get_item_index(DEBUG_MENU_FAILURE_ID), _feature_enabled("failure_reason"))
 	popup.set_item_checked(popup.get_item_index(DEBUG_MENU_BLACKBOARD_ID), is_instance_valid(blackboard_panel) and blackboard_panel.visible)
 	popup.set_item_checked(popup.get_item_index(DEBUG_MENU_SCHEMA_ID), is_instance_valid(schema_panel) and schema_panel.visible)
@@ -898,6 +897,8 @@ func _on_feature_menu_pressed(index: int) -> void:
 	if index < 0 or index >= FEATURE_DEFINITIONS.size():
 		return
 	var key := str(FEATURE_DEFINITIONS[index][0])
+	if BUILT_IN_FEATURE_KEYS.has(key):
+		return
 	_set_feature_enabled(key, not _feature_enabled(key))
 
 
@@ -4131,6 +4132,9 @@ func _load_view_settings() -> void:
 	if config.load(VIEW_SETTINGS_PATH) == OK:
 		for definition in FEATURE_DEFINITIONS:
 			var key := str(definition[0])
+			if BUILT_IN_FEATURE_KEYS.has(key):
+				feature_states[key] = true
+				continue
 			var legacy_default := bool(definition[2])
 			if key == "fisheye":
 				legacy_default = bool(config.get_value("view", "fisheye", legacy_default))
@@ -4145,9 +4149,9 @@ func _load_view_settings() -> void:
 		compact_mode_enabled = _feature_enabled("compact")
 		semantic_zoom_enabled = _feature_enabled("semantic_zoom")
 		if is_instance_valid(grid_toggle):
-			grid_toggle.set_pressed_no_signal(bool(config.get_value("view", "grid", true)))
+			grid_toggle.set_pressed_no_signal(false)
 		if is_instance_valid(minimap_toggle):
-			minimap_toggle.set_pressed_no_signal(bool(config.get_value("view", "minimap", true)))
+			minimap_toggle.set_pressed_no_signal(true)
 	if is_instance_valid(fisheye_toggle):
 		fisheye_toggle.set_pressed_no_signal(fisheye_enabled)
 	if is_instance_valid(branch_dimming_toggle):
@@ -4163,7 +4167,7 @@ func _load_view_settings() -> void:
 	if is_instance_valid(search_toggle):
 		search_toggle.set_pressed_no_signal(_feature_enabled("search"))
 	if is_instance_valid(graph_edit):
-		graph_edit.show_grid = grid_toggle.button_pressed
+		graph_edit.show_grid = false
 		graph_edit.set_enhanced_minimap(_feature_enabled("enhanced_minimap"))
 	_apply_feature_states()
 
@@ -4177,12 +4181,12 @@ func _save_view_settings() -> void:
 func _populate_view_config(config: ConfigFile) -> void:
 	for definition in FEATURE_DEFINITIONS:
 		var key := str(definition[0])
-		config.set_value("features", key, _feature_enabled(key))
+		config.set_value("features", key, true if BUILT_IN_FEATURE_KEYS.has(key) else _feature_enabled(key))
 	config.set_value("view", "fisheye", fisheye_enabled)
 	config.set_value("view", "compact", compact_mode_enabled)
 	config.set_value("view", "semantic_zoom", semantic_zoom_enabled)
-	config.set_value("view", "grid", graph_edit.show_grid if is_instance_valid(graph_edit) else true)
-	config.set_value("view", "minimap", graph_edit.minimap_enabled if is_instance_valid(graph_edit) else true)
+	config.set_value("view", "grid", false)
+	config.set_value("view", "minimap", true)
 
 
 func _is_attached_decorator(node: BTNodeResource) -> bool:

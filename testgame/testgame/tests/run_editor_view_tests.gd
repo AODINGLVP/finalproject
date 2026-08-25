@@ -28,6 +28,14 @@ func _run() -> void:
 	for definition in view.FEATURE_DEFINITIONS:
 		view._set_feature_enabled(str(definition[0]), bool(definition[2]), false)
 	_expect(view.graph_edit != null and view.search_edit != null and view.search_toggle != null and view.branch_dimming_toggle != null and view.failure_reason_toggle != null, "editor view builds controls")
+	_expect(
+		view._feature_enabled("enhanced_minimap")
+			and view._feature_enabled("search")
+			and view._feature_enabled("active_path")
+			and view._feature_enabled("branch_dimming"),
+		"overview, search, active-path highlighting, and inactive-branch dimming start as built-in defaults"
+	)
+	_expect(view.graph_edit.minimap_enabled and not view.graph_edit.show_grid, "built-in overview starts enabled while the hidden Grid implementation starts disabled")
 	_test_compact_display_toolbar(view)
 	var node_palette := view.find_child("NodePalette", true, false) as VBoxContainer
 	_expect(node_palette != null and not node_palette.visible and node_palette.custom_minimum_size == Vector2.ZERO, "node creation palette is removed from the visible editor")
@@ -1110,6 +1118,11 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 		if config.has_section_key("features", str(definition[0])):
 			persisted_count += 1
 	_expect(persisted_count == view.FEATURE_DEFINITIONS.size(), "all feature switches are independently serializable")
+	var built_in_config_is_fixed := true
+	for key in view.BUILT_IN_FEATURE_KEYS:
+		built_in_config_is_fixed = built_in_config_is_fixed and bool(config.get_value("features", key, false))
+	_expect(built_in_config_is_fixed, "built-in display capabilities are persisted as enabled even after internal test overrides")
+	_expect(not bool(config.get_value("view", "grid", true)) and bool(config.get_value("view", "minimap", false)), "legacy view settings persist Grid off and the built-in overview on")
 
 
 func _test_compact_display_toolbar(view: BTEditorView) -> void:
@@ -1132,10 +1145,18 @@ func _test_compact_display_toolbar(view: BTEditorView) -> void:
 	_expect(legacy_creation != null and not legacy_creation.visible, "duplicate node creation toolbar stays hidden in favor of the canvas context menu")
 	_expect(layout_popup.item_count == 9 and layout_popup.get_item_index(view.LAYOUT_MENU_FIT_ID) >= 0, "layout actions are consolidated into one menu")
 	_expect(view.feature_menu_button.text == "Display", "display options use a compact menu label")
-	_expect(popup.item_count == 10 and view.advanced_display_menu.item_count == 17 and grid_index >= 0, "Display shows common options and moves low-frequency switches into Advanced Display")
+	_expect(popup.item_count == 6 and view.advanced_display_menu.item_count == 15 and grid_index == -1, "Display shows five user choices plus Advanced Display, with no Grid entry")
+	var display_labels: Array[String] = []
+	for item_index in range(popup.item_count):
+		display_labels.append(popup.get_item_text(item_index))
 	var advanced_labels: Array[String] = []
 	for item_index in range(view.advanced_display_menu.item_count):
 		advanced_labels.append(view.advanced_display_menu.get_item_text(item_index))
+	var hidden_default_labels := ["Overview + Detail / Enhanced Minimap", "Search + Highlight", "Active Path Highlight", "Non-active Branch Dimming", "Grid"]
+	var default_labels_are_hidden := true
+	for label in hidden_default_labels:
+		default_labels_are_hidden = default_labels_are_hidden and not display_labels.has(label) and not advanced_labels.has(label)
+	_expect(default_labels_are_hidden, "built-in overview, search, runtime emphasis, and hidden Grid have no Display switch")
 	_expect(advanced_labels.has("Straight Connections"), "Advanced Display exposes the straight-connection route")
 	var straight_definition_index := -1
 	for definition_index in range(view.FEATURE_DEFINITIONS.size()):
@@ -1152,17 +1173,21 @@ func _test_compact_display_toolbar(view: BTEditorView) -> void:
 	_expect(not view.fisheye_toggle.visible and not view.compact_toggle.visible and not view.semantic_zoom_toggle.visible and not view.path_summary_toggle.visible and not view.grid_toggle.visible and not view.minimap_toggle.visible, "redundant display checkboxes stay hidden from the toolbar")
 	var toolbar := view.get_node_or_null("ViewToolbar") as HBoxContainer
 	_expect(toolbar != null and not toolbar.visible, "legacy view toolbar no longer consumes a separate row")
-	var original_grid := view.graph_edit.show_grid
-	view._on_feature_menu_pressed(view.DISPLAY_MENU_GRID_ID)
-	_expect(view.graph_edit.show_grid != original_grid and popup.is_item_checked(grid_index) == view.graph_edit.show_grid, "Grid toggles and check mark synchronize through Display menu")
-	view._on_feature_menu_pressed(view.DISPLAY_MENU_GRID_ID)
+	_expect(not view.graph_edit.show_grid, "Grid remains disabled when its menu entry is hidden")
+	view._on_grid_toggled(true)
+	var internal_grid_can_still_render := view.graph_edit.show_grid
+	view._on_grid_toggled(false)
+	_expect(internal_grid_can_still_render and not view.graph_edit.show_grid, "Grid rendering remains available internally without a user-facing switch")
 	var fisheye_index := popup.get_item_index(0)
 	view._set_feature_enabled("fisheye", false, false)
 	_expect(fisheye_index >= 0 and not popup.is_item_checked(fisheye_index) and not view.fisheye_toggle.button_pressed, "feature menu checks synchronize with compatibility state mirrors")
 	view._set_feature_enabled("fisheye", true, false)
-	_expect(view.debug_menu_button.text == "Debug" and debug_popup.item_count == 6, "runtime options use a compact Debug menu")
+	var debug_labels: Array[String] = []
+	for item_index in range(debug_popup.item_count):
+		debug_labels.append(debug_popup.get_item_text(item_index))
+	_expect(view.debug_menu_button.text == "Debug" and debug_popup.item_count == 5 and not debug_labels.has("Dim Inactive Branches"), "Debug keeps branch dimming built in instead of exposing another switch")
 	_expect(not view.live_debug_toggle.visible and not view.branch_dimming_toggle.visible and not view.failure_reason_toggle.visible and not view.blackboard_toggle.visible and not view.schema_toggle.visible, "redundant runtime checkboxes stay hidden from the toolbar")
-	_expect(not view.search_toggle.visible and view.search_edit.visible, "Search + Highlight uses the Display menu without hiding the search field")
+	_expect(not view.search_toggle.visible and view.search_edit.visible and view.search_edit.editable, "built-in Search keeps its input and result navigation visible without a switch")
 	var runtime_toolbar := view.get_node_or_null("RuntimeToolbar") as HBoxContainer
 	_expect(runtime_toolbar != null and runtime_toolbar.get_combined_minimum_size().x < 700.0, "compact runtime toolbar leaves room for Live Debug status")
 	view._on_debug_menu_pressed(view.DEBUG_MENU_LIVE_ID)

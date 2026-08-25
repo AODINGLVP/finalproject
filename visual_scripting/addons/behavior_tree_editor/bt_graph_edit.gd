@@ -30,7 +30,7 @@ var connection_route_cache: Dictionary = {}
 
 func _ready() -> void:
 	right_disconnects = true
-	show_grid = true
+	show_grid = false
 	snapping_enabled = true
 	zoom_min = 0.1
 	minimap_enabled = true

@@ -10,8 +10,8 @@
 
 ## Display Tools
 
-- Open the compact `Display` menu to switch individual optimizations and the graph grid. Common `Collapse`, `Expand`, `Focus`, `All`, and `Fit` actions remain directly available.
-- Open the compact `Debug` menu for Live Debug, inactive-branch dimming, failure annotations, Live Blackboard, and Blackboard Schema authoring.
+- Open the compact `Display` menu for the remaining selectable appearance and layout aids. Search, the enhanced minimap, active-path highlighting, and inactive-branch dimming are built in with no switches. Grid is retained internally but hidden and off by default.
+- Open the compact `Debug` menu for Live Debug, failure annotations, Live Blackboard, and Blackboard Schema authoring. Active paths are highlighted and inactive branches are dimmed automatically when runtime path data exists.
 - `Fisheye` enlarges only the card directly under the pointer, shrinks surrounding cards, and temporarily reflows them without changing saved positions.
 - Enable `Semantic Zoom` and `Zoom-Aware Auto Spacing` to keep low-detail trees dense while temporarily separating expanded cards and preserving clear connection channels.
 - Clicking a card does not reflow the graph. Corrections below 10 screen pixels move only that card and may retain a minor overlap; larger drags activate stepped live avoidance and receive one final check on release.

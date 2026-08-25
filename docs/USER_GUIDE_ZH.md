@@ -77,16 +77,16 @@ func chase_target(blackboard: Dictionary, delta: float, node: Resource) -> int:
 
 ## 7. 大树显示开关
 
-`Display`中24项功能相互独立并保存到`user://behavior_tree_editor_view.cfg`，Grid 另行保存。常用组合如下：
+插件内部保留24项显示状态，但不再把它们全部作为用户开关。Enhanced Minimap、Search、Active Path Highlight和Non-active Branch Dimming是默认能力，不出现在普通或高级菜单中；Grid实现仍保留，但默认关闭且没有菜单入口。其余可选显示状态保存到`user://behavior_tree_editor_view.cfg`。常用方式如下：
 
-- 定位未知区域：`Minimap + Semantic Zoom + Breadcrumb`。
-- 定位已知节点：`Search + Highlight`，无障碍模式下可用`Ctrl+F`、`F3`、`Shift+F3`。
+- 定位未知区域：直接使用默认Minimap，可再开启`Semantic Zoom + Breadcrumb`。
+- 定位已知节点：直接在默认Search栏输入查询；清空查询即可复位。无障碍模式下可用`Ctrl+F`、`F3`、`Shift+F3`。
 - 减少结构：`Subtree Collapse`或选中后`Focus`；`Show All`恢复。
 - 低缩放识别：`Shape / Icon Type Encoding + Accessibility / Colorblind Palette`。
-- 运行诊断：`Active Path + Dim Inactive + Failure Reasons + Path Summary`。
+- 运行诊断：Live Debug有活动路径时自动高亮路径并淡化其他分支；`Failure Reasons`和`Path Summary`提供补充信息。
 - 连线显示：默认`Single Connection Rendering`仅显示一条底部到顶部连接；开启`Straight Connections`后，每条父子连接直接使用一个线段，关闭后恢复先前路线；关闭`Single Connection Rendering`则回到Godot原生线。
 
-每个显示功能关闭后都会恢复基线视觉状态，不修改行为树运行数据。
+菜单中的可选显示功能关闭后会恢复相应基线视觉状态。四项默认能力按查询或运行数据自动出现和复位，不修改行为树运行数据。
 
 ## 8. 示例与验证
 
