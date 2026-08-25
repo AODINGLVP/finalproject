@@ -2,6 +2,7 @@ extends RefCounted
 
 const BTNodeResource = preload("res://addons/behavior_tree_editor/bt_node_resource.gd")
 const BTTreeResource = preload("res://addons/behavior_tree_editor/bt_tree_resource.gd")
+const BTTreeLayout = preload("res://addons/behavior_tree_editor/bt_tree_layout.gd")
 const BTBlackboardSchema = preload("res://addons/behavior_tree_editor/bt_blackboard_schema.gd")
 
 const SCHEMA_PATH := "res://behavior_trees/complex_guard_blackboard_schema.tres"
@@ -381,33 +382,4 @@ func _decorator(tree: BTTreeResource, owner: BTNodeResource, title: String, mode
 
 
 func _layout_tree(tree: BTTreeResource) -> void:
-	var levels := {}
-	var queue: Array[Array] = [[tree.root_node_id, 0]]
-	while not queue.is_empty():
-		var item: Array = queue.pop_front()
-		var node_id := int(item[0])
-		var depth := int(item[1])
-		if not levels.has(depth):
-			levels[depth] = []
-		(levels[depth] as Array).append(node_id)
-		for child in _children_in_creation_order(tree, node_id):
-			queue.append([child.id, depth + 1])
-	for depth in levels:
-		var ids: Array = levels[depth]
-		var width := float(ids.size() - 1) * 360.0
-		for index in range(ids.size()):
-			var node := tree.find_node(int(ids[index]))
-			node.position = Vector2(index * 360.0 - width * 0.5 + 20000.0, float(depth) * 230.0 + 100.0)
-	for node in tree.nodes:
-		if node.decorator_parent_id == -1:
-			continue
-		var owner := tree.find_node(node.decorator_parent_id)
-		node.position = owner.position + Vector2(-90.0, 125.0)
-
-
-func _children_in_creation_order(tree: BTTreeResource, parent_id: int) -> Array[BTNodeResource]:
-	var result: Array[BTNodeResource] = []
-	for node in tree.nodes:
-		if node != null and node.parent_id == parent_id and node.decorator_parent_id == -1:
-			result.append(node)
-	return result
+	BTTreeLayout.arrange(tree)

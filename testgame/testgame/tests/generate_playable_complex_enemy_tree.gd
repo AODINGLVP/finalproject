@@ -2,6 +2,7 @@ extends SceneTree
 
 const BTNodeResource = preload("res://addons/behavior_tree_editor/bt_node_resource.gd")
 const BTTreeResource = preload("res://addons/behavior_tree_editor/bt_tree_resource.gd")
+const BTTreeLayout = preload("res://addons/behavior_tree_editor/bt_tree_layout.gd")
 const BTBlackboardSchema = preload("res://addons/behavior_tree_editor/bt_blackboard_schema.gd")
 const BTBlackboardEntry = preload("res://addons/behavior_tree_editor/bt_blackboard_entry.gd")
 
@@ -247,27 +248,7 @@ func _build_schema() -> BTBlackboardSchema:
 
 
 func _layout_tree(tree: BTTreeResource) -> void:
-	var levels := {}
-	var queue: Array[Array] = [[tree.root_node_id, 0]]
-	while not queue.is_empty():
-		var item: Array = queue.pop_front()
-		var node_id := int(item[0])
-		var depth := int(item[1])
-		if not levels.has(depth):
-			levels[depth] = []
-		(levels[depth] as Array).append(node_id)
-		for child in tree.get_children_of(node_id):
-			queue.append([child.id, depth + 1])
-	for depth in levels:
-		var ids: Array = levels[depth]
-		var width := float(ids.size() - 1) * 300.0
-		for index in range(ids.size()):
-			tree.find_node(int(ids[index])).position = Vector2(index * 300.0 - width * 0.5 + 12000.0, float(depth) * 190.0 + 100.0)
-	for node in tree.nodes:
-		if node.decorator_parent_id == -1:
-			continue
-		var owner := tree.find_node(node.decorator_parent_id)
-		node.position = owner.position + Vector2(-90.0, 125.0)
+	BTTreeLayout.arrange(tree)
 
 
 func _check(condition: bool, label: String) -> void:
