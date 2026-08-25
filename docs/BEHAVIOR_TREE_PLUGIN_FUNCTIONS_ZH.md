@@ -155,24 +155,24 @@ Runner 将原子快照写入项目 `.godot` 目录，编辑器只读取与当前
 | 4 | Shape / Icon Type Encoding | 用形状和符号冗余表示节点类型，低缩放或灰度环境仍可识别。 |
 | 5 | Accessibility / Colorblind Palette | 使用色盲友好颜色并配合形状编码；提供 Ctrl+F、F3 和 Shift+F3。 |
 | 6 | Single Connection Rendering | 隐藏 Godot 侧面原生持久线，只显示一条底部到顶部连接，同时保留命中与断开。 |
-| 7 | Active Path Highlight | 在 Live Debug 中强调正在执行的节点链。 |
-| 8 | Non-active Branch Dimming | 降低非当前分支不透明度，突出实际决策路径。 |
-| 9 | Multi-column Layout | 大扇出超过阈值时按多列换行，仍保存从左到右的执行顺序。 |
+| 7 | Active Path Highlight | Live Debug 有活动路径时自动强调正在执行的节点链，无独立开关。 |
+| 8 | Non-active Branch Dimming | 自动降低非当前分支不透明度，突出实际决策路径，无独立开关。 |
+| 9 | Multi-column Layout | 内部排布实现保留，但普通界面固定关闭且不提供开关。 |
 | 10 | Overview + Detail / Enhanced Minimap | 使用 230×150 小地图显示全树范围和当前视口。 |
 | 11 | Semantic Zoom | 低缩放隐藏参数和说明，中等缩放显示类型，高缩放显示完整参数、说明和 Decorator；节点几何不随滚轮异常改变。 |
-| 12 | Path Summary View | 用紧凑按钮显示当前运行链，可点击展开并定位隐藏节点。 |
-| 13 | Decorator Condition Badges | 在所有者卡片中显示附着条件和参数摘要。 |
+| 12 | Path Summary View | 内部路径摘要实现保留，但普通界面固定关闭且不提供开关。 |
+| 13 | Decorator Condition Badges | 完整详情层自动在所有者卡片中显示附着条件和参数摘要。 |
 | 14 | Search + Highlight | 搜索标题、类型、说明、Action、Condition 和 Decorator 参数；支持前后导航。 |
-| 15 | Orthogonal Edges | 使用水平和垂直折线路由，便于阅读层级关系。 |
-| 16 | Edge Bundling | 共享父节点到多个子节点的主干，减少重复线段。 |
+| 15 | Orthogonal Edges | 内部折线路由实现保留，但普通界面固定关闭且不提供开关。 |
+| 16 | Edge Bundling | 内部共享主干实现保留，但普通界面固定关闭且不提供开关。 |
 | 17 | Stable Incremental Layout | 自动排布时尽量保留已有有效位置，降低心理地图变化。 |
 | 18 | Breadcrumb Navigation | 显示所选节点的 Root 到节点层级路径并支持定位。 |
-| 19 | Failure Reason Annotation | 在 Live Debug 中对失败节点和 Decorator 来源做可见标注。 |
+| 19 | Failure Reason Annotation | Live Debug 有失败数据时自动标注失败节点和 Decorator 来源。 |
 | 20 | Zoom-Aware Auto Spacing | 在缩放、卡片详情变化和拖动时临时消除重叠，保持层级与左右顺序，不写回资源坐标。 |
 | 21 | Zoom View Anchor | 临时布局变化期间保持视口中心附近节点的相对观察位置。 |
-| 22 | Always Curved Edges (Experiment) | 使用采样 Bezier 曲线作为默认关闭的比较路线。 |
+| 22 | Always Curved Edges (Experiment) | 内部采样 Bezier 比较路线保留，但普通界面固定关闭且不提供开关。 |
 | 23 | Translucent Cards (Experiment) | 降低卡片背景透明度，并用不透明文字轮廓阻挡后方连线干扰。 |
-| 24 | Straight Connections | 用父节点底部中心到子节点顶部中心的一个直线段连接，关闭后恢复先前路线。 |
+| 24 | Straight Connections | 默认使用父节点底部中心到子节点顶部中心的一个直线段连接，无独立开关。 |
 
 辅助功能还包括 Grid、Fit、Collapse All、Expand All、Focus、Show All、Minimap 覆盖状态，以及相互独立的 Runtime Path 和 Selection 路径行。
 

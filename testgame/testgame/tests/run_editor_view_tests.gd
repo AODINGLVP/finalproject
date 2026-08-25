@@ -28,14 +28,17 @@ func _run() -> void:
 	for definition in view.FEATURE_DEFINITIONS:
 		view._set_feature_enabled(str(definition[0]), bool(definition[2]), false)
 	_expect(view.graph_edit != null and view.search_edit != null and view.search_toggle != null and view.branch_dimming_toggle != null and view.failure_reason_toggle != null, "editor view builds controls")
-	_expect(
-		view._feature_enabled("enhanced_minimap")
-			and view._feature_enabled("search")
-			and view._feature_enabled("active_path")
-			and view._feature_enabled("branch_dimming"),
-		"overview, search, active-path highlighting, and inactive-branch dimming start as built-in defaults"
-	)
+	var built_in_defaults_enabled := true
+	for key in view.BUILT_IN_FEATURE_KEYS:
+		built_in_defaults_enabled = built_in_defaults_enabled and view._feature_enabled(key)
+	var hidden_defaults_disabled := true
+	for key in view.HIDDEN_DISABLED_FEATURE_KEYS:
+		hidden_defaults_disabled = hidden_defaults_disabled and not view._feature_enabled(key)
+	_expect(built_in_defaults_enabled, "all built-in display capabilities start enabled")
+	_expect(hidden_defaults_disabled, "all hidden comparison and layout alternatives start disabled")
 	_expect(view.graph_edit.minimap_enabled and not view.graph_edit.show_grid, "built-in overview starts enabled while the hidden Grid implementation starts disabled")
+	_expect(view.graph_edit.straight_connections_enabled and not view.graph_edit.always_curved_edges_enabled and not view.graph_edit.orthogonal_edges_enabled and not view.graph_edit.edge_bundling_enabled, "the fixed connection style starts straight with alternate routes disabled")
+	_expect(not view.runtime_path_scroll.visible and not view.runtime_path_label.visible, "the hidden default-off Path Summary leaves no empty runtime row")
 	_test_compact_display_toolbar(view)
 	var node_palette := view.find_child("NodePalette", true, false) as VBoxContainer
 	_expect(node_palette != null and not node_palette.visible and node_palette.custom_minimum_size == Vector2.ZERO, "node creation palette is removed from the visible editor")
@@ -968,6 +971,7 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	view._set_feature_enabled("search", false, false)
 	_expect(not view.search_toggle.button_pressed and view.search_query.is_empty() and view.search_result_ids.is_empty() and view.search_result_label.text == "0 results" and _graph_node(view, 5).self_modulate == Color.WHITE, "disabling search clears results and dimming")
 
+	view._set_feature_enabled("straight_connections", false, false)
 	view._set_feature_enabled("orthogonal_edges", true, false)
 	var orthogonal_line := view.graph_edit._get_connection_line(Vector2(10.0, 20.0), Vector2(90.0, 120.0))
 	_expect(is_zero_approx(view.graph_edit.connection_lines_curvature) and orthogonal_line.size() == 4 and is_equal_approx(orthogonal_line[1].x, 10.0), "orthogonal edge switch creates right-angle route")
@@ -1103,7 +1107,7 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 		var key := str(definition[0])
 		view._set_feature_enabled(key, true, false)
 		view._set_feature_enabled(key, false, false)
-	_expect(true, "all feature switches survive independent enable-disable cycles")
+	_expect(true, "all display implementations survive internal enable-disable cycles")
 	for definition in view.FEATURE_DEFINITIONS:
 		view._set_feature_enabled(str(definition[0]), true, false)
 	view._apply_runtime_snapshot(snapshot)
@@ -1117,11 +1121,15 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	for definition in view.FEATURE_DEFINITIONS:
 		if config.has_section_key("features", str(definition[0])):
 			persisted_count += 1
-	_expect(persisted_count == view.FEATURE_DEFINITIONS.size(), "all feature switches are independently serializable")
+	_expect(persisted_count == view.FEATURE_DEFINITIONS.size(), "all display state keys remain serializable for backward compatibility")
 	var built_in_config_is_fixed := true
 	for key in view.BUILT_IN_FEATURE_KEYS:
 		built_in_config_is_fixed = built_in_config_is_fixed and bool(config.get_value("features", key, false))
 	_expect(built_in_config_is_fixed, "built-in display capabilities are persisted as enabled even after internal test overrides")
+	var hidden_disabled_config_is_fixed := true
+	for key in view.HIDDEN_DISABLED_FEATURE_KEYS:
+		hidden_disabled_config_is_fixed = hidden_disabled_config_is_fixed and not bool(config.get_value("features", key, true))
+	_expect(hidden_disabled_config_is_fixed, "hidden comparison and layout alternatives are persisted as disabled even after internal test overrides")
 	_expect(not bool(config.get_value("view", "grid", true)) and bool(config.get_value("view", "minimap", false)), "legacy view settings persist Grid off and the built-in overview on")
 
 
@@ -1145,30 +1153,52 @@ func _test_compact_display_toolbar(view: BTEditorView) -> void:
 	_expect(legacy_creation != null and not legacy_creation.visible, "duplicate node creation toolbar stays hidden in favor of the canvas context menu")
 	_expect(layout_popup.item_count == 9 and layout_popup.get_item_index(view.LAYOUT_MENU_FIT_ID) >= 0, "layout actions are consolidated into one menu")
 	_expect(view.feature_menu_button.text == "Display", "display options use a compact menu label")
-	_expect(popup.item_count == 6 and view.advanced_display_menu.item_count == 15 and grid_index == -1, "Display shows five user choices plus Advanced Display, with no Grid entry")
+	_expect(popup.item_count == 6 and view.advanced_display_menu.item_count == 7 and grid_index == -1, "Display shows five user choices plus seven remaining advanced choices")
 	var display_labels: Array[String] = []
 	for item_index in range(popup.item_count):
 		display_labels.append(popup.get_item_text(item_index))
 	var advanced_labels: Array[String] = []
 	for item_index in range(view.advanced_display_menu.item_count):
 		advanced_labels.append(view.advanced_display_menu.get_item_text(item_index))
-	var hidden_default_labels := ["Overview + Detail / Enhanced Minimap", "Search + Highlight", "Active Path Highlight", "Non-active Branch Dimming", "Grid"]
+	var hidden_default_labels := [
+		"Overview + Detail / Enhanced Minimap",
+		"Search + Highlight",
+		"Active Path Highlight",
+		"Non-active Branch Dimming",
+		"Failure Reason Annotation",
+		"Decorator Condition Badges",
+		"Straight Connections",
+		"Always Curved Edges (Experiment)",
+		"Multi-column Layout",
+		"Path Summary View",
+		"Edge Bundling",
+		"Orthogonal Edges",
+		"Grid",
+	]
 	var default_labels_are_hidden := true
 	for label in hidden_default_labels:
 		default_labels_are_hidden = default_labels_are_hidden and not display_labels.has(label) and not advanced_labels.has(label)
-	_expect(default_labels_are_hidden, "built-in overview, search, runtime emphasis, and hidden Grid have no Display switch")
-	_expect(advanced_labels.has("Straight Connections"), "Advanced Display exposes the straight-connection route")
+	_expect(default_labels_are_hidden, "fixed display capabilities and hidden alternatives have no Display switch")
+	var expected_advanced_labels := ["Accessibility / Colorblind Palette", "Single Connection Rendering", "Translucent Cards (Experiment)", "Zoom-Aware Auto Spacing", "Zoom View Anchor", "Stable Incremental Layout", "Breadcrumb Navigation"]
+	expected_advanced_labels.sort()
+	advanced_labels.sort()
+	_expect(advanced_labels == expected_advanced_labels, "Advanced Display contains exactly the seven remaining user choices")
+	var fixed_menu_callbacks_are_inert := true
+	for definition_index in range(view.FEATURE_DEFINITIONS.size()):
+		var key := str(view.FEATURE_DEFINITIONS[definition_index][0])
+		if not view.BUILT_IN_FEATURE_KEYS.has(key) and not view.HIDDEN_DISABLED_FEATURE_KEYS.has(key):
+			continue
+		var before := view._feature_enabled(key)
+		view._on_feature_menu_pressed(definition_index)
+		fixed_menu_callbacks_are_inert = fixed_menu_callbacks_are_inert and view._feature_enabled(key) == before
+	_expect(fixed_menu_callbacks_are_inert, "legacy Display item IDs cannot change fixed feature states")
 	var straight_definition_index := -1
 	for definition_index in range(view.FEATURE_DEFINITIONS.size()):
 		if str(view.FEATURE_DEFINITIONS[definition_index][0]) == "straight_connections":
 			straight_definition_index = definition_index
 			break
 	var straight_menu_index := view.advanced_display_menu.get_item_index(straight_definition_index)
-	_expect(straight_definition_index >= 0 and straight_menu_index >= 0 and not view.advanced_display_menu.is_item_checked(straight_menu_index), "Straight Connections is default-off and has one Advanced Display menu item")
-	view._set_feature_enabled("straight_connections", true, false)
-	_expect(view.graph_edit.straight_connections_enabled and view.advanced_display_menu.is_item_checked(straight_menu_index), "Straight Connections menu check follows the active route")
-	view._set_feature_enabled("straight_connections", false, false)
-	_expect(not view.graph_edit.straight_connections_enabled and not view.advanced_display_menu.is_item_checked(straight_menu_index), "disabling Straight Connections clears its menu check and route state")
+	_expect(straight_definition_index >= 0 and straight_menu_index == -1 and view.graph_edit.straight_connections_enabled, "Straight Connections is enabled without an Advanced Display entry")
 	_expect(not advanced_labels.has("Edge Obstacle Avoidance"), "removed edge-obstacle feature has no menu entry")
 	_expect(not view.fisheye_toggle.visible and not view.compact_toggle.visible and not view.semantic_zoom_toggle.visible and not view.path_summary_toggle.visible and not view.grid_toggle.visible and not view.minimap_toggle.visible, "redundant display checkboxes stay hidden from the toolbar")
 	var toolbar := view.get_node_or_null("ViewToolbar") as HBoxContainer
@@ -1185,7 +1215,12 @@ func _test_compact_display_toolbar(view: BTEditorView) -> void:
 	var debug_labels: Array[String] = []
 	for item_index in range(debug_popup.item_count):
 		debug_labels.append(debug_popup.get_item_text(item_index))
-	_expect(view.debug_menu_button.text == "Debug" and debug_popup.item_count == 5 and not debug_labels.has("Dim Inactive Branches"), "Debug keeps branch dimming built in instead of exposing another switch")
+	_expect(view.debug_menu_button.text == "Debug" and debug_popup.item_count == 4 and not debug_labels.has("Dim Inactive Branches") and not debug_labels.has("Failure Reasons"), "Debug keeps runtime highlighting and failure explanations built in without separate switches")
+	var branch_before := view._feature_enabled("branch_dimming")
+	var failure_before := view._feature_enabled("failure_reason")
+	view._on_debug_menu_pressed(view.DEBUG_MENU_DIM_ID)
+	view._on_debug_menu_pressed(view.DEBUG_MENU_FAILURE_ID)
+	_expect(view._feature_enabled("branch_dimming") == branch_before and view._feature_enabled("failure_reason") == failure_before, "legacy Debug IDs cannot change built-in runtime explanations")
 	_expect(not view.live_debug_toggle.visible and not view.branch_dimming_toggle.visible and not view.failure_reason_toggle.visible and not view.blackboard_toggle.visible and not view.schema_toggle.visible, "redundant runtime checkboxes stay hidden from the toolbar")
 	_expect(not view.search_toggle.visible and view.search_edit.visible and view.search_edit.editable, "built-in Search keeps its input and result navigation visible without a switch")
 	var runtime_toolbar := view.get_node_or_null("RuntimeToolbar") as HBoxContainer

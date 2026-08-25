@@ -12,8 +12,8 @@
 
 ## Display Tools
 
-- Open the compact `Display` menu for the remaining user-selectable appearance and layout aids. Search, the enhanced minimap, active-path highlighting, and inactive-branch dimming are built in and therefore have no menu switches. Grid rendering remains implemented internally but is hidden and off by default.
-- Open the compact `Debug` menu to toggle `Live Debug`, failure annotations, the Live Blackboard panel, and Blackboard Schema authoring. When Live Debug supplies an active path, the editor automatically highlights it and dims inactive branches. `Failures` remains beside the menu as a clickable node-location list.
+- Open the compact `Display` menu for the remaining user-selectable appearance and layout aids. Search, the enhanced minimap, runtime highlighting, failure annotations, Decorator badges, and straight connections are built in and have no menu switches. Grid and the unused route/layout alternatives remain implemented internally but are hidden and off.
+- Open the compact `Debug` menu to toggle `Live Debug`, the Live Blackboard panel, and Blackboard Schema authoring. When Live Debug supplies data, the editor automatically highlights the active path, dims inactive branches, and annotates failures. `Failures` remains beside the menu as a clickable node-location list.
 - `Fisheye`: enlarges only the card directly under the pointer, shrinks surrounding cards, and temporarily reflows them without changing saved positions.
 - `Compact`: reduces card size and keeps only the essential node identity.
 - `Semantic Zoom`: hides secondary information at low zoom while keeping card geometry stable.
@@ -26,15 +26,14 @@
 - `Focus`: keeps the selected subtree and its ancestor path; `All` restores the full tree.
 - `Find Node`: the always-available search field highlights matches in titles, types, descriptions, action names, condition names, and decorators. Clear the query to remove the search effect.
 - The enhanced `Minimap` is always available; `Fit` frames the visible tree. Grid has no user-facing control and starts disabled.
-- `Runtime Path` and `Selection` show clickable path buttons for Live Debug and the selected node.
-- `Active Path Highlight`, `Non-active Branch Dimming`, and `Failure Reason Annotation` explain runtime decisions in the editor.
-- `Multi-column Layout` wraps wide fan-outs while preserving left-to-right execution order.
+- `Selection` can show a clickable path to the selected node when Breadcrumb Navigation is enabled.
+- `Active Path Highlight`, `Non-active Branch Dimming`, and `Failure Reason Annotation` automatically explain runtime decisions in the editor.
+- Decorator condition badges are shown automatically whenever the current card detail level has room for them.
 - `Stable Incremental Layout` keeps valid existing positions when `Auto Arrange` is used.
-- `Straight Connections` draws each custom parent-child connection as one direct segment between the bottom and top ports. While enabled it takes priority over the other route styles; disabling it restores the previously selected style.
-- `Orthogonal Edges` and `Edge Bundling` provide alternative connection routing for dense trees.
-- `Always Curved Edges (Experiment)` and `Translucent Cards (Experiment)` are optional, default-off comparison modes. They are not the recommended baseline.
+- Straight connections are the fixed user-facing route: each parent-child connection uses one direct segment between the bottom and top ports.
+- Multi-column layout, Path Summary, Orthogonal Edges, Edge Bundling, and Always Curved Edges remain available only to internal tests and start disabled. `Translucent Cards (Experiment)` remains a selectable default-off experiment.
 
-Display options are saved in `user://behavior_tree_editor_view.cfg`. The four built-in capabilities are persisted as enabled and legacy Grid settings are normalized to off. Experimental or potentially expensive choices such as Compact, Semantic Zoom, multi-column layout, orthogonal edges, edge bundling, and stable layout remain disabled by default.
+Display options are saved in `user://behavior_tree_editor_view.cfg`. Fixed capabilities are normalized to their required states when old settings are loaded or new settings are saved. User-selectable choices such as Compact, Semantic Zoom, and Stable Incremental Layout keep their own preferences.
 
 `complex_guard_validation_tree.tres` uses the compact overview arrangement by default. Enable both `Semantic Zoom` and `Zoom-Aware Auto Spacing` to compare its dense overview coordinates with the temporary expanded detail layout.
 

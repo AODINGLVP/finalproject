@@ -51,7 +51,22 @@ const ZOOM_LAYOUT_ANCHOR_RELEASE_DELAY := 0.65
 const ZOOM_CENTER_SAMPLE_LIMIT := 12
 const ZOOM_CENTER_SAMPLE_RADIUS_FACTOR := 1.25
 const DISPLAY_MENU_GRID_ID := 1000
-const BUILT_IN_FEATURE_KEYS := ["enhanced_minimap", "search", "active_path", "branch_dimming"]
+const BUILT_IN_FEATURE_KEYS := [
+	"enhanced_minimap",
+	"search",
+	"active_path",
+	"branch_dimming",
+	"failure_reason",
+	"decorator_badges",
+	"straight_connections",
+]
+const HIDDEN_DISABLED_FEATURE_KEYS := [
+	"always_curved_edges",
+	"multi_column",
+	"path_summary",
+	"edge_bundling",
+	"orthogonal_edges",
+]
 const DEBUG_MENU_LIVE_ID := 0
 const DEBUG_MENU_DIM_ID := 1
 const DEBUG_MENU_FAILURE_ID := 2
@@ -71,7 +86,7 @@ const FEATURE_DEFINITIONS := [
 	["type_encoding", "Shape / Icon Type Encoding", false],
 	["accessibility", "Accessibility / Colorblind Palette", false],
 	["single_connection", "Single Connection Rendering", true],
-	["straight_connections", "Straight Connections", false],
+	["straight_connections", "Straight Connections", true],
 	["always_curved_edges", "Always Curved Edges (Experiment)", false],
 	["translucent_cards", "Translucent Cards (Experiment)", false],
 	["active_path", "Active Path Highlight", true],
@@ -795,6 +810,8 @@ func _initialize_feature_states() -> void:
 		var key := str(definition[0])
 		if BUILT_IN_FEATURE_KEYS.has(key):
 			feature_states[key] = true
+		elif HIDDEN_DISABLED_FEATURE_KEYS.has(key):
+			feature_states[key] = false
 		elif not feature_states.has(key):
 			feature_states[key] = bool(definition[2])
 
@@ -809,9 +826,10 @@ func _build_feature_menu() -> void:
 	var common_features := ["fisheye", "subtree_collapse", "compact", "type_encoding", "semantic_zoom"]
 	for index in range(FEATURE_DEFINITIONS.size()):
 		var definition: Array = FEATURE_DEFINITIONS[index]
-		if BUILT_IN_FEATURE_KEYS.has(str(definition[0])):
+		var key := str(definition[0])
+		if BUILT_IN_FEATURE_KEYS.has(key) or HIDDEN_DISABLED_FEATURE_KEYS.has(key):
 			continue
-		if common_features.has(str(definition[0])):
+		if common_features.has(key):
 			popup.add_check_item(str(definition[1]), index)
 		else:
 			advanced_display_menu.add_check_item(str(definition[1]), index)
@@ -858,7 +876,6 @@ func _build_debug_menu() -> void:
 	var popup := debug_menu_button.get_popup()
 	popup.clear()
 	popup.add_check_item("Live Debug", DEBUG_MENU_LIVE_ID)
-	popup.add_check_item("Failure Reasons", DEBUG_MENU_FAILURE_ID)
 	popup.add_separator()
 	popup.add_check_item("Live Blackboard", DEBUG_MENU_BLACKBOARD_ID)
 	popup.add_check_item("Edit Blackboard Schema", DEBUG_MENU_SCHEMA_ID)
@@ -870,8 +887,6 @@ func _on_debug_menu_pressed(index: int) -> void:
 	match index:
 		DEBUG_MENU_LIVE_ID:
 			_on_live_debug_toggled(not runtime_debug_enabled)
-		DEBUG_MENU_FAILURE_ID:
-			_set_feature_enabled("failure_reason", not _feature_enabled("failure_reason"))
 		DEBUG_MENU_BLACKBOARD_ID:
 			_on_blackboard_panel_toggled(not blackboard_panel.visible)
 		DEBUG_MENU_SCHEMA_ID:
@@ -884,7 +899,6 @@ func _update_debug_menu_checks() -> void:
 		return
 	var popup := debug_menu_button.get_popup()
 	popup.set_item_checked(popup.get_item_index(DEBUG_MENU_LIVE_ID), runtime_debug_enabled)
-	popup.set_item_checked(popup.get_item_index(DEBUG_MENU_FAILURE_ID), _feature_enabled("failure_reason"))
 	popup.set_item_checked(popup.get_item_index(DEBUG_MENU_BLACKBOARD_ID), is_instance_valid(blackboard_panel) and blackboard_panel.visible)
 	popup.set_item_checked(popup.get_item_index(DEBUG_MENU_SCHEMA_ID), is_instance_valid(schema_panel) and schema_panel.visible)
 
@@ -897,7 +911,7 @@ func _on_feature_menu_pressed(index: int) -> void:
 	if index < 0 or index >= FEATURE_DEFINITIONS.size():
 		return
 	var key := str(FEATURE_DEFINITIONS[index][0])
-	if BUILT_IN_FEATURE_KEYS.has(key):
+	if BUILT_IN_FEATURE_KEYS.has(key) or HIDDEN_DISABLED_FEATURE_KEYS.has(key):
 		return
 	_set_feature_enabled(key, not _feature_enabled(key))
 
@@ -984,6 +998,12 @@ func _set_feature_enabled(key: String, enabled: bool, persist := true) -> void:
 
 func _apply_feature_states() -> void:
 	_update_feature_menu_checks()
+	var path_summary_enabled := _feature_enabled("path_summary")
+	if is_instance_valid(path_summary_toggle):
+		path_summary_toggle.set_pressed_no_signal(path_summary_enabled)
+	_set_path_summary_visible(path_summary_enabled)
+	if not path_summary_enabled and is_instance_valid(runtime_path_container):
+		_clear_container(runtime_path_container)
 	if is_instance_valid(search_edit):
 		search_edit.editable = _feature_enabled("search")
 	if is_instance_valid(search_previous_button):
@@ -4135,6 +4155,9 @@ func _load_view_settings() -> void:
 			if BUILT_IN_FEATURE_KEYS.has(key):
 				feature_states[key] = true
 				continue
+			if HIDDEN_DISABLED_FEATURE_KEYS.has(key):
+				feature_states[key] = false
+				continue
 			var legacy_default := bool(definition[2])
 			if key == "fisheye":
 				legacy_default = bool(config.get_value("view", "fisheye", legacy_default))
@@ -4181,7 +4204,12 @@ func _save_view_settings() -> void:
 func _populate_view_config(config: ConfigFile) -> void:
 	for definition in FEATURE_DEFINITIONS:
 		var key := str(definition[0])
-		config.set_value("features", key, true if BUILT_IN_FEATURE_KEYS.has(key) else _feature_enabled(key))
+		var persisted_value := _feature_enabled(key)
+		if BUILT_IN_FEATURE_KEYS.has(key):
+			persisted_value = true
+		elif HIDDEN_DISABLED_FEATURE_KEYS.has(key):
+			persisted_value = false
+		config.set_value("features", key, persisted_value)
 	config.set_value("view", "fisheye", fisheye_enabled)
 	config.set_value("view", "compact", compact_mode_enabled)
 	config.set_value("view", "semantic_zoom", semantic_zoom_enabled)

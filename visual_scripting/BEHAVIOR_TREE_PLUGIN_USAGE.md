@@ -10,16 +10,16 @@
 
 ## Display Tools
 
-- Open the compact `Display` menu for the remaining selectable appearance and layout aids. Search, the enhanced minimap, active-path highlighting, and inactive-branch dimming are built in with no switches. Grid is retained internally but hidden and off by default.
-- Open the compact `Debug` menu for Live Debug, failure annotations, Live Blackboard, and Blackboard Schema authoring. Active paths are highlighted and inactive branches are dimmed automatically when runtime path data exists.
+- Open the compact `Display` menu for the remaining selectable appearance and layout aids. Search, the enhanced minimap, runtime highlighting, failure annotations, Decorator badges, and straight connections are built in with no switches. Grid and unused route/layout alternatives are retained internally but hidden and off.
+- Open the compact `Debug` menu for Live Debug, Live Blackboard, and Blackboard Schema authoring. Active paths, inactive branches, and failures are explained automatically when runtime data exists.
 - `Fisheye` enlarges only the card directly under the pointer, shrinks surrounding cards, and temporarily reflows them without changing saved positions.
 - Enable `Semantic Zoom` and `Zoom-Aware Auto Spacing` to keep low-detail trees dense while temporarily separating expanded cards and preserving clear connection channels.
 - Clicking a card does not reflow the graph. Corrections below 10 screen pixels move only that card and may retain a minor overlap; larger drags activate stepped live avoidance and receive one final check on release.
 - Reflow keeps a parent card above a child only when their saved placement already had that boundary relationship; it does not impose hierarchy on freeform placements.
 - Keep `Zoom View Anchor` enabled to preserve the viewport center's relative position within nearby nodes while zoom-triggered layout changes settle.
 - Right-click the graph and choose `Arrange for Overview` to save a compact low-detail layout. Zooming out restores these saved coordinates; the expanded spacing is visual only.
-- `Straight Connections` draws every custom parent-child connection as one direct segment. It takes priority while enabled and restores the previous route style when disabled.
-- `Always Curved Edges (Experiment)` and `Translucent Cards (Experiment)` are optional, default-off comparison modes rather than the recommended baseline.
+- Straight connections are the fixed user-facing route and draw every custom parent-child connection as one direct segment.
+- Multi-column layout, Path Summary, Orthogonal Edges, Edge Bundling, and Always Curved Edges remain internal default-off alternatives. `Translucent Cards (Experiment)` remains a selectable default-off comparison mode.
 
 ## Runtime
 

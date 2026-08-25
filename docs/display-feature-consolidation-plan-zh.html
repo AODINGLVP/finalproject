@@ -3,622 +3,357 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>行为树编辑器显示功能说明与下一轮整合清单</title>
+  <title>行为树编辑器：剩余显示功能说明与整合表</title>
   <style>
     :root {
       color-scheme: light;
-      --bg: #f3f6fb;
-      --panel: #ffffff;
-      --text: #172235;
-      --muted: #64748b;
-      --line: #d9e2ef;
-      --blue: #245fc7;
-      --blue-soft: #eaf1ff;
-      --green: #14765d;
-      --green-soft: #e8f7f1;
-      --amber: #9a5b05;
-      --amber-soft: #fff3d8;
-      --red: #ac3448;
-      --red-soft: #ffedf1;
-      --purple: #7048b6;
-      --purple-soft: #f1ebff;
-      --shadow: 0 14px 36px rgba(35, 54, 82, .08);
+      --ink:#172033; --muted:#5e6b80; --line:#d9e1ee; --soft:#f4f7fb;
+      --paper:#fff; --blue:#2357d8; --blue-soft:#eaf0ff; --green:#17795b;
+      --shadow:0 12px 34px rgba(31,45,74,.10);
     }
-
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
     body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
-      line-height: 1.62;
+      margin:0; background:#edf2f8; color:var(--ink);
+      font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif; line-height:1.68;
     }
-    button, input, select, textarea { font: inherit; }
-    button { cursor: pointer; }
-    code { font-family: Consolas, "SFMono-Regular", monospace; font-size: .92em; }
-    .page { width: min(1320px, calc(100% - 32px)); margin: 24px auto 64px; }
-
+    button,input,select,textarea { font:inherit; }
+    code { padding:.1rem .35rem; border-radius:5px; background:#edf1f7; color:#294369; overflow-wrap:anywhere; }
     .hero {
-      padding: 34px;
-      border-radius: 24px;
-      color: #fff;
-      background: linear-gradient(132deg, #143769 0%, #245fc7 58%, #4b83dc 100%);
-      box-shadow: var(--shadow);
+      color:#fff;
+      background:radial-gradient(circle at 86% 10%,rgba(99,201,255,.32),transparent 27rem),
+        linear-gradient(125deg,#183a90,#245ed8 55%,#0f7892);
+      padding:3.4rem max(1.25rem,calc((100vw - 1180px)/2));
     }
-    .hero .state {
-      display: inline-block;
-      padding: 5px 11px;
-      border: 1px solid rgba(255,255,255,.38);
-      border-radius: 999px;
-      background: rgba(255,255,255,.12);
-      font-size: .84rem;
-      font-weight: 750;
+    .eyebrow { margin:0 0 .7rem; color:#cfe1ff; font-weight:700; letter-spacing:.08em; }
+    h1 { margin:0; max-width:980px; font-size:clamp(2rem,4vw,3.5rem); line-height:1.18; }
+    .hero p { max-width:880px; margin:1.1rem 0 0; color:#eef5ff; font-size:1.08rem; }
+    .summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.85rem; margin-top:2rem; }
+    .stat {
+      padding:1rem 1.15rem; border:1px solid rgba(255,255,255,.25); border-radius:14px;
+      background:rgba(255,255,255,.12); backdrop-filter:blur(8px);
     }
-    .hero h1 { max-width: 1000px; margin: 14px 0 8px; font-size: clamp(1.8rem, 4vw, 2.7rem); line-height: 1.22; }
-    .hero p { max-width: 1030px; margin: 7px 0 0; color: rgba(255,255,255,.88); }
-    .hero-links { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 20px; }
-    .hero-links a { padding: 8px 12px; border-radius: 9px; color: #fff; border: 1px solid rgba(255,255,255,.4); text-decoration: none; }
-    .hero-links a:first-child { color: #17427f; background: #fff; }
-
-    .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
-    .stat, .panel, .decision, .group, .menu-card, .notice {
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      background: var(--panel);
-      box-shadow: var(--shadow);
+    .stat strong { display:block; font-size:1.65rem; line-height:1.2; }
+    .stat span { color:#dfeaff; font-size:.9rem; }
+    nav {
+      position:sticky; top:0; z-index:20; display:flex; gap:.35rem; overflow-x:auto;
+      padding:.7rem max(1rem,calc((100vw - 1180px)/2)); border-bottom:1px solid var(--line);
+      background:rgba(255,255,255,.96); box-shadow:0 5px 18px rgba(31,45,74,.07);
     }
-    .stat { padding: 16px; }
-    .stat strong { display: block; font-size: 1.7rem; line-height: 1.1; }
-    .stat span { display: block; margin-top: 6px; color: var(--muted); font-size: .86rem; }
-
-    .toc {
-      position: sticky;
-      top: 8px;
-      z-index: 20;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin: 18px 0 28px;
-      padding: 10px;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: rgba(255,255,255,.94);
-      box-shadow: 0 8px 22px rgba(34, 51, 75, .07);
-      backdrop-filter: blur(8px);
+    nav a {
+      flex:0 0 auto; padding:.45rem .75rem; border-radius:8px; color:#30405a;
+      text-decoration:none; font-weight:700; font-size:.91rem;
     }
-    .toc a { padding: 6px 8px; border-radius: 7px; color: #315270; text-decoration: none; font-size: .88rem; }
-    .toc a:hover { color: var(--blue); background: var(--blue-soft); }
-
-    section { margin: 34px 0; scroll-margin-top: 82px; }
-    .section-head { display: flex; gap: 12px; align-items: baseline; margin-bottom: 14px; }
-    .section-head h2 { margin: 0; font-size: 1.5rem; }
-    .section-head p { margin: 0; color: var(--muted); }
-    .notice { padding: 16px 18px; border-left: 5px solid var(--blue); }
-    .notice strong { color: #1c4f9f; }
-    .notice.warn { border-left-color: var(--amber); }
-    .notice.warn strong { color: var(--amber); }
-
-    .confirmed { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
-    .decision { padding: 18px; }
-    .decision h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 1.04rem; }
-    .decision p { margin: 6px 0; color: var(--muted); }
-    .decision .rule { margin-top: 11px; padding: 10px 12px; border-radius: 10px; background: var(--green-soft); color: #145d4b; }
-    .decision.hidden .rule { background: var(--amber-soft); color: #7c4905; }
-
-    .tag { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: .78rem; font-weight: 750; white-space: nowrap; }
-    .tag.builtin { color: var(--green); background: var(--green-soft); }
-    .tag.hidden { color: var(--amber); background: var(--amber-soft); }
-    .tag.display { color: var(--blue); background: var(--blue-soft); }
-    .tag.advanced { color: var(--purple); background: var(--purple-soft); }
-    .tag.debug { color: var(--red); background: var(--red-soft); }
-    .tag.internal { color: #4b5563; background: #edf1f5; }
-    .tag.layout { color: #116b76; background: #e5f5f7; }
-    .tag.experiment { color: #8a3c8f; background: #f8eafa; }
-
-    .interface-map, .groups, .menus { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
-    .panel, .group, .menu-card { padding: 18px; }
-    .panel h3, .group h3, .menu-card h3 { margin: 0 0 8px; font-size: 1.05rem; }
-    .panel p, .group p, .menu-card p { margin: 6px 0; color: var(--muted); }
-    ul.compact { margin: 8px 0 0; padding-left: 21px; }
-    ul.compact li { margin: 5px 0; }
-    .menu-card ul { margin: 8px 0 0; padding-left: 21px; }
-    .menu-card li { margin: 6px 0; }
-
-    .toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
-    .field { display: grid; gap: 5px; }
-    .field label { color: var(--muted); font-size: .82rem; font-weight: 700; }
-    input[type="search"], select, textarea { border: 1px solid #cbd6e4; border-radius: 9px; background: #fff; color: var(--text); }
-    input[type="search"], select { min-height: 40px; padding: 7px 10px; }
-    input[type="search"] { width: min(390px, 80vw); }
-
-    .table-wrap { overflow: auto; margin-top: 12px; border: 1px solid var(--line); border-radius: 14px; background: #fff; box-shadow: var(--shadow); }
-    table { width: 100%; min-width: 1250px; border-collapse: collapse; }
-    th, td { padding: 11px 12px; border-bottom: 1px solid #e8edf4; text-align: left; vertical-align: top; }
-    th { position: sticky; top: 0; z-index: 2; color: #38506d; background: #f5f8fc; font-size: .82rem; }
-    td { font-size: .88rem; }
-    tr:last-child td { border-bottom: 0; }
-    tr:hover td { background: #fbfdff; }
-    .muted { color: var(--muted); }
-    .empty { padding: 26px; color: var(--muted); text-align: center; }
-
-    .group .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
-    .fact { padding: 9px 10px; border-radius: 9px; background: #f5f8fc; font-size: .86rem; }
-    .fact b { display: block; color: #38506d; }
-
-    .checklist { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-    .check-item { display: grid; grid-template-columns: auto 1fr; gap: 9px; padding: 13px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
-    .check-item input { width: 18px; height: 18px; margin-top: 3px; }
-    .check-item strong { display: block; }
-    .check-item span { color: var(--muted); font-size: .86rem; }
-    textarea { width: 100%; min-height: 120px; margin-top: 12px; padding: 11px; resize: vertical; }
-    .actions { display: flex; gap: 9px; margin-top: 10px; }
-    .actions button { padding: 8px 12px; border: 1px solid var(--line); border-radius: 9px; background: #fff; }
-    .actions button.primary { color: #fff; border-color: var(--blue); background: var(--blue); }
-    .copy-state { align-self: center; color: var(--green); font-size: .86rem; }
-    footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: .86rem; }
-
-    @media (max-width: 900px) {
-      .stats { grid-template-columns: repeat(2, 1fr); }
-      .confirmed, .interface-map, .groups, .menus, .checklist { grid-template-columns: 1fr; }
+    nav a:hover { background:var(--blue-soft); color:var(--blue); }
+    main { max-width:1180px; margin:0 auto; padding:1.2rem 1rem 4rem; }
+    section {
+      scroll-margin-top:4.8rem; margin-top:1.2rem; padding:1.4rem; border:1px solid var(--line);
+      border-radius:18px; background:var(--paper); box-shadow:var(--shadow);
     }
-    @media (max-width: 600px) {
-      .page { width: calc(100% - 16px); margin-top: 8px; }
-      .hero { padding: 23px; border-radius: 17px; }
-      .stats { grid-template-columns: 1fr; }
-      .section-head { display: block; }
-      .group .facts { grid-template-columns: 1fr; }
-      .hero-links, .actions { flex-direction: column; }
+    .section-head { display:flex; justify-content:space-between; gap:1.2rem; align-items:end; margin-bottom:1rem; }
+    .section-head h2 { margin:0; font-size:1.52rem; }
+    .section-head p { max-width:660px; margin:0; color:var(--muted); }
+    .notice { padding:1rem 1.1rem; border-left:5px solid var(--blue); border-radius:9px; background:var(--blue-soft); color:#29436b; }
+    .menu-grid,.relation-grid,.operation-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; }
+    .menu-card,.relation-card,.operation-card {
+      padding:1rem 1.1rem; border:1px solid var(--line); border-radius:13px; background:var(--soft);
     }
-    @media print {
-      body { background: #fff; }
-      .page { width: 100%; margin: 0; }
-      .hero { color: #000; background: #fff; border: 1px solid #999; box-shadow: none; }
-      .hero p { color: #333; }
-      .hero-links, .toc, .toolbar, .actions { display: none; }
-      .stat, .panel, .decision, .group, .menu-card, .notice, .table-wrap { box-shadow: none; break-inside: avoid; }
-      th { position: static; }
+    .menu-card h3,.relation-card h3,.operation-card h3 { margin:0 0 .55rem; }
+    ul { margin:.45rem 0 0; padding-left:1.25rem; }
+    li+li { margin-top:.32rem; }
+    .tag {
+      display:inline-flex; align-items:center; padding:.16rem .52rem; border-radius:999px;
+      font-size:.77rem; font-weight:800; white-space:nowrap;
+    }
+    .main-tag { color:#1f51c7; background:#e8efff; }
+    .advanced-tag { color:#6b36b8; background:#f0e9ff; }
+    .layout-tag { color:#966008; background:#fff2d7; }
+    .debug-tag { color:#08725c; background:#def7ef; }
+    .toolbar { display:grid; grid-template-columns:1.4fr .8fr .8fr; gap:.8rem; margin-bottom:.9rem; }
+    .field label { display:block; margin-bottom:.28rem; color:var(--muted); font-size:.87rem; font-weight:700; }
+    .field input,.field select,textarea {
+      width:100%; border:1px solid #cbd5e3; border-radius:9px; background:#fff; color:var(--ink); padding:.66rem .75rem;
+    }
+    .feature-list { display:grid; gap:1rem; }
+    .feature-card {
+      display:grid; grid-template-columns:minmax(185px,.8fr) minmax(0,2.2fr); gap:1rem;
+      padding:1.05rem; border:1px solid var(--line); border-radius:14px; background:#fff;
+    }
+    .feature-name h3 { margin:.35rem 0 .15rem; font-size:1.12rem; line-height:1.35; }
+    .feature-name p { margin:0; color:var(--muted); font-size:.86rem; }
+    .feature-detail { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.65rem; }
+    .detail { min-width:0; padding:.72rem .8rem; border-radius:9px; background:var(--soft); }
+    .detail b { display:block; margin-bottom:.18rem; color:#31415d; font-size:.82rem; }
+    .detail span { color:#4f5d72; font-size:.9rem; }
+    .empty { padding:1.2rem; text-align:center; color:var(--muted); background:var(--soft); border-radius:10px; }
+    .operation-card p,.relation-card p { margin:.4rem 0 0; color:#4e5c71; }
+    .facts { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; margin-top:.7rem; }
+    .fact { padding:.55rem .65rem; border-radius:8px; background:#fff; color:#506079; font-size:.85rem; }
+    .fact b { display:block; color:#2d3d58; }
+    .decision-list { display:grid; gap:.9rem; }
+    .decision { padding:1rem; border:1px solid var(--line); border-radius:12px; background:var(--soft); }
+    .decision-head { display:flex; justify-content:space-between; gap:.8rem; align-items:baseline; }
+    .decision h3 { margin:0; font-size:1.04rem; }
+    .decision-head span { color:var(--muted); font-size:.82rem; }
+    .choices { display:flex; flex-wrap:wrap; gap:.55rem; margin-top:.7rem; }
+    .choice {
+      display:inline-flex; gap:.38rem; align-items:center; padding:.42rem .58rem;
+      border:1px solid #ccd6e5; border-radius:8px; background:#fff; cursor:pointer; font-size:.88rem;
+    }
+    .choice:has(input:checked) { border-color:var(--blue); background:var(--blue-soft); color:#1f4fbd; }
+    .choice input { margin:0; }
+    .decision textarea { min-height:62px; margin-top:.7rem; resize:vertical; }
+    .actions { display:flex; flex-wrap:wrap; gap:.65rem; align-items:center; margin-top:1rem; }
+    .actions button {
+      border:1px solid #bec9d9; border-radius:9px; padding:.62rem .9rem;
+      background:#fff; color:#2b3b55; cursor:pointer; font-weight:700;
+    }
+    .actions .primary { border-color:var(--blue); background:var(--blue); color:#fff; }
+    .copy-state { color:var(--green); font-weight:700; }
+    footer { padding:1.5rem .25rem 0; color:var(--muted); text-align:center; font-size:.9rem; }
+    @media(max-width:850px) {
+      .summary,.toolbar { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .feature-card { grid-template-columns:1fr; }
+      .menu-grid,.relation-grid,.operation-grid { grid-template-columns:1fr; }
+    }
+    @media(max-width:560px) {
+      .summary,.toolbar,.feature-detail,.facts { grid-template-columns:1fr; }
+      section { padding:1rem; border-radius:13px; }
+      .section-head { display:block; }
+      .section-head p { margin-top:.45rem; }
     }
   </style>
 </head>
 <body>
-  <main class="page">
-    <header class="hero">
-      <span class="state">当前实现说明 · 2026-08-26</span>
-      <h1>行为树编辑器显示功能说明与下一轮整合清单</h1>
-      <p>本页按照当前插件代码重新整理。Overview、Search、活动路径高亮和非活动分支淡化已经作为默认能力，不再向用户提供开关；Grid 的实现仍保留，但默认关闭并从菜单隐藏。其余功能逐项说明，方便继续决定哪些保留、合并、移动或隐藏。</p>
-      <div class="hero-links">
-        <a href="#confirmed">先看已经确认的规则</a>
-        <a href="#inventory">查看全部功能</a>
-        <a href="#candidate">查看候选菜单</a>
-        <a href="#remaining">继续标记待决定项目</a>
-      </div>
-    </header>
-
-    <div class="stats" aria-label="显示功能数量摘要">
-      <div class="stat"><strong>24</strong><span>代码中的功能状态</span></div>
-      <div class="stat"><strong>4</strong><span>内建默认能力，无开关</span></div>
-      <div class="stat"><strong>1</strong><span>Grid 隐藏且默认关闭</span></div>
-      <div class="stat"><strong>20</strong><span>仍可继续整合的功能状态</span></div>
-      <div class="stat"><strong>7 + 4</strong><span>Layout 操作 + Debug 可选操作</span></div>
+  <header class="hero">
+    <p class="eyebrow">BEHAVIOR TREE EDITOR · REMAINING DISPLAY DECISIONS</p>
+    <h1>剩余显示功能说明与整合表</h1>
+    <p>本页只整理还没有确定去留或整合方式的功能。每项都说明用户能看到什么、何时生效、会不会写入行为树资源，以及它与其他功能的关系。</p>
+    <div class="summary">
+      <div class="stat"><strong>12</strong><span>仍可选择的显示功能</span></div>
+      <div class="stat"><strong>7</strong><span>Layout 操作命令</span></div>
+      <div class="stat"><strong>3</strong><span>Debug 菜单操作</span></div>
+      <div class="stat"><strong>22</strong><span>本页待审阅项目</span></div>
     </div>
-
-    <nav class="toc" aria-label="页面目录">
-      <a href="#confirmed">固定规则</a>
-      <a href="#interface">当前界面</a>
-      <a href="#inventory">完整清单</a>
-      <a href="#relationships">功能关系</a>
-      <a href="#candidate">候选菜单</a>
-      <a href="#migration">兼容边界</a>
-      <a href="#remaining">待决定</a>
-    </nav>
-
-    <section id="confirmed">
+  </header>
+  <nav aria-label="页面导航">
+    <a href="#current">当前剩余入口</a>
+    <a href="#features">显示功能详解</a>
+    <a href="#operations">操作命令</a>
+    <a href="#relations">关联关系</a>
+    <a href="#form">删改表单</a>
+  </nav>
+  <main>
+    <section id="current">
       <div class="section-head">
-        <h2>1. 已经确认的固定规则</h2>
-        <p>这五项不再放回后面的决定列表。</p>
+        <h2>1. 当前剩余入口</h2>
+        <p>这里列的是用户界面中仍然存在、尚待你决定如何整合的内容。</p>
       </div>
-      <div class="notice">
-        <strong>“内建”不代表始终改变画面。</strong> Search 只有输入非空查询才高亮；Active Path 和 Branch Dimming 只有 Live Debug 提供有效活动路径时才生效。没有查询、快照或活动路径时，画布保持普通状态。
-      </div>
-      <div class="confirmed">
-        <article class="decision">
-          <h3><span class="tag builtin">内建</span>Overview + Detail / Enhanced Minimap</h3>
-          <p>画布右下角长期提供约 230×150 的全树概览，显示整棵可见树、当前视口位置和当前缩放所代表的细节程度。它帮助用户在大树中判断自己位于哪里。</p>
-          <p><b>不会做什么：</b>不会修改节点坐标、折叠状态、父子结构或执行顺序。</p>
-          <div class="rule">默认开启；Display 和 Advanced Display 均不显示开关。</div>
+      <div class="notice">菜单项目的“默认开启”只表示打开编辑器时会生效，不代表它会修改树资源。是否写入资源要看下面每项的具体说明。</div>
+      <div class="menu-grid" style="margin-top:1rem">
+        <article class="menu-card">
+          <h3><span class="tag main-tag">Display</span> 5 个常用选择</h3>
+          <ul>
+            <li>Fisheye / Focus+Context</li><li>Subtree Collapse / Expand</li>
+            <li>Compact Mode</li><li>Shape / Icon Type Encoding</li><li>Semantic Zoom</li>
+          </ul>
         </article>
-        <article class="decision">
-          <h3><span class="tag builtin">内建</span>Search + Highlight</h3>
-          <p>搜索栏始终可用，可匹配节点标题、类型、描述、Action/Condition 参数以及附着 Decorator。结果按钮可前后切换，提交查询可展开隐藏分支并取景目标。</p>
-          <p><b>复位方式：</b>清空查询即清除匹配高亮和非匹配淡化，不需要再关闭“搜索功能”。</p>
-          <div class="rule">默认可用；保留搜索框，不显示能力开关。</div>
+        <article class="menu-card">
+          <h3><span class="tag advanced-tag">Advanced Display</span> 7 个高级选择</h3>
+          <ul>
+            <li>Accessibility / Colorblind Palette</li><li>Single Connection Rendering</li>
+            <li>Translucent Cards (Experiment)</li><li>Zoom-Aware Auto Spacing</li>
+            <li>Zoom View Anchor</li><li>Stable Incremental Layout</li><li>Breadcrumb Navigation</li>
+          </ul>
         </article>
-        <article class="decision">
-          <h3><span class="tag builtin">内建</span>Active Path Highlight</h3>
-          <p>Live Debug 收到活动路径后，自动高亮从 Root 到当前运行叶节点的卡片和连接线，帮助解释 AI 当前走到了哪一个决策分支。</p>
-          <p><b>复位方式：</b>Live Debug 关闭、快照清空或活动路径为空时自动取消，不修改行为树资源。</p>
-          <div class="rule">默认开启；不在 Display 或 Debug 中提供独立开关。</div>
+        <article class="menu-card">
+          <h3><span class="tag layout-tag">Layout</span> 7 个立即执行的命令</h3>
+          <p>这些不是持续开关。用户点击后立即排布、折叠、聚焦或调整视口，其中部分操作会写入资源。</p>
         </article>
-        <article class="decision">
-          <h3><span class="tag builtin">内建</span>Non-active Branch Dimming</h3>
-          <p>存在有效活动路径时，自动降低其他分支的视觉强调，让活动决策更容易识别。活动路径上的卡片保持完整不透明度。</p>
-          <p><b>安全条件：</b>路径为空时绝不能把整棵树全部淡化；停止 Live Debug 后恢复所有分支。</p>
-          <div class="rule">默认开启；Debug 中不再显示 “Dim Inactive Branches”。</div>
-        </article>
-        <article class="decision hidden">
-          <h3><span class="tag hidden">隐藏关闭</span>Grid</h3>
-          <p>Godot GraphEdit 的网格绘制代码仍然保留，便于内部测试或以后重新启用，但正常用户界面不提供 Grid 菜单项。</p>
-          <p><b>旧设置迁移：</b>即使旧配置记录了 <code>grid=true</code>，新界面也以关闭状态启动，避免用户看到网格却无处关闭。</p>
-          <div class="rule">默认关闭；普通和高级菜单都不显示；没有删除内部实现。</div>
+        <article class="menu-card">
+          <h3><span class="tag debug-tag">Debug</span> 3 个运行与数据入口</h3>
+          <p>Live Debug、Live Blackboard 和 Edit Blackboard Schema。它们的用途不同，不一定需要放在同一个菜单中。</p>
         </article>
       </div>
     </section>
 
-    <section id="interface">
+    <section id="features">
       <div class="section-head">
-        <h2>2. 用户现在实际会在哪里看到功能</h2>
-        <p>区分常驻能力、菜单选项、操作命令和后台保护。</p>
-      </div>
-      <div class="interface-map">
-        <article class="panel">
-          <h3>画布常驻能力</h3>
-          <ul class="compact">
-            <li><b>Search 输入框：</b>始终显示；输入后产生搜索效果。</li>
-            <li><b>Enhanced Minimap：</b>始终显示全树概览和视口。</li>
-            <li><b>Active Path + Dimming：</b>Live Debug 有路径时自动出现。</li>
-            <li><b>Grid：</b>始终不显示，但内部代码保留。</li>
-          </ul>
-        </article>
-        <article class="panel">
-          <h3>Display 当前主菜单：5 项</h3>
-          <ul class="compact">
-            <li>Fisheye / Focus+Context</li>
-            <li>Subtree Collapse / Expand</li>
-            <li>Compact Mode</li>
-            <li>Shape / Icon Type Encoding</li>
-            <li>Semantic Zoom</li>
-            <li><b>另有：</b>Advanced Display 子菜单</li>
-          </ul>
-        </article>
-        <article class="panel">
-          <h3>Advanced Display 当前 15 项</h3>
-          <p>Accessibility、Single Connection、Straight、Curved、Translucent、Multi-column、Auto Spacing、Zoom Anchor、Path Summary、Decorator Badges、Orthogonal、Bundling、Stable Layout、Breadcrumb、Failure Reason。</p>
-          <p>这是当前实现，不代表最终菜单必须保留 15 个开关。</p>
-        </article>
-        <article class="panel">
-          <h3>Layout 与 Debug</h3>
-          <p><b>Layout 7 个操作：</b>Auto Arrange、Arrange for Overview、Collapse All、Expand All、Focus Selected、Show Complete Tree、Fit to View。</p>
-          <p><b>Debug 4 个可选操作：</b>Live Debug、Failure Reasons、Live Blackboard、Edit Blackboard Schema。菜单中另有一个分隔线。</p>
-        </article>
-      </div>
-    </section>
-
-    <section id="inventory">
-      <div class="section-head">
-        <h2>3. 全部现有显示功能的详细清单</h2>
-        <p>包含 24 个功能状态和 Grid；可以搜索与筛选。</p>
+        <h2>2. 仍可选择的 12 个显示功能</h2>
+        <p>可按名称、效果、关联功能或菜单位置搜索。</p>
       </div>
       <div class="toolbar">
-        <div class="field">
-          <label for="featureSearch">搜索名称、用途或关联功能</label>
-          <input id="featureSearch" type="search" placeholder="例如：缩放、连线、Live Debug、Compact">
-        </div>
-        <div class="field">
-          <label for="statusFilter">当前状态</label>
-          <select id="statusFilter">
-            <option value="all">全部状态</option>
-            <option value="内建无开关">内建无开关</option>
-            <option value="隐藏关闭">隐藏关闭</option>
-            <option value="普通 Display">普通 Display</option>
-            <option value="Advanced Display">Advanced Display</option>
-            <option value="Debug">Debug</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="groupFilter">功能组</label>
-          <select id="groupFilter">
-            <option value="all">全部功能组</option>
-            <option value="信息密度">信息密度</option>
-            <option value="焦点与保护">焦点与保护</option>
-            <option value="结构与导航">结构与导航</option>
-            <option value="节点识别">节点识别</option>
-            <option value="连线显示">连线显示</option>
-            <option value="运行解释">运行解释</option>
-            <option value="自动排布">自动排布</option>
-            <option value="画布外观">画布外观</option>
-            <option value="实验外观">实验外观</option>
-          </select>
-        </div>
+        <div class="field"><label for="featureSearch">搜索</label><input id="featureSearch" type="search" placeholder="例如：缩放、卡片、避让、路径"></div>
+        <div class="field"><label for="locationFilter">当前入口</label><select id="locationFilter"><option value="all">全部入口</option><option value="Display">Display</option><option value="Advanced Display">Advanced Display</option></select></div>
+        <div class="field"><label for="groupFilter">功能类别</label><select id="groupFilter">
+          <option value="all">全部类别</option><option value="信息密度">信息密度</option>
+          <option value="焦点与保护">焦点与保护</option><option value="结构与导航">结构与导航</option>
+          <option value="节点识别">节点识别</option><option value="连线渲染">连线渲染</option>
+          <option value="自动排布">自动排布</option><option value="实验外观">实验外观</option>
+        </select></div>
       </div>
-      <div class="table-wrap">
-        <table aria-label="显示功能详细清单">
-          <thead>
-            <tr>
-              <th>编号 / 代码键</th>
-              <th>功能</th>
-              <th>用户会看到什么</th>
-              <th>何时生效</th>
-              <th>是否改变资源</th>
-              <th>联动、覆盖或边界</th>
-              <th>当前状态 / 下一步建议</th>
-            </tr>
-          </thead>
-          <tbody id="featureRows"></tbody>
-        </table>
-        <div id="featureEmpty" class="empty" hidden>没有符合条件的功能。</div>
+      <div id="featureList" class="feature-list"></div>
+      <div id="featureEmpty" class="empty" hidden>没有符合条件的功能。</div>
+    </section>
+
+    <section id="operations">
+      <div class="section-head">
+        <h2>3. Layout 与 Debug 操作</h2>
+        <p>这些项目不是普通显示开关，但会占用菜单空间，因此也需要决定是否保留、合并或换位置。</p>
+      </div>
+      <h3>Layout 命令</h3>
+      <div id="layoutOperations" class="operation-grid"></div>
+      <h3 style="margin-top:1.25rem">Debug 操作</h3>
+      <div id="debugOperations" class="operation-grid"></div>
+    </section>
+
+    <section id="relations">
+      <div class="section-head">
+        <h2>4. 哪些功能适合整合</h2>
+        <p>下面只说明有明确关系的剩余功能，帮助判断是合并成一个模式，还是继续独立存在。</p>
+      </div>
+      <div class="relation-grid">
+        <article class="relation-card"><h3>卡片详情：Compact + Semantic Zoom</h3><p>两者都控制卡片里显示多少信息。Compact 是固定精简；Semantic Zoom 会按缩放自动切换信息层。可以合并成 Full、Adaptive、Compact 三种详情模式。</p><div class="facts"><div class="fact"><b>共同点</b>都不修改资源</div><div class="fact"><b>冲突</b>Compact 会压过语义层</div></div></article>
+        <article class="relation-card"><h3>局部观察：Fisheye + Auto Spacing + Zoom Anchor</h3><p>Fisheye 是用户直接感知的放大效果；Auto Spacing 防止放大后的卡片遮挡；Zoom Anchor 防止临时布局变化把观察位置推走。后两项更像后台保护。</p><div class="facts"><div class="fact"><b>可整合</b>一个 Focus Lens 入口</div><div class="fact"><b>安全边界</b>均不写资源坐标</div></div></article>
+        <article class="relation-card"><h3>节点识别：Type Encoding + Accessibility</h3><p>前者增加形状和图标，后者改变配色。两种提示可组合成 Standard、Shape + Color、Accessible 三种识别模式。</p><div class="facts"><div class="fact"><b>当前问题</b>搜索快捷键与配色绑定</div><div class="fact"><b>建议</b>快捷键独立为常用操作</div></div></article>
+        <article class="relation-card"><h3>结构查看：Collapse + Breadcrumb + Focus</h3><p>Collapse 减少同时显示的后代；Focus 临时只看一个分支；Breadcrumb 显示当前选择的祖先路径。它们互相补充，但保存状态不同，不适合强制同步。</p><div class="facts"><div class="fact"><b>会保存</b>Collapse 状态</div><div class="fact"><b>临时状态</b>Focus 与 Breadcrumb</div></div></article>
+        <article class="relation-card"><h3>连接渲染：Single Connection Rendering</h3><p>它不是线路形状，而是决定使用插件的单条自定义连接，还是恢复 Godot 原生连接层。更适合作为后台实现或诊断选项。</p><div class="facts"><div class="fact"><b>影响</b>绘制、命中和断开</div><div class="fact"><b>不影响</b>树结构与执行顺序</div></div></article>
+        <article class="relation-card"><h3>自动排布：Stable Layout + Auto Arrange</h3><p>Stable Layout 只有在执行 Auto Arrange 时才有意义。它会尽量恢复仍然合法的旧位置，减少大范围跳动，因此更像排布策略。</p><div class="facts"><div class="fact"><b>触发</b>执行 Auto Arrange</div><div class="fact"><b>结果</b>坐标写入资源和历史</div></div></article>
+        <article class="relation-card"><h3>实验外观：Translucent Cards</h3><p>它只降低卡片背景透明度，同时保持文字、端口和状态色清晰。主要用于观察卡片后方内容，复杂图中也可能增加视觉噪声。</p><div class="facts"><div class="fact"><b>优点</b>可看见卡片后方</div><div class="fact"><b>风险</b>复杂树可能更杂乱</div></div></article>
       </div>
     </section>
 
-    <section id="relationships">
+    <section id="form">
       <div class="section-head">
-        <h2>4. 按关联关系理解功能</h2>
-        <p>同组不代表必须绑定成同一个开关。</p>
+        <h2>5. 下一轮删改表单</h2>
+        <p>每项可以选择处理方式并写备注。内容保存在当前浏览器中，可复制为下一轮修改要求。</p>
       </div>
-      <div class="groups">
-        <article class="group">
-          <h3>A. 卡片信息密度</h3>
-          <p><b>Compact + Semantic Zoom + Decorator Badges。</b>Compact 固定使用小卡片并压过语义层；Semantic Zoom 按缩放显示不同字段；Decorator Badges 只在完整详情层有意义。</p>
-          <div class="facts"><div class="fact"><b>可组合方向</b>Full / Adaptive / Compact 三选一</div><div class="fact"><b>保存影响</b>只改显示，不改树资源</div></div>
-        </article>
-        <article class="group">
-          <h3>B. 局部查看与布局保护</h3>
-          <p><b>Fisheye 是用户效果；Auto Spacing 与 Zoom Anchor 是支撑。</b>点击不重排，小于约 10 个屏幕像素的微调允许少量遮挡，明显拖动才启动避让。</p>
-          <div class="facts"><div class="fact"><b>自动联动</b>卡片放大后临时避让并维持视野</div><div class="fact"><b>保存影响</b>visual offset，不写节点坐标</div></div>
-        </article>
-        <article class="group">
-          <h3>C. 结构裁剪与导航</h3>
-          <p><b>Collapse、Focus、Breadcrumb、Search、Minimap。</b>Collapse 保存分支折叠状态；Focus 临时只看指定分支；Search 定位全树；Breadcrumb 表示选择路径；Minimap 提供全局方向。</p>
-          <div class="facts"><div class="fact"><b>不能强绑</b>搜索不能静默折叠或聚焦整树</div><div class="fact"><b>状态差异</b>Collapse 保存，Focus/Search 临时</div></div>
-        </article>
-        <article class="group">
-          <h3>D. 节点识别</h3>
-          <p><b>Type Encoding + Accessibility。</b>前者增加形状和图标，后者使用色盲友好配色。当前 Ctrl+F、F3、Shift+F3 快捷键仍与 Accessibility 状态绑定。</p>
-          <div class="facts"><div class="fact"><b>候选模式</b>Standard / Shape+Color / Accessible</div><div class="fact"><b>待解决</b>快捷键是否应永久可用</div></div>
-        </article>
-        <article class="group">
-          <h3>E. 连线显示</h3>
-          <p><b>Single Connection 是自定义渲染基线。</b>Default Channel、Straight、Orthogonal、Bundled、Curved 是路线风格，用户最终只应选择一种。</p>
-          <div class="facts"><div class="fact"><b>当前优先级</b>Straight &gt; Curved &gt; Bundled &gt; Orthogonal &gt; Default</div><div class="fact"><b>推荐</b>改为互斥单选</div></div>
-        </article>
-        <article class="group">
-          <h3>F. 自动排布</h3>
-          <p><b>Auto Arrange 会写入资源坐标和历史。</b>Multi-column 与 Stable Layout 是它的策略；Dense Overview 是另一种保存排布。它们不能与只改临时偏移的 Auto Spacing 合并。</p>
-          <div class="facts"><div class="fact"><b>会写资源</b>明确执行 Layout 命令时</div><div class="fact"><b>不会写资源</b>缩放、Fisheye、自动避让时</div></div>
-        </article>
-        <article class="group">
-          <h3>G. 运行解释</h3>
-          <p><b>Live Debug 提供数据。</b>Active Path 与 Branch Dimming 自动生效；Failure Reasons、Path Summary、Live Blackboard 和 Schema 面板保留不同用途。</p>
-          <div class="facts"><div class="fact"><b>自动反馈</b>活动路径高亮 + 非活动分支淡化</div><div class="fact"><b>可选信息</b>失败原因、路径摘要、黑板面板</div></div>
-        </article>
-        <article class="group">
-          <h3>H. 实验与隐藏项</h3>
-          <p><b>Translucent Cards</b>降低卡片背景透明度但保护文字与描边；<b>Curved</b>是实验连线路线；<b>Grid</b>单独归为隐藏关闭，不再称为用户偏好。</p>
-          <div class="facts"><div class="fact"><b>不能合并</b>Translucent 与运行分支淡化语义不同</div><div class="fact"><b>Grid</b>实现保留，界面无入口</div></div>
-        </article>
-      </div>
-    </section>
-
-    <section id="candidate">
-      <div class="section-head">
-        <h2>5. 候选最终界面</h2>
-        <p>这是下一轮删改的工作底稿，不是已经全部实施的菜单。</p>
-      </div>
-      <div class="menus">
-        <article class="menu-card">
-          <h3>常驻画布</h3>
-          <ul>
-            <li>Search 输入框、结果计数、上一项、下一项</li>
-            <li>Enhanced Minimap</li>
-            <li>Live Debug 有路径时自动 Active Path + Dimming</li>
-          </ul>
-          <p>这里没有 Minimap、Search、Active Path、Dimming 或 Grid 的开关。</p>
-        </article>
-        <article class="menu-card">
-          <h3>Display 候选</h3>
-          <ul>
-            <li>Card Detail：Full / Adaptive / Compact</li>
-            <li>Focus Lens</li>
-            <li>Node Encoding：Standard / Shape+Color / Accessible</li>
-            <li>Connection Style：Default / Straight / Orthogonal / Bundled / Curved</li>
-            <li>Experimental：Translucent Cards</li>
-            <li>Diagnostics：是否向普通用户显示，仍待决定</li>
-          </ul>
-        </article>
-        <article class="menu-card">
-          <h3>Layout 候选</h3>
-          <ul>
-            <li>Tidy Current Positions</li>
-            <li>Rebuild Balanced Tree / Rebuild Wide Fan-out</li>
-            <li>Dense Overview</li>
-            <li>Collapse All / Expand All</li>
-            <li>Focus Selected / Show Complete Tree</li>
-            <li>Selection Breadcrumb</li>
-            <li>Fit to View</li>
-          </ul>
-        </article>
-        <article class="menu-card">
-          <h3>Debug 候选</h3>
-          <ul>
-            <li>Live Debug</li>
-            <li>Failure Reasons</li>
-            <li>Runtime Path Summary</li>
-            <li>Live Blackboard</li>
-            <li>Edit Blackboard Schema</li>
-          </ul>
-          <p>Active Path 与 Dimming 是 Live Debug 的自动视觉反馈，不再列成菜单项。</p>
-        </article>
-      </div>
-    </section>
-
-    <section id="migration">
-      <div class="section-head">
-        <h2>6. 实施与兼容边界</h2>
-        <p>精简菜单不能破坏已有树或让旧配置产生无入口状态。</p>
-      </div>
-      <div class="interface-map">
-        <article class="panel"><h3>旧配置</h3><p>旧的四项 <code>false</code> 在正常界面中忽略，按内建开启处理；旧的 <code>grid=true</code> 忽略并固定关闭。兼容键仍可保存，便于旧版本读取。</p></article>
-        <article class="panel"><h3>内部实验</h3><p>自动测试和论文基准仍可通过内部接口临时关闭 Minimap、Search、Active Path 或 Dimming，用于构造对照；该接口不暴露给普通用户。</p></article>
-        <article class="panel"><h3>树资源安全</h3><p>菜单和默认状态迁移不得修改节点坐标、父子关系、左右执行顺序、Decorator 归属、保存路径或运行语义。</p></article>
-        <article class="panel"><h3>显示复位</h3><p>Search 清空查询后复位；Live Debug 无路径或关闭后恢复强调；隐藏 Grid 始终关闭。只有明确 Layout 命令可以写入节点排布。</p></article>
-      </div>
-    </section>
-
-    <section id="remaining">
-      <div class="section-head">
-        <h2>7. 下一轮仍需决定的内容</h2>
-        <p>勾选表示“已经决定”，内容会保存在当前浏览器中。</p>
-      </div>
-      <div id="decisionList" class="checklist"></div>
-      <textarea id="decisionNotes" placeholder="补充你的具体修改意见，例如：保留 Fisheye，但改名为局部放大……"></textarea>
+      <div id="decisionList" class="decision-list"></div>
       <div class="actions">
-        <button id="copySummary" class="primary" type="button">复制当前决定摘要</button>
-        <button id="resetChecklist" type="button">清空勾选与备注</button>
+        <button id="copySummary" class="primary" type="button">复制当前决定</button>
+        <button id="resetForm" type="button">清空表单</button>
         <span id="copyState" class="copy-state" role="status"></span>
       </div>
     </section>
-
-    <footer>
-      <p>依据当前 <code>bt_editor_view.gd</code>、<code>bt_graph_edit.gd</code>、<code>bt_graph_node.gd</code> 与相关自动测试整理。</p>
-      <p>已确认：四项默认能力无开关；Grid 默认关闭且隐藏但保留实现。候选菜单部分仅供下一轮决定。</p>
-    </footer>
+    <footer><p>依据当前插件实现、菜单结构和自动测试整理。页面只保留尚待决定的用户入口。</p></footer>
   </main>
 
   <script>
     const features = [
-      {id:"D01", key:"fisheye", name:"Fisheye / Focus+Context", group:"焦点与保护", status:"普通 Display", visible:"指针附近卡片最大约 1.25×，周围卡片缩小并让开。", when:"功能开启且指针在卡片附近；滚轮缩放期间暂缓。", resource:"否，只改临时倍率和视觉偏移。", relation:"依赖 Auto Spacing 防重叠，依赖 Zoom Anchor 稳定观察区域。", next:"候选改名 Focus Lens，是否保留主菜单入口待定。"},
-      {id:"D02", key:"subtree_collapse", name:"Subtree Collapse / Expand", group:"结构与导航", status:"普通 Display", visible:"父卡片可折叠后代并显示隐藏节点摘要。", when:"能力开启且用户执行节点、右键或 Layout 折叠操作。", resource:"是，折叠状态可随树保存。", relation:"与临时 Subtree Focus 不同；Search 可展开隐藏目标。", next:"考虑取消能力总开关，只保留折叠操作。"},
-      {id:"D03", key:"compact", name:"Compact Mode", group:"信息密度", status:"普通 Display", visible:"卡片缩小到约 188×88，只保留必要身份信息。", when:"用户开启 Compact。", resource:"否。", relation:"强制最低信息层，会压过 Semantic Zoom 和 Decorator Badges。", next:"并入 Card Detail：Compact。"},
-      {id:"D04", key:"type_encoding", name:"Shape / Icon Type Encoding", group:"节点识别", status:"普通 Display", visible:"用圆、菱形、六边形、三角形等图标补充颜色。", when:"用户开启类型编码。", resource:"否。", relation:"与 Accessibility 的色盲友好配色形成冗余编码。", next:"并入 Node Encoding：Shape + Color。"},
-      {id:"D05", key:"enhanced_minimap", name:"Overview + Detail / Enhanced Minimap", group:"结构与导航", status:"内建无开关", visible:"右下角显示约 230×150 的全树小地图与视口。", when:"编辑器打开行为树时始终提供。", resource:"否。", relation:"提供全局方向，不与 Fisheye、Focus 或 Semantic 强绑定。", next:"已确认内建，不再决定。"},
-      {id:"D06", key:"semantic_zoom", name:"Semantic Zoom", group:"信息密度", status:"普通 Display", visible:"缩放低于 0.62 显示最低信息，0.62–0.88 显示中层，0.88 以上显示完整字段。", when:"功能开启并改变画布缩放。", resource:"否。", relation:"Compact 开启时语义层变化基本不可见。", next:"并入 Card Detail：Adaptive。"},
-      {id:"D07", key:"search", name:"Search + Highlight", group:"结构与导航", status:"内建无开关", visible:"搜索、计数、前后导航、目标高亮和非匹配淡化。", when:"查询非空时；清空查询即复位。", resource:"通常否；取景隐藏结果时可展开祖先折叠状态。", relation:"负责全树定位，不自动进入 Subtree Focus。", next:"已确认内建，不再决定。"},
-      {id:"D08", key:"view/grid", name:"Grid", group:"画布外观", status:"隐藏关闭", visible:"正常界面不显示画布网格。", when:"仅内部测试显式调用时可临时启用。", resource:"否。", relation:"与任何可读性功能无依赖。", next:"已确认隐藏且关闭，保留实现。"},
-      {id:"D09", key:"accessibility", name:"Accessibility / Colorblind Palette", group:"节点识别", status:"Advanced Display", visible:"切换色盲友好配色；当前还启用 Ctrl+F、F3、Shift+F3。", when:"用户开启 Accessibility。", resource:"否。", relation:"与 Type Encoding 适合组成 Accessible 模式；快捷键耦合仍待拆分。", next:"考虑并入 Node Encoding：Accessible。"},
-      {id:"D10", key:"single_connection", name:"Single Connection Rendering", group:"连线显示", status:"Advanced Display", visible:"隐藏 Godot 原生持久辅助线，只显示一条底部到顶部自定义线。", when:"默认开启。", resource:"否。", relation:"是 Straight、Orthogonal、Bundled、Curved 的渲染基线。", next:"考虑后台化或移入 Diagnostics。"},
-      {id:"D11", key:"always_curved_edges", name:"Always Curved Edges (Experiment)", group:"实验外观", status:"Advanced Display", visible:"连接改用 Bezier 曲线。", when:"实验开关开启且 Straight 未覆盖。", resource:"否。", relation:"当前优先于 Bundled/Orthogonal，低于 Straight。", next:"并入互斥 Connection Style：Curved。"},
-      {id:"D12", key:"translucent_cards", name:"Translucent Cards (Experiment)", group:"实验外观", status:"Advanced Display", visible:"降低卡片背景透明度，同时保护文字与描边可读性。", when:"实验开关开启。", resource:"否。", relation:"不能与 Branch Dimming 合并；前者是外观，后者表达运行状态。", next:"决定是否保留 Experimental。"},
-      {id:"D13", key:"active_path", name:"Active Path Highlight", group:"运行解释", status:"内建无开关", visible:"高亮 Live Debug 当前节点链和连接线。", when:"存在有效运行快照与活动路径。", resource:"否。", relation:"Live Debug 关闭或路径为空时自动复位。", next:"已确认内建，不再决定。"},
-      {id:"D14", key:"branch_dimming", name:"Non-active Branch Dimming", group:"运行解释", status:"内建无开关", visible:"淡化活动路径之外的卡片，活动卡片保持完整强调。", when:"Live Debug 存在非空活动路径。", resource:"否。", relation:"空路径不得淡化整树；与 Translucent Cards 语义不同。", next:"已确认内建，不再决定。"},
-      {id:"D15", key:"multi_column", name:"Multi-column Layout", group:"自动排布", status:"Advanced Display", visible:"Auto Arrange 时把大扇出子节点分成多行/列。", when:"用户执行普通 Auto Arrange；Overview 排布不使用。", resource:"是，随排布命令写入坐标和历史。", relation:"与 Stable Layout 同开时可能互相弱化。", next:"移到 Layout 策略或改为明确命令。"},
-      {id:"D16", key:"auto_spacing", name:"Zoom-Aware Auto Spacing", group:"焦点与保护", status:"Advanced Display", visible:"卡片尺寸变化或明显拖动时临时避让重叠。", when:"缩放、Fisheye、详情变化或超过约 10 屏幕像素的拖动。", resource:"否，只改 visual offset；小微调只保存被拖卡片。", relation:"只保护原本存在的父在上、子在下边界，不强制自由布局分层。", next:"考虑完全后台化为 Layout Protection。"},
-      {id:"D17", key:"zoom_anchor", name:"Zoom View Anchor", group:"焦点与保护", status:"Advanced Display", visible:"布局变化时尽量保持视口中心附近节点的相对观察位置。", when:"滚轮缩放造成临时布局变化。", resource:"否。", relation:"缩放时暂停 Fisheye，拖动时不抢夺控制。", next:"考虑后台化为 Layout Protection。"},
-      {id:"D18", key:"path_summary", name:"Path Summary View", group:"运行解释", status:"Advanced Display", visible:"显示 Actor、状态、深度和可点击的 Root→Leaf 路径。", when:"开关开启并收到 Live Debug 快照。", resource:"否；点击隐藏节点可能展开祖先。", relation:"依赖 Live Debug，与 Active Path 表达层次不同。", next:"移至 Debug，是否保留开关待定。"},
-      {id:"D19", key:"decorator_badges", name:"Decorator Condition Badges", group:"信息密度", status:"Advanced Display", visible:"在所有者卡片内显示 Decorator 条件和参数摘要。", when:"完整详情层且功能开启。", resource:"否。", relation:"Compact 与低/中语义层自动隐藏。", next:"决定随 Card Detail 自动控制还是保留高级覆盖。"},
-      {id:"D20", key:"orthogonal_edges", name:"Orthogonal Edges", group:"连线显示", status:"Advanced Display", visible:"用水平、垂直折线连接父子节点。", when:"功能开启且没有更高优先级路线。", resource:"否。", relation:"低于 Bundled、Curved、Straight。", next:"并入互斥 Connection Style。"},
-      {id:"D21", key:"edge_bundling", name:"Edge Bundling", group:"连线显示", status:"Advanced Display", visible:"同父连接共享靠近父节点的主干高度。", when:"功能开启且未被 Curved/Straight 覆盖。", resource:"否。", relation:"覆盖 Orthogonal，低于 Curved 与 Straight。", next:"并入互斥 Connection Style。"},
-      {id:"D22", key:"stable_layout", name:"Stable Incremental Layout", group:"自动排布", status:"Advanced Display", visible:"Auto Arrange 后尽量恢复没有冲突的原有位置。", when:"执行 Auto Arrange 且功能开启。", resource:"是，随排布命令写入坐标和历史。", relation:"可能弱化 Multi-column 形成的新排布。", next:"移到 Layout，改成 Tidy Current Positions 等明确操作。"},
-      {id:"D23", key:"breadcrumb", name:"Breadcrumb Navigation", group:"结构与导航", status:"Advanced Display", visible:"显示选中节点的 Root→Selection 可点击路径。", when:"有节点被选择且功能开启。", resource:"否。", relation:"不依赖 Live Debug，区别于 Path Summary。", next:"移到 Layout/Navigation；决定自动出现还是保留开关。"},
-      {id:"D24", key:"failure_reason", name:"Failure Reason Annotation", group:"运行解释", status:"Debug", visible:"节点显示失败标记，Failures 列表列出可取景原因。", when:"Debug 开关开启且快照包含失败原因。", resource:"否。", relation:"依赖 Live Debug；与固定 Active Path/Dimming 不同，可保持可选。", next:"只保留 Debug 入口，移除 Advanced 重复项。"},
-      {id:"D25", key:"straight_connections", name:"Straight Connections", group:"连线显示", status:"Advanced Display", visible:"父底部中心到子顶部中心使用两点直线。", when:"功能开启；当前路线优先级最高。", resource:"否。", relation:"覆盖 Curved、Bundled、Orthogonal。", next:"并入互斥 Connection Style：Straight。"}
+      {id:"F01",key:"fisheye",name:"Fisheye / Focus+Context",location:"Display",group:"焦点与保护",defaultState:"默认开启",effect:"鼠标落在卡片上时，该卡片最多放大到约 1.25 倍；其他可见卡片缩小到约 0.78 倍，并临时移动以避免遮挡。鼠标离开后恢复。",trigger:"指针进入节点附近时生效；滚轮缩放期间暂停，等待指针再次移动后恢复。",resource:"不保存卡片倍率或临时位移，也不修改树结构。",relation:"Fisheye 工作时会进行必要避让，并借助 Zoom Anchor 稳定观察位置。"},
+      {id:"F02",key:"subtree_collapse",name:"Subtree Collapse / Expand",location:"Display",group:"结构与导航",defaultState:"默认开启",effect:"允许把某个父节点的全部后代收起，只保留父卡片、隐藏数量和简短摘要；也支持一次折叠或展开整棵树。",trigger:"用户点击卡片折叠按钮、右键命令或 Layout 中的 Collapse All / Expand All 时生效。",resource:"折叠状态会随行为树资源保存并支持撤销，但不会删除节点或改变执行顺序。",relation:"关闭能力只会暂时显示完整树，不会清除已经保存的 collapsed 状态；Focus 则是临时视野。"},
+      {id:"F03",key:"compact",name:"Compact Mode",location:"Display",group:"信息密度",defaultState:"默认关闭",effect:"把普通卡片由约 250×150 缩成约 188×88，只保留标题、类型颜色和必要状态，隐藏描述、类型文字、条件摘要等细节。",trigger:"用户开启后，全部当前可见卡片立即使用紧凑尺寸。",resource:"只改变显示，不修改树结构、运行逻辑或保存坐标。",relation:"Compact 会压过 Semantic Zoom 的详情层，因此两者适合合并成一个 Card Detail 模式。"},
+      {id:"F04",key:"type_encoding",name:"Shape / Icon Type Encoding",location:"Display",group:"节点识别",defaultState:"默认关闭",effect:"在标题旁增加不同几何图标，例如 Root 用圆形、复合节点用菱形、Condition 用三角形、Decorator 用盾形。",trigger:"开启后显示图标；低缩放时仍保留几何轮廓作为颜色以外的线索。",resource:"只改变卡片绘制，不写入行为树资源。",relation:"可与 Accessibility 配色组成冗余编码，但两者目前是独立开关。"},
+      {id:"F05",key:"semantic_zoom",name:"Semantic Zoom",location:"Display",group:"信息密度",defaultState:"默认关闭",effect:"缩放 88% 以上显示完整信息，62%–88% 隐藏描述等次要内容，低于 62% 只保留核心身份信息；卡片外框不因此缩小。",trigger:"开启后按当前画布缩放自动切换信息层，不需要逐张调整卡片。",resource:"不改变保存坐标、节点参数或运行逻辑。",relation:"Compact 开启时会固定最低详情，Semantic Zoom 的层级变化基本不可见。"},
+      {id:"F06",key:"accessibility",name:"Accessibility / Colorblind Palette",location:"Advanced Display",group:"节点识别",defaultState:"默认关闭",effect:"把节点类型色切换为更容易被常见色觉差异区分的蓝、橙、绿、朱红、黄和紫红组合。",trigger:"开启后立即替换配色；当前还同时启用 Ctrl+F、F3 和 Shift+F3 搜索快捷键。",resource:"只改变编辑器颜色与快捷键处理，不修改树资源。",relation:"适合与 Type Encoding 合并；搜索快捷键与配色没有必要绑定，可单独处理。"},
+      {id:"F07",key:"single_connection",name:"Single Connection Rendering",location:"Advanced Display",group:"连线渲染",defaultState:"默认开启",effect:"隐藏 Godot GraphEdit 自带的持久辅助线，由插件只绘制一条从父卡片底部中央到子卡片顶部中央的连接。",trigger:"开启时使用插件的绘制、命中和右键断开；拖拽创建连接时仍临时使用原生预览。",resource:"不会改变父子关系、节点位置或执行顺序。",relation:"它决定由谁绘制连接，不是线条形状选择；关闭后会退回 Godot 原生侧端口曲线，因此可能绕过当前的插件连线外观。"},
+      {id:"F08",key:"translucent_cards",name:"Translucent Cards (Experiment)",location:"Advanced Display",group:"实验外观",defaultState:"默认关闭",effect:"把卡片背景透明度降到原来的约 72%，让后方画布更容易看见；文字使用高对比颜色和约 2px 深色描边，端口与状态色保持不透明。",trigger:"开启后作用于全部当前卡片，关闭后恢复原主题样式。",resource:"只改变主题覆盖，不修改树资源。",relation:"这是外观实验，不表示节点是否活动；复杂树中也可能增加视觉噪声。"},
+      {id:"F09",key:"auto_spacing",name:"Zoom-Aware Auto Spacing",location:"Advanced Display",group:"焦点与保护",defaultState:"默认开启",effect:"卡片放大、详情变化或拖动造成碰撞时，临时移动周围卡片以减少重叠；不是把整棵树强制排成固定格式。",trigger:"缩放或卡片尺寸变化时生效；拖动累计超过约 10 个屏幕像素后启动，每继续约 8 像素刷新一次，释放时再检查。",resource:"自动避让只改 visual offset；被拖节点的最终位置仍正常保存，其他临时偏移不写入资源。",relation:"为 Fisheye、Semantic Zoom 和拖动提供保护；只有原布局已经父在上、子在下时才保持该高度关系。"},
+      {id:"F10",key:"zoom_anchor",name:"Zoom View Anchor",location:"Advanced Display",group:"焦点与保护",defaultState:"默认开启",effect:"缩放引发卡片尺寸或临时位置变化时，调整滚动位置，让视口中心附近的内容尽量留在相近屏幕位置，减少画面跳动。",trigger:"滚轮缩放开始时采样视口中心附近最多 12 个节点，布局稳定后释放锚点；拖动时不介入。",resource:"只调整视口与临时布局参考，不修改节点资源坐标。",relation:"主要支撑 Auto Spacing 与 Fisheye，可考虑改成没有开关的后台保护。"},
+      {id:"F11",key:"stable_layout",name:"Stable Incremental Layout",location:"Advanced Display",group:"自动排布",defaultState:"默认关闭",effect:"执行普通 Auto Arrange 后，尽量把没有冲突的旧节点放回原坐标；冲突节点和新节点使用新排布位置。",trigger:"只在用户明确执行 Auto Arrange 时参与计算；Arrange for Overview、日常拖动和缩放不使用它。",resource:"最终排布坐标会写入资源，并进入 Undo / Redo 历史。",relation:"它本质上是 Auto Arrange 的策略，更适合放进 Layout 命令设置或改成名称明确的独立命令。"},
+      {id:"F12",key:"breadcrumb",name:"Breadcrumb Navigation",location:"Advanced Display",group:"结构与导航",defaultState:"默认关闭",effect:"选中节点后显示 Root > … > 当前节点路径；每一级都可点击，点击后选择并把相应节点移到视口中央。",trigger:"开启且已有节点选择时显示，不依赖游戏运行状态。",resource:"只显示编辑器选择路径，不修改折叠状态、节点坐标或运行数据。",relation:"可考虑在选择节点时自动显示，不再保留 Navigation 开关。"}
     ];
 
-    const statusClass = value => ({
-      "内建无开关":"builtin", "隐藏关闭":"hidden", "普通 Display":"display",
-      "Advanced Display":"advanced", "Debug":"debug"
-    })[value] || "internal";
+    const layoutOperations = [
+      {id:"L01",name:"Auto Arrange",effect:"按层级重新计算整棵树的位置，适合从混乱布局恢复为规则树形。",resource:"写入相关节点坐标，并记录 Undo / Redo。",boundary:"这是明确的永久排布操作，不应在普通点击或缩放时自动执行。"},
+      {id:"L02",name:"Arrange for Overview",effect:"生成更紧凑的低详情布局，便于缩小后查看大型树的整体结构。",resource:"把紧凑坐标写入资源，并记录历史。",boundary:"与 Fit to View 不同：它改坐标；Fit 只改镜头。"},
+      {id:"L03",name:"Collapse All",effect:"一次折叠所有可折叠子树，只保留高层结构和隐藏摘要。",resource:"修改并保存节点的 collapsed 状态。",boundary:"不会删除节点，也不会改变运行结构。"},
+      {id:"L04",name:"Expand All",effect:"一次恢复所有通过 Collapse 隐藏的子树。",resource:"清除并保存 collapsed 状态。",boundary:"只处理折叠，不负责退出临时 Focus。"},
+      {id:"L05",name:"Focus Selected Subtree",effect:"只显示选中分支、它的后代和通向 Root 的必要上下文。",resource:"临时视图，不写入资源。",boundary:"需要先选择节点，适合大型树的局部编辑。"},
+      {id:"L06",name:"Show Complete Tree",effect:"退出当前 Subtree Focus，重新显示完整树范围。",resource:"临时视图，不写入资源。",boundary:"不会自动展开用户主动折叠的子树。"},
+      {id:"L07",name:"Fit to View",effect:"调整缩放和滚动位置，让当前可见树尽量进入画布。",resource:"只改变镜头，不写入树资源。",boundary:"节点很多时可能达到最小缩放，但不会重新排列节点。"}
+    ];
+    const debugOperations = [
+      {id:"B01",name:"Live Debug",effect:"读取运行中 Actor 的行为树快照，并把当前状态显示在编辑器里。",resource:"不修改树资源或游戏逻辑。",boundary:"关闭后停止运行时显示并清理当前快照。"},
+      {id:"B02",name:"Live Blackboard",effect:"打开面板，查看所选运行 Actor 当前 Blackboard 键、值和类型。",resource:"查看模式不写入树资源。",boundary:"它显示运行值，不负责定义允许使用哪些键。"},
+      {id:"B03",name:"Edit Blackboard Schema",effect:"定义 Blackboard 键名、类型、默认值和动态键规则。",resource:"会修改树绑定的 Schema 资源，并影响保存验证。",boundary:"这是资源编辑功能，是否继续放在 Debug 菜单仍可调整。"}
+    ];
 
-    const featureRows = document.getElementById("featureRows");
-    const featureEmpty = document.getElementById("featureEmpty");
-    const featureSearch = document.getElementById("featureSearch");
-    const statusFilter = document.getElementById("statusFilter");
-    const groupFilter = document.getElementById("groupFilter");
-
-    function renderFeatures() {
-      const query = featureSearch.value.trim().toLowerCase();
-      const status = statusFilter.value;
-      const group = groupFilter.value;
-      const rows = features.filter(item => {
-        const text = Object.values(item).join(" ").toLowerCase();
-        return (!query || text.includes(query))
-          && (status === "all" || item.status === status)
-          && (group === "all" || item.group === group);
-      });
-      featureRows.innerHTML = rows.map(item => `
-        <tr>
-          <td><strong>${item.id}</strong><br><code>${item.key}</code></td>
-          <td><strong>${item.name}</strong><br><span class="tag ${statusClass(item.status)}">${item.status}</span></td>
-          <td>${item.visible}</td>
-          <td>${item.when}</td>
-          <td>${item.resource}</td>
-          <td>${item.relation}</td>
-          <td>${item.next}</td>
-        </tr>`).join("");
-      featureEmpty.hidden = rows.length !== 0;
+    function featureCard(item) {
+      var cls = item.location === "Display" ? "main-tag" : "advanced-tag";
+      return '<article class="feature-card"><div class="feature-name"><span class="tag '+cls+'">'+item.location+
+        '</span><h3>'+item.id+'. '+item.name+'</h3><p><code>'+item.key+'</code> · '+item.group+' · '+item.defaultState+
+        '</p></div><div class="feature-detail"><div class="detail"><b>用户会看到什么</b><span>'+item.effect+
+        '</span></div><div class="detail"><b>什么时候生效</b><span>'+item.trigger+
+        '</span></div><div class="detail"><b>是否改变资源</b><span>'+item.resource+
+        '</span></div><div class="detail"><b>与其他功能的关系</b><span>'+item.relation+'</span></div></div></article>';
     }
-    [featureSearch, statusFilter, groupFilter].forEach(control => control.addEventListener("input", renderFeatures));
+    var featureList = document.getElementById("featureList");
+    var featureEmpty = document.getElementById("featureEmpty");
+    var featureSearch = document.getElementById("featureSearch");
+    var locationFilter = document.getElementById("locationFilter");
+    var groupFilter = document.getElementById("groupFilter");
+    function renderFeatures() {
+      var query = featureSearch.value.trim().toLowerCase();
+      var visible = features.filter(function(item) {
+        var text = Object.values(item).join(" ").toLowerCase();
+        return (!query || text.includes(query)) &&
+          (locationFilter.value === "all" || item.location === locationFilter.value) &&
+          (groupFilter.value === "all" || item.group === groupFilter.value);
+      });
+      featureList.innerHTML = visible.map(featureCard).join("");
+      featureEmpty.hidden = visible.length !== 0;
+    }
+    [featureSearch,locationFilter,groupFilter].forEach(function(control) { control.addEventListener("input",renderFeatures); });
     renderFeatures();
 
-    const decisions = [
-      ["card-detail", "卡片详情模式", "Compact 与 Semantic Zoom 是否合成 Full / Adaptive / Compact；Decorator Badges 是否自动跟随详情。"],
-      ["encoding", "节点编码模式", "Type Encoding 与 Accessibility 是否合成 Standard / Shape+Color / Accessible。"],
-      ["shortcuts", "搜索快捷键", "Ctrl+F、F3、Shift+F3 是否从 Accessibility 拆出并永久可用。"],
-      ["connections", "连线路线", "Straight、Orthogonal、Bundled、Curved 是否改成互斥 Connection Style。"],
-      ["curved", "Curved 的位置", "Curved 放在 Connection Style 中，还是只放 Experimental。"],
-      ["fisheye", "Fisheye 入口", "是否保留普通 Display 入口；Auto Spacing 与 Zoom Anchor 是否完全后台化。"],
-      ["collapse", "Collapse 能力开关", "是否取消“允许折叠”的总开关，只保留折叠/展开操作。"],
-      ["layout", "排布策略", "Multi-column 与 Stable 是排布模式、命令，还是高级选项。"],
-      ["breadcrumb", "Breadcrumb", "有选择时自动显示，还是保留 Navigation 开关。"],
-      ["runtime", "运行补充信息", "Failure Reasons 与 Path Summary 是否都保留 Debug 开关。"],
-      ["translucent", "Translucent Cards", "实验性透明卡片是否继续保留。"],
-      ["diagnostics", "Advanced / Diagnostics", "普通用户能否看到内部渲染和布局保护开关。"]
-    ];
-
-    const list = document.getElementById("decisionList");
-    const notes = document.getElementById("decisionNotes");
-    const copyState = document.getElementById("copyState");
-    const storageKey = "bt-display-decisions-v2";
-
-    function loadDecisionState() {
-      try { return JSON.parse(localStorage.getItem(storageKey) || "{}"); }
-      catch (_) { return {}; }
+    function renderOperations(targetId,items,tagClass,tagText) {
+      document.getElementById(targetId).innerHTML = items.map(function(item) {
+        return '<article class="operation-card"><span class="tag '+tagClass+'">'+tagText+'</span><h3>'+item.id+'. '+item.name+
+          '</h3><p><b>作用：</b>'+item.effect+'</p><p><b>资源影响：</b>'+item.resource+'</p><p><b>边界：</b>'+item.boundary+'</p></article>';
+      }).join("");
     }
-    function saveDecisionState() {
-      const state = {notes: notes.value, checked:{}};
-      document.querySelectorAll("[data-decision]").forEach(input => state.checked[input.dataset.decision] = input.checked);
-      localStorage.setItem(storageKey, JSON.stringify(state));
-    }
-    const saved = loadDecisionState();
-    list.innerHTML = decisions.map(([id, title, detail]) => `
-      <label class="check-item">
-        <input type="checkbox" data-decision="${id}" ${saved.checked && saved.checked[id] ? "checked" : ""}>
-        <span><strong>${title}</strong><span>${detail}</span></span>
-      </label>`).join("");
-    notes.value = saved.notes || "";
-    list.addEventListener("change", saveDecisionState);
-    notes.addEventListener("input", saveDecisionState);
+    renderOperations("layoutOperations",layoutOperations,"layout-tag","Layout");
+    renderOperations("debugOperations",debugOperations,"debug-tag","Debug");
 
-    document.getElementById("copySummary").addEventListener("click", async () => {
-      const lines = [
-        "行为树编辑器显示功能决定摘要",
-        "",
-        "已固定：",
-        "- Enhanced Minimap：内建，无开关。",
-        "- Search + Highlight：内建，无开关。",
-        "- Active Path Highlight：内建，无开关。",
-        "- Non-active Branch Dimming：内建，无开关。",
-        "- Grid：默认关闭并隐藏，保留内部实现。",
-        "",
-        "已完成决定的剩余项目："
-      ];
-      document.querySelectorAll("[data-decision]").forEach((input, index) => {
-        if (input.checked) lines.push(`- ${decisions[index][1]}：已决定，具体内容见备注。`);
+    var formItems = features.map(function(item) { return {id:item.id,name:item.name,kind:"显示功能"}; })
+      .concat(layoutOperations.map(function(item) { return {id:item.id,name:item.name,kind:"Layout 命令"}; }))
+      .concat(debugOperations.map(function(item) { return {id:item.id,name:item.name,kind:"Debug 操作"}; }));
+    var choices = ["保留当前入口","与相关功能合并","改为自动后台","移动到其他菜单","隐藏但保留实现","尚未决定"];
+    var storageKey = "bt-remaining-display-decisions-v3";
+    function loadState() { try { return JSON.parse(localStorage.getItem(storageKey) || "{}"); } catch (_) { return {}; } }
+    var saved = loadState();
+    function decisionCard(item) {
+      var current = saved[item.id] || {};
+      var selected = current.choice || "尚未决定";
+      var radios = choices.map(function(choice) {
+        return '<label class="choice"><input type="radio" name="choice-'+item.id+'" value="'+choice+'" '+(choice===selected?"checked":"")+'>'+choice+'</label>';
+      }).join("");
+      return '<article class="decision" data-form-id="'+item.id+'"><div class="decision-head"><h3>'+item.id+'. '+item.name+
+        '</h3><span>'+item.kind+'</span></div><div class="choices">'+radios+'</div><textarea aria-label="'+item.name+
+        '备注" placeholder="具体怎么改；如果选择合并，请写明与什么合并。">'+(current.note || "")+'</textarea></article>';
+    }
+    var decisionList = document.getElementById("decisionList");
+    var copyState = document.getElementById("copyState");
+    decisionList.innerHTML = formItems.map(decisionCard).join("");
+    function collectState() {
+      var state = {};
+      document.querySelectorAll("[data-form-id]").forEach(function(card) {
+        var checked = card.querySelector("input:checked");
+        state[card.dataset.formId] = {choice:checked ? checked.value : "尚未决定",note:card.querySelector("textarea").value.trim()};
       });
-      if (!document.querySelector("[data-decision]:checked")) lines.push("- 暂无。");
-      lines.push("", "补充备注：", notes.value.trim() || "无");
-      try {
-        await navigator.clipboard.writeText(lines.join("\n"));
-        copyState.textContent = "已复制";
-      } catch (_) {
-        copyState.textContent = "浏览器未允许复制，请手动复制备注。";
-      }
+      return state;
+    }
+    function saveState() { localStorage.setItem(storageKey,JSON.stringify(collectState())); }
+    decisionList.addEventListener("change",saveState);
+    decisionList.addEventListener("input",saveState);
+    document.getElementById("copySummary").addEventListener("click",async function() {
+      var state = collectState();
+      var lines = ["行为树编辑器剩余显示功能决定",""];
+      formItems.forEach(function(item) {
+        var value = state[item.id];
+        lines.push("- "+item.id+" "+item.name+"："+value.choice+(value.note ? "；"+value.note : ""));
+      });
+      try { await navigator.clipboard.writeText(lines.join("\n")); copyState.textContent="已复制"; }
+      catch (_) { copyState.textContent="浏览器未允许复制，请手动选择文字。"; }
     });
-
-    document.getElementById("resetChecklist").addEventListener("click", () => {
-      document.querySelectorAll("[data-decision]").forEach(input => input.checked = false);
-      notes.value = "";
+    document.getElementById("resetForm").addEventListener("click",function() {
       localStorage.removeItem(storageKey);
-      copyState.textContent = "已清空";
+      document.querySelectorAll("[data-form-id]").forEach(function(card) {
+        Array.from(card.querySelectorAll("input")).forEach(function(input) { input.checked=input.value==="尚未决定"; });
+        card.querySelector("textarea").value="";
+      });
+      copyState.textContent="已清空";
     });
   </script>
 </body>

@@ -50,6 +50,7 @@ func _run() -> void:
 	_restore_overview()
 	await _settle()
 	_expect(view.graph_edit.minimap_enabled and not view.graph_edit.show_grid, "visual baseline keeps the built-in overview on and hidden Grid off")
+	_expect(view.graph_edit.straight_connections_enabled and not view.graph_edit.always_curved_edges_enabled and not view.graph_edit.orthogonal_edges_enabled and not view.graph_edit.edge_bundling_enabled, "visual baseline uses the fixed straight route and no alternate edge style")
 
 	var baseline := await _capture_case("01_baseline")
 	var diagnostic_child := _graph_node(view, 2)
@@ -93,8 +94,12 @@ func _run() -> void:
 	var advanced_labels: Array[String] = []
 	for item_index in range(view.advanced_display_menu.item_count):
 		advanced_labels.append(view.advanced_display_menu.get_item_text(item_index))
-	_expect(display_popup.visible and display_popup.item_count == 6 and view.advanced_display_menu.item_count == 15, "Display popup keeps only five user choices and its advanced submenu")
-	_expect(not display_labels.has("Grid") and not display_labels.has("Search + Highlight") and not display_labels.has("Overview + Detail / Enhanced Minimap") and not advanced_labels.has("Active Path Highlight") and not advanced_labels.has("Non-active Branch Dimming"), "Display popup omits built-in capabilities and the hidden Grid setting")
+	_expect(display_popup.visible and display_popup.item_count == 6 and view.advanced_display_menu.item_count == 7, "Display popup keeps five common choices and seven remaining advanced choices")
+	var fixed_labels := ["Grid", "Search + Highlight", "Overview + Detail / Enhanced Minimap", "Active Path Highlight", "Non-active Branch Dimming", "Failure Reason Annotation", "Decorator Condition Badges", "Straight Connections", "Always Curved Edges (Experiment)", "Multi-column Layout", "Path Summary View", "Edge Bundling", "Orthogonal Edges"]
+	var fixed_labels_are_hidden := true
+	for label in fixed_labels:
+		fixed_labels_are_hidden = fixed_labels_are_hidden and not display_labels.has(label) and not advanced_labels.has(label)
+	_expect(fixed_labels_are_hidden, "Display popup omits every fixed capability and hidden alternative")
 	display_popup.hide()
 	await _settle()
 	var debug_popup := view.debug_menu_button.get_popup()
@@ -106,7 +111,7 @@ func _run() -> void:
 	var debug_labels: Array[String] = []
 	for item_index in range(debug_popup.item_count):
 		debug_labels.append(debug_popup.get_item_text(item_index))
-	_expect(debug_popup.visible and debug_popup.item_count == 5 and not debug_labels.has("Dim Inactive Branches") and not view.live_debug_toggle.visible and not view.blackboard_toggle.visible, "Debug popup treats branch dimming as built in without expanding the toolbar")
+	_expect(debug_popup.visible and debug_popup.item_count == 4 and not debug_labels.has("Dim Inactive Branches") and not debug_labels.has("Failure Reasons") and not view.live_debug_toggle.visible and not view.blackboard_toggle.visible, "Debug popup treats runtime emphasis and failure explanations as built in")
 	debug_popup.hide()
 	await _settle()
 
@@ -318,6 +323,7 @@ func _run() -> void:
 	_expect(picker != null and picker.item_count == 3 and key_edit.text == "target_in_range", "Inspector picker lists typed Schema keys and preserves the selected key")
 	_expect(view.inspector_panel.get_rect().end.x <= VIEWPORT_SIZE.x and picker.get_global_rect().end.x <= view.inspector_panel.get_global_rect().end.x + 1.0, "Schema key controls stay inside the 1600x900 Inspector")
 
+	view._set_feature_enabled("straight_connections", false, false)
 	view._set_feature_enabled("orthogonal_edges", true, false)
 	view._set_feature_enabled("edge_bundling", false, false)
 	await _settle()
@@ -439,8 +445,8 @@ func _run() -> void:
 		var edge_comparison_scroll := view.graph_edit.scroll_offset
 		var edge_baseline_route := view.graph_edit._route_connection_between(edge_source, edge_target)
 		var edge_baseline := await _capture_case("11a1_playable_241_edge_baseline")
-		_assert_image_valid(edge_baseline, "playable 241-node default edge comparison renders")
-		_expect(_resource_positions_equal(view.current_tree, playable_positions), "default edge comparison uses visual-only positions and preserves all 241-node resource coordinates")
+		_assert_image_valid(edge_baseline, "playable 241-node internal alternate-route comparison renders")
+		_expect(_resource_positions_equal(view.current_tree, playable_positions), "alternate-route comparison uses visual-only positions and preserves all 241-node resource coordinates")
 
 		view._set_feature_enabled("straight_connections", true, false)
 		view.graph_edit.zoom = edge_comparison_zoom
@@ -464,7 +470,7 @@ func _run() -> void:
 		_assert_image_valid(always_curved, "playable 241-node always-curved edge comparison renders")
 		_expect(always_curved_route.size() == 13 and always_curved_route != edge_baseline_route and always_curved_crosses, "always-curved experiment produces a distinct Bezier route that passes behind the fixed comparison card")
 		_expect(always_curved_route[0].is_equal_approx(edge_baseline_route[0]) and always_curved_route[always_curved_route.size() - 1].is_equal_approx(edge_baseline_route[edge_baseline_route.size() - 1]), "always-curved comparison preserves the same 241-node edge endpoints")
-		_expect(is_equal_approx(view.graph_edit.zoom, edge_comparison_zoom) and view.graph_edit.scroll_offset.is_equal_approx(edge_comparison_scroll), "default and always-curved 241-node screenshots use the same camera")
+		_expect(is_equal_approx(view.graph_edit.zoom, edge_comparison_zoom) and view.graph_edit.scroll_offset.is_equal_approx(edge_comparison_scroll), "alternate-route and always-curved 241-node screenshots use the same camera")
 		print("VISUAL_METRIC default_edge_length=%.1f curved_length=%.1f curved_crosses_comparison_card=%d" % [view.graph_edit._polyline_length(edge_baseline_route), view.graph_edit._polyline_length(always_curved_route), int(always_curved_crosses)])
 
 		var opaque_panel_style := edge_obstacle.get_theme_stylebox(&"panel") as StyleBoxFlat
@@ -506,7 +512,7 @@ func _run() -> void:
 		view.graph_edit.zoom = edge_comparison_zoom
 		view.graph_edit.scroll_offset = edge_comparison_scroll
 		await _settle()
-		_expect(view.graph_edit._route_connection_between(edge_source, edge_target) == edge_baseline_route and not view.graph_edit.always_curved_edges_enabled, "disabling always-curved experiment restores the default connection")
+		_expect(view.graph_edit._route_connection_between(edge_source, edge_target) == edge_baseline_route and not view.graph_edit.always_curved_edges_enabled, "disabling always-curved experiment restores the internal alternate route")
 
 	view._rebuild_graph()
 	view._set_feature_enabled("semantic_zoom", true, false)
