@@ -68,7 +68,6 @@ const FEATURE_DEFINITIONS := [
 	["type_encoding", "Shape / Icon Type Encoding", false],
 	["accessibility", "Accessibility / Colorblind Palette", false],
 	["single_connection", "Single Connection Rendering", true],
-	["edge_avoidance", "Edge Obstacle Avoidance", true],
 	["always_curved_edges", "Always Curved Edges (Experiment)", false],
 	["translucent_cards", "Translucent Cards (Experiment)", false],
 	["active_path", "Active Path Highlight", true],
@@ -982,7 +981,6 @@ func _apply_feature_states() -> void:
 	if is_instance_valid(graph_edit):
 		graph_edit.set_edge_display(_feature_enabled("orthogonal_edges"), _feature_enabled("edge_bundling"), _feature_enabled("always_curved_edges"))
 		graph_edit.set_single_connection_rendering(_feature_enabled("single_connection"))
-		graph_edit.set_edge_obstacle_avoidance(_feature_enabled("edge_avoidance"))
 		graph_edit.set_enhanced_minimap(_feature_enabled("enhanced_minimap"))
 	_update_minimap_status(true)
 	for child in graph_edit.get_children() if is_instance_valid(graph_edit) else []:

@@ -28,7 +28,6 @@
 - `Active Path Highlight`, `Non-active Branch Dimming`, and `Failure Reason Annotation` explain runtime decisions in the editor.
 - `Multi-column Layout` wraps wide fan-outs while preserving left-to-right execution order.
 - `Stable Incremental Layout` keeps valid existing positions when `Auto Arrange` is used.
-- `Edge Obstacle Avoidance` is enabled by default and reroutes a connection only when its normal route crosses an unrelated card.
 - `Orthogonal Edges` and `Edge Bundling` provide alternative connection routing for dense trees.
 - `Always Curved Edges (Experiment)` and `Translucent Cards (Experiment)` are optional, default-off comparison modes. They are not the recommended baseline.
 
