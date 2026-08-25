@@ -18,6 +18,11 @@ var edge_bundling_enabled := false
 var always_curved_edges_enabled := false
 var straight_connections_enabled := false
 var active_path_ids: Array[int] = []
+var selection_context_enabled := false
+var selection_context_selected_id := -1
+var selection_context_path_ids: Array[int] = []
+var selection_context_child_ids: Array[int] = []
+var selection_context_sibling_ids: Array[int] = []
 var single_connection_rendering_enabled := true
 var native_connection_layer: Control
 var manual_connection_active := false
@@ -141,8 +146,24 @@ func _draw_behavior_tree_connections() -> void:
 		var cache_key := "%s>%s" % [from_node.name, to_node.name]
 		var points := _cached_connection_between(cache_key, from_node, to_node)
 		var active := _is_active_connection(from_node.node_resource.id, to_node.node_resource.id)
-		var color := Color("f8fafc") if active else from_node.output_square.color.lerp(to_node.input_square.color, 0.35)
-		var thickness := 5.0 if active else (2.5 if edge_bundling_enabled else 3.5)
+		var selection_role := _selection_connection_role(from_node.node_resource.id, to_node.node_resource.id)
+		var color := from_node.output_square.color.lerp(to_node.input_square.color, 0.35)
+		var thickness := 2.5 if edge_bundling_enabled else 3.5
+		if active:
+			color = Color("f8fafc")
+			thickness = 5.0
+		elif selection_role == "path":
+			color = Color("60a5fa")
+			thickness = 4.6
+		elif selection_role == "child":
+			color = Color("34d399")
+			thickness = 4.3
+		elif selection_role == "sibling":
+			color = Color("c4b5fd")
+			thickness = 3.9
+		elif selection_context_enabled and selection_context_selected_id != -1:
+			color.a *= 0.34
+			thickness = 2.5
 		draw_polyline(points, color, thickness, true)
 
 
@@ -251,6 +272,21 @@ func _is_active_connection(from_id: int, to_id: int) -> bool:
 		if active_path_ids[index] == from_id and active_path_ids[index + 1] == to_id:
 			return true
 	return false
+
+
+func _selection_connection_role(from_id: int, to_id: int) -> String:
+	if not selection_context_enabled or selection_context_selected_id == -1:
+		return ""
+	for index in range(selection_context_path_ids.size() - 1):
+		if selection_context_path_ids[index] == from_id and selection_context_path_ids[index + 1] == to_id:
+			return "path"
+	if from_id == selection_context_selected_id and selection_context_child_ids.has(to_id):
+		return "child"
+	if selection_context_path_ids.size() >= 2:
+		var selected_parent_id := selection_context_path_ids[selection_context_path_ids.size() - 2]
+		if from_id == selected_parent_id and selection_context_sibling_ids.has(to_id):
+			return "sibling"
+	return ""
 
 
 func _get_connection_line(from_position: Vector2, to_position: Vector2) -> PackedVector2Array:
@@ -407,6 +443,22 @@ func set_active_path(path_ids: Array) -> void:
 	active_path_ids.clear()
 	for value in path_ids:
 		active_path_ids.append(int(value))
+	queue_redraw()
+
+
+func set_selection_context(enabled: bool, selected_id: int, path_ids: Array, child_ids: Array, sibling_ids: Array) -> void:
+	selection_context_enabled = enabled and selected_id != -1
+	selection_context_selected_id = selected_id if selection_context_enabled else -1
+	selection_context_path_ids.clear()
+	selection_context_child_ids.clear()
+	selection_context_sibling_ids.clear()
+	if selection_context_enabled:
+		for value in path_ids:
+			selection_context_path_ids.append(int(value))
+		for value in child_ids:
+			selection_context_child_ids.append(int(value))
+		for value in sibling_ids:
+			selection_context_sibling_ids.append(int(value))
 	queue_redraw()
 
 

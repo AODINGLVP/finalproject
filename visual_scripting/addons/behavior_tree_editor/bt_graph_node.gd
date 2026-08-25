@@ -7,6 +7,12 @@ const BTTypeIcon = preload("res://addons/behavior_tree_editor/bt_type_icon.gd")
 const INACTIVE_BRANCH_ALPHA := 0.24
 const NORMAL_CARD_SIZE := Vector2(250.0, 150.0)
 const COMPACT_CARD_SIZE := Vector2(188.0, 88.0)
+const SELECTION_ROLE_NONE := 0
+const SELECTION_ROLE_UNRELATED := 1
+const SELECTION_ROLE_SIBLING := 2
+const SELECTION_ROLE_DIRECT_CHILD := 3
+const SELECTION_ROLE_ANCESTOR := 4
+const SELECTION_ROLE_SELECTED := 5
 const NORMAL_CONTENT_WIDTH := 230.0
 const COMPACT_CONTENT_WIDTH := 172.0
 const TRANSPARENT_EDGE_COLOR := Color(0.0, 0.0, 0.0, 0.0)
@@ -66,6 +72,8 @@ var semantic_detail_level := 2
 var search_matches := true
 var search_active := false
 var search_current := false
+var selection_context_enabled := false
+var selection_context_role := SELECTION_ROLE_NONE
 var subtree_collapse_enabled := true
 var decorator_badges_enabled := true
 var type_encoding_enabled := false
@@ -544,6 +552,12 @@ func set_search_state(has_query: bool, matches_query: bool, is_current_result :=
 	_apply_search_style()
 
 
+func set_selection_context(enabled: bool, role: int = SELECTION_ROLE_NONE) -> void:
+	selection_context_enabled = enabled
+	selection_context_role = role if enabled else SELECTION_ROLE_NONE
+	_apply_search_style()
+
+
 func _apply_information_density() -> void:
 	if not is_instance_valid(description_label):
 		return
@@ -627,17 +641,38 @@ func _refresh_connection_slots(color: Color) -> void:
 
 func _apply_search_style() -> void:
 	if runtime_active and runtime_highlight_enabled:
-		return
-	if not search_active:
 		self_modulate = Color.WHITE
-		if node_resource != null and not runtime_active:
+		return
+	if search_active:
+		self_modulate = Color.WHITE if search_matches else Color(0.45, 0.45, 0.45, 0.32)
+		if search_current:
+			header_bar.color = Color("22d3ee")
+		elif search_matches:
+			header_bar.color = Color("fbbf24")
+		elif node_resource != null:
 			header_bar.color = _type_color(node_resource.node_type)
 		return
-	self_modulate = Color.WHITE if search_matches else Color(0.45, 0.45, 0.45, 0.32)
-	if search_current:
-		header_bar.color = Color("22d3ee")
-	elif search_matches:
-		header_bar.color = Color("fbbf24")
+	_apply_selection_style()
+
+
+func _apply_selection_style() -> void:
+	self_modulate = Color.WHITE
+	if node_resource == null:
+		return
+	header_bar.color = _type_color(node_resource.node_type)
+	if not selection_context_enabled:
+		return
+	match selection_context_role:
+		SELECTION_ROLE_SELECTED:
+			header_bar.color = Color("a78bfa")
+		SELECTION_ROLE_ANCESTOR:
+			header_bar.color = Color("60a5fa")
+		SELECTION_ROLE_DIRECT_CHILD:
+			header_bar.color = Color("34d399")
+		SELECTION_ROLE_SIBLING:
+			header_bar.color = Color("c4b5fd")
+		SELECTION_ROLE_UNRELATED:
+			self_modulate = Color(0.72, 0.75, 0.82, 0.48)
 
 
 func _on_collapse_button_pressed() -> void:
@@ -690,6 +725,7 @@ func _apply_runtime_style() -> void:
 		return
 	var highlight := _runtime_highlight_color()
 	modulate = Color(1.0, 0.96, 0.68, 1.0)
+	self_modulate = Color.WHITE
 	header_bar.color = highlight
 	input_square.color = highlight.darkened(0.2)
 	output_square.color = highlight

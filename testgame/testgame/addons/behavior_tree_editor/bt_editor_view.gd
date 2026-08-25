@@ -993,7 +993,7 @@ func _set_feature_enabled(key: String, enabled: bool, persist := true) -> void:
 				_clear_container(runtime_path_container)
 		"breadcrumb":
 			if is_instance_valid(selection_path_row):
-				selection_path_row.visible = enabled
+				selection_path_row.visible = false
 			if not enabled:
 				_clear_container(selection_path_container)
 		"failure_reason":
@@ -1062,15 +1062,68 @@ func _refresh_navigation_paths() -> void:
 		var runtime_titles: Array = last_runtime_snapshot.get("path_titles", [])
 		_populate_path_buttons(runtime_path_container, runtime_ids, runtime_titles, "No active path", true)
 		_update_path_summary_metadata(runtime_ids)
-	if _feature_enabled("breadcrumb"):
-		var selection_ids: Array[int] = []
-		var selection_titles: Array[String] = []
-		var cursor := _get_selected_node()
-		while cursor != null:
-			selection_ids.push_front(cursor.id)
-			selection_titles.push_front(cursor.title)
-			cursor = current_tree.find_node(cursor.parent_id) if current_tree != null else null
-		_populate_path_buttons(selection_path_container, selection_ids, selection_titles, "No selection")
+	if is_instance_valid(selection_path_row):
+		selection_path_row.visible = false
+	if is_instance_valid(selection_path_container):
+		_clear_container(selection_path_container)
+	_apply_selection_context()
+
+
+func _selection_context_data() -> Dictionary:
+	var selected := _get_selected_node()
+	if selected != null and selected.decorator_parent_id != -1:
+		selected = current_tree.find_node(selected.decorator_parent_id)
+	if selected == null or current_tree == null:
+		return {"selected_id": -1, "path_ids": [], "child_ids": [], "sibling_ids": []}
+	var path_ids: Array[int] = []
+	var cursor := selected
+	while cursor != null:
+		path_ids.push_front(cursor.id)
+		cursor = current_tree.find_node(cursor.parent_id)
+	var child_ids: Array[int] = []
+	for child in current_tree.get_children_of(selected.id):
+		child_ids.append(child.id)
+	var sibling_ids: Array[int] = []
+	if selected.parent_id != -1:
+		for sibling in current_tree.get_children_of(selected.parent_id):
+			if sibling.id != selected.id:
+				sibling_ids.append(sibling.id)
+	return {
+		"selected_id": selected.id,
+		"path_ids": path_ids,
+		"child_ids": child_ids,
+		"sibling_ids": sibling_ids,
+	}
+
+
+func _apply_selection_context() -> void:
+	if not is_instance_valid(graph_edit):
+		return
+	var enabled := _feature_enabled("breadcrumb")
+	var data := _selection_context_data() if enabled else {"selected_id": -1, "path_ids": [], "child_ids": [], "sibling_ids": []}
+	var selected_id := int(data.get("selected_id", -1))
+	var path_ids: Array = data.get("path_ids", [])
+	var child_ids: Array = data.get("child_ids", [])
+	var sibling_ids: Array = data.get("sibling_ids", [])
+	graph_edit.set_selection_context(enabled, selected_id, path_ids, child_ids, sibling_ids)
+	for child in graph_edit.get_children():
+		if not (child is BTGraphNode) or child.node_resource == null:
+			continue
+		var graph_node: BTGraphNode = child
+		var role := BTGraphNode.SELECTION_ROLE_NONE
+		var node_id: int = graph_node.node_resource.id
+		if enabled and selected_id != -1:
+			if node_id == selected_id:
+				role = BTGraphNode.SELECTION_ROLE_SELECTED
+			elif path_ids.has(node_id):
+				role = BTGraphNode.SELECTION_ROLE_ANCESTOR
+			elif child_ids.has(node_id):
+				role = BTGraphNode.SELECTION_ROLE_DIRECT_CHILD
+			elif sibling_ids.has(node_id):
+				role = BTGraphNode.SELECTION_ROLE_SIBLING
+			else:
+				role = BTGraphNode.SELECTION_ROLE_UNRELATED
+		graph_node.set_selection_context(enabled and selected_id != -1, role)
 
 
 func _populate_path_buttons(container: HBoxContainer, ids: Array, titles: Array, empty_text: String, mark_current := false) -> void:
@@ -1494,6 +1547,7 @@ func _refresh_inspector() -> void:
 		_refresh_typed_parameters(null)
 		_refresh_decorator_picker(null)
 		suppress_inspector_changes = false
+		_refresh_navigation_paths()
 		return
 	selected_label.text = "Editing Node #%d" % node.id
 	node_type_edit.disabled = node.id == current_tree.root_node_id or node.decorator_parent_id != -1
@@ -1504,6 +1558,7 @@ func _refresh_inspector() -> void:
 	_refresh_typed_parameters(node)
 	_refresh_decorator_picker(node)
 	suppress_inspector_changes = false
+	_refresh_navigation_paths()
 
 
 func _refresh_decorator_picker(node: BTNodeResource) -> void:

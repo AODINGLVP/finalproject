@@ -655,6 +655,7 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	view._set_feature_enabled("compact", false, false)
 	view._set_feature_enabled("semantic_zoom", false, false)
 
+	view._set_feature_enabled("breadcrumb", false, false)
 	var baseline_selector_color := _graph_node(view, 2).header_bar.color
 	view._set_feature_enabled("accessibility", true, false)
 	_expect(_graph_node(view, 2).accessible_palette_enabled and _graph_node(view, 2).header_bar.color == Color("e69f00"), "accessibility switch applies the colorblind-safe Selector color")
@@ -673,6 +674,7 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	_expect(view.search_edit.has_focus(), "Ctrl+F focuses the node search field inside the behavior-tree panel")
 	view._set_feature_enabled("accessibility", false, false)
 	_expect(not _graph_node(view, 2).accessible_palette_enabled and _graph_node(view, 2).header_bar.color == baseline_selector_color, "disabling accessibility restores the original palette")
+	view._set_feature_enabled("breadcrumb", true, false)
 
 	var translucent_node := _graph_node(view, 2)
 	var protected_text_node := _graph_node(view, 4)
@@ -974,7 +976,7 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	view._on_search_changed("attack")
 	_expect(_graph_node(view, 4).search_matches and not _graph_node(view, 5).search_matches, "search highlights matches and dims non-matches")
 	view._set_feature_enabled("search", false, false)
-	_expect(not view.search_toggle.button_pressed and view.search_query.is_empty() and view.search_result_ids.is_empty() and view.search_result_label.text == "0 results" and _graph_node(view, 5).self_modulate == Color.WHITE, "disabling search clears results and dimming")
+	_expect(not view.search_toggle.button_pressed and view.search_query.is_empty() and view.search_result_ids.is_empty() and view.search_result_label.text == "0 results" and not _graph_node(view, 5).search_active and _graph_node(view, 5).selection_context_role == BTGraphNode.SELECTION_ROLE_UNRELATED, "disabling Search clears its results and restores the lower-priority Selection Context")
 
 	view._set_feature_enabled("straight_connections", false, false)
 	view._set_feature_enabled("orthogonal_edges", true, false)
@@ -1072,12 +1074,29 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	_expect(view.current_tree.find_node(4).position == stable_position, "stable layout preserves non-overlapping positions")
 	view._set_feature_enabled("stable_layout", false, false)
 
-	view.selected_node_id = 4
+	view.selected_node_id = 3
 	view._set_feature_enabled("breadcrumb", true, false)
 	view._refresh_navigation_paths()
-	_expect(_button_count(view.selection_path_container) == 4, "breadcrumb switch shows selected hierarchy")
+	_expect(_graph_node(view, 3).selection_context_role == BTGraphNode.SELECTION_ROLE_SELECTED, "Selection Context marks the selected node")
+	_expect(_graph_node(view, 1).selection_context_role == BTGraphNode.SELECTION_ROLE_ANCESTOR and _graph_node(view, 2).selection_context_role == BTGraphNode.SELECTION_ROLE_ANCESTOR, "Selection Context marks only the ancestor path")
+	_expect(_graph_node(view, 4).selection_context_role == BTGraphNode.SELECTION_ROLE_DIRECT_CHILD and _graph_node(view, 5).selection_context_role == BTGraphNode.SELECTION_ROLE_SIBLING, "Selection Context distinguishes direct children from siblings")
+	_expect(view.graph_edit._selection_connection_role(1, 2) == "path" and view.graph_edit._selection_connection_role(2, 3) == "path" and view.graph_edit._selection_connection_role(3, 4) == "child" and view.graph_edit._selection_connection_role(2, 5) == "sibling", "Selection Context classifies the related connections without expanding the whole descendant tree")
+	_expect(not view.selection_path_row.visible and view.selection_path_container.get_child_count() == 0, "Selection Context uses the graph itself without restoring a separate breadcrumb row")
+	view.selected_node_id = 6
+	view._refresh_inspector()
+	_expect(view.graph_edit.selection_context_selected_id == 4 and _graph_node(view, 4).selection_context_role == BTGraphNode.SELECTION_ROLE_SELECTED, "selecting an attached Decorator maps context to its owner card")
+	view.selected_node_id = 3
+	view._refresh_inspector()
+	view._set_feature_enabled("search", true, false)
+	view._on_search_changed("patrol")
+	_expect(_graph_node(view, 5).header_bar.color == Color("fbbf24") and _graph_node(view, 3).self_modulate.a < 0.4, "Search styling takes priority over Selection Context")
+	view._on_search_changed("")
+	_expect(_graph_node(view, 3).header_bar.color == Color("a78bfa") and _graph_node(view, 5).header_bar.color == Color("c4b5fd"), "clearing Search restores Selection Context styling")
+	view._apply_runtime_snapshot(snapshot)
+	_expect(_graph_node(view, 4).runtime_active and _graph_node(view, 4).self_modulate == Color.WHITE, "Live Debug active styling takes priority over Selection Context")
 	view._set_feature_enabled("breadcrumb", false, false)
-	_expect(view.selection_path_container.get_child_count() == 0, "disabling breadcrumb clears hierarchy")
+	_expect(not view.graph_edit.selection_context_enabled and _graph_node(view, 3).selection_context_role == BTGraphNode.SELECTION_ROLE_NONE and _graph_node(view, 5).self_modulate == Color.WHITE, "disabling Selection Context clears every node and connection state")
+	view._set_feature_enabled("breadcrumb", true, false)
 
 	view._set_feature_enabled("failure_reason", true, false)
 	var failure_snapshot := snapshot.duplicate(true)
