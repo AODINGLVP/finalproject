@@ -86,7 +86,7 @@ func _run() -> void:
 	await _settle()
 	var display_menu := await _capture_case("01a_display_menu")
 	_assert_image_valid(display_menu, "compact Display menu renders")
-	_expect(display_popup.visible and display_popup.item_count == 10 and view.advanced_display_menu.item_count == 16, "Display popup keeps common options concise and exposes advanced options in a submenu")
+	_expect(display_popup.visible and display_popup.item_count == 10 and view.advanced_display_menu.item_count == 17, "Display popup keeps common options concise and exposes advanced options in a submenu")
 	display_popup.hide()
 	await _settle()
 	var debug_popup := view.debug_menu_button.get_popup()
@@ -450,6 +450,42 @@ func _run() -> void:
 		_expect(always_curved_route[0].is_equal_approx(edge_baseline_route[0]) and always_curved_route[always_curved_route.size() - 1].is_equal_approx(edge_baseline_route[edge_baseline_route.size() - 1]), "always-curved comparison preserves the same 241-node edge endpoints")
 		_expect(is_equal_approx(view.graph_edit.zoom, edge_comparison_zoom) and view.graph_edit.scroll_offset.is_equal_approx(edge_comparison_scroll), "current and always-curved 241-node screenshots use the same camera")
 		print("VISUAL_METRIC curved_edge_current_intersections=%d always_curved_intersections=%d current_length=%.1f curved_length=%.1f" % [int(edge_avoided_crosses), int(always_curved_crosses), view.graph_edit._polyline_length(edge_avoided_route), view.graph_edit._polyline_length(always_curved_route)])
+
+		var opaque_panel_style := edge_obstacle.get_theme_stylebox(&"panel") as StyleBoxFlat
+		var opaque_panel_alpha := opaque_panel_style.bg_color.a if opaque_panel_style != null else -1.0
+		var opaque_card_modulate := edge_obstacle.modulate
+		var opaque_card_self_modulate := edge_obstacle.self_modulate
+		var obstacle_screen_rect := edge_obstacle.get_global_rect()
+		var card_screen_rect := obstacle_screen_rect.grow(-6.0)
+		var obstacle_local_rect := Rect2(edge_obstacle.position, edge_obstacle.size * edge_obstacle.scale)
+		var line_inside_card := _first_polyline_point_in_rect(
+			always_curved_route,
+			obstacle_local_rect.grow(-12.0)
+		)
+		view._set_feature_enabled("translucent_cards", true, false)
+		view.graph_edit.zoom = edge_comparison_zoom
+		view.graph_edit.scroll_offset = edge_comparison_scroll
+		await _settle()
+		var translucent_panel_style := edge_obstacle.get_theme_stylebox(&"panel") as StyleBoxFlat
+		var translucent_route := view.graph_edit._route_connection_between(edge_source, edge_target)
+		var translucent_cards := await _capture_case("11a4_playable_241_translucent_cards")
+		_assert_image_valid(translucent_cards, "playable 241-node translucent-card comparison renders")
+		var line_card_ratio := (line_inside_card - obstacle_local_rect.position) / obstacle_local_rect.size if line_inside_card != Vector2.INF else Vector2.INF
+		var line_screen_point := obstacle_screen_rect.position + line_card_ratio * obstacle_screen_rect.size if line_card_ratio != Vector2.INF else Vector2.INF
+		var crossing_difference_count := _image_difference_count_in_rect(always_curved, translucent_cards, Rect2(line_screen_point - Vector2(8.0, 8.0), Vector2(16.0, 16.0)), 0.03) if line_screen_point != Vector2.INF else 0
+		var card_difference_count := _image_difference_count_in_rect(always_curved, translucent_cards, card_screen_rect, 0.03)
+		var opaque_bright_pixels := _bright_pixel_count_in_rect(always_curved, card_screen_rect, 0.72)
+		var translucent_bright_pixels := _bright_pixel_count_in_rect(translucent_cards, card_screen_rect, 0.72)
+		_expect(translucent_panel_style != null and is_equal_approx(translucent_panel_style.bg_color.a, opaque_panel_alpha * BTGraphNode.TRANSLUCENT_CARD_ALPHA_FACTOR) and edge_obstacle.translucent_style_override_names.size() >= 2, "translucent screenshot applies the fixed background-only alpha rule")
+		_expect(translucent_route == always_curved_route and always_curved_crosses and card_difference_count > 100, "translucent card visibly changes its interior while the same edge continues behind it")
+		_expect(edge_obstacle.modulate == opaque_card_modulate and edge_obstacle.self_modulate == opaque_card_self_modulate and edge_obstacle.title_label.modulate.a == 1.0 and edge_obstacle.header_bar.color.a == 1.0 and edge_obstacle.input_square.color.a == 1.0 and edge_obstacle.output_square.color.a == 1.0, "translucent screenshot preserves card text, state color, ports, and independent opacity channels")
+		_expect(translucent_bright_pixels >= int(float(opaque_bright_pixels) * 0.9), "translucent screenshot retains at least ninety percent of the card's bright text and control pixels")
+		_expect(is_equal_approx(view.graph_edit.zoom, edge_comparison_zoom) and view.graph_edit.scroll_offset.is_equal_approx(edge_comparison_scroll), "opaque and translucent 241-node screenshots use the same camera")
+		print("VISUAL_METRIC translucent_card_changed_pixels=%d sampled_crossing_changed_pixels=%d opaque_bright_pixels=%d translucent_bright_pixels=%d alpha_factor=%.2f" % [card_difference_count, crossing_difference_count, opaque_bright_pixels, translucent_bright_pixels, BTGraphNode.TRANSLUCENT_CARD_ALPHA_FACTOR])
+		view._set_feature_enabled("translucent_cards", false, false)
+		await _settle()
+		var restored_opaque_style := edge_obstacle.get_theme_stylebox(&"panel") as StyleBoxFlat
+		_expect(restored_opaque_style != null and is_equal_approx(restored_opaque_style.bg_color.a, opaque_panel_alpha) and not edge_obstacle.has_theme_stylebox_override(&"panel"), "disabling translucent cards restores the original opaque theme without residue")
 		view._set_feature_enabled("always_curved_edges", false, false)
 		view.graph_edit.zoom = edge_comparison_zoom
 		view.graph_edit.scroll_offset = edge_comparison_scroll
@@ -898,6 +934,48 @@ func _polyline_enters_rect(points: PackedVector2Array, rect: Rect2) -> bool:
 			if rect.has_point(start.lerp(finish, float(step) / float(steps))):
 				return true
 	return false
+
+
+func _first_polyline_point_in_rect(points: PackedVector2Array, rect: Rect2) -> Vector2:
+	for index in range(points.size() - 1):
+		var start := points[index]
+		var finish := points[index + 1]
+		var steps := maxi(1, ceili(start.distance_to(finish) / 2.0))
+		for step in range(steps + 1):
+			var point := start.lerp(finish, float(step) / float(steps))
+			if rect.has_point(point):
+				return point
+	return Vector2.INF
+
+
+func _image_difference_count_in_rect(left: Image, right: Image, rect: Rect2, tolerance: float) -> int:
+	var left_x := clampi(floori(rect.position.x), 0, left.get_width())
+	var top_y := clampi(floori(rect.position.y), 0, left.get_height())
+	var right_x := clampi(ceili(rect.end.x), 0, mini(left.get_width(), right.get_width()))
+	var bottom_y := clampi(ceili(rect.end.y), 0, mini(left.get_height(), right.get_height()))
+	var count := 0
+	for y in range(top_y, bottom_y):
+		for x in range(left_x, right_x):
+			var left_color := left.get_pixel(x, y)
+			var right_color := right.get_pixel(x, y)
+			if absf(left_color.r - right_color.r) + absf(left_color.g - right_color.g) + absf(left_color.b - right_color.b) > tolerance:
+				count += 1
+	return count
+
+
+func _bright_pixel_count_in_rect(image: Image, rect: Rect2, threshold: float) -> int:
+	var left_x := clampi(floori(rect.position.x), 0, image.get_width())
+	var top_y := clampi(floori(rect.position.y), 0, image.get_height())
+	var right_x := clampi(ceili(rect.end.x), 0, image.get_width())
+	var bottom_y := clampi(ceili(rect.end.y), 0, image.get_height())
+	var count := 0
+	for y in range(top_y, bottom_y):
+		for x in range(left_x, right_x):
+			var color := image.get_pixel(x, y)
+			var luminance := 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b
+			if luminance >= threshold:
+				count += 1
+	return count
 
 
 func _render_positions_match_resources() -> bool:

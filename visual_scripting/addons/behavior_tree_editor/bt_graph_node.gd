@@ -10,6 +10,16 @@ const COMPACT_CARD_SIZE := Vector2(188.0, 88.0)
 const NORMAL_CONTENT_WIDTH := 230.0
 const COMPACT_CONTENT_WIDTH := 172.0
 const TRANSPARENT_EDGE_COLOR := Color(0.0, 0.0, 0.0, 0.0)
+const TRANSLUCENT_CARD_ALPHA_FACTOR := 0.72
+const TRANSLUCENT_CARD_STYLE_NAMES := [
+	&"panel",
+	&"panel_focus",
+	&"panel_selected",
+	&"slot",
+	&"slot_selected",
+	&"titlebar",
+	&"titlebar_selected",
+]
 
 signal collapse_toggled(node_id: int)
 signal drag_started(node_id: int)
@@ -52,6 +62,9 @@ var decorator_badges_enabled := true
 var type_encoding_enabled := false
 var accessible_palette_enabled := false
 var single_connection_rendering_enabled := true
+var translucent_cards_enabled := false
+var translucent_style_override_names: Array[StringName] = []
+var translucent_saved_style_overrides: Dictionary = {}
 var runtime_highlight_enabled := true
 var runtime_dim_non_active := false
 var runtime_reason_enabled := true
@@ -363,6 +376,45 @@ func set_single_connection_rendering_enabled(enabled: bool) -> void:
 	single_connection_rendering_enabled = enabled
 	if node_resource != null:
 		_refresh_connection_slots(_type_color(node_resource.node_type))
+
+
+func set_translucent_cards_enabled(enabled: bool) -> void:
+	if translucent_cards_enabled == enabled:
+		return
+	translucent_cards_enabled = enabled
+	if enabled:
+		_capture_translucent_style_baseline()
+		_apply_translucent_card_styles()
+	else:
+		_restore_translucent_style_baseline()
+
+
+func _capture_translucent_style_baseline() -> void:
+	translucent_saved_style_overrides.clear()
+	for style_name in TRANSLUCENT_CARD_STYLE_NAMES:
+		if has_theme_stylebox_override(style_name):
+			translucent_saved_style_overrides[style_name] = get_theme_stylebox(style_name).duplicate(true)
+
+
+func _apply_translucent_card_styles() -> void:
+	translucent_style_override_names.clear()
+	for style_name in TRANSLUCENT_CARD_STYLE_NAMES:
+		var base_style := get_theme_stylebox(style_name)
+		if not (base_style is StyleBoxFlat):
+			continue
+		var translucent_style := base_style.duplicate(true) as StyleBoxFlat
+		translucent_style.bg_color.a *= TRANSLUCENT_CARD_ALPHA_FACTOR
+		add_theme_stylebox_override(style_name, translucent_style)
+		translucent_style_override_names.append(style_name)
+
+
+func _restore_translucent_style_baseline() -> void:
+	for style_name in TRANSLUCENT_CARD_STYLE_NAMES:
+		remove_theme_stylebox_override(style_name)
+	for style_name in translucent_saved_style_overrides:
+		add_theme_stylebox_override(style_name, translucent_saved_style_overrides[style_name])
+	translucent_style_override_names.clear()
+	translucent_saved_style_overrides.clear()
 
 
 func set_search_state(has_query: bool, matches_query: bool, is_current_result := false) -> void:

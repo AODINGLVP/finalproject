@@ -70,6 +70,7 @@ const FEATURE_DEFINITIONS := [
 	["single_connection", "Single Connection Rendering", true],
 	["edge_avoidance", "Edge Obstacle Avoidance", true],
 	["always_curved_edges", "Always Curved Edges (Experiment)", false],
+	["translucent_cards", "Translucent Cards (Experiment)", false],
 	["active_path", "Active Path Highlight", true],
 	["branch_dimming", "Non-active Branch Dimming", false],
 	["multi_column", "Multi-column Layout", false],
@@ -992,6 +993,7 @@ func _apply_feature_states() -> void:
 		graph_node.set_type_encoding_enabled(_feature_enabled("type_encoding"))
 		graph_node.set_accessible_palette_enabled(_feature_enabled("accessibility"))
 		graph_node.set_single_connection_rendering_enabled(_feature_enabled("single_connection"))
+		graph_node.set_translucent_cards_enabled(_feature_enabled("translucent_cards"))
 		graph_node.set_semantic_detail_level(semantic_detail_level if _feature_enabled("semantic_zoom") else 2)
 		graph_node.set_subtree_collapse_enabled(_feature_enabled("subtree_collapse"))
 		graph_node.set_decorator_badges_enabled(_feature_enabled("decorator_badges"))

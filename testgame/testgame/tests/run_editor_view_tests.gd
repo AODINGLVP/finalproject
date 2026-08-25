@@ -656,6 +656,27 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	view._set_feature_enabled("accessibility", false, false)
 	_expect(not _graph_node(view, 2).accessible_palette_enabled and _graph_node(view, 2).header_bar.color == baseline_selector_color, "disabling accessibility restores the original palette")
 
+	var translucent_node := _graph_node(view, 2)
+	var baseline_panel_style := translucent_node.get_theme_stylebox(&"panel") as StyleBoxFlat
+	var baseline_panel_override := translucent_node.has_theme_stylebox_override(&"panel")
+	var baseline_panel_alpha := baseline_panel_style.bg_color.a if baseline_panel_style != null else -1.0
+	var baseline_border_color := baseline_panel_style.border_color if baseline_panel_style != null else Color.TRANSPARENT
+	var baseline_card_modulate := translucent_node.modulate
+	var baseline_card_self_modulate := translucent_node.self_modulate
+	view._set_feature_enabled("translucent_cards", true, false)
+	var translucent_panel_style := translucent_node.get_theme_stylebox(&"panel") as StyleBoxFlat
+	_expect(translucent_panel_style != null and translucent_node.translucent_cards_enabled and translucent_node.translucent_style_override_names.size() >= 2 and is_equal_approx(translucent_panel_style.bg_color.a, baseline_panel_alpha * BTGraphNode.TRANSLUCENT_CARD_ALPHA_FACTOR), "translucent-card experiment changes only supported GraphNode background styles by one fixed factor")
+	var translucent_selected_style := translucent_node.get_theme_stylebox(&"panel_selected") as StyleBoxFlat
+	_expect(translucent_node.has_theme_stylebox_override(&"panel_selected") and translucent_selected_style != null and translucent_selected_style.bg_color.a < baseline_panel_alpha, "translucent-card experiment covers the selected-card background state")
+	_expect(translucent_panel_style != null and translucent_panel_style.border_color == baseline_border_color and translucent_node.title_label.modulate.a == 1.0 and translucent_node.header_bar.color.a == 1.0 and translucent_node.input_square.color.a == 1.0 and translucent_node.output_square.color.a == 1.0, "translucent-card experiment preserves borders, text, status bar, and ports")
+	_expect(translucent_node.modulate == baseline_card_modulate and translucent_node.self_modulate == baseline_card_self_modulate, "translucent-card experiment does not reuse runtime or search opacity channels")
+	view._on_search_changed("attack")
+	_expect(translucent_node.self_modulate.a < 0.4 and is_equal_approx((translucent_node.get_theme_stylebox(&"panel") as StyleBoxFlat).bg_color.a, baseline_panel_alpha * BTGraphNode.TRANSLUCENT_CARD_ALPHA_FACTOR), "search dimming composes with translucent backgrounds without replacing them")
+	view._on_search_changed("")
+	view._set_feature_enabled("translucent_cards", false, false)
+	var restored_panel_style := translucent_node.get_theme_stylebox(&"panel") as StyleBoxFlat
+	_expect(not translucent_node.translucent_cards_enabled and translucent_node.has_theme_stylebox_override(&"panel") == baseline_panel_override and restored_panel_style != null and is_equal_approx(restored_panel_style.bg_color.a, baseline_panel_alpha), "disabling translucent cards restores the original theme background exactly")
+
 	view._set_feature_enabled("single_connection", true, false)
 	var parent_graph := _graph_node(view, 2)
 	var child_graph := _graph_node(view, 3)
@@ -753,6 +774,12 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	_expect(view.branch_dimming_toggle.button_pressed, "branch dimming toolbar switch mirrors feature state")
 	_expect(is_equal_approx(_graph_node(view, 5).modulate.a, BTGraphNode.INACTIVE_BRANCH_ALPHA), "branch dimming uses measured inactive opacity")
 	_expect(is_equal_approx(_graph_node(view, 4).modulate.a, 1.0), "branch dimming preserves active path opacity")
+	var runtime_opaque_panel := _graph_node(view, 5).get_theme_stylebox(&"panel") as StyleBoxFlat
+	view._set_feature_enabled("translucent_cards", true, false)
+	var runtime_translucent_panel := _graph_node(view, 5).get_theme_stylebox(&"panel") as StyleBoxFlat
+	_expect(runtime_opaque_panel != null and runtime_translucent_panel != null and runtime_translucent_panel.bg_color.a < runtime_opaque_panel.bg_color.a and is_equal_approx(_graph_node(view, 5).modulate.a, BTGraphNode.INACTIVE_BRANCH_ALPHA), "runtime branch dimming composes with background-only translucency")
+	view._set_feature_enabled("translucent_cards", false, false)
+	_expect(is_equal_approx(_graph_node(view, 5).modulate.a, BTGraphNode.INACTIVE_BRANCH_ALPHA), "disabling translucency leaves runtime dimming unchanged")
 	var patrol_snapshot := {
 		"actor": "TestActor", "path_ids": [1, 2, 5],
 		"path_titles": ["Root", "Decision", "Patrol"],
@@ -1079,7 +1106,7 @@ func _test_compact_display_toolbar(view: BTEditorView) -> void:
 	_expect(legacy_creation != null and not legacy_creation.visible, "duplicate node creation toolbar stays hidden in favor of the canvas context menu")
 	_expect(layout_popup.item_count == 9 and layout_popup.get_item_index(view.LAYOUT_MENU_FIT_ID) >= 0, "layout actions are consolidated into one menu")
 	_expect(view.feature_menu_button.text == "Display", "display options use a compact menu label")
-	_expect(popup.item_count == 10 and view.advanced_display_menu.item_count == 16 and grid_index >= 0, "Display shows common options and moves low-frequency switches into Advanced Display")
+	_expect(popup.item_count == 10 and view.advanced_display_menu.item_count == 17 and grid_index >= 0, "Display shows common options and moves low-frequency switches into Advanced Display")
 	_expect(not view.fisheye_toggle.visible and not view.compact_toggle.visible and not view.semantic_zoom_toggle.visible and not view.path_summary_toggle.visible and not view.grid_toggle.visible and not view.minimap_toggle.visible, "redundant display checkboxes stay hidden from the toolbar")
 	var toolbar := view.get_node_or_null("ViewToolbar") as HBoxContainer
 	_expect(toolbar != null and not toolbar.visible, "legacy view toolbar no longer consumes a separate row")
