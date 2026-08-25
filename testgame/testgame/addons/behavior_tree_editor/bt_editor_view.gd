@@ -49,6 +49,11 @@ const AUTO_SPACING_LERP_SPEED := 14.0
 const AUTO_SPACING_EPSILON := 0.1
 const DRAG_REFLOW_ACTIVATION_SCREEN_DISTANCE := 10.0
 const DRAG_REFLOW_REFRESH_SCREEN_DISTANCE := 8.0
+const DRAG_REFLOW_INITIAL_GROUP_LAYERS := 2
+const DRAG_REFLOW_MAX_GROUP_LAYERS := 4
+const DRAG_REFLOW_MAX_AFFECTED_CARDS := 24
+const DRAG_REFLOW_MAX_COLLISION_HOPS := 4
+const DRAG_REFLOW_GROUP_SOLVE_PASSES := 24
 const ZOOM_LAYOUT_ANCHOR_STABLE_FRAMES := 8
 const ZOOM_LAYOUT_ANCHOR_RELEASE_DELAY := 0.65
 const ZOOM_CENTER_SAMPLE_LIMIT := 12
@@ -246,6 +251,10 @@ var drag_reflow_screen_offset := Vector2.ZERO
 var drag_reflow_last_refresh_screen_offset := Vector2.ZERO
 var drag_auto_spacing_active := false
 var drag_visual_offset_claimed := false
+var drag_reflow_context: Dictionary = {}
+var pending_drag_reflow_release := false
+var settled_drag_reflow_anchor_id := -1
+var settled_drag_reflow_restore_targets: Dictionary = {}
 var suppress_drag_reflow_position_changes := false
 var zoom_anchor_candidate_id := -1
 var zoom_anchor_candidate_screen_position := Vector2.ZERO
@@ -1486,6 +1495,10 @@ func _rebuild_graph() -> void:
 	drag_reflow_last_refresh_screen_offset = Vector2.ZERO
 	drag_auto_spacing_active = false
 	drag_visual_offset_claimed = false
+	drag_reflow_context.clear()
+	pending_drag_reflow_release = false
+	settled_drag_reflow_anchor_id = -1
+	settled_drag_reflow_restore_targets.clear()
 	suppress_drag_reflow_position_changes = false
 	_refresh_search_results(true)
 	graph_edit.cancel_manual_connection()
@@ -1689,7 +1702,9 @@ func _activate_drag_auto_spacing(graph_node: BTGraphNode) -> void:
 	# Fisheye is frozen for clicks and small corrections. Reset it only once a
 	# deliberate drag crosses the reflow threshold.
 	_reset_fisheye()
-	drag_auto_spacing_base_targets = _build_drag_auto_spacing_baseline(graph_node.node_resource.id)
+	drag_reflow_context = _build_drag_reflow_context(graph_node.node_resource.id)
+	pending_drag_reflow_release = false
+	drag_auto_spacing_base_targets = _build_drag_auto_spacing_baseline(graph_node.node_resource.id, drag_reflow_context)
 	drag_auto_spacing_base_targets[graph_node.node_resource.id] = Vector2.ZERO
 	auto_spacing_targets = drag_auto_spacing_base_targets.duplicate(true)
 	drag_auto_spacing_last_refresh_position = graph_node.position_offset
@@ -1718,6 +1733,11 @@ func _on_graph_node_drag_started(node_id: int) -> void:
 	var node := current_tree.find_node(node_id)
 	if node == null:
 		return
+	# A restore target belongs only to the card whose previous drag created it.
+	# Manually grabbing another card makes those old coordinates stale.
+	if settled_drag_reflow_anchor_id != node_id:
+		settled_drag_reflow_anchor_id = -1
+		settled_drag_reflow_restore_targets.clear()
 	# A wheel burst may still be restoring the previous viewport anchor. Once a
 	# card is grabbed, pointer tracking owns the view and scrolling must stay put.
 	_clear_zoom_layout_anchor()
@@ -1737,6 +1757,8 @@ func _on_graph_node_drag_started(node_id: int) -> void:
 	auto_spacing_density_signature = _auto_spacing_density_signature()
 	drag_auto_spacing_active = false
 	drag_visual_offset_claimed = false
+	drag_reflow_context.clear()
+	pending_drag_reflow_release = false
 	pending_auto_spacing_seed_targets.clear()
 	pending_auto_spacing_anchor_id = -1
 	drag_history_snapshot = null
@@ -1756,6 +1778,8 @@ func _on_graph_node_drag_finished(node_id: int) -> void:
 		drag_reflow_last_refresh_screen_offset = Vector2.ZERO
 		drag_auto_spacing_active = false
 		drag_visual_offset_claimed = false
+		drag_reflow_context.clear()
+		pending_drag_reflow_release = false
 		drag_history_snapshot = null
 		drag_history_node_id = -1
 		return
@@ -1775,11 +1799,18 @@ func _on_graph_node_drag_finished(node_id: int) -> void:
 		drag_reflow_last_refresh_screen_offset = Vector2.ZERO
 		drag_auto_spacing_active = false
 		drag_visual_offset_claimed = false
+		drag_reflow_context.clear()
+		pending_drag_reflow_release = false
 		auto_spacing_signature = _auto_spacing_layout_signature()
 		drag_history_snapshot = null
 		drag_history_node_id = -1
 		return
 	if graph_node != null:
+		# A press, motion, and release can arrive in one rendered frame. Complete the
+		# already-queued live solve while the card is still the drag anchor, then
+		# freeze that exact result for release.
+		if drag_auto_spacing_active and live_auto_spacing_refresh_pending:
+			_update_auto_spacing(0.0, true)
 		# A dragged card is placed where the user released it, even when the card
 		# previously had a temporary collision-avoidance offset. The local solver
 		# treats this card as the fixed point and moves only colliding neighbours.
@@ -1798,6 +1829,13 @@ func _on_graph_node_drag_finished(node_id: int) -> void:
 			undo_stack.pop_front()
 		_update_history_buttons()
 	var reflow_was_active := drag_auto_spacing_active
+	var completed_restore_targets: Dictionary = {}
+	if reflow_was_active:
+		var affected_ids: Dictionary = drag_reflow_context.get("affected_ids", {})
+		for affected_id_variant in affected_ids.keys():
+			var affected_id := int(affected_id_variant)
+			if affected_id != node_id and drag_auto_spacing_base_targets.has(affected_id):
+				completed_restore_targets[affected_id] = Vector2(drag_auto_spacing_base_targets[affected_id])
 	drag_history_snapshot = null
 	drag_history_node_id = -1
 	drag_auto_spacing_base_targets.clear()
@@ -1810,19 +1848,23 @@ func _on_graph_node_drag_finished(node_id: int) -> void:
 	drag_auto_spacing_active = false
 	drag_visual_offset_claimed = false
 	if reflow_was_active:
-		# The live solution already represents the released geometry. Reuse it for
-		# the release-time verification instead of restarting a large-tree solve.
-		pending_auto_spacing_seed_targets = auto_spacing_targets.duplicate(true)
-		# BTGraphNode emits drag_finished immediately before it clears manual_dragging.
-		# Defer one frame so local collision avoidance sees the released position.
-		auto_spacing_signature = ""
-		_refresh_auto_spacing_deferred.call_deferred()
+		# The live solution already represents the released geometry. Accept it
+		# unchanged after BTGraphNode clears manual_dragging; never run a second
+		# collision solve that could move a branch after the pointer is released.
+		pending_auto_spacing_anchor_id = -1
+		pending_auto_spacing_seed_targets.clear()
+		settled_drag_reflow_anchor_id = node_id
+		settled_drag_reflow_restore_targets = completed_restore_targets
+		pending_drag_reflow_release = true
+		_finalize_drag_reflow_release_deferred.call_deferred()
 	else:
 		# Keep a sub-threshold drop exactly where the user placed it. Mark the new
 		# resource position as accepted so the next process frame does not reflow it.
 		auto_spacing_targets[node_id] = Vector2.ZERO
 		pending_auto_spacing_anchor_id = -1
 		pending_auto_spacing_seed_targets.clear()
+		drag_reflow_context.clear()
+		pending_drag_reflow_release = false
 		auto_spacing_signature = _auto_spacing_layout_signature()
 		graph_edit.queue_redraw()
 
@@ -2319,8 +2361,24 @@ func _refresh_auto_spacing_deferred() -> void:
 	_update_auto_spacing(0.0, true)
 
 
+func _finalize_drag_reflow_release_deferred() -> void:
+	if not pending_drag_reflow_release:
+		return
+	pending_drag_reflow_release = false
+	drag_reflow_context.clear()
+	pending_auto_spacing_anchor_id = -1
+	pending_auto_spacing_seed_targets.clear()
+	if is_instance_valid(graph_edit):
+		auto_spacing_signature = _auto_spacing_layout_signature()
+		graph_edit.queue_redraw()
+
+
 func _update_auto_spacing(delta: float, immediate := false) -> void:
 	if not is_instance_valid(graph_edit):
+		return
+	# drag_finished is emitted before the held GraphNode clears its internal drag
+	# flag. During that short hand-off, preserve the final live solution verbatim.
+	if pending_drag_reflow_release:
 		return
 	var dragged_node := _active_dragged_graph_node()
 	var dragged_node_id := dragged_node.node_resource.id if dragged_node != null and dragged_node.node_resource != null else -1
@@ -2334,15 +2392,21 @@ func _update_auto_spacing(delta: float, immediate := false) -> void:
 	var signature := _auto_spacing_layout_signature() if enabled else "disabled"
 	var overlap_repair_required := false
 	if signature != auto_spacing_signature:
+		if dragged_node_id == -1:
+			# A zoom/detail/global-spacing solve establishes a new visual baseline.
+			# Do not later restore offsets captured for an older card geometry.
+			settled_drag_reflow_anchor_id = -1
+			settled_drag_reflow_restore_targets.clear()
 		overlap_repair_required = dragged_node_id == -1 and _rendered_auto_spacing_has_overlap()
 		auto_spacing_signature = signature
 		var anchor_node_id := dragged_node_id if dragged_node_id != -1 else (fisheye_focus_node_id if fisheye_focus_node_id != -1 else pending_auto_spacing_anchor_id)
+		var grouped_drag_solve := drag_auto_spacing_active
 		var seed_targets: Dictionary = {}
 		if dragged_node_id != -1:
 			seed_targets = drag_auto_spacing_base_targets
 		elif not pending_auto_spacing_seed_targets.is_empty():
 			seed_targets = pending_auto_spacing_seed_targets
-		auto_spacing_targets = _solve_auto_spacing_offsets(anchor_node_id, seed_targets) if enabled else {}
+		auto_spacing_targets = _solve_auto_spacing_offsets(anchor_node_id, seed_targets, grouped_drag_solve) if enabled else {}
 		pending_auto_spacing_anchor_id = -1
 		pending_auto_spacing_seed_targets.clear()
 	# Live avoidance must finish in the same rendered frame as the pointer move;
@@ -2387,7 +2451,7 @@ func _auto_spacing_density_signature() -> String:
 	return "%d:%s:%d" % [semantic_detail_level, str(_effective_compact_mode()), fisheye_focus_node_id]
 
 
-func _solve_auto_spacing_offsets(anchor_node_id := -1, initial_offsets: Dictionary = {}) -> Dictionary:
+func _solve_auto_spacing_offsets(anchor_node_id := -1, initial_offsets: Dictionary = {}, grouped_drag_solve := false) -> Dictionary:
 	var nodes: Array[BTGraphNode] = []
 	var nodes_by_id: Dictionary = {}
 	var base_positions: Dictionary = {}
@@ -2410,6 +2474,8 @@ func _solve_auto_spacing_offsets(anchor_node_id := -1, initial_offsets: Dictiona
 	if nodes_by_id.has(anchor_node_id):
 		offsets[anchor_node_id] = Vector2.ZERO
 		anchor_influence[anchor_node_id] = 0
+	if grouped_drag_solve and nodes_by_id.has(anchor_node_id) and not drag_reflow_context.is_empty():
+		return _solve_local_drag_group_offsets(nodes, nodes_by_id, base_positions, offsets, source_order, anchor_node_id, drag_reflow_context)
 
 	# Old or damaged resources can contain many cards at the exact same point.
 	# There is no relative layout to preserve in such a group, so seed only that
@@ -2440,6 +2506,484 @@ func _solve_auto_spacing_offsets(anchor_node_id := -1, initial_offsets: Dictiona
 			# residual collisions, then recheck the hierarchy on the next pass.
 			_resolve_auto_spacing_residual_collisions(nodes, base_positions, offsets, source_order, anchor_influence)
 	return offsets
+
+
+func _build_drag_reflow_context(anchor_node_id: int) -> Dictionary:
+	var protected_parent_child_edges: Dictionary = {}
+	var protected_sibling_orders: Array[Vector2i] = []
+	for child_variant in graph_edit.get_children() if is_instance_valid(graph_edit) else []:
+		if not (child_variant is BTGraphNode):
+			continue
+		var child := child_variant as BTGraphNode
+		if child.node_resource == null or child.node_resource.parent_id == -1:
+			continue
+		var parent := graph_edit.get_node_or_null(NodePath(str(child.node_resource.parent_id))) as BTGraphNode
+		if parent != null and _saved_parent_child_vertical_gap(parent, child) >= -AUTO_SPACING_SEPARATION_EPSILON:
+			protected_parent_child_edges[_drag_reflow_edge_key(parent.node_resource.id, child.node_resource.id)] = true
+	if current_tree != null:
+		for parent_resource in current_tree.nodes:
+			if parent_resource == null or parent_resource.decorator_parent_id != -1:
+				continue
+			var visible_children: Array[BTGraphNode] = []
+			for child_resource in current_tree.get_children_of(parent_resource.id):
+				var child_graph := graph_edit.get_node_or_null(NodePath(str(child_resource.id))) as BTGraphNode
+				# The held card may intentionally cross its siblings. Remove it before
+				# building the order chain so siblings on opposite sides still retain
+				# their relative order (A-anchor-C becomes the protected pair A-C).
+				if child_graph != null and child_resource.id != anchor_node_id:
+					visible_children.append(child_graph)
+			visible_children.sort_custom(func(left: BTGraphNode, right: BTGraphNode) -> bool:
+				if not is_equal_approx(left.node_resource.position.x, right.node_resource.position.x):
+					return left.node_resource.position.x < right.node_resource.position.x
+				return left.node_resource.id < right.node_resource.id
+			)
+			for index in range(visible_children.size() - 1):
+				var left := visible_children[index]
+				var right := visible_children[index + 1]
+				if right.node_resource.position.x - left.node_resource.position.x > AUTO_SPACING_SEPARATION_EPSILON:
+					protected_sibling_orders.append(Vector2i(left.node_resource.id, right.node_resource.id))
+	return {
+		"anchor_id": anchor_node_id,
+		"groups": {},
+		"group_for_id": {},
+		"affected_ids": {},
+		"baseline_affected_ids": {},
+		"next_group_id": 1,
+		"protected_parent_child_edges": protected_parent_child_edges,
+		"protected_sibling_orders": protected_sibling_orders,
+	}
+
+
+func _solve_local_drag_group_offsets(nodes: Array[BTGraphNode], nodes_by_id: Dictionary, base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary, anchor_node_id: int, context: Dictionary) -> Dictionary:
+	# Smart Drag is intentionally different from Adaptive Zoom. It follows only the
+	# collision component that starts at the held card, moves a short branch as a
+	# rigid block, and never recruits the complete canvas into the solve.
+	var influence_hops: Dictionary = {anchor_node_id: 0}
+	var anchor := nodes_by_id[anchor_node_id] as BTGraphNode
+	# Each pointer refresh is a new local solution from the fixed drag baseline.
+	# Cards touched at an older pointer position must not consume the current
+	# 24-card budget or keep a distant branch displaced.
+	var baseline_affected_ids: Dictionary = context.get("baseline_affected_ids", {})
+	if not baseline_affected_ids.is_empty() and _drag_reflow_anchor_has_collision(anchor, nodes, base_positions, offsets):
+		# Restoring a previous branch can itself use all 24 slots. If the same mouse
+		# hold later reaches another collision, first return those restored cards to
+		# this drag's starting offsets. The new branch can then use the budget without
+		# ever displaying two independently changed 24-card sets at once.
+		for restored_id_variant in baseline_affected_ids.keys():
+			var restored_id := int(restored_id_variant)
+			if drag_auto_spacing_original_targets.has(restored_id):
+				var drag_start_offset := Vector2(drag_auto_spacing_original_targets[restored_id])
+				offsets[restored_id] = drag_start_offset
+				# Future 8-pixel pointer refreshes must start from the same released
+				# baseline; otherwise the old restored branch would reappear uncounted.
+				drag_auto_spacing_base_targets[restored_id] = drag_start_offset
+		baseline_affected_ids = {}
+		context["baseline_affected_ids"] = {}
+	context["groups"] = {}
+	context["group_for_id"] = {}
+	context["affected_ids"] = baseline_affected_ids.duplicate(true)
+	context["next_group_id"] = 1
+	for _pass_index in range(DRAG_REFLOW_GROUP_SOLVE_PASSES):
+		var collision_pairs := _auto_spacing_collision_pairs(nodes, base_positions, offsets, source_order)
+		var changed := false
+		for pair in collision_pairs:
+			var first := pair[0] as BTGraphNode
+			var second := pair[1] as BTGraphNode
+			var first_id: int = first.node_resource.id
+			var second_id: int = second.node_resource.id
+			var first_influenced := influence_hops.has(first_id)
+			var second_influenced := influence_hops.has(second_id)
+			if not first_influenced and not second_influenced:
+				continue
+
+			var moving := second
+			var fixed := first
+			var moving_hop := 1
+			var boundary_fallback := false
+			if first_influenced and not second_influenced:
+				var source_hop := int(influence_hops[first_id])
+				if source_hop >= DRAG_REFLOW_MAX_COLLISION_HOPS:
+					moving = first
+					fixed = second
+					moving_hop = source_hop
+					boundary_fallback = true
+				else:
+					moving = second
+					fixed = first
+					moving_hop = source_hop + 1
+			elif second_influenced and not first_influenced:
+				var source_hop := int(influence_hops[second_id])
+				if source_hop >= DRAG_REFLOW_MAX_COLLISION_HOPS:
+					moving = second
+					fixed = first
+					moving_hop = source_hop
+					boundary_fallback = true
+				else:
+					moving = first
+					fixed = second
+					moving_hop = source_hop + 1
+			else:
+				var first_group_id := _drag_reflow_existing_group_id(first_id, context)
+				var second_group_id := _drag_reflow_existing_group_id(second_id, context)
+				if first_group_id != 0 and first_group_id == second_group_id:
+					continue
+				var first_hop := int(influence_hops[first_id])
+				var second_hop := int(influence_hops[second_id])
+				if first_id == anchor_node_id or first_hop < second_hop:
+					moving = second
+					fixed = first
+					moving_hop = second_hop
+				elif second_id == anchor_node_id or second_hop < first_hop:
+					moving = first
+					fixed = second
+					moving_hop = first_hop
+				else:
+					var first_distance := absf((_drag_reflow_base_center(first, base_positions) - _drag_reflow_base_center(anchor, base_positions)).x)
+					var second_distance := absf((_drag_reflow_base_center(second, base_positions) - _drag_reflow_base_center(anchor, base_positions)).x)
+					if first_distance > second_distance or (is_equal_approx(first_distance, second_distance) and int(source_order.get(first_id, first_id)) > int(source_order.get(second_id, second_id))):
+						moving = first
+						fixed = second
+						moving_hop = first_hop
+					else:
+						moving = second
+						fixed = first
+						moving_hop = second_hop
+
+			var moving_is_protected_parent := fixed.node_resource.parent_id == moving.node_resource.id and _drag_reflow_edge_was_protected(moving.node_resource.id, fixed.node_resource.id, context)
+			var group_id := _ensure_drag_reflow_group(moving.node_resource.id, moving_hop, moving_is_protected_parent, nodes_by_id, offsets, context, anchor_node_id)
+			if group_id == 0:
+				var fallback_group_id := _drag_reflow_existing_group_id(fixed.node_resource.id, context)
+				if boundary_fallback or fallback_group_id == 0:
+					continue
+				var blocked := moving
+				moving = fixed
+				fixed = blocked
+				moving_hop = int(influence_hops.get(moving.node_resource.id, DRAG_REFLOW_MAX_COLLISION_HOPS))
+				group_id = fallback_group_id
+				boundary_fallback = true
+			var fixed_group_id := _drag_reflow_existing_group_id(fixed.node_resource.id, context)
+			if fixed_group_id != 0 and fixed_group_id == group_id:
+				continue
+			var groups: Dictionary = context.get("groups", {})
+			var group: Dictionary = groups.get(group_id, {})
+			var member_ids: Array = group.get("members", [])
+			for member_id_variant in member_ids:
+				var member_id := int(member_id_variant)
+				if not influence_hops.has(member_id) or int(influence_hops[member_id]) > moving_hop:
+					influence_hops[member_id] = moving_hop
+			var translation := _find_drag_reflow_boundary_translation(group_id, nodes, nodes_by_id, base_positions, offsets, context) if boundary_fallback else _drag_reflow_pair_translation(moving, fixed, group_id, base_positions, offsets, source_order, context)
+			if not translation.is_zero_approx() and (not _drag_reflow_translation_preserves_constraints(group_id, translation, nodes_by_id, base_positions, offsets, context) or not _drag_reflow_translation_clears_pair(moving, fixed, translation, base_positions, offsets)):
+				translation = _find_drag_reflow_boundary_translation(group_id, nodes, nodes_by_id, base_positions, offsets, context)
+			if translation.is_zero_approx():
+				continue
+			_translate_drag_reflow_group(group_id, translation, offsets, context)
+			changed = true
+		if not changed:
+			break
+	return offsets
+
+
+func _drag_reflow_anchor_has_collision(anchor: BTGraphNode, nodes: Array[BTGraphNode], base_positions: Dictionary, offsets: Dictionary) -> bool:
+	var anchor_rect := _auto_spacing_rect(anchor, base_positions, offsets, true)
+	for other in nodes:
+		if other == anchor:
+			continue
+		if anchor_rect.intersects(_auto_spacing_rect(other, base_positions, offsets, true)):
+			return true
+	return false
+
+
+func _drag_reflow_base_center(graph_node: BTGraphNode, base_positions: Dictionary) -> Vector2:
+	return Vector2(base_positions[graph_node.node_resource.id]) + graph_node.size * 0.5
+
+
+func _drag_reflow_existing_group_id(node_id: int, context: Dictionary) -> int:
+	var group_for_id: Dictionary = context.get("group_for_id", {})
+	return int(group_for_id.get(node_id, 0))
+
+
+func _drag_reflow_edge_key(parent_id: int, child_id: int) -> String:
+	return "%d>%d" % [parent_id, child_id]
+
+
+func _drag_reflow_edge_was_protected(parent_id: int, child_id: int, context: Dictionary) -> bool:
+	var protected_edges: Dictionary = context.get("protected_parent_child_edges", {})
+	return protected_edges.has(_drag_reflow_edge_key(parent_id, child_id))
+
+
+func _ensure_drag_reflow_group(root_node_id: int, collision_hop: int, include_ancestors: bool, nodes_by_id: Dictionary, offsets: Dictionary, context: Dictionary, anchor_node_id: int) -> int:
+	var group_for_id: Dictionary = context.get("group_for_id", {})
+	var group_id := int(group_for_id.get(root_node_id, 0))
+	var groups: Dictionary = context.get("groups", {})
+	var affected_ids: Dictionary = context.get("affected_ids", {})
+	if group_id == 0 and affected_ids.size() >= DRAG_REFLOW_MAX_AFFECTED_CARDS:
+		return 0
+	var layer_count := mini(DRAG_REFLOW_INITIAL_GROUP_LAYERS + maxi(collision_hop - 1, 0), DRAG_REFLOW_MAX_GROUP_LAYERS)
+	if group_id == 0:
+		group_id = -int(context.get("next_group_id", 1))
+		context["next_group_id"] = int(context.get("next_group_id", 1)) + 1
+		groups[group_id] = {
+			"root_id": root_node_id,
+			"layers": 0,
+			"members": [],
+			"include_ancestors": include_ancestors,
+			"horizontal_direction": 0,
+			"vertical_direction": 0,
+			"translation": Vector2.ZERO,
+		}
+	var group: Dictionary = groups.get(group_id, {})
+	# A group may grow to four layers, but it cannot first collect descendants
+	# and later append ancestors (or vice versa), which would span seven layers.
+	var collect_ancestors := bool(group.get("include_ancestors", include_ancestors))
+	var available_slots := maxi(0, DRAG_REFLOW_MAX_AFFECTED_CARDS - affected_ids.size())
+	var collected_ids := _collect_drag_reflow_group_ids(int(group.get("root_id", root_node_id)), layer_count, collect_ancestors, nodes_by_id, group_for_id, group_id, anchor_node_id, affected_ids, available_slots)
+	var member_ids: Array = group.get("members", [])
+	for node_id in collected_ids:
+		if member_ids.has(node_id):
+			continue
+		if not affected_ids.has(node_id) and affected_ids.size() >= DRAG_REFLOW_MAX_AFFECTED_CARDS:
+			break
+		offsets[node_id] = Vector2(offsets.get(node_id, Vector2.ZERO)) + Vector2(group.get("translation", Vector2.ZERO))
+		member_ids.append(node_id)
+		group_for_id[node_id] = group_id
+		affected_ids[node_id] = true
+	group["members"] = member_ids
+	group["layers"] = maxi(int(group.get("layers", 0)), layer_count)
+	groups[group_id] = group
+	context["groups"] = groups
+	context["group_for_id"] = group_for_id
+	context["affected_ids"] = affected_ids
+	return group_id if not member_ids.is_empty() else 0
+
+
+func _collect_drag_reflow_group_ids(root_node_id: int, layer_count: int, include_ancestors: bool, nodes_by_id: Dictionary, group_for_id: Dictionary, group_id: int, anchor_node_id: int, affected_ids: Dictionary, available_slots: int) -> Array[int]:
+	var result: Array[int] = []
+	if not nodes_by_id.has(root_node_id) or root_node_id == anchor_node_id:
+		return result
+	var frontier: Array[int] = [root_node_id]
+	var remaining_slots := available_slots
+	var descendant_layer_count := 1 if include_ancestors else layer_count
+	for _layer_index in range(descendant_layer_count):
+		var next_layer: Array[int] = []
+		var accepted_layer: Array[int] = []
+		for node_id in frontier:
+			if node_id == anchor_node_id or not nodes_by_id.has(node_id):
+				continue
+			var existing_group_id := int(group_for_id.get(node_id, group_id))
+			if existing_group_id != group_id:
+				continue
+			accepted_layer.append(node_id)
+			if current_tree != null:
+				for child in current_tree.get_children_of(node_id):
+					if child != null and child.id != anchor_node_id and nodes_by_id.has(child.id):
+						next_layer.append(child.id)
+		if accepted_layer.is_empty():
+			break
+		var new_member_count := 0
+		for node_id in accepted_layer:
+			if not affected_ids.has(node_id) and not result.has(node_id):
+				new_member_count += 1
+		if new_member_count > remaining_slots:
+			break
+		for node_id in accepted_layer:
+			if not result.has(node_id):
+				result.append(node_id)
+		remaining_slots -= new_member_count
+		frontier = next_layer
+	if include_ancestors and current_tree != null:
+		var cursor := current_tree.find_node(root_node_id)
+		var ancestor_count := 0
+		while cursor != null and cursor.parent_id != -1 and ancestor_count + 1 < layer_count:
+			cursor = current_tree.find_node(cursor.parent_id)
+			ancestor_count += 1
+			if cursor == null:
+				break
+			if cursor.id == anchor_node_id:
+				break
+			if not nodes_by_id.has(cursor.id):
+				continue
+			var existing_group_id := int(group_for_id.get(cursor.id, group_id))
+			if existing_group_id != group_id:
+				break
+			if not result.has(cursor.id):
+				if not affected_ids.has(cursor.id):
+					if remaining_slots <= 0:
+						break
+					remaining_slots -= 1
+				result.append(cursor.id)
+	return result
+
+
+func _drag_reflow_pair_translation(moving: BTGraphNode, fixed: BTGraphNode, group_id: int, base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary, context: Dictionary) -> Vector2:
+	var moving_rect := _auto_spacing_rect(moving, base_positions, offsets, true)
+	var fixed_rect := _auto_spacing_rect(fixed, base_positions, offsets, true)
+	if not moving_rect.intersects(fixed_rect):
+		return Vector2.ZERO
+	var moving_is_parent := fixed.node_resource.parent_id == moving.node_resource.id
+	var moving_is_child := moving.node_resource.parent_id == fixed.node_resource.id
+	var protects_vertical_order := false
+	if moving_is_parent:
+		protects_vertical_order = _drag_reflow_edge_was_protected(moving.node_resource.id, fixed.node_resource.id, context)
+	elif moving_is_child:
+		protects_vertical_order = _drag_reflow_edge_was_protected(fixed.node_resource.id, moving.node_resource.id, context)
+	if protects_vertical_order:
+		if moving_is_parent:
+			return Vector2.UP * (moving_rect.end.y - fixed_rect.position.y + AUTO_SPACING_SEPARATION_EPSILON)
+		return Vector2.DOWN * (fixed_rect.end.y - moving_rect.position.y + AUTO_SPACING_SEPARATION_EPSILON)
+
+	var groups: Dictionary = context.get("groups", {})
+	var group: Dictionary = groups.get(group_id, {})
+	var direction := int(group.get("horizontal_direction", 0))
+	if direction == 0:
+		var moving_center := _drag_reflow_base_center(moving, base_positions)
+		var fixed_center := _drag_reflow_base_center(fixed, base_positions)
+		if moving_center.x > fixed_center.x:
+			direction = 1
+		elif moving_center.x < fixed_center.x:
+			direction = -1
+		else:
+			direction = 1 if int(source_order.get(moving.node_resource.id, moving.node_resource.id)) > int(source_order.get(fixed.node_resource.id, fixed.node_resource.id)) else -1
+		group["horizontal_direction"] = direction
+		groups[group_id] = group
+		context["groups"] = groups
+	if direction > 0:
+		return Vector2.RIGHT * (fixed_rect.end.x - moving_rect.position.x + AUTO_SPACING_SEPARATION_EPSILON)
+	return Vector2.LEFT * (moving_rect.end.x - fixed_rect.position.x + AUTO_SPACING_SEPARATION_EPSILON)
+
+
+func _drag_reflow_translation_clears_pair(moving: BTGraphNode, fixed: BTGraphNode, translation: Vector2, base_positions: Dictionary, offsets: Dictionary) -> bool:
+	var moved_rect := _auto_spacing_rect(moving, base_positions, offsets, true)
+	moved_rect.position += translation
+	return not moved_rect.intersects(_auto_spacing_rect(fixed, base_positions, offsets, true))
+
+
+func _drag_reflow_group_member_set(group_id: int, context: Dictionary) -> Dictionary:
+	var result: Dictionary = {}
+	var groups: Dictionary = context.get("groups", {})
+	var group: Dictionary = groups.get(group_id, {})
+	for node_id_variant in group.get("members", []):
+		result[int(node_id_variant)] = true
+	return result
+
+
+func _drag_reflow_translation_preserves_constraints(group_id: int, translation: Vector2, nodes_by_id: Dictionary, base_positions: Dictionary, offsets: Dictionary, context: Dictionary) -> bool:
+	var member_ids := _drag_reflow_group_member_set(group_id, context)
+	var protected_edges: Dictionary = context.get("protected_parent_child_edges", {})
+	for edge_key_variant in protected_edges.keys():
+		var edge_parts := str(edge_key_variant).split(">", false, 1)
+		if edge_parts.size() != 2:
+			continue
+		var parent_id := int(edge_parts[0])
+		var child_id := int(edge_parts[1])
+		if not nodes_by_id.has(parent_id) or not nodes_by_id.has(child_id):
+			continue
+		var parent_moves := member_ids.has(parent_id)
+		var child_moves := member_ids.has(child_id)
+		if parent_moves == child_moves:
+			continue
+		var parent := nodes_by_id[parent_id] as BTGraphNode
+		var parent_position := Vector2(base_positions[parent_id]) + Vector2(offsets.get(parent_id, Vector2.ZERO))
+		var child_position := Vector2(base_positions[child_id]) + Vector2(offsets.get(child_id, Vector2.ZERO))
+		if parent_moves:
+			parent_position += translation
+		if child_moves:
+			child_position += translation
+		if parent_position.y + parent.size.y > child_position.y + AUTO_SPACING_SEPARATION_EPSILON:
+			return false
+	var sibling_orders: Array = context.get("protected_sibling_orders", [])
+	for order_variant in sibling_orders:
+		var order := Vector2i(order_variant)
+		if not nodes_by_id.has(order.x) or not nodes_by_id.has(order.y):
+			continue
+		var left_moves := member_ids.has(order.x)
+		var right_moves := member_ids.has(order.y)
+		if left_moves == right_moves:
+			continue
+		var left_x := Vector2(base_positions[order.x]).x + Vector2(offsets.get(order.x, Vector2.ZERO)).x
+		var right_x := Vector2(base_positions[order.y]).x + Vector2(offsets.get(order.y, Vector2.ZERO)).x
+		if left_moves:
+			left_x += translation.x
+		if right_moves:
+			right_x += translation.x
+		if right_x - left_x < AUTO_SPACING_SEPARATION_EPSILON:
+			return false
+	return true
+
+
+func _find_drag_reflow_boundary_translation(group_id: int, nodes: Array[BTGraphNode], nodes_by_id: Dictionary, base_positions: Dictionary, offsets: Dictionary, context: Dictionary) -> Vector2:
+	var member_ids := _drag_reflow_group_member_set(group_id, context)
+	if member_ids.is_empty():
+		return Vector2.ZERO
+	var directions: Array[Vector2] = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
+	var best_translation := Vector2.ZERO
+	var best_score := INF
+	for direction in directions:
+		var candidate := _drag_reflow_directional_clearance(member_ids, direction, nodes, base_positions, offsets)
+		if candidate.is_zero_approx():
+			continue
+		if not _drag_reflow_translation_preserves_constraints(group_id, candidate, nodes_by_id, base_positions, offsets, context):
+			continue
+		var score := candidate.length() * (1.0 if not is_zero_approx(direction.x) else 1.15)
+		if score < best_score:
+			best_score = score
+			best_translation = candidate
+	return best_translation
+
+
+func _drag_reflow_directional_clearance(member_ids: Dictionary, direction: Vector2, nodes: Array[BTGraphNode], base_positions: Dictionary, offsets: Dictionary) -> Vector2:
+	var translation := Vector2.ZERO
+	for _pass_index in range(nodes.size() + 1):
+		var required_step := 0.0
+		for member in nodes:
+			var member_id: int = member.node_resource.id
+			if not member_ids.has(member_id):
+				continue
+			var member_rect := _auto_spacing_rect(member, base_positions, offsets, true)
+			member_rect.position += translation
+			for obstacle in nodes:
+				var obstacle_id: int = obstacle.node_resource.id
+				if member_ids.has(obstacle_id):
+					continue
+				var obstacle_rect := _auto_spacing_rect(obstacle, base_positions, offsets, true)
+				if not member_rect.intersects(obstacle_rect):
+					continue
+				if direction == Vector2.RIGHT:
+					required_step = maxf(required_step, obstacle_rect.end.x - member_rect.position.x + AUTO_SPACING_SEPARATION_EPSILON)
+				elif direction == Vector2.LEFT:
+					required_step = maxf(required_step, member_rect.end.x - obstacle_rect.position.x + AUTO_SPACING_SEPARATION_EPSILON)
+				elif direction == Vector2.DOWN:
+					required_step = maxf(required_step, obstacle_rect.end.y - member_rect.position.y + AUTO_SPACING_SEPARATION_EPSILON)
+				else:
+					required_step = maxf(required_step, member_rect.end.y - obstacle_rect.position.y + AUTO_SPACING_SEPARATION_EPSILON)
+		if required_step <= AUTO_SPACING_SEPARATION_EPSILON:
+			break
+		translation += direction * required_step
+	if translation.is_zero_approx():
+		return Vector2.ZERO
+	for member in nodes:
+		var member_id: int = member.node_resource.id
+		if not member_ids.has(member_id):
+			continue
+		var member_rect := _auto_spacing_rect(member, base_positions, offsets, true)
+		member_rect.position += translation
+		for obstacle in nodes:
+			if member_ids.has(obstacle.node_resource.id):
+				continue
+			if member_rect.intersects(_auto_spacing_rect(obstacle, base_positions, offsets, true)):
+				return Vector2.ZERO
+	return translation
+
+
+func _translate_drag_reflow_group(group_id: int, translation: Vector2, offsets: Dictionary, context: Dictionary) -> void:
+	var groups: Dictionary = context.get("groups", {})
+	var group: Dictionary = groups.get(group_id, {})
+	var member_ids: Array = group.get("members", [])
+	for node_id_variant in member_ids:
+		var node_id := int(node_id_variant)
+		offsets[node_id] = Vector2(offsets.get(node_id, Vector2.ZERO)) + translation
+	group["translation"] = Vector2(group.get("translation", Vector2.ZERO)) + translation
+	groups[group_id] = group
+	context["groups"] = groups
 
 
 func _apply_auto_spacing_collision_pair(left: BTGraphNode, right: BTGraphNode, base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary, anchor_influence: Dictionary, one_sided := false) -> bool:
@@ -2779,6 +3323,10 @@ func _reset_auto_spacing() -> void:
 	drag_reflow_last_refresh_screen_offset = Vector2.ZERO
 	drag_auto_spacing_active = false
 	drag_visual_offset_claimed = false
+	drag_reflow_context.clear()
+	pending_drag_reflow_release = false
+	settled_drag_reflow_anchor_id = -1
+	settled_drag_reflow_restore_targets.clear()
 	suppress_drag_reflow_position_changes = true
 	for child in graph_edit.get_children():
 		if child is BTGraphNode:
@@ -2806,46 +3354,63 @@ func _capture_current_auto_spacing_offsets() -> Dictionary:
 	return result
 
 
-func _build_drag_auto_spacing_baseline(dragged_node_id: int) -> Dictionary:
+func _build_drag_auto_spacing_baseline(dragged_node_id: int, context: Dictionary) -> Dictionary:
+	var offsets := _capture_current_auto_spacing_offsets()
+	# Smart Drag starts from the exact rendered canvas. Clearing older visual
+	# offsets here would silently move cards outside the 24-card local budget.
+	# Only the held card claims its rendered position as the new fixed anchor.
+	offsets[dragged_node_id] = Vector2.ZERO
+	context["baseline_affected_ids"] = {}
+	if settled_drag_reflow_anchor_id != dragged_node_id or settled_drag_reflow_restore_targets.is_empty():
+		return offsets
+	var candidate_offsets := offsets.duplicate(true)
+	var restored_ids: Array[int] = []
+	var restore_ids: Array = settled_drag_reflow_restore_targets.keys()
+	restore_ids.sort()
+	for restore_id_variant in restore_ids:
+		var restore_id := int(restore_id_variant)
+		if restore_id == dragged_node_id or not candidate_offsets.has(restore_id):
+			continue
+		var restore_target := Vector2(settled_drag_reflow_restore_targets[restore_id])
+		if Vector2(candidate_offsets[restore_id]).distance_squared_to(restore_target) <= AUTO_SPACING_EPSILON * AUTO_SPACING_EPSILON:
+			continue
+		if restored_ids.size() >= DRAG_REFLOW_MAX_AFFECTED_CARDS:
+			break
+		candidate_offsets[restore_id] = restore_target
+		restored_ids.append(restore_id)
+	if restored_ids.is_empty():
+		return offsets
+	var collision_check_ids := restored_ids.duplicate()
+	collision_check_ids.append(dragged_node_id)
+	if _drag_reflow_offsets_collide(candidate_offsets, collision_check_ids):
+		return offsets
+	var baseline_affected_ids: Dictionary = {}
+	for restored_id in restored_ids:
+		baseline_affected_ids[restored_id] = true
+	context["baseline_affected_ids"] = baseline_affected_ids
+	return candidate_offsets
+
+
+func _drag_reflow_offsets_collide(offsets: Dictionary, checked_ids: Array[int]) -> bool:
 	var nodes: Array[BTGraphNode] = []
 	var base_positions: Dictionary = {}
-	var offsets := _capture_current_auto_spacing_offsets()
+	var checked_set: Dictionary = {}
+	for node_id in checked_ids:
+		checked_set[node_id] = true
 	for child in graph_edit.get_children() if is_instance_valid(graph_edit) else []:
 		if child is BTGraphNode and child.node_resource != null:
 			nodes.append(child)
 			base_positions[child.node_resource.id] = child.position_offset - child.visual_offset
-	offsets[dragged_node_id] = Vector2.ZERO
-	# Remove offsets that were needed only because of the card now being dragged.
-	# Testing a zero offset against the still-valid layout is much cheaper than
-	# restarting the 32-iteration global solver on every pointer-down.
-	for _pass_index in range(3):
-		var changed := false
-		for graph_node in nodes:
-			var node_id: int = graph_node.node_resource.id
-			if node_id == dragged_node_id:
-				continue
-			var previous_offset := Vector2(offsets.get(node_id, Vector2.ZERO))
-			if previous_offset.is_zero_approx():
-				continue
-			offsets[node_id] = Vector2.ZERO
-			if _auto_spacing_node_collides(graph_node, nodes, base_positions, offsets, dragged_node_id):
-				offsets[node_id] = previous_offset
-			else:
-				changed = true
-		if not changed:
-			break
-	return offsets
-
-
-func _auto_spacing_node_collides(graph_node: BTGraphNode, nodes: Array[BTGraphNode], base_positions: Dictionary, offsets: Dictionary, excluded_node_id: int) -> bool:
-	var node_id: int = graph_node.node_resource.id
-	var candidate_rect := _auto_spacing_rect(graph_node, base_positions, offsets, true)
-	for other in nodes:
-		var other_id: int = other.node_resource.id
-		if other_id == node_id or other_id == excluded_node_id:
+	for graph_node in nodes:
+		var node_id: int = graph_node.node_resource.id
+		if not checked_set.has(node_id):
 			continue
-		if candidate_rect.intersects(_auto_spacing_rect(other, base_positions, offsets, true)):
-			return true
+		var candidate_rect := _auto_spacing_rect(graph_node, base_positions, offsets, true)
+		for other in nodes:
+			if other.node_resource.id == node_id:
+				continue
+			if candidate_rect.intersects(_auto_spacing_rect(other, base_positions, offsets, true)):
+				return true
 	return false
 
 

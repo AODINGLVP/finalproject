@@ -20,6 +20,17 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var view := await _make_view()
+	if OS.get_cmdline_user_args().has("grouped-drag-quick"):
+		await _test_branch_shape_preserving_drag_reflow(view)
+		await _test_bounded_collision_chain(view)
+		await _test_affected_card_budget(view)
+		await _test_parent_child_drag_hierarchy(view)
+		print("BT_GROUPED_DRAG_QUICK_SUMMARY passed=%d failed=%d" % [passed, failed])
+		view.queue_free()
+		await process_frame
+		await process_frame
+		quit(0 if failed == 0 else 1)
+		return
 	if OS.get_cmdline_user_args().has("density-transition-quick"):
 		await _test_drag_across_display_density_change(view)
 		print("BT_ZOOM_DENSITY_QUICK_SUMMARY passed=%d failed=%d" % [passed, failed])
@@ -31,6 +42,7 @@ func _run() -> void:
 	if OS.get_cmdline_user_args().has("drag-rules-quick"):
 		await _test_drag_reflow_deadzone(view)
 		await _test_conditional_parent_child_clearance(view)
+		await _test_branch_shape_preserving_drag_reflow(view)
 		await _test_playable_tree_max_zoom_quick(view)
 		print("BT_ZOOM_DRAG_LAYOUT_QUICK_SUMMARY passed=%d failed=%d" % [passed, failed])
 		view.queue_free()
@@ -41,6 +53,9 @@ func _run() -> void:
 	await _test_freeform_layout_is_untouched(view)
 	await _test_drag_reflow_deadzone(view)
 	await _test_conditional_parent_child_clearance(view)
+	await _test_branch_shape_preserving_drag_reflow(view)
+	await _test_bounded_collision_chain(view)
+	await _test_affected_card_budget(view)
 	await _test_local_drag_avoidance(view)
 	await _test_parent_child_drag_hierarchy(view)
 	await _test_complete_zoom_range(view)
@@ -289,6 +304,152 @@ func _test_conditional_parent_child_clearance(view: BTEditorView) -> void:
 		_expect(_resource_positions_equal(tree, resource_positions), "conditional hierarchy protection changes no saved node position")
 
 
+func _test_branch_shape_preserving_drag_reflow(view: BTEditorView) -> void:
+	var tree := _make_branch_shape_tree()
+	var structure_before := _structure_signature(tree)
+	var order_before := _execution_order_signature(tree)
+	var resource_positions_before := _resource_positions(tree)
+	await _prepare_view(view, tree, 1.0, false, false)
+	var rendered_before := _render_positions(view)
+	var moving_branch_ids: Array[int] = [6, 8, 9]
+	var remote_ids: Array[int] = [1, 2, 4, 5, 7, 10, 11, 12]
+	var target := Vector2(520.0, 550.0)
+	var drag_state := _begin_graph_node_drag(view, 3)
+	_move_graph_node_drag(view, drag_state, target)
+	await process_frame
+	var rendered_during := _render_positions(view)
+	_expect(view.drag_auto_spacing_active, "branch-shape drag activates grouped Smart Drag reflow")
+	_expect(_graph_node(view, 3).position_offset.distance_to(target) <= POSITION_EPSILON, "branch-shape drag keeps the held branch root under the pointer")
+	_expect(_render_group_moved(rendered_before, rendered_during, moving_branch_ids), "branch-shape drag moves the colliding middle branch")
+	_expect(_render_group_translation_is_uniform(rendered_before, rendered_during, moving_branch_ids), "branch-shape drag gives every middle-branch card the same translation")
+	_expect(_render_positions_for_ids_equal(view, rendered_before, remote_ids), "branch-shape drag leaves the distant branch and unrelated cards fixed")
+	_expect(_rendered_overlaps(view).is_empty() and _screen_overlaps(view).is_empty(), "branch-shape drag removes overlap before pointer release")
+	_expect(_saved_layered_relationship_failures(view).is_empty(), "branch-shape drag preserves every authored parent-above-child relationship")
+	_expect(_resource_positions_equal(tree, resource_positions_before), "branch-shape drag writes no resource position while held")
+
+	_end_graph_node_drag(drag_state)
+	await _wait_frames(SETTLE_FRAMES)
+	var rendered_after := _render_positions(view)
+	_expect(tree.find_node(3).position.distance_to(target) <= POSITION_EPSILON, "branch-shape release stores only the user's dragged position")
+	_expect(_render_positions_equal(view, rendered_during), "branch-shape release reuses the live solution without secondary movement")
+	_expect(_render_group_translation_is_uniform(rendered_before, rendered_after, moving_branch_ids), "branch-shape release keeps the displaced branch rigid")
+	_expect(_render_positions_for_ids_equal(view, rendered_before, remote_ids), "branch-shape release causes no second wave of distant movement")
+	_expect(_rendered_overlaps(view).is_empty() and _screen_overlaps(view).is_empty(), "branch-shape release remains overlap-free")
+	_expect(_saved_layered_relationship_failures(view).is_empty(), "branch-shape release retains the original vertical hierarchy")
+	_expect(_resource_positions_except_equal(tree, 3, _resource_positions_except_from_dictionary(resource_positions_before, 3)), "branch-shape release keeps every automatic displacement temporary")
+	_expect(tree.validate_tree().is_empty() and _structure_signature(tree) == structure_before and _execution_order_signature(tree) == order_before, "branch-shape reflow preserves structure and execution order")
+
+
+func _test_bounded_collision_chain(view: BTEditorView) -> void:
+	var tree := _make_bounded_collision_chain_tree()
+	var structure_before := _structure_signature(tree)
+	var resource_positions_before := _resource_positions(tree)
+	await _prepare_view(view, tree, 1.0, false, false)
+	var rendered_before := _render_positions(view)
+	var remote_ids: Array[int] = []
+	for node_id in range(8, 39):
+		remote_ids.append(node_id)
+	var drag_state := _begin_graph_node_drag(view, 3)
+	# Keeping the held card just left of node 4 pushes four consecutive cards
+	# toward the row instead of letting the first obstacle escape into empty space.
+	var target := _graph_node(view, 4).position_offset - Vector2.ONE
+	_move_graph_node_drag(view, drag_state, target)
+	await process_frame
+	var rendered_during := _render_positions(view)
+	var affected_ids: Dictionary = view.drag_reflow_context.get("affected_ids", {})
+	var chain_overlaps_during := _rendered_overlaps(view)
+	if not chain_overlaps_during.is_empty():
+		print("BT_BOUNDED_CHAIN_FAILURE affected=%s overlaps=%s" % [affected_ids.keys(), chain_overlaps_during])
+	_expect(view.drag_auto_spacing_active and affected_ids.size() > 0, "bounded collision chain activates a local affected set")
+	_expect(affected_ids.size() <= view.DRAG_REFLOW_MAX_AFFECTED_CARDS, "bounded collision chain never exceeds the 24-card drag budget")
+	_expect(affected_ids.has(4) and affected_ids.has(5) and affected_ids.has(6) and affected_ids.has(7), "bounded collision chain propagates through four local collision steps")
+	_expect(not affected_ids.has(8), "bounded collision chain stops before recruiting a fifth collision step")
+	_expect(_render_positions_for_ids_equal(view, rendered_before, remote_ids), "bounded collision chain keeps cards beyond the fourth collision step fixed")
+	_expect(chain_overlaps_during.is_empty() and _screen_overlaps(view).is_empty(), "bounded collision chain resolves its edge collision without moving the remote row")
+	_expect(_saved_layered_relationship_failures(view).is_empty(), "bounded collision chain keeps every protected parent above its children")
+	_expect(_resource_positions_equal(tree, resource_positions_before), "bounded collision chain changes no resource while held")
+
+	_end_graph_node_drag(drag_state)
+	await _wait_frames(SETTLE_FRAMES)
+	var order_after_release := _execution_order_signature(tree)
+	_expect(_render_positions_equal(view, rendered_during), "bounded collision chain performs no release-time global reflow")
+	_expect(_render_positions_for_ids_equal(view, rendered_before, remote_ids), "bounded collision chain leaves remote cards fixed after release")
+	_expect(_rendered_overlaps(view).is_empty() and _screen_overlaps(view).is_empty(), "bounded collision chain remains overlap-free after release")
+	_expect(_resource_positions_except_equal(tree, 3, _resource_positions_except_from_dictionary(resource_positions_before, 3)), "bounded collision chain keeps automatic movement out of saved resources")
+	_expect(tree.validate_tree().is_empty() and _structure_signature(tree) == structure_before and _execution_order_signature(tree) == order_after_release, "bounded collision chain preserves tree validity and its released execution order")
+
+
+func _test_affected_card_budget(view: BTEditorView) -> void:
+	var tree := _make_affected_card_budget_tree()
+	var structure_before := _structure_signature(tree)
+	var resource_positions_before := _resource_positions(tree)
+	await _prepare_view(view, tree, 1.0, false, false)
+	var rendered_before := _render_positions(view)
+	var branch_ids: Array[int] = [4]
+	for node_id in range(100, 123):
+		branch_ids.append(node_id)
+	var drag_state := _begin_graph_node_drag(view, 3)
+	var target := _graph_node(view, 4).position_offset - Vector2.ONE
+	_move_graph_node_drag(view, drag_state, target)
+	await process_frame
+	var rendered_during := _render_positions(view)
+	var affected_ids: Dictionary = view.drag_reflow_context.get("affected_ids", {})
+	_expect(affected_ids.size() == view.DRAG_REFLOW_MAX_AFFECTED_CARDS, "wide branch fills exactly the complete 24-card Smart Drag budget")
+	_expect(not affected_ids.has(5) and not affected_ids.has(6), "the 24-card budget prevents recruitment of the next branches")
+	_expect(_render_group_moved(rendered_before, rendered_during, branch_ids), "the complete wide branch moves away from the held card")
+	_expect(_render_group_translation_is_uniform(rendered_before, rendered_during, branch_ids), "all 24 cards in the wide branch keep one rigid translation")
+	_expect(_render_positions_for_ids_equal(view, rendered_before, [5, 6]), "cards beyond the 24-card budget remain fixed")
+	_expect(_rendered_overlaps(view).is_empty() and _screen_overlaps(view).is_empty(), "the capped wide-branch solve clears overlap without moving remote cards")
+	_expect(_saved_layered_relationship_failures(view).is_empty(), "the capped wide-branch solve preserves authored hierarchy")
+	_expect(_resource_positions_equal(tree, resource_positions_before), "the capped wide-branch solve writes no resource while held")
+
+	_end_graph_node_drag(drag_state)
+	await _wait_frames(SETTLE_FRAMES)
+	_expect(_render_positions_equal(view, rendered_during), "the capped wide-branch release performs no second solve")
+	_expect(_render_positions_for_ids_equal(view, rendered_before, [5, 6]), "the capped wide-branch release keeps remote cards fixed")
+
+	# In a second drag of the same anchor, first move to free space so all 24 cards
+	# restore, then continue the same mouse hold into another branch. Restored cards
+	# must stop consuming the live budget after that first refresh.
+	var second_drag_state := _begin_graph_node_drag(view, 3)
+	var free_target := Vector2(-1200.0, 600.0)
+	_move_graph_node_drag(view, second_drag_state, free_target)
+	await process_frame
+	var restored_affected_ids: Dictionary = view.drag_reflow_context.get("affected_ids", {})
+	_expect(restored_affected_ids.size() == view.DRAG_REFLOW_MAX_AFFECTED_CARDS, "second drag restores the complete previous 24-card branch in one bounded refresh")
+	_expect(_render_positions_for_ids_equal(view, rendered_before, branch_ids), "second drag returns the previous wide branch to its baseline")
+
+	var second_target := _graph_node(view, 6).position_offset - Vector2.ONE
+	_move_graph_node_drag(view, second_drag_state, second_target)
+	await process_frame
+	var rendered_second := _render_positions(view)
+	var second_affected_ids: Dictionary = view.drag_reflow_context.get("affected_ids", {})
+	_expect(second_affected_ids.has(6) and not second_affected_ids.has(4), "restored cards release the budget for a later collision in the same drag")
+	_expect(second_affected_ids.size() < view.DRAG_REFLOW_MAX_AFFECTED_CARDS, "the restored wide branch no longer consumes the current 24-card budget")
+	_expect(_render_positions_for_ids_equal(view, rendered_during, branch_ids), "later collision returns the restored wide branch to this drag's starting layout")
+	_expect(_render_positions_for_ids_equal(view, rendered_before, [5]), "later same-drag movement leaves the middle remote card fixed")
+	_expect(_render_group_moved(rendered_before, rendered_second, [6]), "later same-drag movement avoids the newly reached branch")
+	_expect(_rendered_overlaps(view).is_empty() and _screen_overlaps(view).is_empty(), "later same-drag movement clears the new collision without reviving the old one")
+	# Trigger another refresh beyond the 8-screen-pixel step. This catches a stale
+	# fixed baseline that would otherwise make the old 24-card branch reappear.
+	var third_target := second_target + Vector2(9.0, 0.0)
+	_move_graph_node_drag(view, second_drag_state, third_target)
+	await process_frame
+	var rendered_third := _render_positions(view)
+	var third_affected_ids: Dictionary = view.drag_reflow_context.get("affected_ids", {})
+	_expect(third_affected_ids.has(6) and not third_affected_ids.has(4), "the next pointer refresh keeps the budget assigned to the current branch")
+	_expect(_render_positions_for_ids_equal(view, rendered_during, branch_ids), "the next pointer refresh does not revive the old restored branch")
+	_expect(_rendered_overlaps(view).is_empty() and _screen_overlaps(view).is_empty(), "the next pointer refresh remains overlap-free")
+
+	_end_graph_node_drag(second_drag_state)
+	await _wait_frames(SETTLE_FRAMES)
+	_expect(_render_positions_equal(view, rendered_third), "the restored-budget release performs no second solve")
+	_expect(_render_positions_for_ids_equal(view, rendered_during, branch_ids), "the restored-budget release keeps the wide branch at this drag's starting layout")
+	_expect(_render_positions_for_ids_equal(view, rendered_before, [5]), "the restored-budget release keeps its remote card fixed")
+	_expect(_resource_positions_except_equal(tree, 3, _resource_positions_except_from_dictionary(resource_positions_before, 3)), "the capped wide-branch release saves no automatic movement")
+	_expect(tree.validate_tree().is_empty() and _structure_signature(tree) == structure_before, "the capped wide-branch release preserves tree structure")
+
+
 func _test_local_drag_avoidance(view: BTEditorView) -> void:
 	var cases: Array[Array] = [
 		[view.graph_edit.zoom_min, false, false],
@@ -369,7 +530,10 @@ func _test_parent_child_drag_hierarchy(view: BTEditorView) -> void:
 		_expect(bool(drag_result.get("started", false)), "%s starts a direct-edge collision drag" % label)
 		_expect(_graph_node(view, 3).position_offset.distance_to(parent_target) <= POSITION_EPSILON, "%s keeps the dragged child at the requested position" % label)
 		_expect(_rendered_overlaps(view).is_empty(), "%s resolves the complete parent collision chain" % label)
-		_expect(_parent_child_clearance_failures(view, 0.0).is_empty(), "%s preserves the fixture's original parent-above-child relationships" % label)
+		var hierarchy_failures := _parent_child_clearance_failures(view, 0.0)
+		if not hierarchy_failures.is_empty():
+			print("BT_PARENT_DRAG_FAILURE label=%s failures=%s" % [label, hierarchy_failures])
+		_expect(hierarchy_failures.is_empty(), "%s preserves the fixture's original parent-above-child relationships" % label)
 		_expect(_resource_positions_except_equal(tree, 3, other_positions), "%s leaves every non-dragged resource coordinate unchanged" % label)
 		_expect(_structure_signature(tree) == structure_before and _execution_order_signature(tree) == order_before, "%s preserves tree structure and execution order" % label)
 
@@ -1016,6 +1180,58 @@ func _make_parent_child_drag_tree() -> BTTreeResource:
 	return tree
 
 
+func _make_branch_shape_tree() -> BTTreeResource:
+	var tree := BTTreeResource.new()
+	tree.tree_name = "Rigid Local Branch Reflow Fixture"
+	tree.root_node_id = 1
+	tree.nodes = [
+		_make_node(1, BTNodeResource.TYPE_ROOT, -1, Vector2(900.0, 0.0)),
+		_make_node(2, BTNodeResource.TYPE_SELECTOR, 1, Vector2(900.0, 250.0)),
+		_make_node(3, BTNodeResource.TYPE_SEQUENCE, 2, Vector2(0.0, 550.0)),
+		_make_node(4, BTNodeResource.TYPE_ACTION, 3, Vector2(-150.0, 850.0)),
+		_make_node(5, BTNodeResource.TYPE_SEQUENCE, 3, Vector2(150.0, 850.0)),
+		_make_node(7, BTNodeResource.TYPE_ACTION, 5, Vector2(150.0, 1150.0)),
+		_make_node(6, BTNodeResource.TYPE_SEQUENCE, 2, Vector2(700.0, 550.0)),
+		_make_node(8, BTNodeResource.TYPE_ACTION, 6, Vector2(550.0, 850.0)),
+		_make_node(9, BTNodeResource.TYPE_ACTION, 6, Vector2(850.0, 850.0)),
+		_make_node(10, BTNodeResource.TYPE_SEQUENCE, 2, Vector2(1600.0, 550.0)),
+		_make_node(11, BTNodeResource.TYPE_ACTION, 10, Vector2(1450.0, 850.0)),
+		_make_node(12, BTNodeResource.TYPE_ACTION, 10, Vector2(1750.0, 850.0)),
+	]
+	return tree
+
+
+func _make_bounded_collision_chain_tree() -> BTTreeResource:
+	var tree := BTTreeResource.new()
+	tree.tree_name = "Bounded Collision Chain Fixture"
+	tree.root_node_id = 1
+	tree.nodes = [
+		_make_node(1, BTNodeResource.TYPE_ROOT, -1, Vector2(1800.0, 0.0)),
+		_make_node(2, BTNodeResource.TYPE_SELECTOR, 1, Vector2(1800.0, 300.0)),
+		_make_node(3, BTNodeResource.TYPE_ACTION, 2, Vector2(-1200.0, 600.0)),
+	]
+	for node_id in range(4, 39):
+		tree.nodes.append(_make_node(node_id, BTNodeResource.TYPE_ACTION, 2, Vector2(float(node_id - 4) * 300.0, 600.0)))
+	return tree
+
+
+func _make_affected_card_budget_tree() -> BTTreeResource:
+	var tree := BTTreeResource.new()
+	tree.tree_name = "Twenty Four Card Smart Drag Budget Fixture"
+	tree.root_node_id = 1
+	tree.nodes = [
+		_make_node(1, BTNodeResource.TYPE_ROOT, -1, Vector2(900.0, 0.0)),
+		_make_node(2, BTNodeResource.TYPE_SELECTOR, 1, Vector2(900.0, 300.0)),
+		_make_node(3, BTNodeResource.TYPE_ACTION, 2, Vector2(-1200.0, 600.0)),
+		_make_node(4, BTNodeResource.TYPE_SEQUENCE, 2, Vector2(0.0, 600.0)),
+		_make_node(5, BTNodeResource.TYPE_ACTION, 2, Vector2(300.0, 600.0)),
+		_make_node(6, BTNodeResource.TYPE_ACTION, 2, Vector2(2400.0, 600.0)),
+	]
+	for index in range(23):
+		tree.nodes.append(_make_node(100 + index, BTNodeResource.TYPE_ACTION, 4, Vector2(-6600.0 + float(index) * 600.0, 1200.0)))
+	return tree
+
+
 func _make_drag_tree() -> BTTreeResource:
 	var tree := BTTreeResource.new()
 	tree.tree_name = "Zoom Drag Layout Fixture"
@@ -1203,6 +1419,29 @@ func _moved_render_ids(before: Dictionary, after: Dictionary) -> Array[int]:
 	return result
 
 
+func _render_group_moved(before: Dictionary, after: Dictionary, node_ids: Array[int]) -> bool:
+	for node_id in node_ids:
+		if before.has(node_id) and after.has(node_id) and Vector2(before[node_id]).distance_to(Vector2(after[node_id])) > POSITION_EPSILON:
+			return true
+	return false
+
+
+func _render_group_translation_is_uniform(before: Dictionary, after: Dictionary, node_ids: Array[int]) -> bool:
+	if node_ids.is_empty():
+		return true
+	var first_id := node_ids[0]
+	if not before.has(first_id) or not after.has(first_id):
+		return false
+	var expected_delta := Vector2(after[first_id]) - Vector2(before[first_id])
+	for node_id in node_ids:
+		if not before.has(node_id) or not after.has(node_id):
+			return false
+		var delta := Vector2(after[node_id]) - Vector2(before[node_id])
+		if delta.distance_to(expected_delta) > POSITION_EPSILON:
+			return false
+	return true
+
+
 func _ids_are_subset(candidate_ids: Array[int], allowed_ids: Array) -> bool:
 	for node_id in candidate_ids:
 		if not allowed_ids.has(node_id):
@@ -1337,6 +1576,15 @@ func _resource_positions_except(tree: BTTreeResource, excluded_id: int) -> Dicti
 	for node in tree.nodes:
 		if node != null and node.id != excluded_id:
 			result[node.id] = node.position
+	return result
+
+
+func _resource_positions_except_from_dictionary(positions: Dictionary, excluded_id: int) -> Dictionary:
+	var result := {}
+	for id_variant in positions.keys():
+		var node_id := int(id_variant)
+		if node_id != excluded_id:
+			result[node_id] = positions[id_variant]
 	return result
 
 
