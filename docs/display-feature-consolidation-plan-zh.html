@@ -396,19 +396,19 @@
     </header>
 
     <div class="stats" aria-label="当前功能数量摘要">
-      <div class="stat"><span class="number">23</span><span class="label">FEATURE_DEFINITIONS 功能开关</span></div>
-      <div class="stat"><span class="number">+1</span><span class="label">独立 Grid 开关，共 24 项</span></div>
+      <div class="stat"><span class="number">24</span><span class="label">FEATURE_DEFINITIONS 功能开关</span></div>
+      <div class="stat"><span class="number">+1</span><span class="label">独立 Grid 开关，共 25 项</span></div>
       <div class="stat"><span class="number">7</span><span class="label">另有 Layout 操作命令</span></div>
       <div class="stat"><span class="number">5</span><span class="label">另有 Debug 菜单项目</span></div>
     </div>
 
     <div class="notice">
-      <strong>建议先选“平衡整合”。</strong> 普通 Display 只保留约 5 个主要控件；布局相关内容回到 Layout，运行信息回到 Debug，互相覆盖的复选框改为单选。底层 23 个状态仍可在 Advanced／Diagnostics 中独立控制，不影响现有实验能力。
+      <strong>建议先选“平衡整合”。</strong> 普通 Display 只保留约 5 个主要控件；布局相关内容回到 Layout，运行信息回到 Debug，互相覆盖的复选框改为单选。底层 24 个状态仍可在 Advanced／Diagnostics 中独立控制，不影响现有实验能力。
     </div>
 
     <nav class="toc" aria-label="页面目录">
       <a href="#problem">当前问题</a>
-      <a href="#inventory">24 项清单</a>
+      <a href="#inventory">25 项清单</a>
       <a href="#relationships">关联关系</a>
       <a href="#options">三套方案</a>
       <a href="#recommended">推荐菜单</a>
@@ -452,10 +452,11 @@
           </ul>
         </article>
         <article class="map-column">
-          <h3>Advanced Display <span class="count">16 功能</span></h3>
+          <h3>Advanced Display <span class="count">17 功能</span></h3>
           <ul>
             <li>Accessibility / Colorblind Palette</li>
             <li>Single Connection Rendering</li>
+            <li>Straight Connections</li>
             <li>Always Curved Edges <span class="misplaced">实验</span></li>
             <li>Translucent Cards <span class="misplaced">实验</span></li>
             <li>Active Path Highlight <span class="misplaced">应属 Debug</span></li>
@@ -496,7 +497,7 @@
 
     <section id="inventory">
       <div class="section-head">
-        <h2>2. 当前 24 项 Display 清单</h2>
+        <h2>2. 当前 25 项 Display 清单</h2>
         <p>可按名称、用途或建议处理方式筛选。</p>
       </div>
       <div class="toolbar">
@@ -549,7 +550,7 @@
         <div id="featureEmpty" class="empty" hidden>没有符合筛选条件的功能。</div>
       </div>
       <div class="notice warning">
-        <strong>历史项说明：</strong> Edge Obstacle Avoidance 已从当前代码和菜单删除，不计入这 24 项。旧配置中的该键会被忽略；规划中不会把它重新加入。
+        <strong>历史项说明：</strong> Edge Obstacle Avoidance 已从当前代码和菜单删除，不计入这 25 项。旧配置中的该键会被忽略；规划中不会把它重新加入。
       </div>
     </section>
 
@@ -576,8 +577,8 @@
         </article>
         <article class="cluster">
           <div class="cluster-top"><h3>连线显示</h3><span class="tag merge strength">必须单选</span></div>
-          <div class="feature-chips"><span class="feature-chip">Default Channel</span><span class="feature-chip">Orthogonal</span><span class="feature-chip">Bundled</span><span class="feature-chip">Curved</span></div>
-          <p>当前三个复选框可以同时为真，但只有最高优先级生效。改成单选可消除隐式覆盖；Single Connection 作为自定义连线基线，退到 Diagnostics。</p>
+          <div class="feature-chips"><span class="feature-chip">Default Channel</span><span class="feature-chip">Straight</span><span class="feature-chip">Orthogonal</span><span class="feature-chip">Bundled</span><span class="feature-chip">Curved</span></div>
+          <p>当前四个路线复选框可以同时为真，但只有最高优先级生效。改成单选可消除隐式覆盖；Single Connection 作为自定义连线基线，退到 Diagnostics。</p>
         </article>
         <article class="cluster">
           <div class="cluster-top"><h3>运行解释</h3><span class="tag move strength">移动分组</span></div>
@@ -652,7 +653,7 @@
         <h2>5. 推荐的最终菜单结构</h2>
         <p>对应方案 B；这是供你确认的规划，不是已经实施的界面。</p>
       </div>
-      <div class="recommended-banner"><strong>核心原则：</strong> 合并的是“用户入口”，不是删除底层功能。普通 Display 从 24 个勾选项降为约 5 个主要控件，加 Canvas 与 Experimental 子组。</div>
+      <div class="recommended-banner"><strong>核心原则：</strong> 合并的是“用户入口”，不是删除底层功能。普通 Display 从 25 个勾选项降为约 5 个主要控件，加 Canvas 与 Experimental 子组。</div>
       <div class="menus">
         <article class="menu-card display">
           <h3>Display</h3>
@@ -666,7 +667,7 @@
               <ul><li>Standard</li><li>Shape + Color</li><li>Accessible</li></ul>
             </li>
             <li><span class="recommended">Connection Style</span>
-              <ul><li>Default Channel</li><li>Orthogonal</li><li>Bundled</li></ul>
+              <ul><li>Default Channel</li><li>Straight</li><li>Orthogonal</li><li>Bundled</li></ul>
             </li>
             <li>Canvas
               <ul><li>Grid ✓</li></ul>
@@ -676,7 +677,7 @@
             </li>
             <li>Advanced / Diagnostics…</li>
           </ul>
-          <p>Curved 虽收在 Experimental，逻辑上仍是 Connection Style 的第四个单选值；选择它时必须清除 Orthogonal 与 Bundled，不能重新变成可叠加复选框。</p>
+          <p>Straight 应作为 Default Channel 与 Orthogonal 之间的直接两点路线。Curved 虽收在 Experimental，逻辑上仍是 Connection Style 的第五个单选值；选择任一路线时必须清除其他路线状态，不能重新变成可叠加复选框。</p>
         </article>
         <article class="menu-card layout">
           <h3>Layout</h3>
@@ -710,7 +711,7 @@
       <div class="flow">
         <article class="flow-side">
           <h3>当前普通用户需要理解</h3>
-          <p>23 个 feature flag、1 个 Grid、多个相邻 Layout 命令，以及 Display／Debug 中重复或错位的运行选项。</p>
+          <p>24 个 feature flag、1 个 Grid、多个相邻 Layout 命令，以及 Display／Debug 中重复或错位的运行选项。</p>
         </article>
         <div class="flow-arrow" aria-hidden="true">→</div>
         <article class="flow-side">
@@ -730,7 +731,7 @@
           <thead><tr><th>关系</th><th>建议</th><th>理由</th></tr></thead>
           <tbody>
             <tr><td>Compact + Semantic Zoom</td><td><span class="tag merge">合并为三选一</span></td><td>Compact 本来就覆盖语义层。Full／Adaptive／Compact 能直接表达用户想看到多少信息。</td></tr>
-            <tr><td>Orthogonal + Bundled + Curved</td><td><span class="tag merge">改为路线单选</span></td><td>当前同时勾选时只有最高优先级生效，多个复选框会显示错误的心理模型。</td></tr>
+            <tr><td>Straight + Orthogonal + Bundled + Curved</td><td><span class="tag merge">改为路线单选</span></td><td>当前同时勾选时只有最高优先级生效，多个复选框会显示错误的心理模型。</td></tr>
             <tr><td>Type Encoding + Accessibility</td><td><span class="tag merge">合并为编码模式</span></td><td>Accessible 应包含形状冗余和友好配色；高级层仍可单独覆盖。</td></tr>
             <tr><td>Fisheye + Auto Spacing + Zoom Anchor</td><td><span class="tag advanced">一个效果 + 后台保护</span></td><td>用户选择局部放大，插件自动保证避让与视野稳定；不需要让用户手动拼装依赖。</td></tr>
             <tr><td>Collapse + Focus</td><td><span class="tag keep">只分组，不合并</span></td><td>Collapse 保存每个分支状态；Focus 是临时只看一个分支及祖先路径。</td></tr>
@@ -752,7 +753,7 @@
       <div class="safety-grid">
         <article class="safety-item"><h4>Card Detail 迁移</h4><p>旧 Compact=true → Compact；否则 Semantic=true → Adaptive；其余 → Full。若两者同时开启，Compact 优先，符合当前实际效果。</p></article>
         <article class="safety-item"><h4>Node Encoding 迁移</h4><p>Accessibility=true → Accessible；否则 Type Encoding=true → Shape + Color；其余 → Standard。</p></article>
-        <article class="safety-item"><h4>Connection Style 迁移</h4><p>Curved &gt; Bundled &gt; Orthogonal &gt; Default，严格按当前代码优先级得到唯一有效模式，再清理无效的重复状态。</p></article>
+        <article class="safety-item"><h4>Connection Style 迁移</h4><p>Straight &gt; Curved &gt; Bundled &gt; Orthogonal &gt; Default，严格按当前代码优先级得到唯一有效模式，再清理无效的重复状态。</p></article>
         <article class="safety-item"><h4>底层独立开关保留</h4><p>Auto Spacing、Zoom Anchor、Single Connection 等移到 Advanced／Diagnostics，仍能单独关闭、复位和自动测试。</p></article>
         <article class="safety-item"><h4>不改变树资源</h4><p>菜单迁移不能修改节点坐标、父子关系、左右执行顺序、Decorator 归属、折叠资源状态或 .tres 保存路径。</p></article>
         <article class="safety-item"><h4>Search 与 Collapse 能力</h4><p>普通界面可取消“是否允许使用”的总开关。旧 Search=false 不能让升级后的搜索框无故不可用；旧 Collapse=false 首次升级先按完整树显示且不写回 .tres，避免旧树突然隐藏。</p></article>
@@ -797,7 +798,7 @@
           <div class="field">
             <label for="decisionConnections">连线方式</label>
             <select id="decisionConnections">
-              <option value="改为 Default / Orthogonal / Bundled / Curved 单选（推荐）">改为 Default / Orthogonal / Bundled / Curved 单选（推荐）</option>
+              <option value="改为 Default / Straight / Orthogonal / Bundled / Curved 单选（推荐）">改为 Default / Straight / Orthogonal / Bundled / Curved 单选（推荐）</option>
               <option value="继续使用多个独立复选框">继续使用多个独立复选框</option>
             </select>
           </div>
@@ -860,7 +861,7 @@
       {id:"D08", name:"Grid", key:"view/grid", place:"Display", enabled:true, group:"画布外观", role:"显示 Godot 图画布网格。", treatment:"保留", proposal:"放入 Display > Canvas", note:"纯个人偏好，保持独立。"},
       {id:"D09", name:"Accessibility / Colorblind Palette", key:"accessibility", place:"Advanced Display", enabled:false, group:"节点识别", role:"切换色盲友好配色，并启用 Ctrl+F、F3、Shift+F3。", treatment:"合并", proposal:"并入 Node Encoding：Accessible", note:"Accessible 建议自动包含形状冗余。"},
       {id:"D10", name:"Single Connection Rendering", key:"single_connection", place:"Advanced Display", enabled:true, group:"连线显示", role:"隐藏 Godot 原生持久线，只画一条底部到顶部的自定义连线。", treatment:"高级", proposal:"作为默认实现；关闭入口移入 Diagnostics", note:"关闭后自定义路由模式不再按预期显示。"},
-      {id:"D11", name:"Always Curved Edges (Experiment)", key:"always_curved_edges", place:"Advanced Display", enabled:false, group:"实验", role:"把自定义连线改成 Bezier 曲线。", treatment:"合并", proposal:"Connection Style 的 Curved 实验选项", note:"当前优先级最高，会覆盖 Bundled 与 Orthogonal。"},
+      {id:"D11", name:"Always Curved Edges (Experiment)", key:"always_curved_edges", place:"Advanced Display", enabled:false, group:"实验", role:"把自定义连线改成 Bezier 曲线。", treatment:"合并", proposal:"Connection Style 的 Curved 实验选项", note:"覆盖 Bundled 与 Orthogonal，但会被 Straight 覆盖。"},
       {id:"D12", name:"Translucent Cards (Experiment)", key:"translucent_cards", place:"Advanced Display", enabled:false, group:"实验", role:"降低卡片背景透明度，同时维持文字与轮廓对比。", treatment:"高级", proposal:"集中到 Experimental，默认关闭", note:"不能与运行时 Branch Dimming 合并。"},
       {id:"D13", name:"Active Path Highlight", key:"active_path", place:"Advanced Display", enabled:true, group:"运行调试", role:"高亮 Live Debug 的当前运行节点链和连接。", treatment:"移动", proposal:"只在 Debug 显示", note:"依赖 Live Debug 快照。"},
       {id:"D14", name:"Non-active Branch Dimming", key:"branch_dimming", place:"Advanced Display + Debug", enabled:false, group:"运行调试", role:"有活动路径时淡化非活动卡片。", treatment:"移动", proposal:"只在 Debug 显示，删除重复入口", note:"无活动路径时不应淡化整棵树。"},
@@ -873,7 +874,8 @@
       {id:"D21", name:"Edge Bundling", key:"edge_bundling", place:"Advanced Display", enabled:false, group:"连线显示", role:"同父边使用靠近父节点的共同高度主干式折线。", treatment:"合并", proposal:"Connection Style：Bundled", note:"覆盖 Orthogonal，但被 Curved 覆盖。"},
       {id:"D22", name:"Stable Incremental Layout", key:"stable_layout", place:"Advanced Display", enabled:false, group:"自动排布", role:"Auto Arrange 时尽量保留原有无冲突坐标。", treatment:"移动", proposal:"改为 Layout 中的 Tidy Current Positions／保留位置选项", note:"与 Multi-column 同开时可能弱化多列结果。"},
       {id:"D23", name:"Breadcrumb Navigation", key:"breadcrumb", place:"Advanced Display", enabled:false, group:"导航定位", role:"显示所选节点从 Root 到 Selection 的可点击路径。", treatment:"移动", proposal:"移到 Layout／Navigation；可在有选择时自动显示", note:"不依赖 Live Debug。"},
-      {id:"D24", name:"Failure Reason Annotation", key:"failure_reason", place:"Advanced Display + Debug", enabled:true, group:"运行调试", role:"在节点和 Failures 列表显示失败原因。", treatment:"移动", proposal:"只在 Debug 显示，删除重复入口", note:"依赖 Live Debug 快照。"}
+      {id:"D24", name:"Failure Reason Annotation", key:"failure_reason", place:"Advanced Display + Debug", enabled:true, group:"运行调试", role:"在节点和 Failures 列表显示失败原因。", treatment:"移动", proposal:"只在 Debug 显示，删除重复入口", note:"依赖 Live Debug 快照。"},
+      {id:"D25", name:"Straight Connections", key:"straight_connections", place:"Advanced Display", enabled:false, group:"连线显示", role:"使用父节点底部中心到子节点顶部中心的单条直线。", treatment:"合并", proposal:"Connection Style：Straight", note:"当前实现中优先于 Curved、Bundled 与 Orthogonal；未来应进入互斥单选。"}
     ];
 
     const featureRows = document.getElementById("featureRows");

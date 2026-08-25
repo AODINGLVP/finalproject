@@ -23,6 +23,10 @@ func _run() -> void:
 	root.add_child(view)
 	await process_frame
 	await process_frame
+	# User display preferences persist outside the project. Reset every feature to
+	# its declared default so this suite never inherits a developer's local menu state.
+	for definition in view.FEATURE_DEFINITIONS:
+		view._set_feature_enabled(str(definition[0]), bool(definition[2]), false)
 	_expect(view.graph_edit != null and view.search_edit != null and view.search_toggle != null and view.branch_dimming_toggle != null and view.failure_reason_toggle != null, "editor view builds controls")
 	_test_compact_display_toolbar(view)
 	var node_palette := view.find_child("NodePalette", true, false) as VBoxContainer
@@ -968,6 +972,61 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	view._set_feature_enabled("edge_bundling", false, false)
 	_expect(is_equal_approx(view.graph_edit.connection_lines_curvature, 0.45), "disabling edge bundling restores baseline")
 
+	var straight_from := Vector2(10.0, 20.0)
+	var straight_to := Vector2(190.0, 220.0)
+	var straight_tree_order := _child_ids(view.current_tree, 2)
+	var straight_parent := _graph_node(view, 2)
+	var straight_child := _graph_node(view, 3)
+	var straight_resource_positions := {
+		straight_parent.node_resource.id: straight_parent.node_resource.position,
+		straight_child.node_resource.id: straight_child.node_resource.position,
+	}
+	view.graph_edit._cached_connection_line("straight-toggle", straight_from, straight_to)
+	view._set_feature_enabled("straight_connections", true, false)
+	var straight_config := ConfigFile.new()
+	view._populate_view_config(straight_config)
+	var straight_line := view.graph_edit._get_connection_line(straight_from, straight_to)
+	var straight_connection := view.graph_edit._route_connection_between(straight_parent, straight_child)
+	_expect(
+		view.graph_edit.straight_connections_enabled
+			and straight_line == PackedVector2Array([straight_from, straight_to])
+			and straight_connection.size() == 2
+			and straight_connection[0].is_equal_approx(view.graph_edit._output_port_position(straight_parent))
+			and straight_connection[1].is_equal_approx(view.graph_edit._input_port_position(straight_child))
+			and view.graph_edit.connection_route_cache.is_empty(),
+		"straight-connections switch draws one direct segment between the exact parent and child ports"
+	)
+	_expect(straight_config.has_section_key("features", "straight_connections") and bool(straight_config.get_value("features", "straight_connections", false)), "straight-connections state is saved with the other display preferences")
+	_expect(not view.graph_edit.find_connection_at((straight_connection[0] + straight_connection[1]) * 0.5, 12.0).is_empty(), "straight connections remain interactively hittable")
+	_expect(
+		_child_ids(view.current_tree, 2) == straight_tree_order
+			and straight_parent.node_resource.position == Vector2(straight_resource_positions[straight_parent.node_resource.id])
+			and straight_child.node_resource.position == Vector2(straight_resource_positions[straight_child.node_resource.id]),
+		"straight connections change only route geometry without changing tree order or saved positions"
+	)
+	var straight_protected_node := _graph_node(view, 4)
+	var straight_protected_labels := _translucent_information_labels(straight_protected_node)
+	var straight_label_baseline := _label_override_signature(straight_protected_labels)
+	var straight_geometry_baseline := _node_geometry_signature(straight_protected_node)
+	view._set_feature_enabled("translucent_cards", true, false)
+	var straight_mask_signature := _label_override_signature(straight_protected_labels)
+	var straight_translucent_panel := straight_protected_node.get_theme_stylebox(&"panel") as StyleBoxFlat
+	view._set_feature_enabled("straight_connections", true, false)
+	var straight_route_with_masks := view.graph_edit._route_connection_between(straight_parent, straight_child)
+	_expect(
+		straight_route_with_masks == straight_connection
+			and straight_translucent_panel != null
+			and straight_protected_node.translucent_cards_enabled
+			and _labels_have_translucent_text_masks(straight_protected_labels)
+			and _label_override_signature(straight_protected_labels) == straight_mask_signature
+			and _node_geometry_matches(straight_protected_node, straight_geometry_baseline),
+		"straight routing composes with translucent-card text masks without changing either feature"
+	)
+	view._set_feature_enabled("straight_connections", false, false)
+	_expect(not view.graph_edit.straight_connections_enabled and straight_protected_node.translucent_cards_enabled and _labels_have_translucent_text_masks(straight_protected_labels) and _label_override_signature(straight_protected_labels) == straight_mask_signature, "disabling straight routing leaves translucent-card protection intact")
+	view._set_feature_enabled("translucent_cards", false, false)
+	_expect(_label_override_signature(straight_protected_labels) == straight_label_baseline and _labels_have_no_translucent_text_meta(straight_protected_labels) and _node_geometry_matches(straight_protected_node, straight_geometry_baseline), "straight and translucent features restore independently without visual residue")
+
 	var curved_tree_order := _child_ids(view.current_tree, 2)
 	view._set_feature_enabled("orthogonal_edges", true, false)
 	view._set_feature_enabled("edge_bundling", true, false)
@@ -980,6 +1039,11 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	var curved_connection := view.graph_edit._route_connection_between(curved_parent, curved_child)
 	_expect(curved_connection[0].is_equal_approx(view.graph_edit._output_port_position(curved_parent)) and curved_connection[curved_connection.size() - 1].is_equal_approx(view.graph_edit._input_port_position(curved_child)), "always-curved edges preserve exact parent and child ports")
 	_expect(not view.graph_edit.find_connection_at(curved_connection[curved_connection.size() / 2], 12.0).is_empty(), "always-curved edges remain interactively hittable")
+	view._set_feature_enabled("straight_connections", true, false)
+	var straight_priority_route := view.graph_edit._get_connection_line(Vector2(10.0, 20.0), Vector2(190.0, 220.0))
+	_expect(view.graph_edit.straight_connections_enabled and view.graph_edit.always_curved_edges_enabled and straight_priority_route.size() == 2, "straight connections take explicit priority over previously enabled edge styles")
+	view._set_feature_enabled("straight_connections", false, false)
+	_expect(view.graph_edit._get_connection_line(Vector2(10.0, 20.0), Vector2(190.0, 220.0)) == always_curve_route, "disabling straight connections restores the previous curved style")
 	view._set_feature_enabled("always_curved_edges", false, false)
 	_expect(not view.graph_edit.always_curved_edges_enabled and view.graph_edit.orthogonal_edges_enabled and view.graph_edit.edge_bundling_enabled and view.graph_edit._get_connection_line(Vector2(10.0, 20.0), Vector2(190.0, 220.0)) == pre_curve_route and _child_ids(view.current_tree, 2) == curved_tree_order, "disabling always-curved edges restores the previous edge styles and tree order")
 	view._set_feature_enabled("edge_bundling", false, false)
@@ -1068,10 +1132,22 @@ func _test_compact_display_toolbar(view: BTEditorView) -> void:
 	_expect(legacy_creation != null and not legacy_creation.visible, "duplicate node creation toolbar stays hidden in favor of the canvas context menu")
 	_expect(layout_popup.item_count == 9 and layout_popup.get_item_index(view.LAYOUT_MENU_FIT_ID) >= 0, "layout actions are consolidated into one menu")
 	_expect(view.feature_menu_button.text == "Display", "display options use a compact menu label")
-	_expect(popup.item_count == 10 and view.advanced_display_menu.item_count == 16 and grid_index >= 0, "Display shows common options and moves low-frequency switches into Advanced Display")
+	_expect(popup.item_count == 10 and view.advanced_display_menu.item_count == 17 and grid_index >= 0, "Display shows common options and moves low-frequency switches into Advanced Display")
 	var advanced_labels: Array[String] = []
 	for item_index in range(view.advanced_display_menu.item_count):
 		advanced_labels.append(view.advanced_display_menu.get_item_text(item_index))
+	_expect(advanced_labels.has("Straight Connections"), "Advanced Display exposes the straight-connection route")
+	var straight_definition_index := -1
+	for definition_index in range(view.FEATURE_DEFINITIONS.size()):
+		if str(view.FEATURE_DEFINITIONS[definition_index][0]) == "straight_connections":
+			straight_definition_index = definition_index
+			break
+	var straight_menu_index := view.advanced_display_menu.get_item_index(straight_definition_index)
+	_expect(straight_definition_index >= 0 and straight_menu_index >= 0 and not view.advanced_display_menu.is_item_checked(straight_menu_index), "Straight Connections is default-off and has one Advanced Display menu item")
+	view._set_feature_enabled("straight_connections", true, false)
+	_expect(view.graph_edit.straight_connections_enabled and view.advanced_display_menu.is_item_checked(straight_menu_index), "Straight Connections menu check follows the active route")
+	view._set_feature_enabled("straight_connections", false, false)
+	_expect(not view.graph_edit.straight_connections_enabled and not view.advanced_display_menu.is_item_checked(straight_menu_index), "disabling Straight Connections clears its menu check and route state")
 	_expect(not advanced_labels.has("Edge Obstacle Avoidance"), "removed edge-obstacle feature has no menu entry")
 	_expect(not view.fisheye_toggle.visible and not view.compact_toggle.visible and not view.semantic_zoom_toggle.visible and not view.path_summary_toggle.visible and not view.grid_toggle.visible and not view.minimap_toggle.visible, "redundant display checkboxes stay hidden from the toolbar")
 	var toolbar := view.get_node_or_null("ViewToolbar") as HBoxContainer
@@ -1310,6 +1386,9 @@ func _all_feature_visual_residue_cleared(view: BTEditorView) -> bool:
 		return false
 	if view.graph_edit.minimap_enabled or view.runtime_path_scroll.visible or view.failure_summary_button.visible:
 		print("FEATURE_RESIDUE controls minimap=%s path=%s failures=%s" % [view.graph_edit.minimap_enabled, view.runtime_path_scroll.visible, view.failure_summary_button.visible])
+		return false
+	if view.graph_edit.straight_connections_enabled or view.graph_edit.always_curved_edges_enabled or view.graph_edit.edge_bundling_enabled or view.graph_edit.orthogonal_edges_enabled:
+		print("FEATURE_RESIDUE edge_styles straight=%s curved=%s bundled=%s orthogonal=%s" % [view.graph_edit.straight_connections_enabled, view.graph_edit.always_curved_edges_enabled, view.graph_edit.edge_bundling_enabled, view.graph_edit.orthogonal_edges_enabled])
 		return false
 	for child in view.graph_edit.get_children():
 		if not (child is BTGraphNode):

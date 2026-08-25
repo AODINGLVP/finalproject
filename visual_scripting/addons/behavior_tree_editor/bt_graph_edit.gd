@@ -16,6 +16,7 @@ var fisheye_focus_position := Vector2.ZERO
 var orthogonal_edges_enabled := false
 var edge_bundling_enabled := false
 var always_curved_edges_enabled := false
+var straight_connections_enabled := false
 var active_path_ids: Array[int] = []
 var single_connection_rendering_enabled := true
 var native_connection_layer: Control
@@ -257,6 +258,8 @@ func _get_connection_line(from_position: Vector2, to_position: Vector2) -> Packe
 
 
 func _route_connection_line(from_position: Vector2, to_position: Vector2) -> PackedVector2Array:
+	if straight_connections_enabled:
+		return PackedVector2Array([from_position, to_position])
 	if always_curved_edges_enabled:
 		return _build_bezier_line(from_position, to_position)
 	if edge_bundling_enabled:
@@ -343,11 +346,14 @@ func _build_bezier_line(from_position: Vector2, to_position: Vector2) -> PackedV
 	return points
 
 
-func set_edge_display(orthogonal_enabled: bool, bundling_enabled: bool, always_curved_enabled := false) -> void:
+func set_edge_display(orthogonal_enabled: bool, bundling_enabled: bool, always_curved_enabled := false, straight_enabled := false) -> void:
 	orthogonal_edges_enabled = orthogonal_enabled
 	edge_bundling_enabled = bundling_enabled
 	always_curved_edges_enabled = always_curved_enabled
-	if always_curved_enabled:
+	straight_connections_enabled = straight_enabled
+	if straight_enabled:
+		connection_lines_curvature = 0.0
+	elif always_curved_enabled:
 		connection_lines_curvature = 1.0
 	elif bundling_enabled:
 		connection_lines_curvature = 0.82

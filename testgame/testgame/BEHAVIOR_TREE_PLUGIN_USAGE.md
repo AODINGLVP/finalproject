@@ -28,6 +28,7 @@
 - `Active Path Highlight`, `Non-active Branch Dimming`, and `Failure Reason Annotation` explain runtime decisions in the editor.
 - `Multi-column Layout` wraps wide fan-outs while preserving left-to-right execution order.
 - `Stable Incremental Layout` keeps valid existing positions when `Auto Arrange` is used.
+- `Straight Connections` draws each custom parent-child connection as one direct segment between the bottom and top ports. While enabled it takes priority over the other route styles; disabling it restores the previously selected style.
 - `Orthogonal Edges` and `Edge Bundling` provide alternative connection routing for dense trees.
 - `Always Curved Edges (Experiment)` and `Translucent Cards (Experiment)` are optional, default-off comparison modes. They are not the recommended baseline.
 

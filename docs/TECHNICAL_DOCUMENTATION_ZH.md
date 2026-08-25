@@ -34,11 +34,11 @@ Schema Editor直接编辑树的`BTBlackboardSchema`，不依赖Godot通用Resour
 
 Godot GraphEdit的槽位负责拖拽请求，但原生持久线是侧面端口曲线，与插件底部到顶部线同时显示时形成双线。插件在`Single Connection Rendering`开启时隐藏内部`_connection_layer`，自定义绘制持久线；端口拖拽开始时临时显示原生层提供预览，结束后再次隐藏。
 
-自定义命中把鼠标位置与路由折线/贝塞尔的每段最近点比较，默认容差10像素。右键命中发出`custom_edge_disconnect_requested`，复用编辑器原有断开与Undo/Redo逻辑。关闭开关时停止自定义绘制、恢复原生层和3.5像素原生线。
+自定义命中把鼠标位置与路由折线/贝塞尔的每段最近点比较，默认容差10像素。`Straight Connections`只返回父节点底部中心与子节点顶部中心两个端点，因此绘制、拖拽预览、缓存和命中统一使用一个直线段。右键命中发出`custom_edge_disconnect_requested`，复用编辑器原有断开与Undo/Redo逻辑。关闭单连接开关时停止自定义绘制、恢复原生层和3.5像素原生线。
 
 ## 5. 显示优化架构
 
-`FEATURE_DEFINITIONS`登记19个独立开关，统一由`_set_feature_enabled()`、`_apply_feature_states()`和ConfigFile持久化。所有功能必须有关闭复位路径。新增类型图标由`BTTypeIcon`使用Canvas绘制圆、菱形、六边形、三角形、盾形和内部符号，不依赖外部纹理；无障碍配色采用色盲友好的蓝、橙、绿、朱红、黄和紫红，并与形状形成冗余编码。
+`FEATURE_DEFINITIONS`登记24个独立开关，统一由`_set_feature_enabled()`、`_apply_feature_states()`和ConfigFile持久化。所有功能必须有关闭复位路径。新增类型图标由`BTTypeIcon`使用Canvas绘制圆、菱形、六边形、三角形、盾形和内部符号，不依赖外部纹理；无障碍配色采用色盲友好的蓝、橙、绿、朱红、黄和紫红，并与形状形成冗余编码。
 
 Semantic Zoom只改变信息可见性，不改变节点尺寸，避免滚轮时卡片异常缩放。Fisheye独立修改节点倍率并在关闭时重建清理Transform。Collapse、Focus、Search、Minimap、Path Summary、Breadcrumb、Branch Dimming和Failure Annotation分别处理结构、导航和运行解释，不混用运行数据。
 

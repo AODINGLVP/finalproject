@@ -24,13 +24,13 @@
 
 ## 大树显示优化
 
-插件提供 19 个可独立开关的显示功能，包括：
+插件提供 24 个可独立开关的显示功能，以及独立的 Grid 画布开关，包括：
 
 - Fisheye / Focus+Context、Semantic Zoom 和 Compact Mode。
 - Subtree Collapse / Expand、Focus、Breadcrumb 和 Path Summary。
 - Search + Highlight、增强 Minimap 和 Fit-to-view。
 - Non-active Branch Dimming 和 Failure Reason Annotation。
-- Multi-column Layout、Stable Layout、Orthogonal Edges 和 Edge Bundling。
+- Multi-column Layout、Stable Layout、Straight Connections、Orthogonal Edges 和 Edge Bundling。
 - Shape/Icon Type Encoding 和色盲友好配色。
 
 每项显示优化都具有安全关闭和视觉状态复位路径，不会修改行为树运行数据。

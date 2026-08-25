@@ -77,14 +77,14 @@ func chase_target(blackboard: Dictionary, delta: float, node: Resource) -> int:
 
 ## 7. 大树显示开关
 
-`Display Features`中19项功能相互独立并保存到`user://behavior_tree_editor_view.cfg`。常用组合如下：
+`Display`中24项功能相互独立并保存到`user://behavior_tree_editor_view.cfg`，Grid 另行保存。常用组合如下：
 
 - 定位未知区域：`Minimap + Semantic Zoom + Breadcrumb`。
 - 定位已知节点：`Search + Highlight`，无障碍模式下可用`Ctrl+F`、`F3`、`Shift+F3`。
 - 减少结构：`Subtree Collapse`或选中后`Focus`；`Show All`恢复。
 - 低缩放识别：`Shape / Icon Type Encoding + Accessibility / Colorblind Palette`。
 - 运行诊断：`Active Path + Dim Inactive + Failure Reasons + Path Summary`。
-- 连线显示：默认`Single Connection Rendering`仅显示一条底部到顶部连接；关闭后回到Godot原生线。
+- 连线显示：默认`Single Connection Rendering`仅显示一条底部到顶部连接；开启`Straight Connections`后，每条父子连接直接使用一个线段，关闭后恢复先前路线；关闭`Single Connection Rendering`则回到Godot原生线。
 
 每个显示功能关闭后都会恢复基线视觉状态，不修改行为树运行数据。
 

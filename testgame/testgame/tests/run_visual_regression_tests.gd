@@ -86,7 +86,7 @@ func _run() -> void:
 	await _settle()
 	var display_menu := await _capture_case("01a_display_menu")
 	_assert_image_valid(display_menu, "compact Display menu renders")
-	_expect(display_popup.visible and display_popup.item_count == 10 and view.advanced_display_menu.item_count == 16, "Display popup keeps common options concise and exposes advanced options in a submenu")
+	_expect(display_popup.visible and display_popup.item_count == 10 and view.advanced_display_menu.item_count == 17, "Display popup keeps common options concise and exposes advanced options in a submenu")
 	display_popup.hide()
 	await _settle()
 	var debug_popup := view.debug_menu_button.get_popup()
@@ -321,6 +321,14 @@ func _run() -> void:
 	_assert_image_valid(bundled, "edge bundling renders")
 	var bundled_line := view.graph_edit._get_connection_line(Vector2.ZERO, Vector2(100.0, 100.0))
 	_expect(bundled_line.size() == 4 and is_equal_approx(bundled_line[1].y, bundled_line[2].y), "bundled screenshot uses shared trunk geometry")
+	view._set_feature_enabled("edge_bundling", false, false)
+	view._set_feature_enabled("straight_connections", true, false)
+	await _settle()
+	var straight := await _capture_case("09a_straight_connections")
+	_assert_image_valid(straight, "straight connections render")
+	var straight_line := view.graph_edit._get_connection_line(Vector2.ZERO, Vector2(100.0, 100.0))
+	_expect(straight_line == PackedVector2Array([Vector2.ZERO, Vector2(100.0, 100.0)]), "straight screenshot uses one direct segment")
+	view._set_feature_enabled("straight_connections", false, false)
 
 	view._clear_runtime_highlights()
 	view._set_feature_enabled("branch_dimming", false, false)
@@ -422,6 +430,18 @@ func _run() -> void:
 		var edge_baseline := await _capture_case("11a1_playable_241_edge_baseline")
 		_assert_image_valid(edge_baseline, "playable 241-node default edge comparison renders")
 		_expect(_resource_positions_equal(view.current_tree, playable_positions), "default edge comparison uses visual-only positions and preserves all 241-node resource coordinates")
+
+		view._set_feature_enabled("straight_connections", true, false)
+		view.graph_edit.zoom = edge_comparison_zoom
+		view.graph_edit.scroll_offset = edge_comparison_scroll
+		await _settle()
+		var straight_comparison_route := view.graph_edit._route_connection_between(edge_source, edge_target)
+		var straight_comparison := await _capture_case("11a2_playable_241_straight_connections")
+		_assert_image_valid(straight_comparison, "playable 241-node straight-connection comparison renders")
+		_expect(straight_comparison_route.size() == 2 and straight_comparison_route[0].is_equal_approx(edge_baseline_route[0]) and straight_comparison_route[1].is_equal_approx(edge_baseline_route[edge_baseline_route.size() - 1]), "straight comparison uses one direct segment with the same parent and child ports")
+		_expect(not view.graph_edit.find_connection_at((straight_comparison_route[0] + straight_comparison_route[1]) * 0.5, 12.0).is_empty(), "straight comparison remains interactively hittable on the 241-node tree")
+		_expect(_resource_positions_equal(view.current_tree, playable_positions) and is_equal_approx(view.graph_edit.zoom, edge_comparison_zoom) and view.graph_edit.scroll_offset.is_equal_approx(edge_comparison_scroll), "straight comparison preserves all 241-node resource coordinates and uses the same camera")
+		view._set_feature_enabled("straight_connections", false, false)
 
 		view._set_feature_enabled("always_curved_edges", true, false)
 		view.graph_edit.zoom = edge_comparison_zoom

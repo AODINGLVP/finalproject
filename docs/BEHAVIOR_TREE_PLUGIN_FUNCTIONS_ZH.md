@@ -143,7 +143,7 @@ Runner 将原子快照写入项目 `.godot` 目录，编辑器只读取与当前
 
 游戏画面中没有行为树状态覆盖层；调试信息只存在于 Godot 编辑器插件。
 
-## 10. 十九项显示优化
+## 10. 二十四项显示功能
 
 每项功能都有独立开关，状态保存在 `user://behavior_tree_editor_view.cfg`。关闭功能时必须清除该功能留下的缩放、颜色、隐藏、路由或高亮状态，不改变行为树运行数据。
 
@@ -168,6 +168,11 @@ Runner 将原子快照写入项目 `.godot` 目录，编辑器只读取与当前
 | 17 | Stable Incremental Layout | 自动排布时尽量保留已有有效位置，降低心理地图变化。 |
 | 18 | Breadcrumb Navigation | 显示所选节点的 Root 到节点层级路径并支持定位。 |
 | 19 | Failure Reason Annotation | 在 Live Debug 中对失败节点和 Decorator 来源做可见标注。 |
+| 20 | Zoom-Aware Auto Spacing | 在缩放、卡片详情变化和拖动时临时消除重叠，保持层级与左右顺序，不写回资源坐标。 |
+| 21 | Zoom View Anchor | 临时布局变化期间保持视口中心附近节点的相对观察位置。 |
+| 22 | Always Curved Edges (Experiment) | 使用采样 Bezier 曲线作为默认关闭的比较路线。 |
+| 23 | Translucent Cards (Experiment) | 降低卡片背景透明度，并用不透明文字轮廓阻挡后方连线干扰。 |
+| 24 | Straight Connections | 用父节点底部中心到子节点顶部中心的一个直线段连接，关闭后恢复先前路线。 |
 
 辅助功能还包括 Grid、Fit、Collapse All、Expand All、Focus、Show All、Minimap 覆盖状态，以及相互独立的 Runtime Path 和 Selection 路径行。
 

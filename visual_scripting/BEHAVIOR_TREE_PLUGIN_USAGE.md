@@ -16,6 +16,7 @@
 - Enable `Semantic Zoom` and `Zoom-Aware Auto Spacing` to keep low-detail trees dense while temporarily separating expanded cards and preserving clear connection channels.
 - Keep `Zoom View Anchor` enabled to preserve the viewport center's relative position within nearby nodes while zoom-triggered layout changes settle.
 - Right-click the graph and choose `Arrange for Overview` to save a compact low-detail layout. Zooming out restores these saved coordinates; the expanded spacing is visual only.
+- `Straight Connections` draws every custom parent-child connection as one direct segment. It takes priority while enabled and restores the previous route style when disabled.
 - `Always Curved Edges (Experiment)` and `Translucent Cards (Experiment)` are optional, default-off comparison modes rather than the recommended baseline.
 
 ## Runtime
