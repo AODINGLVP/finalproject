@@ -64,7 +64,7 @@ func _run() -> void:
 	_expect(_count_near_color(baseline, Color("a78bfa"), 0.12) > 2, "baseline contains Repeat type color")
 	_expect(_count_near_color(baseline, Color("facc15"), 0.12) > 2, "baseline contains Wait type color")
 	_expect(_overlapping_node_pairs().is_empty(), "baseline node cards do not overlap")
-	_expect(_all_parent_child_gaps_at_least(45.0), "baseline keeps a clear parent-child vertical gap")
+	_expect(_all_parent_child_gaps_at_least(0.0), "baseline preserves its authored parent-above-child relationships")
 
 	view.context_menu.position = Vector2i(260, 170)
 	view.context_menu.popup()
@@ -688,7 +688,8 @@ func _rendered_tree_order_is_valid() -> bool:
 			var rendered := _graph_node(view, child_node.id)
 			if rendered == null or rendered.position_offset.x < previous_x:
 				return false
-			if parent.position_offset.y + parent.size.y + view.AUTO_SPACING_GAP > rendered.position_offset.y + 0.1:
+			var saved_gap := view._saved_parent_child_vertical_gap(parent, rendered)
+			if saved_gap >= -0.1 and parent.position_offset.y + parent.size.y > rendered.position_offset.y + 0.1:
 				return false
 			previous_x = rendered.position_offset.x
 	return true
@@ -724,7 +725,7 @@ func _begin_live_visual_drag(source: BTGraphNode) -> Dictionary:
 func _move_live_visual_drag(drag_state: Dictionary, logical_target: Vector2) -> void:
 	var source := drag_state.get("source") as BTGraphNode
 	var local_pointer := Vector2(drag_state.get("local_pointer", Vector2.ZERO))
-	var graph_delta := logical_target - source.get_logical_position()
+	var graph_delta := logical_target - source.position_offset
 	var motion := InputEventMouseMotion.new()
 	motion.position = local_pointer + graph_delta * view.graph_edit.zoom
 	motion.relative = graph_delta * view.graph_edit.zoom
@@ -803,7 +804,7 @@ func _all_parent_child_gaps_at_least(minimum_gap: float) -> bool:
 	return _parent_child_gap_failures(minimum_gap).is_empty()
 
 
-func _parent_child_gap_failures(minimum_gap: float) -> Array[String]:
+func _parent_child_gap_failures(_minimum_gap: float) -> Array[String]:
 	var failures: Array[String] = []
 	for node in view.current_tree.nodes:
 		if node == null or node.parent_id == -1 or node.decorator_parent_id != -1:
@@ -811,9 +812,14 @@ func _parent_child_gap_failures(minimum_gap: float) -> Array[String]:
 		var parent := _graph_node(view, node.parent_id)
 		var child := _graph_node(view, node.id)
 		if parent != null and child != null:
+			var saved_gap := view._saved_parent_child_vertical_gap(parent, child)
+			# Only protect a top-to-bottom relationship that already existed in the
+			# authored resource. Freeform or inverted pairs must remain freeform.
+			if saved_gap < -0.1:
+				continue
 			var gap := child.position_offset.y - (parent.position_offset.y + parent.size.y)
-			if gap + 0.1 < minimum_gap:
-				failures.append("%d>%d:%.1f" % [node.parent_id, node.id, gap])
+			if gap + 0.1 < 0.0:
+				failures.append("%d>%d:saved=%.1f rendered=%.1f" % [node.parent_id, node.id, saved_gap, gap])
 	return failures
 
 

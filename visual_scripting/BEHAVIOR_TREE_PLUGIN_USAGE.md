@@ -14,6 +14,8 @@
 - Open the compact `Debug` menu for Live Debug, inactive-branch dimming, failure annotations, Live Blackboard, and Blackboard Schema authoring.
 - `Fisheye` enlarges only the card directly under the pointer, shrinks surrounding cards, and temporarily reflows them without changing saved positions.
 - Enable `Semantic Zoom` and `Zoom-Aware Auto Spacing` to keep low-detail trees dense while temporarily separating expanded cards and preserving clear connection channels.
+- Clicking a card does not reflow the graph. Corrections below 10 screen pixels move only that card and may retain a minor overlap; larger drags activate stepped live avoidance and receive one final check on release.
+- Reflow keeps a parent card above a child only when their saved placement already had that boundary relationship; it does not impose hierarchy on freeform placements.
 - Keep `Zoom View Anchor` enabled to preserve the viewport center's relative position within nearby nodes while zoom-triggered layout changes settle.
 - Right-click the graph and choose `Arrange for Overview` to save a compact low-detail layout. Zooming out restores these saved coordinates; the expanded spacing is visual only.
 - `Straight Connections` draws every custom parent-child connection as one direct segment. It takes priority while enabled and restores the previous route style when disabled.

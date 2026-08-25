@@ -42,6 +42,10 @@ Godot GraphEdit的槽位负责拖拽请求，但原生持久线是侧面端口�
 
 Semantic Zoom只改变信息可见性，不改变节点尺寸，避免滚轮时卡片异常缩放。Fisheye独立修改节点倍率并在关闭时重建清理Transform。Collapse、Focus、Search、Minimap、Path Summary、Breadcrumb、Branch Dimming和Failure Annotation分别处理结构、导航和运行解释，不混用运行数据。
 
+节点按下时只进入待拖动状态，不立即求解布局。累计位移按屏幕像素计算：不足10像素时只保存当前卡片的微调，超过阈值后锁定进入实时避让；激活后每移动8个屏幕像素才刷新一次，释放时再验证一次。父子高度约束先检查资源中的原始位置，仅当原布局已经满足父卡片在子卡片上方时，才保证重新布局后父卡片底部不低于子卡片顶部；原本自由摆放的连线不施加该约束。
+
+开发时可在仓库根目录运行 `Godot_v4.6-stable_win64_console.exe --headless --audio-driver Dummy --path ./testgame/testgame --script res://tests/run_zoom_drag_layout_tests.gd -- drag-rules-quick`，约数秒完成点击、微调、三档缩放、条件父子关系和241节点最大缩放检查。完整组合测试仅在最终回归时运行。
+
 ## 6. Live Debug桥
 
 Runner把组件快照原子写入`res://.godot/behavior_tree_runtime_debug.json`，包含Actor、树路径、活动ID/标题、叶状态、节点状态、失败原因、Blackboard值和Schema类型/错误。编辑器按树资源路径筛选快照，损坏或截断JSON会保留上一完整帧，下一完整快照可自动恢复。

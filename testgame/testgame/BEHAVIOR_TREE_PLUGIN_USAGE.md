@@ -18,6 +18,8 @@
 - `Compact`: reduces card size and keeps only the essential node identity.
 - `Semantic Zoom`: hides secondary information at low zoom while keeping card geometry stable.
 - `Zoom-Aware Auto Spacing`: temporarily separates expanded cards, keeps lower levels from moving upward, and reserves clear parent-child connection channels without changing saved node coordinates.
+- Clicking a card never starts Auto Spacing. A correction smaller than 10 screen pixels moves only that card and may keep a minor overlap; a deliberate drag activates live avoidance, refreshed after each further 8 screen pixels and verified once on release.
+- Reflow preserves parent-above-child boundaries only for links whose saved placement already had that relationship. Side-by-side, inverted, or originally overlapping links remain freeform.
 - `Zoom View Anchor`: records the viewport center and nearby node relationships at the start of a wheel-zoom burst, then preserves that center-relative neighborhood while temporary layout changes settle.
 - `Arrange for Overview`: right-click the canvas and choose this command to save a compact low-detail layout; zooming in then demonstrates Auto Spacing, while zooming out restores the dense arrangement.
 - `Collapse` / `Expand`: summarizes or restores all child subtrees.
