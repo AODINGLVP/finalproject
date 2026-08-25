@@ -69,6 +69,7 @@ const FEATURE_DEFINITIONS := [
 	["accessibility", "Accessibility / Colorblind Palette", false],
 	["single_connection", "Single Connection Rendering", true],
 	["edge_avoidance", "Edge Obstacle Avoidance", true],
+	["always_curved_edges", "Always Curved Edges (Experiment)", false],
 	["active_path", "Active Path Highlight", true],
 	["branch_dimming", "Non-active Branch Dimming", false],
 	["multi_column", "Multi-column Layout", false],
@@ -978,7 +979,7 @@ func _apply_feature_states() -> void:
 	if is_instance_valid(search_next_button):
 		search_next_button.disabled = not _feature_enabled("search") or search_result_ids.is_empty()
 	if is_instance_valid(graph_edit):
-		graph_edit.set_edge_display(_feature_enabled("orthogonal_edges"), _feature_enabled("edge_bundling"))
+		graph_edit.set_edge_display(_feature_enabled("orthogonal_edges"), _feature_enabled("edge_bundling"), _feature_enabled("always_curved_edges"))
 		graph_edit.set_single_connection_rendering(_feature_enabled("single_connection"))
 		graph_edit.set_edge_obstacle_avoidance(_feature_enabled("edge_avoidance"))
 		graph_edit.set_enhanced_minimap(_feature_enabled("enhanced_minimap"))

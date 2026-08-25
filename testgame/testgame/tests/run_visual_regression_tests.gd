@@ -86,7 +86,7 @@ func _run() -> void:
 	await _settle()
 	var display_menu := await _capture_case("01a_display_menu")
 	_assert_image_valid(display_menu, "compact Display menu renders")
-	_expect(display_popup.visible and display_popup.item_count == 10 and view.advanced_display_menu.item_count == 15, "Display popup keeps common options concise and exposes advanced options in a submenu")
+	_expect(display_popup.visible and display_popup.item_count == 10 and view.advanced_display_menu.item_count == 16, "Display popup keeps common options concise and exposes advanced options in a submenu")
 	display_popup.hide()
 	await _settle()
 	var debug_popup := view.debug_menu_button.get_popup()
@@ -423,6 +423,7 @@ func _run() -> void:
 		view.graph_edit.scroll_offset = edge_comparison_scroll
 		await _settle()
 		var edge_baseline_crosses := _connection_enters_node(2, 3, 4)
+		var edge_baseline_route := view.graph_edit._route_connection_between(edge_source, edge_target)
 		var edge_baseline := await _capture_case("11a1_playable_241_edge_baseline")
 		_assert_image_valid(edge_baseline, "playable 241-node baseline edge comparison renders")
 		view._set_feature_enabled("edge_avoidance", true, false)
@@ -430,11 +431,30 @@ func _run() -> void:
 		view.graph_edit.scroll_offset = edge_comparison_scroll
 		await _settle()
 		var edge_avoided_crosses := _connection_enters_node(2, 3, 4)
+		var edge_avoided_route := view.graph_edit._route_connection_between(edge_source, edge_target)
 		var edge_avoided := await _capture_case("11a2_playable_241_edge_avoidance")
 		_assert_image_valid(edge_avoided, "playable 241-node obstacle-avoiding edge comparison renders")
 		_expect(edge_baseline_crosses and not edge_avoided_crosses, "edge avoidance reroutes the same 241-node parent-child edge around the unrelated card")
-		_expect(view.graph_edit.zoom == edge_comparison_zoom and view.graph_edit.scroll_offset.is_equal_approx(edge_comparison_scroll), "paired 241-node edge screenshots keep the same zoom and viewport")
+		_expect(is_equal_approx(view.graph_edit.zoom, edge_comparison_zoom) and view.graph_edit.scroll_offset.is_equal_approx(edge_comparison_scroll), "paired 241-node edge screenshots keep the same zoom and viewport")
 		_expect(_resource_positions_equal(view.current_tree, playable_positions), "edge comparison uses visual-only positions and preserves all 241-node resource coordinates")
+
+		view._set_feature_enabled("always_curved_edges", true, false)
+		view.graph_edit.zoom = edge_comparison_zoom
+		view.graph_edit.scroll_offset = edge_comparison_scroll
+		await _settle()
+		var always_curved_route := view.graph_edit._route_connection_between(edge_source, edge_target)
+		var always_curved_crosses := _connection_enters_node(2, 3, 4)
+		var always_curved := await _capture_case("11a3_playable_241_always_curved")
+		_assert_image_valid(always_curved, "playable 241-node always-curved edge comparison renders")
+		_expect(always_curved_route.size() == 13 and always_curved_route != edge_avoided_route and always_curved_crosses, "always-curved experiment produces a distinct Bezier route but does not avoid the fixed card obstruction")
+		_expect(always_curved_route[0].is_equal_approx(edge_baseline_route[0]) and always_curved_route[always_curved_route.size() - 1].is_equal_approx(edge_baseline_route[edge_baseline_route.size() - 1]), "always-curved comparison preserves the same 241-node edge endpoints")
+		_expect(is_equal_approx(view.graph_edit.zoom, edge_comparison_zoom) and view.graph_edit.scroll_offset.is_equal_approx(edge_comparison_scroll), "current and always-curved 241-node screenshots use the same camera")
+		print("VISUAL_METRIC curved_edge_current_intersections=%d always_curved_intersections=%d current_length=%.1f curved_length=%.1f" % [int(edge_avoided_crosses), int(always_curved_crosses), view.graph_edit._polyline_length(edge_avoided_route), view.graph_edit._polyline_length(always_curved_route)])
+		view._set_feature_enabled("always_curved_edges", false, false)
+		view.graph_edit.zoom = edge_comparison_zoom
+		view.graph_edit.scroll_offset = edge_comparison_scroll
+		await _settle()
+		_expect(view.graph_edit._route_connection_between(edge_source, edge_target) == edge_avoided_route and view._feature_enabled("edge_avoidance"), "disabling always-curved experiment restores obstacle avoidance without changing its switch")
 
 	view._rebuild_graph()
 	view._set_feature_enabled("semantic_zoom", true, false)
@@ -475,8 +495,10 @@ func _run() -> void:
 		_expect(playable_release_pairs.is_empty(), "playable 241-node maximum-zoom layout remains overlap-free after release")
 
 	print("BT_VISUAL_TEST_SUMMARY passed=%d failed=%d output=%s" % [passed, failed, OUTPUT_DIR])
-	view.free()
-	viewport.free()
+	view.queue_free()
+	await process_frame
+	viewport.queue_free()
+	await process_frame
 	quit(0 if failed == 0 else 1)
 
 
@@ -491,7 +513,14 @@ func _capture_case(case_name: String) -> Image:
 	RenderingServer.force_draw(false, 0.0)
 	await process_frame
 	var image := viewport.get_texture().get_image()
-	var error := image.save_png(OUTPUT_DIR.path_join("%s.png" % case_name))
+	var output_path := OUTPUT_DIR.path_join("%s.png" % case_name)
+	var error := FAILED
+	for attempt in range(3):
+		error = image.save_png(output_path)
+		if error == OK:
+			break
+		print("VISUAL_RETRY case=%s attempt=%d error=%d" % [case_name, attempt + 1, error])
+		await process_frame
 	_expect(error == OK, "%s screenshot saves" % case_name)
 	return image
 

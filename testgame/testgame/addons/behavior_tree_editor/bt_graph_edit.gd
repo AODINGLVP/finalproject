@@ -17,6 +17,7 @@ const EDGE_CHANNEL_CLEARANCE := 4.0
 var fisheye_focus_position := Vector2.ZERO
 var orthogonal_edges_enabled := false
 var edge_bundling_enabled := false
+var always_curved_edges_enabled := false
 var edge_obstacle_avoidance_enabled := true
 var active_path_ids: Array[int] = []
 var single_connection_rendering_enabled := true
@@ -278,6 +279,8 @@ func _get_connection_line(from_position: Vector2, to_position: Vector2) -> Packe
 
 
 func _route_connection_line(from_position: Vector2, to_position: Vector2) -> PackedVector2Array:
+	if always_curved_edges_enabled:
+		return _build_bezier_line(from_position, to_position)
 	if edge_bundling_enabled:
 		var direction := 1.0 if to_position.y >= from_position.y else -1.0
 		var trunk_y := from_position.y + direction * minf(72.0, absf(to_position.y - from_position.y) * 0.35)
@@ -301,7 +304,9 @@ func _route_connection_line(from_position: Vector2, to_position: Vector2) -> Pac
 func _route_connection_between(from_node: BTGraphNode, to_node: BTGraphNode) -> PackedVector2Array:
 	var from_position := _output_port_position(from_node)
 	var to_position := _input_port_position(to_node)
-	if not edge_obstacle_avoidance_enabled:
+	# The experimental style must stay genuinely curved. It temporarily takes
+	# precedence over obstacle avoidance without changing that switch's state.
+	if always_curved_edges_enabled or not edge_obstacle_avoidance_enabled:
 		return _route_connection_line(from_position, to_position)
 	return _route_connection_around_obstacles(
 		from_position,
@@ -462,13 +467,16 @@ func _build_bezier_line(from_position: Vector2, to_position: Vector2) -> PackedV
 	return points
 
 
-func set_edge_display(orthogonal_enabled: bool, bundling_enabled: bool) -> void:
+func set_edge_display(orthogonal_enabled: bool, bundling_enabled: bool, always_curved_enabled := false) -> void:
 	orthogonal_edges_enabled = orthogonal_enabled
 	edge_bundling_enabled = bundling_enabled
-	if orthogonal_enabled:
-		connection_lines_curvature = 0.0
+	always_curved_edges_enabled = always_curved_enabled
+	if always_curved_enabled:
+		connection_lines_curvature = 1.0
 	elif bundling_enabled:
 		connection_lines_curvature = 0.82
+	elif orthogonal_enabled:
+		connection_lines_curvature = 0.0
 	else:
 		connection_lines_curvature = 0.45
 	connection_route_cache.clear()

@@ -979,6 +979,23 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	view._set_feature_enabled("edge_bundling", false, false)
 	_expect(is_equal_approx(view.graph_edit.connection_lines_curvature, 0.45), "disabling edge bundling restores baseline")
 
+	var curved_tree_order := _child_ids(view.current_tree, 2)
+	view._set_feature_enabled("orthogonal_edges", true, false)
+	view._set_feature_enabled("edge_bundling", true, false)
+	var pre_curve_route := view.graph_edit._get_connection_line(Vector2(10.0, 20.0), Vector2(190.0, 220.0))
+	view._set_feature_enabled("always_curved_edges", true, false)
+	var always_curve_route := view.graph_edit._get_connection_line(Vector2(10.0, 20.0), Vector2(190.0, 220.0))
+	_expect(view.graph_edit.always_curved_edges_enabled and always_curve_route.size() == 13 and is_equal_approx(view.graph_edit.connection_lines_curvature, 1.0), "always-curved experiment takes visual priority and produces a sampled Bezier route")
+	var curved_parent := _graph_node(view, 2)
+	var curved_child := _graph_node(view, 3)
+	var curved_connection := view.graph_edit._route_connection_between(curved_parent, curved_child)
+	_expect(curved_connection[0].is_equal_approx(view.graph_edit._output_port_position(curved_parent)) and curved_connection[curved_connection.size() - 1].is_equal_approx(view.graph_edit._input_port_position(curved_child)), "always-curved edges preserve exact parent and child ports")
+	_expect(not view.graph_edit.find_connection_at(curved_connection[curved_connection.size() / 2], 12.0).is_empty(), "always-curved edges remain interactively hittable")
+	view._set_feature_enabled("always_curved_edges", false, false)
+	_expect(not view.graph_edit.always_curved_edges_enabled and view.graph_edit.orthogonal_edges_enabled and view.graph_edit.edge_bundling_enabled and view.graph_edit._get_connection_line(Vector2(10.0, 20.0), Vector2(190.0, 220.0)) == pre_curve_route and _child_ids(view.current_tree, 2) == curved_tree_order, "disabling always-curved edges restores previous edge switches and tree order")
+	view._set_feature_enabled("edge_bundling", false, false)
+	view._set_feature_enabled("orthogonal_edges", false, false)
+
 	var stable_position := view.current_tree.find_node(4).position
 	view._set_feature_enabled("stable_layout", true, false)
 	view._auto_arrange_tree()
@@ -1062,7 +1079,7 @@ func _test_compact_display_toolbar(view: BTEditorView) -> void:
 	_expect(legacy_creation != null and not legacy_creation.visible, "duplicate node creation toolbar stays hidden in favor of the canvas context menu")
 	_expect(layout_popup.item_count == 9 and layout_popup.get_item_index(view.LAYOUT_MENU_FIT_ID) >= 0, "layout actions are consolidated into one menu")
 	_expect(view.feature_menu_button.text == "Display", "display options use a compact menu label")
-	_expect(popup.item_count == 10 and view.advanced_display_menu.item_count == 15 and grid_index >= 0, "Display shows common options and moves low-frequency switches into Advanced Display")
+	_expect(popup.item_count == 10 and view.advanced_display_menu.item_count == 16 and grid_index >= 0, "Display shows common options and moves low-frequency switches into Advanced Display")
 	_expect(not view.fisheye_toggle.visible and not view.compact_toggle.visible and not view.semantic_zoom_toggle.visible and not view.path_summary_toggle.visible and not view.grid_toggle.visible and not view.minimap_toggle.visible, "redundant display checkboxes stay hidden from the toolbar")
 	var toolbar := view.get_node_or_null("ViewToolbar") as HBoxContainer
 	_expect(toolbar != null and not toolbar.visible, "legacy view toolbar no longer consumes a separate row")
