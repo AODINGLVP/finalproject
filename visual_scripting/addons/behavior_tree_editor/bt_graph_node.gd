@@ -11,6 +11,15 @@ const NORMAL_CONTENT_WIDTH := 230.0
 const COMPACT_CONTENT_WIDTH := 172.0
 const TRANSPARENT_EDGE_COLOR := Color(0.0, 0.0, 0.0, 0.0)
 const TRANSLUCENT_CARD_ALPHA_FACTOR := 0.72
+const TRANSLUCENT_TEXT_OUTLINE_SIZE := 2
+const TRANSLUCENT_TEXT_PRIMARY_COLOR := Color("f8fafc")
+const TRANSLUCENT_TEXT_SECONDARY_COLOR := Color("dbeafe")
+const TRANSLUCENT_TEXT_ACCENT_COLOR := Color("fef3c7")
+const TRANSLUCENT_TEXT_RUNTIME_COLOR := Color("dcfce7")
+const TRANSLUCENT_TEXT_FAILURE_COLOR := Color("fecaca")
+const TRANSLUCENT_TEXT_DECORATOR_COLOR := Color("f3e8ff")
+const TRANSLUCENT_TEXT_OUTLINE_COLOR := Color("020617")
+const TRANSLUCENT_TEXT_BASELINE_META := &"_bt_translucent_text_baseline"
 const TRANSLUCENT_CARD_STYLE_NAMES := [
 	&"panel",
 	&"panel_focus",
@@ -385,8 +394,10 @@ func set_translucent_cards_enabled(enabled: bool) -> void:
 	if enabled:
 		_capture_translucent_style_baseline()
 		_apply_translucent_card_styles()
+		_apply_translucent_text_masks()
 	else:
 		_restore_translucent_style_baseline()
+		_restore_translucent_text_masks()
 
 
 func _capture_translucent_style_baseline() -> void:
@@ -416,6 +427,115 @@ func _restore_translucent_style_baseline() -> void:
 	translucent_style_override_names.clear()
 	translucent_saved_style_overrides.clear()
 
+
+func _apply_translucent_text_masks() -> void:
+	if not translucent_cards_enabled:
+		return
+	var titlebar := get_titlebar_hbox()
+	if is_instance_valid(titlebar):
+		_apply_translucent_text_masks_in(titlebar, TRANSLUCENT_TEXT_PRIMARY_COLOR)
+	_apply_translucent_text_mask(title_label, TRANSLUCENT_TEXT_PRIMARY_COLOR)
+	_apply_translucent_text_mask(order_label, TRANSLUCENT_TEXT_ACCENT_COLOR)
+	_apply_translucent_text_mask(type_badge, TRANSLUCENT_TEXT_SECONDARY_COLOR)
+	_apply_translucent_text_mask(runtime_label, TRANSLUCENT_TEXT_RUNTIME_COLOR)
+	_apply_translucent_text_mask(failure_badge, TRANSLUCENT_TEXT_FAILURE_COLOR)
+	_apply_translucent_text_mask(collapsed_summary_label, TRANSLUCENT_TEXT_SECONDARY_COLOR)
+	_apply_translucent_text_mask(description_label, TRANSLUCENT_TEXT_SECONDARY_COLOR)
+	for child in decorator_badges.get_children():
+		if child is Label:
+			_apply_translucent_text_mask(child, TRANSLUCENT_TEXT_DECORATOR_COLOR)
+
+
+func _apply_translucent_text_masks_in(parent: Node, text_color: Color) -> void:
+	for child in parent.get_children(true):
+		if child is Label:
+			_apply_translucent_text_mask(child, text_color)
+		_apply_translucent_text_masks_in(child, text_color)
+
+
+func _apply_translucent_text_mask(label: Label, text_color: Color) -> void:
+	if not is_instance_valid(label):
+		return
+	if not label.has_meta(TRANSLUCENT_TEXT_BASELINE_META):
+		var saved := {
+			"font_color_overridden": label.has_theme_color_override(&"font_color"),
+			"font_outline_color_overridden": label.has_theme_color_override(&"font_outline_color"),
+			"outline_size_overridden": label.has_theme_constant_override(&"outline_size"),
+			"modulate": label.modulate,
+		}
+		if bool(saved["font_color_overridden"]):
+			saved["font_color"] = label.get_theme_color(&"font_color")
+		if bool(saved["font_outline_color_overridden"]):
+			saved["font_outline_color"] = label.get_theme_color(&"font_outline_color")
+		if bool(saved["outline_size_overridden"]):
+			saved["outline_size"] = label.get_theme_constant(&"outline_size")
+		label.set_meta(TRANSLUCENT_TEXT_BASELINE_META, saved)
+	elif label.modulate != Color.WHITE:
+		# Runtime state can update semantic text colors while the mask is active.
+		# Preserve that latest value so disabling the experiment is exact.
+		var saved: Dictionary = label.get_meta(TRANSLUCENT_TEXT_BASELINE_META)
+		saved["modulate"] = label.modulate
+		label.set_meta(TRANSLUCENT_TEXT_BASELINE_META, saved)
+	label.modulate = Color.WHITE
+	var outline_color := _translucent_text_outline_color()
+	if not label.has_theme_color_override(&"font_color") or label.get_theme_color(&"font_color") != text_color:
+		label.add_theme_color_override(&"font_color", text_color)
+	if not label.has_theme_color_override(&"font_outline_color") or label.get_theme_color(&"font_outline_color") != outline_color:
+		label.add_theme_color_override(&"font_outline_color", outline_color)
+	if not label.has_theme_constant_override(&"outline_size") or label.get_theme_constant(&"outline_size") != TRANSLUCENT_TEXT_OUTLINE_SIZE:
+		label.add_theme_constant_override(&"outline_size", TRANSLUCENT_TEXT_OUTLINE_SIZE)
+
+
+func _translucent_text_outline_color() -> Color:
+	var outline_color := TRANSLUCENT_TEXT_OUTLINE_COLOR
+	# Branch dimming intentionally fades the text fill. Compensate only the dark
+	# glyph silhouette so the independently rendered connection cannot bleed
+	# through it, even when the owning card is dimmed.
+	outline_color.a = 1.0 / maxf(modulate.a, 0.05)
+	return outline_color
+
+
+func _restore_translucent_text_masks() -> void:
+	var titlebar := get_titlebar_hbox()
+	if is_instance_valid(titlebar):
+		_restore_translucent_text_masks_in(titlebar)
+	_restore_translucent_text_mask(title_label)
+	_restore_translucent_text_mask(order_label)
+	_restore_translucent_text_mask(type_badge)
+	_restore_translucent_text_mask(runtime_label)
+	_restore_translucent_text_mask(failure_badge)
+	_restore_translucent_text_mask(collapsed_summary_label)
+	_restore_translucent_text_mask(description_label)
+	for child in decorator_badges.get_children():
+		if child is Label:
+			_restore_translucent_text_mask(child)
+
+
+func _restore_translucent_text_masks_in(parent: Node) -> void:
+	for child in parent.get_children(true):
+		if child is Label:
+			_restore_translucent_text_mask(child)
+		_restore_translucent_text_masks_in(child)
+
+
+func _restore_translucent_text_mask(label: Label) -> void:
+	if not is_instance_valid(label) or not label.has_meta(TRANSLUCENT_TEXT_BASELINE_META):
+		return
+	var saved: Dictionary = label.get_meta(TRANSLUCENT_TEXT_BASELINE_META)
+	var saved_modulate: Color = saved["modulate"]
+	label.modulate = saved_modulate
+	label.remove_theme_color_override(&"font_color")
+	label.remove_theme_color_override(&"font_outline_color")
+	label.remove_theme_constant_override(&"outline_size")
+	if bool(saved.get("font_color_overridden", false)):
+		var saved_font_color: Color = saved["font_color"]
+		label.add_theme_color_override(&"font_color", saved_font_color)
+	if bool(saved.get("font_outline_color_overridden", false)):
+		var saved_outline_color: Color = saved["font_outline_color"]
+		label.add_theme_color_override(&"font_outline_color", saved_outline_color)
+	if bool(saved.get("outline_size_overridden", false)):
+		label.add_theme_constant_override(&"outline_size", int(saved["outline_size"]))
+	label.remove_meta(TRANSLUCENT_TEXT_BASELINE_META)
 
 func set_search_state(has_query: bool, matches_query: bool, is_current_result := false) -> void:
 	search_active = has_query
@@ -566,18 +686,9 @@ func _apply_runtime_style() -> void:
 		modulate = Color(enabled_color.r, enabled_color.g, enabled_color.b, INACTIVE_BRANCH_ALPHA) if runtime_snapshot_active and runtime_dim_non_active and not runtime_active else enabled_color
 		runtime_label.text = ""
 		_apply_search_style()
+		_apply_translucent_text_masks()
 		return
-	var highlight := Color("facc15")
-	if runtime_leaf:
-		match runtime_status:
-			"SUCCESS":
-				highlight = Color("34d399")
-			"FAILURE":
-				highlight = Color("f87171")
-			"RUNNING":
-				highlight = Color("22c55e")
-			_:
-				highlight = Color("facc15")
+	var highlight := _runtime_highlight_color()
 	modulate = Color(1.0, 0.96, 0.68, 1.0)
 	header_bar.color = highlight
 	input_square.color = highlight.darkened(0.2)
@@ -585,6 +696,21 @@ func _apply_runtime_style() -> void:
 	order_label.modulate = highlight
 	runtime_label.text = "CURRENT: %s" % runtime_status if runtime_leaf else "ACTIVE PATH"
 	runtime_label.modulate = highlight
+	_apply_translucent_text_masks()
+
+
+func _runtime_highlight_color() -> Color:
+	if not runtime_leaf:
+		return Color("facc15")
+	match runtime_status:
+		"SUCCESS":
+			return Color("34d399")
+		"FAILURE":
+			return Color("f87171")
+		"RUNNING":
+			return Color("22c55e")
+		_:
+			return Color("facc15")
 
 
 func _refresh_decorator_badges(decorators: Array) -> void:
@@ -602,6 +728,8 @@ func _refresh_decorator_badges(decorators: Array) -> void:
 		badge.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		badge.modulate = _type_color(BTNodeResource.TYPE_DECORATOR)
 		decorator_badges.add_child(badge)
+		if translucent_cards_enabled:
+			_apply_translucent_text_mask(badge, TRANSLUCENT_TEXT_DECORATOR_COLOR)
 
 
 func _decorator_badge_text(decorator: BTNodeResource) -> String:

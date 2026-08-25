@@ -657,25 +657,36 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	_expect(not _graph_node(view, 2).accessible_palette_enabled and _graph_node(view, 2).header_bar.color == baseline_selector_color, "disabling accessibility restores the original palette")
 
 	var translucent_node := _graph_node(view, 2)
+	var protected_text_node := _graph_node(view, 4)
+	await process_frame
+	await process_frame
 	var baseline_panel_style := translucent_node.get_theme_stylebox(&"panel") as StyleBoxFlat
 	var baseline_panel_override := translucent_node.has_theme_stylebox_override(&"panel")
 	var baseline_panel_alpha := baseline_panel_style.bg_color.a if baseline_panel_style != null else -1.0
 	var baseline_border_color := baseline_panel_style.border_color if baseline_panel_style != null else Color.TRANSPARENT
 	var baseline_card_modulate := translucent_node.modulate
 	var baseline_card_self_modulate := translucent_node.self_modulate
+	var protected_labels := _translucent_information_labels(protected_text_node)
+	var baseline_label_overrides := _label_override_signature(protected_labels)
+	var baseline_label_minimum_sizes := _label_minimum_size_signature(protected_labels)
+	var baseline_node_geometry := _node_geometry_signature(protected_text_node)
 	view._set_feature_enabled("translucent_cards", true, false)
+	await process_frame
+	await process_frame
 	var translucent_panel_style := translucent_node.get_theme_stylebox(&"panel") as StyleBoxFlat
-	_expect(translucent_panel_style != null and translucent_node.translucent_cards_enabled and translucent_node.translucent_style_override_names.size() >= 2 and is_equal_approx(translucent_panel_style.bg_color.a, baseline_panel_alpha * BTGraphNode.TRANSLUCENT_CARD_ALPHA_FACTOR), "translucent-card experiment changes only supported GraphNode background styles by one fixed factor")
+	_expect(translucent_panel_style != null and translucent_node.translucent_cards_enabled and translucent_node.translucent_style_override_names.size() >= 2 and is_equal_approx(translucent_panel_style.bg_color.a, baseline_panel_alpha * BTGraphNode.TRANSLUCENT_CARD_ALPHA_FACTOR) and _labels_have_translucent_text_masks(protected_labels), "translucent-card experiment keeps the card background transparent while applying text-shaped edge masks")
 	var translucent_selected_style := translucent_node.get_theme_stylebox(&"panel_selected") as StyleBoxFlat
-	_expect(translucent_node.has_theme_stylebox_override(&"panel_selected") and translucent_selected_style != null and translucent_selected_style.bg_color.a < baseline_panel_alpha, "translucent-card experiment covers the selected-card background state")
-	_expect(translucent_panel_style != null and translucent_panel_style.border_color == baseline_border_color and translucent_node.title_label.modulate.a == 1.0 and translucent_node.header_bar.color.a == 1.0 and translucent_node.input_square.color.a == 1.0 and translucent_node.output_square.color.a == 1.0, "translucent-card experiment preserves borders, text, status bar, and ports")
-	_expect(translucent_node.modulate == baseline_card_modulate and translucent_node.self_modulate == baseline_card_self_modulate, "translucent-card experiment does not reuse runtime or search opacity channels")
+	_expect(translucent_node.has_theme_stylebox_override(&"panel_selected") and translucent_selected_style != null and translucent_selected_style.bg_color.a < baseline_panel_alpha and protected_labels.size() >= 9, "translucent-card experiment covers selected cards, native titles, information labels, and dynamic Decorator labels")
+	_expect(translucent_panel_style != null and translucent_panel_style.border_color == baseline_border_color and translucent_node.title_label.modulate.a == 1.0 and translucent_node.header_bar.color.a == 1.0 and translucent_node.input_square.color.a == 1.0 and translucent_node.output_square.color.a == 1.0 and _label_minimum_size_signature(protected_labels) == baseline_label_minimum_sizes, "opaque two-tone text remains readable without changing any Label minimum size")
+	_expect(translucent_node.modulate == baseline_card_modulate and translucent_node.self_modulate == baseline_card_self_modulate and _node_geometry_matches(protected_text_node, baseline_node_geometry), "translucent-card text masks do not reuse opacity channels or move and resize graph nodes")
 	view._on_search_changed("attack")
-	_expect(translucent_node.self_modulate.a < 0.4 and is_equal_approx((translucent_node.get_theme_stylebox(&"panel") as StyleBoxFlat).bg_color.a, baseline_panel_alpha * BTGraphNode.TRANSLUCENT_CARD_ALPHA_FACTOR), "search dimming composes with translucent backgrounds without replacing them")
+	_expect(translucent_node.self_modulate.a < 0.4 and is_equal_approx((translucent_node.get_theme_stylebox(&"panel") as StyleBoxFlat).bg_color.a, baseline_panel_alpha * BTGraphNode.TRANSLUCENT_CARD_ALPHA_FACTOR) and _labels_have_translucent_text_masks(protected_labels), "search dimming composes with translucent backgrounds and keeps text masks intact")
 	view._on_search_changed("")
 	view._set_feature_enabled("translucent_cards", false, false)
+	await process_frame
+	await process_frame
 	var restored_panel_style := translucent_node.get_theme_stylebox(&"panel") as StyleBoxFlat
-	_expect(not translucent_node.translucent_cards_enabled and translucent_node.has_theme_stylebox_override(&"panel") == baseline_panel_override and restored_panel_style != null and is_equal_approx(restored_panel_style.bg_color.a, baseline_panel_alpha), "disabling translucent cards restores the original theme background exactly")
+	_expect(not translucent_node.translucent_cards_enabled and translucent_node.has_theme_stylebox_override(&"panel") == baseline_panel_override and restored_panel_style != null and is_equal_approx(restored_panel_style.bg_color.a, baseline_panel_alpha) and _label_override_signature(protected_labels) == baseline_label_overrides and _labels_have_no_translucent_text_meta(protected_labels) and _node_geometry_matches(protected_text_node, baseline_node_geometry), "disabling translucent cards restores backgrounds, text themes, and geometry exactly")
 
 	view._set_feature_enabled("single_connection", true, false)
 	var parent_graph := _graph_node(view, 2)
@@ -728,7 +739,7 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	var runtime_opaque_panel := _graph_node(view, 5).get_theme_stylebox(&"panel") as StyleBoxFlat
 	view._set_feature_enabled("translucent_cards", true, false)
 	var runtime_translucent_panel := _graph_node(view, 5).get_theme_stylebox(&"panel") as StyleBoxFlat
-	_expect(runtime_opaque_panel != null and runtime_translucent_panel != null and runtime_translucent_panel.bg_color.a < runtime_opaque_panel.bg_color.a and is_equal_approx(_graph_node(view, 5).modulate.a, BTGraphNode.INACTIVE_BRANCH_ALPHA), "runtime branch dimming composes with background-only translucency")
+	_expect(runtime_opaque_panel != null and runtime_translucent_panel != null and runtime_translucent_panel.bg_color.a < runtime_opaque_panel.bg_color.a and is_equal_approx(_graph_node(view, 5).modulate.a, BTGraphNode.INACTIVE_BRANCH_ALPHA) and _labels_have_translucent_text_masks(_translucent_information_labels(_graph_node(view, 5))), "runtime branch dimming fades text fill while its glyph mask remains opaque over connections")
 	view._set_feature_enabled("translucent_cards", false, false)
 	_expect(is_equal_approx(_graph_node(view, 5).modulate.a, BTGraphNode.INACTIVE_BRANCH_ALPHA), "disabling translucency leaves runtime dimming unchanged")
 	var patrol_snapshot := {
@@ -1384,6 +1395,132 @@ func _graph_node_count(view: BTEditorView) -> int:
 		if child is BTGraphNode:
 			count += 1
 	return count
+
+
+func _translucent_information_labels(graph_node: BTGraphNode) -> Array[Label]:
+	var labels: Array[Label] = []
+	var titlebar := graph_node.get_titlebar_hbox()
+	if is_instance_valid(titlebar):
+		_append_label_descendants(titlebar, labels)
+	var direct_labels: Array[Label] = [
+		graph_node.order_label,
+		graph_node.title_label,
+		graph_node.type_badge,
+		graph_node.runtime_label,
+		graph_node.failure_badge,
+		graph_node.collapsed_summary_label,
+		graph_node.description_label,
+	]
+	for label in direct_labels:
+		if is_instance_valid(label) and not labels.has(label):
+			labels.append(label)
+	for child in graph_node.decorator_badges.get_children():
+		if child is Label and not labels.has(child):
+			labels.append(child)
+	return labels
+
+
+func _append_label_descendants(parent: Node, labels: Array[Label]) -> void:
+	for child in parent.get_children(true):
+		if child is Label and not labels.has(child):
+			labels.append(child)
+		_append_label_descendants(child, labels)
+
+
+func _labels_have_translucent_text_masks(labels: Array[Label]) -> bool:
+	for label in labels:
+		if not label.has_meta(BTGraphNode.TRANSLUCENT_TEXT_BASELINE_META) \
+				or not label.has_theme_color_override(&"font_color") \
+				or not label.has_theme_color_override(&"font_outline_color") \
+				or not label.has_theme_constant_override(&"outline_size"):
+			return false
+		var text_color := label.get_theme_color(&"font_color")
+		var outline_color := label.get_theme_color(&"font_outline_color")
+		var graph_node := _owning_graph_node(label)
+		if label.get_theme_constant(&"outline_size") < BTGraphNode.TRANSLUCENT_TEXT_OUTLINE_SIZE \
+				or text_color.a < 0.999 \
+				or outline_color.a < 0.999 \
+				or _contrast_ratio(text_color, outline_color) < 7.0 \
+				or graph_node == null \
+				or outline_color.a * graph_node.modulate.a < 0.999 \
+				or label.modulate != Color.WHITE:
+			return false
+	return true
+
+
+func _owning_graph_node(node: Node) -> BTGraphNode:
+	var current := node.get_parent()
+	while current != null:
+		if current is BTGraphNode:
+			return current
+		current = current.get_parent()
+	return null
+
+
+func _labels_have_no_translucent_text_meta(labels: Array[Label]) -> bool:
+	for label in labels:
+		if label.has_meta(BTGraphNode.TRANSLUCENT_TEXT_BASELINE_META):
+			return false
+	return true
+
+
+func _label_override_signature(labels: Array[Label]) -> Dictionary:
+	var signature := {}
+	for label in labels:
+		var has_font_color := label.has_theme_color_override(&"font_color")
+		var has_outline_color := label.has_theme_color_override(&"font_outline_color")
+		var has_outline_size := label.has_theme_constant_override(&"outline_size")
+		signature[label.get_instance_id()] = [
+			has_font_color,
+			label.get_theme_color(&"font_color") if has_font_color else Color.TRANSPARENT,
+			has_outline_color,
+			label.get_theme_color(&"font_outline_color") if has_outline_color else Color.TRANSPARENT,
+			has_outline_size,
+			label.get_theme_constant(&"outline_size") if has_outline_size else -1,
+			label.modulate,
+		]
+	return signature
+
+
+func _label_minimum_size_signature(labels: Array[Label]) -> Dictionary:
+	var signature := {}
+	for label in labels:
+		signature[label.get_instance_id()] = label.get_combined_minimum_size()
+	return signature
+
+
+func _node_geometry_signature(graph_node: BTGraphNode) -> Dictionary:
+	return {
+		"position_offset": graph_node.position_offset,
+		"size": graph_node.size,
+		"custom_minimum_size": graph_node.custom_minimum_size,
+		"combined_minimum_size": graph_node.get_combined_minimum_size(),
+		"resource_position": graph_node.node_resource.position,
+	}
+
+
+func _node_geometry_matches(graph_node: BTGraphNode, signature: Dictionary) -> bool:
+	return graph_node.position_offset.is_equal_approx(Vector2(signature["position_offset"])) \
+		and graph_node.size.is_equal_approx(Vector2(signature["size"])) \
+		and graph_node.custom_minimum_size.is_equal_approx(Vector2(signature["custom_minimum_size"])) \
+		and graph_node.get_combined_minimum_size().is_equal_approx(Vector2(signature["combined_minimum_size"])) \
+		and graph_node.node_resource.position.is_equal_approx(Vector2(signature["resource_position"]))
+
+
+func _contrast_ratio(left: Color, right: Color) -> float:
+	var left_luminance := _relative_luminance(left)
+	var right_luminance := _relative_luminance(right)
+	return (maxf(left_luminance, right_luminance) + 0.05) / (minf(left_luminance, right_luminance) + 0.05)
+
+
+func _relative_luminance(color: Color) -> float:
+	return 0.2126 * _linear_color_channel(color.r) \
+		+ 0.7152 * _linear_color_channel(color.g) \
+		+ 0.0722 * _linear_color_channel(color.b)
+
+
+func _linear_color_channel(value: float) -> float:
+	return value / 12.92 if value <= 0.04045 else pow((value + 0.055) / 1.055, 2.4)
 
 
 func _expect(condition: bool, label: String) -> void:
