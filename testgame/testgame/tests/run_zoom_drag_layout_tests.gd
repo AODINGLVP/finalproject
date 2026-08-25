@@ -22,6 +22,7 @@ func _run() -> void:
 	var view := await _make_view()
 	await _test_freeform_layout_is_untouched(view)
 	await _test_local_drag_avoidance(view)
+	await _test_parent_child_drag_hierarchy(view)
 	await _test_complete_zoom_range(view)
 	await _test_playable_tree_zoom_sweep(view)
 	await _test_live_drag_avoidance(view)
@@ -139,6 +140,33 @@ func _test_local_drag_avoidance(view: BTEditorView) -> void:
 		await _wait_frames(SETTLE_FRAMES)
 		_expect(_render_positions_match_resources(view), "%s clears temporary avoidance offsets when the collision is removed" % label)
 		_expect(_rendered_overlaps(view).is_empty(), "%s remains overlap-free after moving back into free space" % label)
+
+
+func _test_parent_child_drag_hierarchy(view: BTEditorView) -> void:
+	var cases: Array[Array] = [
+		[view.graph_edit.zoom_min, false, false],
+		[1.0, true, false],
+		[view.graph_edit.zoom_max, false, true],
+	]
+	for case in cases:
+		var zoom_value := float(case[0])
+		var semantic_zoom := bool(case[1])
+		var compact_cards := bool(case[2])
+		var tree := _make_parent_child_drag_tree()
+		var structure_before := _structure_signature(tree)
+		var order_before := _execution_order_signature(tree)
+		var other_positions := _resource_positions_except(tree, 3)
+		var label := "parent-child drag zoom %.3f semantic=%s compact=%s" % [zoom_value, semantic_zoom, compact_cards]
+		await _prepare_view(view, tree, zoom_value, semantic_zoom, compact_cards)
+		var parent_target := _graph_node(view, 2).position_offset
+		var drag_result := _drag_graph_node_to(view, 3, parent_target)
+		await _wait_frames(SETTLE_FRAMES)
+		_expect(bool(drag_result.get("started", false)), "%s starts a direct-edge collision drag" % label)
+		_expect(_graph_node(view, 3).position_offset.distance_to(parent_target) <= POSITION_EPSILON, "%s keeps the dragged child at the requested position" % label)
+		_expect(_rendered_overlaps(view).is_empty(), "%s resolves the complete parent collision chain" % label)
+		_expect(_parent_child_clearance_failures(view, view.AUTO_SPACING_GAP).is_empty(), "%s keeps every direct child below its parent with a readable gap" % label)
+		_expect(_resource_positions_except_equal(tree, 3, other_positions), "%s leaves every non-dragged resource coordinate unchanged" % label)
+		_expect(_structure_signature(tree) == structure_before and _execution_order_signature(tree) == order_before, "%s preserves tree structure and execution order" % label)
 
 
 func _test_complete_zoom_range(view: BTEditorView) -> void:
@@ -445,21 +473,29 @@ func _test_large_local_solver_latency(view: BTEditorView) -> void:
 func _test_zero_coordinate_recovery(view: BTEditorView) -> void:
 	var cases: Array[Array] = []
 	for node_count in SCALE_COUNTS:
-		cases.append([node_count, view.graph_edit.zoom_min])
+		cases.append([node_count, view.graph_edit.zoom_min, true, false, "semantic overview"])
+		cases.append([node_count, 1.0, false, false, "normal cards"])
+		cases.append([node_count, view.graph_edit.zoom_max, false, true, "compact cards"])
 	for zoom_value in [0.619, 0.620, 0.621, view.graph_edit.zoom_max]:
-		cases.append([364, zoom_value])
+		cases.append([364, zoom_value, true, false, "semantic boundary"])
 	for case in cases:
 		var node_count := int(case[0])
 		var zoom_value := float(case[1])
+		var semantic_zoom := bool(case[2])
+		var compact_cards := bool(case[3])
+		var display_mode := str(case[4])
 		var tree := TreeFactory.generate(node_count) as BTTreeResource
 		var positions_before := _resource_positions(tree)
 		var structure_before := _structure_signature(tree)
 		var order_before := _execution_order_signature(tree)
-		var label := "%d-node all-zero layout at zoom %.3f" % [node_count, zoom_value]
-		await _prepare_view(view, tree, zoom_value, true, false)
+		var label := "%d-node all-zero %s layout at zoom %.3f" % [node_count, display_mode, zoom_value]
+		await _prepare_view(view, tree, zoom_value, semantic_zoom, compact_cards)
 		await _wait_frames(SETTLE_FRAMES)
 		_expect(_rendered_overlaps(view).is_empty(), "%s automatically recovers without overlap" % label)
 		_expect(_screen_overlaps(view).is_empty(), "%s is readable in screen space" % label)
+		_expect(_parent_child_clearance_failures(view, view.AUTO_SPACING_GAP).is_empty(), "%s places every child card below its parent with a readable gap" % label)
+		_expect(_depth_layer_clearance_failures(view, tree, view.AUTO_SPACING_GAP).is_empty(), "%s keeps each complete depth row below the previous row" % label)
+		_expect(_rendered_sibling_order_matches_resources(view, tree), "%s renders siblings in their saved execution order" % label)
 		_expect(_resource_positions_equal(tree, positions_before), "%s uses temporary offsets only" % label)
 		_expect(_structure_signature(tree) == structure_before and tree.validate_tree().is_empty(), "%s preserves a valid tree" % label)
 		_expect(_execution_order_signature(tree) == order_before, "%s preserves execution order" % label)
@@ -674,6 +710,19 @@ func _make_local_avoidance_tree() -> BTTreeResource:
 	return tree
 
 
+func _make_parent_child_drag_tree() -> BTTreeResource:
+	var tree := BTTreeResource.new()
+	tree.tree_name = "Parent Child Drag Hierarchy"
+	tree.root_node_id = 1
+	tree.nodes = [
+		_make_node(1, BTNodeResource.TYPE_ROOT, -1, Vector2(100.0, 100.0)),
+		_make_node(2, BTNodeResource.TYPE_SEQUENCE, 1, Vector2(100.0, 400.0)),
+		_make_node(3, BTNodeResource.TYPE_ACTION, 2, Vector2(100.0, 700.0)),
+		_make_node(4, BTNodeResource.TYPE_ACTION, 2, Vector2(500.0, 700.0)),
+	]
+	return tree
+
+
 func _make_drag_tree() -> BTTreeResource:
 	var tree := BTTreeResource.new()
 	tree.tree_name = "Zoom Drag Layout Fixture"
@@ -875,6 +924,67 @@ func _rendered_ids_left_to_right(view: BTEditorView, node_ids: Array) -> bool:
 		if graph_node == null or graph_node.position_offset.x <= previous_x:
 			return false
 		previous_x = graph_node.position_offset.x
+	return true
+
+
+func _parent_child_clearance_failures(view: BTEditorView, minimum_gap: float) -> Array[String]:
+	var failures: Array[String] = []
+	for child in _graph_nodes(view):
+		var parent_id: int = child.node_resource.parent_id
+		if parent_id == -1:
+			continue
+		var parent := _graph_node(view, parent_id)
+		if parent == null:
+			continue
+		var gap := child.position_offset.y - (parent.position_offset.y + parent.size.y)
+		if gap + POSITION_EPSILON < minimum_gap:
+			failures.append("%d>%d gap=%.3f" % [parent_id, child.node_resource.id, gap])
+	return failures
+
+
+func _depth_layer_clearance_failures(view: BTEditorView, tree: BTTreeResource, minimum_gap: float) -> Array[String]:
+	var rows: Dictionary = {}
+	var maximum_depth := 0
+	for graph_node in _graph_nodes(view):
+		var depth := _node_depth(tree, graph_node.node_resource)
+		maximum_depth = maxi(maximum_depth, depth)
+		var row: Dictionary = rows.get(depth, {"min_top": INF, "max_bottom": -INF})
+		row["min_top"] = minf(float(row["min_top"]), graph_node.position_offset.y)
+		row["max_bottom"] = maxf(float(row["max_bottom"]), graph_node.position_offset.y + graph_node.size.y)
+		rows[depth] = row
+	var failures: Array[String] = []
+	for depth in range(maximum_depth):
+		if not rows.has(depth) or not rows.has(depth + 1):
+			continue
+		var upper: Dictionary = rows[depth]
+		var lower: Dictionary = rows[depth + 1]
+		var gap := float(lower["min_top"]) - float(upper["max_bottom"])
+		if gap + POSITION_EPSILON < minimum_gap:
+			failures.append("%d>%d gap=%.3f" % [depth, depth + 1, gap])
+	return failures
+
+
+func _rendered_sibling_order_matches_resources(view: BTEditorView, tree: BTTreeResource) -> bool:
+	for parent in tree.nodes:
+		if parent == null or parent.decorator_parent_id != -1:
+			continue
+		var resource_children := tree.get_children_of(parent.id)
+		if resource_children.size() < 2:
+			continue
+		var rendered_children: Array[BTGraphNode] = []
+		for child in resource_children:
+			var rendered := _graph_node(view, child.id)
+			if rendered == null:
+				return false
+			rendered_children.append(rendered)
+		rendered_children.sort_custom(func(left: BTGraphNode, right: BTGraphNode) -> bool:
+			if not is_equal_approx(left.position_offset.x, right.position_offset.x):
+				return left.position_offset.x < right.position_offset.x
+			return left.position_offset.y < right.position_offset.y
+		)
+		for index in range(resource_children.size()):
+			if resource_children[index].id != rendered_children[index].node_resource.id:
+				return false
 	return true
 
 

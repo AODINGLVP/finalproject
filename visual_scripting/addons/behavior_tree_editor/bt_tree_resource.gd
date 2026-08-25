@@ -19,11 +19,18 @@ func find_node(node_id: int) -> BTNodeResource:
 
 func get_children_of(parent_id: int) -> Array[BTNodeResource]:
 	var result: Array[BTNodeResource] = []
+	var source_order: Dictionary = {}
+	for index in range(nodes.size()):
+		var source_node := nodes[index]
+		if source_node != null:
+			source_order[source_node.id] = index
 	for node in nodes:
 		if node != null and node.parent_id == parent_id and node.decorator_parent_id == -1:
 			result.append(node)
 	result.sort_custom(func(a: BTNodeResource, b: BTNodeResource) -> bool:
 		if is_equal_approx(a.position.x, b.position.x):
+			if is_equal_approx(a.position.y, b.position.y):
+				return int(source_order.get(a.id, a.id)) < int(source_order.get(b.id, b.id))
 			return a.position.y < b.position.y
 		return a.position.x < b.position.x
 	)

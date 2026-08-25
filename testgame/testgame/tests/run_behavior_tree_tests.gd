@@ -137,6 +137,8 @@ func _test_tree_validation_edge_cases() -> void:
 	tie_order.find_node(2).position.y = 300.0
 	tie_order.find_node(3).position.y = 200.0
 	_expect(tie_order.get_children_of(1).map(func(item): return item.id) == [3, 2], "child order uses vertical tie breaker")
+	tie_order.find_node(2).position.y = 200.0
+	_expect(tie_order.get_children_of(1).map(func(item): return item.id) == [2, 3], "fully overlapping children preserve their resource order deterministically")
 
 
 func _test_sequence_running_resume() -> void:

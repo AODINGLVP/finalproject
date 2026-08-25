@@ -2206,11 +2206,16 @@ func _apply_auto_spacing_collision_pair(left: BTGraphNode, right: BTGraphNode, b
 	var right_id: int = right.node_resource.id
 	var left_base_center := Vector2(base_positions[left_id]) + left.size * 0.5
 	var right_base_center := Vector2(base_positions[right_id]) + right.size * 0.5
-	var axis := Vector2.RIGHT if overlap_x <= overlap_y else Vector2.DOWN
+	var left_is_parent := right.node_resource.parent_id == left_id
+	var right_is_parent := left.node_resource.parent_id == right_id
+	# A direct behavior-tree edge must remain readable when its cards collide.
+	# Resolve that pair vertically in topology order; unrelated freeform cards still
+	# use the smallest movement axis and keep the user's local arrangement.
+	var axis := Vector2.DOWN if left_is_parent or right_is_parent else (Vector2.RIGHT if overlap_x <= overlap_y else Vector2.DOWN)
 	var left_axis_value := left_base_center.x if axis == Vector2.RIGHT else left_base_center.y
 	var right_axis_value := right_base_center.x if axis == Vector2.RIGHT else right_base_center.y
-	var left_precedes_right := left_axis_value < right_axis_value
-	if is_equal_approx(left_axis_value, right_axis_value):
+	var left_precedes_right := left_is_parent if left_is_parent or right_is_parent else left_axis_value < right_axis_value
+	if not left_is_parent and not right_is_parent and is_equal_approx(left_axis_value, right_axis_value):
 		left_precedes_right = int(source_order.get(left_id, left_id)) < int(source_order.get(right_id, right_id))
 	# Use the distance to the required ordered boundary, not only the current
 	# intersection width. If earlier avoidance carried two cards across one
@@ -2273,26 +2278,72 @@ func _seed_identical_auto_spacing_groups(nodes: Array[BTGraphNode], base_positio
 			maximum_size.x = maxf(maximum_size.x, member.size.x)
 			maximum_size.y = maxf(maximum_size.y, member.size.y)
 		var step := maximum_size + Vector2.ONE * AUTO_SPACING_GAP
-		var column_count := maxi(1, ceili(sqrt(float(group.size()) * step.y / maxf(step.x, 1.0))))
-		var row_count := ceili(float(group.size()) / float(column_count))
 		var seeded_positions: Dictionary = {}
 		var anchor_seed := Vector2.ZERO
-		for index in range(group.size()):
-			var member := group[index] as BTGraphNode
-			var column := index % column_count
-			var row := index / column_count
-			var members_in_row := mini(column_count, group.size() - row * column_count)
-			var seed := Vector2(
-				(float(column) - float(members_in_row - 1) * 0.5) * step.x,
-				(float(row) - float(row_count - 1) * 0.5) * step.y
-			)
-			seeded_positions[member.node_resource.id] = seed
-			if member.node_resource.id == anchor_node_id:
-				anchor_seed = seed
+		var depth_rows: Dictionary = {}
+		for member_variant in group:
+			var member := member_variant as BTGraphNode
+			var depth := _auto_spacing_node_depth(member.node_resource)
+			if not depth_rows.has(depth):
+				depth_rows[depth] = []
+			(depth_rows[depth] as Array).append(member)
+		if depth_rows.size() > 1:
+			var depths: Array = depth_rows.keys()
+			depths.sort()
+			var minimum_depth := int(depths[0])
+			var maximum_depth := int(depths[-1])
+			var depth_center := float(minimum_depth + maximum_depth) * 0.5
+			for depth_variant in depths:
+				var depth := int(depth_variant)
+				var row_members: Array = depth_rows[depth]
+				row_members.sort_custom(func(left: BTGraphNode, right: BTGraphNode) -> bool:
+					return int(source_order.get(left.node_resource.id, left.node_resource.id)) < int(source_order.get(right.node_resource.id, right.node_resource.id))
+				)
+				for index in range(row_members.size()):
+					var member := row_members[index] as BTGraphNode
+					var seed := Vector2(
+						(float(index) - float(row_members.size() - 1) * 0.5) * step.x,
+						(float(depth) - depth_center) * step.y
+					)
+					seeded_positions[member.node_resource.id] = seed
+					if member.node_resource.id == anchor_node_id:
+						anchor_seed = seed
+		else:
+			# Invalid flat resources have no topology to preserve. Keep the previous
+			# compact grid fallback rather than creating an unnecessarily wide row.
+			var column_count := maxi(1, ceili(sqrt(float(group.size()) * step.y / maxf(step.x, 1.0))))
+			var row_count := ceili(float(group.size()) / float(column_count))
+			for index in range(group.size()):
+				var member := group[index] as BTGraphNode
+				var column := index % column_count
+				var row := index / column_count
+				var members_in_row := mini(column_count, group.size() - row * column_count)
+				var seed := Vector2(
+					(float(column) - float(members_in_row - 1) * 0.5) * step.x,
+					(float(row) - float(row_count - 1) * 0.5) * step.y
+				)
+				seeded_positions[member.node_resource.id] = seed
+				if member.node_resource.id == anchor_node_id:
+					anchor_seed = seed
 		var translation := -anchor_seed if seeded_positions.has(anchor_node_id) else Vector2.ZERO
 		for member in group:
 			var member_id: int = member.node_resource.id
 			offsets[member_id] = Vector2(seeded_positions[member_id]) + translation
+
+
+func _auto_spacing_node_depth(node: BTNodeResource) -> int:
+	if current_tree == null or node == null:
+		return 0
+	var depth := 0
+	var visited: Dictionary = {}
+	var cursor := node
+	while cursor != null and cursor.parent_id != -1:
+		if visited.has(cursor.id):
+			return depth
+		visited[cursor.id] = true
+		cursor = current_tree.find_node(cursor.parent_id)
+		depth += 1
+	return depth
 
 
 func _auto_spacing_collision_pairs(nodes: Array[BTGraphNode], base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary) -> Array[Array]:
