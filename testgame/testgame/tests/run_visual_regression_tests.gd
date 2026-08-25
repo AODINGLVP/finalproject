@@ -145,7 +145,7 @@ func _run() -> void:
 	view._set_feature_enabled("accessibility", false, false)
 	view._set_feature_enabled("type_encoding", false, false)
 	await _settle()
-	_expect(_graph_node(view, 2).header_bar.color == Color("f59e0b"), "accessible palette disable restores baseline colors")
+	_expect(not _graph_node(view, 2).accessible_palette_enabled and _graph_node(view, 2)._type_color(BTNodeResource.TYPE_SELECTOR) == Color("f59e0b"), "accessible palette disable restores baseline type colors beneath Selection Context")
 
 	view._set_feature_enabled("single_connection", true, false)
 	await _settle()
@@ -186,8 +186,8 @@ func _run() -> void:
 	await _settle()
 	var overlap_before := _overlapping_node_pairs().size()
 	var dense_detail_overlap := await _capture_case("02c_dense_detail_overlap")
-	_assert_image_valid(dense_detail_overlap, "dense detail overlap baseline renders")
-	_expect(overlap_before > 0, "dense detail baseline reproduces expansion overlap")
+	_assert_image_valid(dense_detail_overlap, "dense detail Adaptive layout renders")
+	_expect(overlap_before == 0, "Adaptive Zoom Detail prevents expansion overlap even when Smart Drag Reflow is off")
 	view._set_feature_enabled("auto_spacing", true, false)
 	view._update_auto_spacing(0.0, true)
 	await _settle()
@@ -232,7 +232,20 @@ func _run() -> void:
 	_expect(_all_unfocused_nodes_shrunk(3), "fisheye screenshot shrinks every surrounding node")
 	_expect(_overlapping_node_pairs().is_empty(), "fisheye focus-and-context layout does not overlap cards")
 	_expect(_rendered_tree_order_is_valid() and _resource_positions_equal(view.current_tree, fisheye_positions), "fisheye preserves topology and saved positions")
+	view._reset_fisheye()
+	view._set_feature_enabled("semantic_zoom", true, false)
+	view.graph_edit.zoom = 0.5
+	view._update_semantic_zoom()
+	view._apply_fisheye_focus(focused, 1.0)
+	view._update_auto_spacing(0.0, true)
+	await _settle()
+	var fisheye_adaptive := await _capture_case("03a_fisheye_adaptive_overview")
+	_assert_image_valid(fisheye_adaptive, "Fisheye Focus at Adaptive overview zoom renders")
+	_expect(focused.fisheye_detail_focus and focused.description_label.visible and not _graph_node(view, 6).description_label.visible, "Fisheye overview screenshot restores full focal information while keeping context compact")
+	_expect(_overlapping_node_pairs().is_empty() and _resource_positions_equal(view.current_tree, fisheye_positions), "Fisheye overview screenshot remains overlap-free without changing saved positions")
 	view._set_feature_enabled("fisheye", false, false)
+	view._set_feature_enabled("semantic_zoom", false, false)
+	view.graph_edit.zoom = 1.0
 	await _settle()
 	var recovered := await _capture_case("04_fisheye_disabled")
 	_assert_image_valid(recovered, "fisheye disable recovery renders")
@@ -257,7 +270,14 @@ func _run() -> void:
 	_expect(_count_near_color(search, Color("22d3ee"), 0.13) > 4, "search screenshot contains current-result highlight")
 	view._set_feature_enabled("search", false, false)
 	_restore_overview()
+	view.selected_node_id = 3
+	view._refresh_inspector()
 	await _settle()
+	var selection_context := await _capture_case("06b_selection_context")
+	_assert_image_valid(selection_context, "Selection Context screenshot renders")
+	_expect(_graph_node(view, 3).selection_context_role == BTGraphNode.SELECTION_ROLE_SELECTED and _graph_node(view, 1).selection_context_role == BTGraphNode.SELECTION_ROLE_ANCESTOR and _graph_node(view, 4).selection_context_role == BTGraphNode.SELECTION_ROLE_DIRECT_CHILD and _graph_node(view, 6).selection_context_role == BTGraphNode.SELECTION_ROLE_SIBLING, "Selection Context screenshot contains selected, ancestor, direct-child, and sibling roles")
+	_expect(view.graph_edit._selection_connection_role(1, 2) == "path" and view.graph_edit._selection_connection_role(2, 3) == "path" and view.graph_edit._selection_connection_role(3, 4) == "child" and view.graph_edit._selection_connection_role(2, 6) == "sibling", "Selection Context screenshot classifies every related connection type")
+	_expect(_count_near_color(selection_context, Color("a78bfa"), 0.15) > 3 and _count_near_color(selection_context, Color("60a5fa"), 0.15) > 3 and _count_near_color(selection_context, Color("34d399"), 0.15) > 3, "Selection Context screenshot visibly distinguishes its main node roles")
 
 	var failure_snapshot := {
 		"actor": "VisualTestNPC", "tree_path": view.current_tree_path,
