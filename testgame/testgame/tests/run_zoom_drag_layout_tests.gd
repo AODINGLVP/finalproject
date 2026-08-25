@@ -25,6 +25,7 @@ func _run() -> void:
 	await _test_parent_child_drag_hierarchy(view)
 	await _test_complete_zoom_range(view)
 	await _test_playable_tree_zoom_sweep(view)
+	await _test_saved_arena_hierarchy_zoom_sweep(view)
 	await _test_live_drag_avoidance(view)
 	await _test_drag_across_display_density_change(view)
 	await _test_wheel_anchor_disabled_during_drag(view)
@@ -227,8 +228,34 @@ func _test_playable_tree_zoom_sweep(view: BTEditorView) -> void:
 		_expect(_screen_overlaps(view).is_empty(), "%s has no screen-space overlap on the first rendered frame" % label)
 		await _wait_frames(SETTLE_FRAMES)
 		_expect(_rendered_overlaps(view).is_empty() and _screen_overlaps(view).is_empty(), "%s remains overlap-free after layout settles" % label)
+		_expect(_parent_child_clearance_failures(view, view.AUTO_SPACING_GAP).is_empty(), "%s keeps every layered parent card completely above its children" % label)
+		_expect(_rendered_sibling_order_matches_resources(view, tree), "%s preserves the saved sibling order" % label)
 	_expect(_structure_signature(tree) == structure_before and _execution_order_signature(tree) == order_before, "complete playable-tree zoom sweep preserves structure and execution order")
 	_expect(_resource_positions_equal(tree, positions_before), "complete playable-tree zoom sweep preserves every saved node position")
+
+
+func _test_saved_arena_hierarchy_zoom_sweep(view: BTEditorView) -> void:
+	var tree := ResourceLoader.load("res://behavior_trees/arena_hunter_121.tres", "", ResourceLoader.CACHE_MODE_IGNORE) as BTTreeResource
+	_expect(tree != null, "saved 121-node arena tree loads for hierarchy-preserving zoom tests")
+	if tree == null:
+		return
+	var structure_before := _structure_signature(tree)
+	var order_before := _execution_order_signature(tree)
+	var positions_before := _resource_positions(tree)
+	await _prepare_view(view, tree, view.graph_edit.zoom_min, true, false)
+	for requested_zoom in [view.graph_edit.zoom_min, 0.25, 0.50, 0.619, 0.620, 0.621, 0.879, 0.880, 0.881, 1.0, 1.5, view.graph_edit.zoom_max]:
+		var zoom_value := clampf(float(requested_zoom), view.graph_edit.zoom_min, view.graph_edit.zoom_max)
+		view.graph_edit.zoom = zoom_value
+		view._update_semantic_zoom()
+		await _wait_frames(SETTLE_FRAMES)
+		var failures := _parent_child_clearance_failures(view, view.AUTO_SPACING_GAP)
+		if not failures.is_empty():
+			print("BT_HIERARCHY_FAILURE zoom=%.3f failures=%s" % [zoom_value, failures])
+		_expect(failures.is_empty(), "saved 121-node arena tree keeps every parent card completely above its children at zoom %.3f" % zoom_value)
+		_expect(_rendered_overlaps(view).is_empty() and _screen_overlaps(view).is_empty(), "saved 121-node arena tree stays overlap-free at zoom %.3f" % zoom_value)
+		_expect(_rendered_sibling_order_matches_resources(view, tree), "saved 121-node arena tree preserves sibling order at zoom %.3f" % zoom_value)
+	_expect(_structure_signature(tree) == structure_before and _execution_order_signature(tree) == order_before, "arena hierarchy zoom sweep preserves structure and execution order")
+	_expect(_resource_positions_equal(tree, positions_before), "arena hierarchy zoom sweep preserves every saved node position")
 
 
 func _test_live_drag_avoidance(view: BTEditorView) -> void:

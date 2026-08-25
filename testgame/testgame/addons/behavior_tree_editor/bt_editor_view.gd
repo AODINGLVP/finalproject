@@ -2193,6 +2193,16 @@ func _solve_auto_spacing_offsets(anchor_node_id := -1, initial_offsets: Dictiona
 	# Continue only on the small set still involved in collisions. This preserves
 	# freeform positions while avoiding another 128 full-tree topology scan.
 	_resolve_auto_spacing_residual_collisions(nodes, base_positions, offsets, source_order, anchor_influence)
+	# Card detail can increase height without a rectangle collision when connected
+	# cards are far apart horizontally. Reconcile the saved rank gap after the
+	# collision solver, outside the high-frequency live-drag path.
+	if _active_dragged_graph_node() == null:
+		for _rank_pass in range(8):
+			if not _enforce_layered_parent_child_clearance(nodes, nodes_by_id, base_positions, offsets):
+				break
+			# Moving a child rank downward can meet a lower card. Clear only those
+			# residual collisions, then recheck the hierarchy on the next pass.
+			_resolve_auto_spacing_residual_collisions(nodes, base_positions, offsets, source_order, anchor_influence)
 	return offsets
 
 
@@ -2347,6 +2357,34 @@ func _auto_spacing_node_depth(node: BTNodeResource) -> int:
 		cursor = current_tree.find_node(cursor.parent_id)
 		depth += 1
 	return depth
+
+
+func _enforce_layered_parent_child_clearance(nodes: Array[BTGraphNode], nodes_by_id: Dictionary, base_positions: Dictionary, offsets: Dictionary) -> bool:
+	var ordered: Array[BTGraphNode] = nodes.duplicate()
+	ordered.sort_custom(func(left: BTGraphNode, right: BTGraphNode) -> bool:
+		return _auto_spacing_node_depth(left.node_resource) < _auto_spacing_node_depth(right.node_resource)
+	)
+	var changed := false
+	var layered_threshold := BTGraphNode.NORMAL_CARD_SIZE.y + AUTO_SPACING_GAP
+	for child in ordered:
+		var parent_id: int = child.node_resource.parent_id
+		if not nodes_by_id.has(parent_id):
+			continue
+		var child_id: int = child.node_resource.id
+		var base_vertical_delta := Vector2(base_positions[child_id]).y - Vector2(base_positions[parent_id]).y
+		# A small or inverted saved delta is intentional freeform placement. Only
+		# ordinary top-to-bottom ranks receive the complete card-boundary gap.
+		if base_vertical_delta < layered_threshold:
+			continue
+		var parent := nodes_by_id[parent_id] as BTGraphNode
+		var parent_top := Vector2(base_positions[parent_id]).y + Vector2(offsets.get(parent_id, Vector2.ZERO)).y
+		var child_top := Vector2(base_positions[child_id]).y + Vector2(offsets.get(child_id, Vector2.ZERO)).y
+		var required_child_top := parent_top + parent.size.y + AUTO_SPACING_GAP
+		if child_top + AUTO_SPACING_SEPARATION_EPSILON >= required_child_top:
+			continue
+		offsets[child_id] = Vector2(offsets.get(child_id, Vector2.ZERO)) + Vector2.DOWN * (required_child_top - child_top)
+		changed = true
+	return changed
 
 
 func _auto_spacing_collision_pairs(nodes: Array[BTGraphNode], base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary) -> Array[Array]:

@@ -490,6 +490,14 @@ func _run() -> void:
 	print("VISUAL_METRIC playable_max_zoom_overlaps=%d target_overlaps=%d pairs=%s target_pairs=%s" % [playable_max_zoom_pairs.size(), playable_max_zoom_target_pairs.size(), playable_max_zoom_pairs.slice(0, mini(12, playable_max_zoom_pairs.size())), playable_max_zoom_target_pairs.slice(0, mini(12, playable_max_zoom_target_pairs.size()))])
 	_print_overlap_geometry("playable_max", playable_max_zoom_pairs)
 	_expect(playable_max_zoom_pairs.is_empty(), "playable 241-node full-detail layout is overlap-free at maximum zoom")
+	var playable_max_gap_failures := _parent_child_gap_failures(view.AUTO_SPACING_GAP)
+	if not playable_max_gap_failures.is_empty():
+		print("VISUAL_METRIC playable_max_hierarchy_failures=%s" % [playable_max_gap_failures.slice(0, mini(20, playable_max_gap_failures.size()))])
+	_expect(playable_max_gap_failures.is_empty(), "playable 241-node maximum-zoom layout keeps every layered parent completely above its children")
+	view._focus_graph_node(3)
+	await _settle()
+	var playable_max_hierarchy := await _capture_case("11b0_playable_241_max_zoom_hierarchy")
+	_assert_image_valid(playable_max_hierarchy, "playable 241-node maximum-zoom hierarchy renders for visual inspection")
 	var playable_leaf_ids := _last_visible_leaf_ids(2)
 	_expect(playable_leaf_ids.size() == 2, "playable 241-node live visual test has two leaf cards")
 	if playable_leaf_ids.size() == 2:
@@ -652,12 +660,15 @@ func _rendered_tree_order_is_valid() -> bool:
 		if node == null or node.decorator_parent_id != -1:
 			continue
 		var children := view.current_tree.get_children_of(node.id)
+		var parent := _graph_node(view, node.id)
+		if parent == null:
+			return false
 		var previous_x := -INF
 		for child_node in children:
 			var rendered := _graph_node(view, child_node.id)
 			if rendered == null or rendered.position_offset.x < previous_x:
 				return false
-			if _graph_node(view, node.id).position_offset.y >= rendered.position_offset.y:
+			if parent.position_offset.y + parent.size.y + view.AUTO_SPACING_GAP > rendered.position_offset.y + 0.1:
 				return false
 			previous_x = rendered.position_offset.x
 	return true
@@ -781,7 +792,7 @@ func _parent_child_gap_failures(minimum_gap: float) -> Array[String]:
 		var child := _graph_node(view, node.id)
 		if parent != null and child != null:
 			var gap := child.position_offset.y - (parent.position_offset.y + parent.size.y)
-			if gap < minimum_gap:
+			if gap + 0.1 < minimum_gap:
 				failures.append("%d>%d:%.1f" % [node.parent_id, node.id, gap])
 	return failures
 
