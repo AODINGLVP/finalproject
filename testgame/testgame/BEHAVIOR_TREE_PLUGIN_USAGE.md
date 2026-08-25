@@ -4,8 +4,7 @@
 
 - Enable the plugin from `Project > Project Settings > Plugins`.
 - Open the bottom panel named `Behavior Tree`.
-- Drag node types from the `Palette` into the graph.
-- Right-click the graph to add nodes at the cursor.
+- Right-click an empty point on the graph and choose a node type to create it at the cursor.
 - Right-click a node to disconnect, delete, or enable/disable it.
 - Use `Undo` and `Redo` in the toolbar while editing.
 - Use the attached-decorator list in `Node Inspector` to edit or remove decorators.
@@ -29,7 +28,9 @@
 - `Active Path Highlight`, `Non-active Branch Dimming`, and `Failure Reason Annotation` explain runtime decisions in the editor.
 - `Multi-column Layout` wraps wide fan-outs while preserving left-to-right execution order.
 - `Stable Incremental Layout` keeps valid existing positions when `Auto Arrange` is used.
+- `Edge Obstacle Avoidance` is enabled by default and reroutes a connection only when its normal route crosses an unrelated card.
 - `Orthogonal Edges` and `Edge Bundling` provide alternative connection routing for dense trees.
+- `Always Curved Edges (Experiment)` and `Translucent Cards (Experiment)` are optional, default-off comparison modes. They are not the recommended baseline.
 
 Display options are saved in `user://behavior_tree_editor_view.cfg`. Experimental or potentially expensive options such as Compact, Semantic Zoom, branch dimming, multi-column layout, orthogonal edges, edge bundling, and stable layout are disabled by default. Disabling a feature restores its baseline visual state without changing behavior-tree execution data.
 
@@ -75,6 +76,10 @@ Run these commands from the repository root:
 ./Godot_v4.6-stable_win64_console.exe --headless --path ./testgame/testgame --script res://tests/run_editor_view_tests.gd
 ./Godot_v4.6-stable_win64_console.exe --headless --path ./testgame/testgame --script res://tests/run_game_integration_tests.gd
 ./Godot_v4.6-stable_win64_console.exe --headless --path ./testgame/testgame --script res://tests/run_complex_arena_tests.gd
-./Godot_v4.6-stable_win64_console.exe --headless --path ./testgame/testgame --script res://tests/run_arena_smoke_test.gd
+./Godot_v4.6-stable_win64_console.exe --headless --path ./testgame/testgame --script res://tests/run_arena_progression_tests.gd
+./Godot_v4.6-stable_win64_console.exe --rendering-method gl_compatibility --path ./testgame/testgame --script res://tests/run_arena_smoke_test.gd
+./Godot_v4.6-stable_win64_console.exe --rendering-method gl_compatibility --path ./testgame/testgame --script res://tests/run_playable_game_evidence_visual_tests.gd
 ./Godot_v4.6-stable_win64_console.exe --headless --path ./testgame/testgame --script res://tests/run_display_benchmarks.gd
 ```
+
+For the finite five-enemy game, controls, victory/reset flow, and actual 241-node Live Debug procedure, see `COMPLEX_ARENA_GUIDE.md`.

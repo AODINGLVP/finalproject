@@ -4,8 +4,7 @@
 
 - Enable the plugin from `Project > Project Settings > Plugins`.
 - Open the bottom panel named `Behavior Tree`.
-- Drag node types from the `Palette` into the graph.
-- Right-click the graph to add nodes at the cursor.
+- Right-click an empty point on the graph and choose a node type to create it at the cursor.
 - Right-click a node to disconnect, delete, or enable/disable it.
 - Use `Undo` and `Redo` in the toolbar while editing.
 
@@ -17,6 +16,8 @@
 - Enable `Semantic Zoom` and `Zoom-Aware Auto Spacing` to keep low-detail trees dense while temporarily separating expanded cards and preserving clear connection channels.
 - Keep `Zoom View Anchor` enabled to preserve the viewport center's relative position within nearby nodes while zoom-triggered layout changes settle.
 - Right-click the graph and choose `Arrange for Overview` to save a compact low-detail layout. Zooming out restores these saved coordinates; the expanded spacing is visual only.
+- Keep `Edge Obstacle Avoidance` enabled to reroute a connection only when its normal route crosses an unrelated card.
+- `Always Curved Edges (Experiment)` and `Translucent Cards (Experiment)` are optional, default-off comparison modes rather than the recommended baseline.
 
 ## Runtime
 

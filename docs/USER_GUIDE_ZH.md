@@ -10,10 +10,10 @@
 
 ## 2. 创建与保存行为树
 
-1. 点击 `New Tree`，填写 `Resource Path`，路径必须以 `res://` 开头并以 `.tres` 结尾。
-2. 从左侧 `Node Palette` 拖入节点，或在画布空白处右键创建。
+1. 点击 `New` 创建树；保存时选择项目内的 `.tres` 资源位置。
+2. 在画布空白处右键，选择需要的节点类型并在鼠标位置创建。
 3. 先创建唯一的 `Root`，再从父节点下方端口拖到子节点上方端口连接。
-4. 也可以选中父节点后点击 `Add Child`。同一父节点的子节点按照画布横坐标从左到右执行。
+4. 同一父节点的子节点按照画布横坐标从左到右执行。
 5. 拖动节点调整顺序，使用 `Undo` / `Redo` 撤销或重做编辑。
 6. 点击 `Save Tree`。保存前会检查Root、断线、循环、叶节点子节点、Decorator和Schema错误。
 
@@ -90,6 +90,6 @@ func chase_target(blackboard: Dictionary, delta: float, node: Resource) -> int:
 
 ## 8. 示例与验证
 
-运行`res://scenes/test_game.tscn`。玩家使用A/D移动、J或鼠标左键攻击、Space冲刺、C隐身、H治疗、T暂停AI、R重置。EnemyB/EnemyC使用复杂行为树，覆盖巡逻、索敌、追击、左右攻击、搜索最后位置、撤退、治疗、Random Selector、Parallel、Repeat、Wait和Decorator。
+运行`res://scenes/test_game.tscn`。玩家使用A/D移动、W跳跃或攀爬、S向下攀爬、J或鼠标左键攻击、Space冲刺、C隐身、H治疗、T暂停AI、R重置。场景固定包含五个不会自动复活的敌人，分别使用31、61、121、241和364节点的真实行为树；玩家为无限生命，击败全部敌人后出现胜利界面。241节点Tactician覆盖巡逻、索敌、追击、方向近战、远程投射物、跳跃、攀爬、搜索最后位置、返回、撤退和治疗。详细演示见`testgame/testgame/COMPLEX_ARENA_GUIDE.md`。
 
-自动验证命令和预期结果见 `docs/TECHNICAL_DOCUMENTATION_ZH.md`。最终基线为核心 `447/447`、固定研究视觉 `21/21`、运行时性能 `511/511` 和发布包 `53/53`。测试证据目录含 `.gdignore`，不会被Godot误当成重复插件源码扫描。
+自动验证命令见 `docs/TECHNICAL_DOCUMENTATION_ZH.md` 和游戏演示指南。测试结果以当前运行日志为准，不在本指南中保留容易过期的固定总数。测试证据目录含 `.gdignore`，不会被Godot误当成重复插件源码扫描。
