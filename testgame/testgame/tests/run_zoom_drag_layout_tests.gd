@@ -23,7 +23,9 @@ func _run() -> void:
 	if OS.get_cmdline_user_args().has("density-transition-quick"):
 		await _test_drag_across_display_density_change(view)
 		print("BT_ZOOM_DENSITY_QUICK_SUMMARY passed=%d failed=%d" % [passed, failed])
-		view.free()
+		view.queue_free()
+		await process_frame
+		await process_frame
 		quit(0 if failed == 0 else 1)
 		return
 	if OS.get_cmdline_user_args().has("drag-rules-quick"):
@@ -31,7 +33,9 @@ func _run() -> void:
 		await _test_conditional_parent_child_clearance(view)
 		await _test_playable_tree_max_zoom_quick(view)
 		print("BT_ZOOM_DRAG_LAYOUT_QUICK_SUMMARY passed=%d failed=%d" % [passed, failed])
-		view.free()
+		view.queue_free()
+		await process_frame
+		await process_frame
 		quit(0 if failed == 0 else 1)
 		return
 	await _test_freeform_layout_is_untouched(view)
@@ -56,7 +60,9 @@ func _run() -> void:
 	await _test_topology_cache_invalidation(view)
 	_test_saved_large_tree_layouts()
 	print("BT_ZOOM_DRAG_LAYOUT_TEST_SUMMARY passed=%d failed=%d" % [passed, failed])
-	view.free()
+	view.queue_free()
+	await process_frame
+	await process_frame
 	quit(0 if failed == 0 else 1)
 
 
@@ -226,6 +232,22 @@ func _test_drag_reflow_deadzone(view: BTEditorView) -> void:
 	_expect(view.drag_auto_spacing_active, "post-zoom movement activates reflow only after the accumulated screen distance crosses the threshold")
 	_end_graph_node_drag(zoom_drag)
 	await _wait_frames(2)
+
+	# Turning Smart Drag Reflow off must leave deliberate node movement free while
+	# Adaptive Zoom can still request its own layout solves independently.
+	await _prepare_deadzone_fixture(view, 1.0)
+	view._set_feature_enabled("auto_spacing", false, false)
+	var disabled_source := _graph_node(view, 4)
+	var disabled_neighbour := _graph_node(view, 5)
+	var disabled_start := disabled_source.position_offset
+	var neighbour_before := disabled_neighbour.position_offset
+	var disabled_drag := _begin_graph_node_drag(view, 4)
+	_move_graph_node_drag(view, disabled_drag, disabled_start + Vector2.RIGHT * 24.0)
+	await process_frame
+	_expect(not view.drag_auto_spacing_active and disabled_neighbour.position_offset.is_equal_approx(neighbour_before), "disabling Smart Drag Reflow keeps even a beyond-threshold drag free of automatic neighbour movement")
+	_end_graph_node_drag(disabled_drag)
+	await _wait_frames(2)
+	view._set_feature_enabled("auto_spacing", true, false)
 
 
 func _test_conditional_parent_child_clearance(view: BTEditorView) -> void:

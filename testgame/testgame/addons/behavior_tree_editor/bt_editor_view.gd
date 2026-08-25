@@ -31,6 +31,7 @@ const FISHEYE_RESUME_POINTER_DISTANCE := 6.0
 const ADAPTIVE_COMPACT_ZOOM_THRESHOLD := 0.62
 const ADAPTIVE_FULL_DETAIL_ZOOM_THRESHOLD := 0.88
 const VIEW_SETTINGS_PATH := "user://behavior_tree_editor_view.cfg"
+const VIEW_SETTINGS_SCHEMA_VERSION := 2
 const MULTI_COLUMN_THRESHOLD := 5
 const MULTI_COLUMN_COUNT := 4
 const LAYOUT_START := Vector2(120.0, 100.0)
@@ -3544,6 +3545,7 @@ func _apply_fisheye_focus(focused_node: BTGraphNode, delta: float) -> void:
 			continue
 		var graph_node: BTGraphNode = child
 		var is_focused := graph_node == focused_node
+		graph_node.set_fisheye_detail_focus(is_focused)
 		_apply_node_fisheye_scale(graph_node, FISHEYE_MAX_SCALE if is_focused else FISHEYE_CONTEXT_SCALE, 1.0 if is_focused else 0.0, delta)
 	graph_edit.fisheye_focus_position = focused_node.position_offset + focused_node.size * 0.5
 	graph_edit.queue_redraw()
@@ -3749,6 +3751,7 @@ func _reset_fisheye(delta := 0.0) -> void:
 		if not (child is BTGraphNode):
 			continue
 		var graph_node: BTGraphNode = child
+		graph_node.set_fisheye_detail_focus(false)
 		var next_scale := lerpf(graph_node.fisheye_magnification, 1.0, blend)
 		graph_node.set_fisheye_magnification(next_scale)
 		# Clear transforms left by plugin versions that scaled GraphNode directly.
@@ -4238,24 +4241,7 @@ func _is_ancestor_of(candidate_id: int, node_id: int) -> bool:
 func _load_view_settings() -> void:
 	var config := ConfigFile.new()
 	if config.load(VIEW_SETTINGS_PATH) == OK:
-		for definition in FEATURE_DEFINITIONS:
-			var key := str(definition[0])
-			if BUILT_IN_FEATURE_KEYS.has(key):
-				feature_states[key] = true
-				continue
-			if HIDDEN_DISABLED_FEATURE_KEYS.has(key):
-				feature_states[key] = false
-				continue
-			var legacy_default := bool(definition[2])
-			if key == "fisheye":
-				legacy_default = bool(config.get_value("view", "fisheye", legacy_default))
-			elif key == "compact":
-				legacy_default = bool(config.get_value("view", "compact", legacy_default))
-			elif key == "semantic_zoom":
-				legacy_default = bool(config.get_value("view", "semantic_zoom", legacy_default))
-			elif key == "enhanced_minimap":
-				legacy_default = bool(config.get_value("view", "minimap", legacy_default))
-			feature_states[key] = bool(config.get_value("features", key, legacy_default))
+		_load_feature_states_from_config(config)
 		if is_instance_valid(grid_toggle):
 			grid_toggle.set_pressed_no_signal(false)
 		if is_instance_valid(minimap_toggle):
@@ -4289,6 +4275,32 @@ func _load_view_settings() -> void:
 	_apply_feature_states()
 
 
+func _load_feature_states_from_config(config: ConfigFile) -> void:
+	var schema_version := int(config.get_value("meta", "display_schema_version", 1))
+	for definition in FEATURE_DEFINITIONS:
+		var key := str(definition[0])
+		if BUILT_IN_FEATURE_KEYS.has(key):
+			feature_states[key] = true
+			continue
+		if HIDDEN_DISABLED_FEATURE_KEYS.has(key):
+			feature_states[key] = false
+			continue
+		# These keys had narrower meanings and defaulted off before consolidation.
+		# On the first upgrade, start the two new combined features in their intended
+		# default state; versioned settings then preserve later user choices exactly.
+		if schema_version < VIEW_SETTINGS_SCHEMA_VERSION and (key == "semantic_zoom" or key == "breadcrumb"):
+			feature_states[key] = true
+			continue
+		var legacy_default := bool(definition[2])
+		if key == "fisheye":
+			legacy_default = bool(config.get_value("view", "fisheye", legacy_default))
+		elif key == "semantic_zoom":
+			legacy_default = bool(config.get_value("view", "semantic_zoom", legacy_default))
+		elif key == "enhanced_minimap":
+			legacy_default = bool(config.get_value("view", "minimap", legacy_default))
+		feature_states[key] = bool(config.get_value("features", key, legacy_default))
+
+
 func _save_view_settings() -> void:
 	var config := ConfigFile.new()
 	_populate_view_config(config)
@@ -4296,6 +4308,7 @@ func _save_view_settings() -> void:
 
 
 func _populate_view_config(config: ConfigFile) -> void:
+	config.set_value("meta", "display_schema_version", VIEW_SETTINGS_SCHEMA_VERSION)
 	for definition in FEATURE_DEFINITIONS:
 		var key := str(definition[0])
 		var persisted_value := _feature_enabled(key)

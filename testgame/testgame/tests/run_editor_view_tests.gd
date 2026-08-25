@@ -143,7 +143,9 @@ func _run() -> void:
 	_test_live_debug_bridge_resilience(view)
 
 	print("BT_EDITOR_TEST_SUMMARY passed=%d failed=%d" % [passed, failed])
-	view.free()
+	view.queue_free()
+	await process_frame
+	await process_frame
 	quit(0 if failed == 0 else 1)
 
 
@@ -694,9 +696,9 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	await process_frame
 	await process_frame
 	var translucent_panel_style := translucent_node.get_theme_stylebox(&"panel") as StyleBoxFlat
-	_expect(translucent_panel_style != null and translucent_node.translucent_cards_enabled and translucent_node.translucent_style_override_names.size() >= 2 and is_equal_approx(translucent_panel_style.bg_color.a, baseline_panel_alpha * BTGraphNode.TRANSLUCENT_CARD_ALPHA_FACTOR) and _labels_have_translucent_text_masks(protected_labels), "translucent-card experiment keeps the card background transparent while applying text-shaped edge masks")
+	_expect(translucent_panel_style != null and translucent_node.translucent_cards_enabled and translucent_node.translucent_style_override_names.size() >= 2 and is_equal_approx(translucent_panel_style.bg_color.a, baseline_panel_alpha * BTGraphNode.TRANSLUCENT_CARD_ALPHA_FACTOR) and _labels_have_translucent_text_masks(protected_labels), "Readable Edge Overlay reveals connections through the card background while applying text-shaped masks")
 	var translucent_selected_style := translucent_node.get_theme_stylebox(&"panel_selected") as StyleBoxFlat
-	_expect(translucent_node.has_theme_stylebox_override(&"panel_selected") and translucent_selected_style != null and translucent_selected_style.bg_color.a < baseline_panel_alpha and protected_labels.size() >= 9, "translucent-card experiment covers selected cards, native titles, information labels, and dynamic Decorator labels")
+	_expect(translucent_node.has_theme_stylebox_override(&"panel_selected") and translucent_selected_style != null and translucent_selected_style.bg_color.a < baseline_panel_alpha and protected_labels.size() >= 9, "Readable Edge Overlay protects selected cards, native titles, information labels, and dynamic Decorator labels")
 	_expect(translucent_panel_style != null and translucent_panel_style.border_color == baseline_border_color and translucent_node.title_label.modulate.a == 1.0 and translucent_node.header_bar.color.a == 1.0 and translucent_node.input_square.color.a == 1.0 and translucent_node.output_square.color.a == 1.0 and _label_minimum_size_signature(protected_labels) == baseline_label_minimum_sizes, "opaque two-tone text remains readable without changing any Label minimum size")
 	_expect(translucent_node.modulate == baseline_card_modulate and translucent_node.self_modulate == baseline_card_self_modulate and _node_geometry_matches(protected_text_node, baseline_node_geometry), "translucent-card text masks do not reuse opacity channels or move and resize graph nodes")
 	view._on_search_changed("attack")
@@ -706,7 +708,7 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	await process_frame
 	await process_frame
 	var restored_panel_style := translucent_node.get_theme_stylebox(&"panel") as StyleBoxFlat
-	_expect(not translucent_node.translucent_cards_enabled and translucent_node.has_theme_stylebox_override(&"panel") == baseline_panel_override and restored_panel_style != null and is_equal_approx(restored_panel_style.bg_color.a, baseline_panel_alpha) and _label_override_signature(protected_labels) == baseline_label_overrides and _labels_have_no_translucent_text_meta(protected_labels) and _node_geometry_matches(protected_text_node, baseline_node_geometry), "disabling translucent cards restores backgrounds, text themes, and geometry exactly")
+	_expect(not translucent_node.translucent_cards_enabled and translucent_node.has_theme_stylebox_override(&"panel") == baseline_panel_override and restored_panel_style != null and is_equal_approx(restored_panel_style.bg_color.a, baseline_panel_alpha) and _label_override_signature(protected_labels) == baseline_label_overrides and _labels_have_no_translucent_text_meta(protected_labels) and _node_geometry_matches(protected_text_node, baseline_node_geometry), "disabling Readable Edge Overlay restores backgrounds, text themes, and geometry exactly")
 
 	view._set_feature_enabled("single_connection", true, false)
 	var parent_graph := _graph_node(view, 2)
@@ -900,6 +902,9 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	view._rebuild_graph()
 	var fisheye_positions := _resource_positions(view.current_tree)
 	var fisheye_order := _child_ids(view.current_tree, 1)
+	view._set_feature_enabled("semantic_zoom", true, false)
+	view.graph_edit.zoom = 0.5
+	view._update_semantic_zoom()
 	view._set_feature_enabled("fisheye", true, false)
 	var focused_fisheye_node := _graph_node(view, 2)
 	var fisheye_local_point := (focused_fisheye_node.position_offset + focused_fisheye_node.size * 0.5) * view.graph_edit.zoom - view.graph_edit.scroll_offset
@@ -909,6 +914,8 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	view._apply_fisheye_focus(focused_fisheye_node, 1.0)
 	view._update_auto_spacing(0.0, true)
 	_expect(_count_magnified_nodes(view) == 1 and _graph_node(view, 2).fisheye_magnification >= 1.24, "fisheye magnifies only the focused node")
+	_expect(_graph_node(view, 2).fisheye_detail_focus and _graph_node(view, 2).description_label.visible and _graph_node(view, 2).custom_minimum_size.x >= BTGraphNode.NORMAL_CARD_SIZE.x * 1.24, "Fisheye Focus restores full information and normal-card geometry for the focal node at overview zoom")
+	_expect(not _graph_node(view, 3).fisheye_detail_focus and not _graph_node(view, 3).description_label.visible, "Fisheye Focus leaves surrounding nodes in Adaptive overview density")
 	_expect(_all_unfocused_nodes_shrunk(view, 2), "fisheye shrinks every surrounding node")
 	_expect(_rendered_overlaps(view).is_empty(), "fisheye context layout prevents card overlap")
 	_expect(_child_ids(view.current_tree, 1) == fisheye_order and _rendered_child_order(view, 1) == fisheye_order, "fisheye preserves sibling left-to-right order")
@@ -916,7 +923,9 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	_expect(_resource_positions_equal(view.current_tree, fisheye_positions), "fisheye layout never changes saved resource coordinates")
 	view._reset_fisheye()
 	view._update_auto_spacing(0.0, true)
-	_expect(_all_fisheye_state_reset(view), "leaving fisheye restores scale and temporary layout offsets")
+	_expect(_all_fisheye_state_reset(view) and not _graph_node(view, 2).description_label.visible, "leaving Fisheye restores Adaptive density and an overlap-free layout")
+	view._set_feature_enabled("semantic_zoom", false, false)
+	view.graph_edit.zoom = 1.0
 
 	view.current_tree = _make_view_tree()
 	view.selected_node_id = 4
@@ -1155,6 +1164,20 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 		hidden_disabled_config_is_fixed = hidden_disabled_config_is_fixed and not bool(config.get_value("features", key, true))
 	_expect(hidden_disabled_config_is_fixed, "hidden comparison and layout alternatives are persisted as disabled even after internal test overrides")
 	_expect(not bool(config.get_value("view", "grid", true)) and bool(config.get_value("view", "minimap", false)), "legacy view settings persist Grid off and the built-in overview on")
+	_expect(int(config.get_value("meta", "display_schema_version", 0)) == view.VIEW_SETTINGS_SCHEMA_VERSION, "display settings record the consolidated schema version")
+	var legacy_config := ConfigFile.new()
+	legacy_config.set_value("features", "semantic_zoom", false)
+	legacy_config.set_value("features", "breadcrumb", false)
+	view._load_feature_states_from_config(legacy_config)
+	_expect(view._feature_enabled("semantic_zoom") and view._feature_enabled("breadcrumb"), "legacy settings migrate the two newly combined default features to enabled")
+	var current_config := ConfigFile.new()
+	current_config.set_value("meta", "display_schema_version", view.VIEW_SETTINGS_SCHEMA_VERSION)
+	current_config.set_value("features", "semantic_zoom", false)
+	current_config.set_value("features", "breadcrumb", false)
+	view._load_feature_states_from_config(current_config)
+	_expect(not view._feature_enabled("semantic_zoom") and not view._feature_enabled("breadcrumb"), "versioned settings preserve later user choices for Adaptive and Selection Context")
+	for definition in view.FEATURE_DEFINITIONS:
+		view._set_feature_enabled(str(definition[0]), bool(definition[2]), false)
 
 
 func _test_compact_display_toolbar(view: BTEditorView) -> void:
@@ -1208,6 +1231,7 @@ func _test_compact_display_toolbar(view: BTEditorView) -> void:
 	_expect(default_labels_are_hidden, "fixed display capabilities and hidden alternatives have no Display switch")
 	var expected_display_labels := ["Smart Drag Reflow", "Adaptive Zoom Detail", "Readable Edge Overlay", "Selection Context Highlight", "Fisheye Focus"]
 	_expect(display_labels == expected_display_labels and advanced_labels.is_empty(), "Display presents the five consolidated features in a stable order")
+	_expect(popup.is_item_checked(popup.get_item_index(14)) and popup.is_item_checked(popup.get_item_index(13)) and not popup.is_item_checked(popup.get_item_index(8)) and popup.is_item_checked(popup.get_item_index(22)) and popup.is_item_checked(popup.get_item_index(0)), "the five Display defaults are Smart on, Adaptive on, Readable Edge off, Selection on, and Fisheye on")
 	var fixed_menu_callbacks_are_inert := true
 	for definition_index in range(view.FEATURE_DEFINITIONS.size()):
 		var key := str(view.FEATURE_DEFINITIONS[definition_index][0])
@@ -1443,9 +1467,9 @@ func _rendered_parent_above_children(view: BTEditorView) -> bool:
 
 func _all_fisheye_state_reset(view: BTEditorView) -> bool:
 	for child in view.graph_edit.get_children():
-		if child is BTGraphNode and (not is_equal_approx(child.fisheye_magnification, 1.0) or not child.visual_offset.is_zero_approx()):
+		if child is BTGraphNode and (not is_equal_approx(child.fisheye_magnification, 1.0) or child.fisheye_detail_focus):
 			return false
-	return view.fisheye_focus_node_id == -1
+	return view.fisheye_focus_node_id == -1 and _rendered_overlaps(view).is_empty()
 
 
 func _all_node_scales_reset(view: BTEditorView) -> bool:

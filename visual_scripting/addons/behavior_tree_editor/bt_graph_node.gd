@@ -88,6 +88,7 @@ var runtime_reason_enabled := true
 var runtime_reason := ""
 var runtime_snapshot_active := false
 var fisheye_magnification := 1.0
+var fisheye_detail_focus := false
 var manual_connection_dragging := false
 var visual_offset := Vector2.ZERO
 var fisheye_base_size := Vector2.ZERO
@@ -561,7 +562,8 @@ func set_selection_context(enabled: bool, role: int = SELECTION_ROLE_NONE) -> vo
 func _apply_information_density() -> void:
 	if not is_instance_valid(description_label):
 		return
-	var effective_level := 0 if compact_mode else semantic_detail_level
+	var density_compact := compact_mode and not fisheye_detail_focus
+	var effective_level := 2 if fisheye_detail_focus else (0 if density_compact else semantic_detail_level)
 	type_badge.visible = effective_level >= 1
 	type_icon.visible = type_encoding_enabled
 	description_label.visible = effective_level >= 2
@@ -569,18 +571,17 @@ func _apply_information_density() -> void:
 	collapsed_summary_label.visible = subtree_collapse_enabled and effective_level >= 1
 	runtime_label.visible = effective_level >= 1 or runtime_active
 	failure_badge.visible = runtime_reason_enabled and not runtime_reason.is_empty()
-	if compact_mode:
+	if density_compact:
 		custom_minimum_size = COMPACT_CARD_SIZE * fisheye_magnification
 		title_row.custom_minimum_size = Vector2(COMPACT_CONTENT_WIDTH, 26.0) * fisheye_magnification
 		title_label.custom_minimum_size = Vector2(105.0, 24.0) * fisheye_magnification
 		header_bar.custom_minimum_size = Vector2(COMPACT_CONTENT_WIDTH, 5.0) * fisheye_magnification
 	else:
-		# Semantic zoom changes information only, so wheel zoom never resizes nodes.
 		custom_minimum_size = NORMAL_CARD_SIZE * fisheye_magnification
 		title_row.custom_minimum_size = Vector2(NORMAL_CONTENT_WIDTH, 28.0) * fisheye_magnification
 		title_label.custom_minimum_size = Vector2(150.0, 28.0) * fisheye_magnification
 		header_bar.custom_minimum_size = Vector2(NORMAL_CONTENT_WIDTH, 6.0) * fisheye_magnification
-	var content_width := (COMPACT_CONTENT_WIDTH if compact_mode else NORMAL_CONTENT_WIDTH) * fisheye_magnification
+	var content_width := (COMPACT_CONTENT_WIDTH if density_compact else NORMAL_CONTENT_WIDTH) * fisheye_magnification
 	description_label.custom_minimum_size.x = content_width
 	decorator_badges.custom_minimum_size.x = content_width
 	collapsed_summary_label.custom_minimum_size.x = content_width
@@ -616,6 +617,16 @@ func set_fisheye_magnification(value: float) -> void:
 	if is_equal_approx(fisheye_magnification, 1.0) or fisheye_base_size.is_zero_approx():
 		fisheye_base_size = size
 	fisheye_magnification = next_value
+	_apply_information_density()
+
+
+func set_fisheye_detail_focus(enabled: bool) -> void:
+	if fisheye_detail_focus == enabled:
+		return
+	fisheye_detail_focus = enabled
+	# Density changes alter the unscaled card geometry. Keep the compensation base
+	# aligned with that geometry so the magnified card remains centered.
+	fisheye_base_size = NORMAL_CARD_SIZE if enabled or not compact_mode else COMPACT_CARD_SIZE
 	_apply_information_density()
 
 
