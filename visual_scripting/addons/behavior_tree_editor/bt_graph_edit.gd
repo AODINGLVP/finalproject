@@ -11,10 +11,13 @@ signal manual_connection_requested(from_node: StringName, to_node: StringName)
 const FISHEYE_RADIUS := 82.0
 const ENHANCED_MINIMAP_SIZE := Vector2(230.0, 150.0)
 const ENHANCED_MINIMAP_OPACITY := 0.72
+const EDGE_OBSTACLE_MARGIN := 12.0
+const EDGE_CHANNEL_CLEARANCE := 4.0
 
 var fisheye_focus_position := Vector2.ZERO
 var orthogonal_edges_enabled := false
 var edge_bundling_enabled := false
+var edge_obstacle_avoidance_enabled := true
 var active_path_ids: Array[int] = []
 var single_connection_rendering_enabled := true
 var native_connection_layer: Control
@@ -126,6 +129,7 @@ func _draw_behavior_tree_connections() -> void:
 	if not single_connection_rendering_enabled:
 		return
 	var viewport_rect := Rect2(Vector2.ZERO, size).grow(64.0)
+	var obstacle_signature := _graph_obstacle_signature()
 	for connection in get_connection_list():
 		var from_node := get_node_or_null(NodePath(str(connection.get("from_node", "")))) as BTGraphNode
 		var to_node := get_node_or_null(NodePath(str(connection.get("to_node", "")))) as BTGraphNode
@@ -137,7 +141,7 @@ func _draw_behavior_tree_connections() -> void:
 		if not viewport_rect.intersects(rough_bounds):
 			continue
 		var cache_key := "%s>%s" % [from_node.name, to_node.name]
-		var points := _cached_connection_line(cache_key, from_position, to_position)
+		var points := _cached_connection_between(cache_key, from_node, to_node, obstacle_signature)
 		var active := _is_active_connection(from_node.node_resource.id, to_node.node_resource.id)
 		var color := Color("f8fafc") if active else from_node.output_square.color.lerp(to_node.input_square.color, 0.35)
 		var thickness := 5.0 if active else (2.5 if edge_bundling_enabled else 3.5)
@@ -148,12 +152,36 @@ func _cached_connection_line(cache_key: String, from_position: Vector2, to_posit
 	var cached: Dictionary = connection_route_cache.get(cache_key, {})
 	if not cached.is_empty() \
 			and Vector2(cached.get("from", Vector2.INF)).is_equal_approx(from_position) \
-			and Vector2(cached.get("to", Vector2.INF)).is_equal_approx(to_position):
+			and Vector2(cached.get("to", Vector2.INF)).is_equal_approx(to_position) \
+			and str(cached.get("obstacles", "")) == "":
 		return cached.get("points", PackedVector2Array()) as PackedVector2Array
 	var points := _route_connection_line(from_position, to_position)
 	connection_route_cache[cache_key] = {
 		"from": from_position,
 		"to": to_position,
+		"obstacles": "",
+		"points": points,
+	}
+	return points
+
+
+func _cached_connection_between(cache_key: String, from_node: BTGraphNode, to_node: BTGraphNode, obstacle_signature := "") -> PackedVector2Array:
+	var from_position := _output_port_position(from_node)
+	var to_position := _input_port_position(to_node)
+	var current_signature: String = obstacle_signature
+	if current_signature.is_empty():
+		current_signature = _graph_obstacle_signature()
+	var cached: Dictionary = connection_route_cache.get(cache_key, {})
+	if not cached.is_empty() \
+			and Vector2(cached.get("from", Vector2.INF)).is_equal_approx(from_position) \
+			and Vector2(cached.get("to", Vector2.INF)).is_equal_approx(to_position) \
+			and str(cached.get("obstacles", "")) == current_signature:
+		return cached.get("points", PackedVector2Array()) as PackedVector2Array
+	var points := _route_connection_between(from_node, to_node)
+	connection_route_cache[cache_key] = {
+		"from": from_position,
+		"to": to_position,
+		"obstacles": current_signature,
 		"points": points,
 	}
 	return points
@@ -270,6 +298,117 @@ func _route_connection_line(from_position: Vector2, to_position: Vector2) -> Pac
 	return _build_channel_line(from_position, to_position)
 
 
+func _route_connection_between(from_node: BTGraphNode, to_node: BTGraphNode) -> PackedVector2Array:
+	var from_position := _output_port_position(from_node)
+	var to_position := _input_port_position(to_node)
+	if not edge_obstacle_avoidance_enabled:
+		return _route_connection_line(from_position, to_position)
+	return _route_connection_around_obstacles(
+		from_position,
+		to_position,
+		_connection_obstacles(from_node, to_node)
+	)
+
+
+func _connection_obstacles(from_node: BTGraphNode, to_node: BTGraphNode) -> Array[Rect2]:
+	var obstacles: Array[Rect2] = []
+	for graph_child in get_children():
+		var obstacle_node := graph_child as BTGraphNode
+		if obstacle_node == null or obstacle_node == from_node or obstacle_node == to_node or not obstacle_node.visible:
+			continue
+		obstacles.append(Rect2(obstacle_node.position, obstacle_node.size * obstacle_node.scale).grow(EDGE_OBSTACLE_MARGIN))
+	return obstacles
+
+
+func _graph_obstacle_signature() -> String:
+	var entries: Array[String] = []
+	for graph_child in get_children():
+		var graph_node := graph_child as BTGraphNode
+		if graph_node == null:
+			continue
+		entries.append("%s:%s:%s:%s:%s" % [graph_node.name, graph_node.visible, graph_node.position, graph_node.size, graph_node.scale])
+	entries.sort()
+	return "|".join(entries)
+
+
+func _route_connection_around_obstacles(from_position: Vector2, to_position: Vector2, obstacles: Array[Rect2]) -> PackedVector2Array:
+	var baseline := _route_connection_line(from_position, to_position)
+	if obstacles.is_empty() or not _polyline_intersects_obstacles(baseline, obstacles):
+		return baseline
+
+	var lane_values: Array[float] = [(from_position.y + to_position.y) * 0.5]
+	for obstacle in obstacles:
+		lane_values.append(obstacle.position.y - EDGE_CHANNEL_CLEARANCE)
+		lane_values.append(obstacle.end.y + EDGE_CHANNEL_CLEARANCE)
+	var candidates: Array[PackedVector2Array] = []
+	for lane_y in lane_values:
+		candidates.append(PackedVector2Array([
+			from_position,
+			Vector2(from_position.x, lane_y),
+			Vector2(to_position.x, lane_y),
+			to_position,
+		]))
+
+	var left_x := minf(from_position.x, to_position.x)
+	var right_x := maxf(from_position.x, to_position.x)
+	for obstacle in obstacles:
+		left_x = minf(left_x, obstacle.position.x)
+		right_x = maxf(right_x, obstacle.end.x)
+	left_x -= EDGE_CHANNEL_CLEARANCE
+	right_x += EDGE_CHANNEL_CLEARANCE
+	var vertical_direction := 1.0 if to_position.y >= from_position.y else -1.0
+	var start_stub_y := from_position.y + vertical_direction * 24.0
+	var end_stub_y := to_position.y - vertical_direction * 24.0
+	for side_x in [left_x, right_x]:
+		candidates.append(PackedVector2Array([
+			from_position,
+			Vector2(from_position.x, start_stub_y),
+			Vector2(side_x, start_stub_y),
+			Vector2(side_x, end_stub_y),
+			Vector2(to_position.x, end_stub_y),
+			to_position,
+		]))
+
+	var best_route := PackedVector2Array()
+	var best_length := INF
+	for candidate in candidates:
+		if _polyline_intersects_obstacles(candidate, obstacles):
+			continue
+		var candidate_length := _polyline_length(candidate)
+		if candidate_length < best_length:
+			best_length = candidate_length
+			best_route = candidate
+	return best_route if not best_route.is_empty() else baseline
+
+
+func _polyline_length(points: PackedVector2Array) -> float:
+	var length := 0.0
+	for index in range(points.size() - 1):
+		length += points[index].distance_to(points[index + 1])
+	return length
+
+
+func _polyline_intersects_obstacles(points: PackedVector2Array, obstacles: Array[Rect2]) -> bool:
+	for obstacle in obstacles:
+		for index in range(points.size() - 1):
+			if _segment_intersects_rect(points[index], points[index + 1], obstacle):
+				return true
+	return false
+
+
+func _segment_intersects_rect(start: Vector2, finish: Vector2, rect: Rect2) -> bool:
+	if rect.has_point(start) or rect.has_point(finish):
+		return true
+	var top_left := rect.position
+	var top_right := Vector2(rect.end.x, rect.position.y)
+	var bottom_right := rect.end
+	var bottom_left := Vector2(rect.position.x, rect.end.y)
+	return Geometry2D.segment_intersects_segment(start, finish, top_left, top_right) != null \
+		or Geometry2D.segment_intersects_segment(start, finish, top_right, bottom_right) != null \
+		or Geometry2D.segment_intersects_segment(start, finish, bottom_right, bottom_left) != null \
+		or Geometry2D.segment_intersects_segment(start, finish, bottom_left, top_left) != null
+
+
 func _build_channel_line(from_position: Vector2, to_position: Vector2) -> PackedVector2Array:
 	var vertical_distance := to_position.y - from_position.y
 	if vertical_distance <= 8.0:
@@ -337,6 +476,12 @@ func set_edge_display(orthogonal_enabled: bool, bundling_enabled: bool) -> void:
 	queue_redraw()
 
 
+func set_edge_obstacle_avoidance(enabled: bool) -> void:
+	edge_obstacle_avoidance_enabled = enabled
+	connection_route_cache.clear()
+	queue_redraw()
+
+
 func set_single_connection_rendering(enabled: bool) -> void:
 	single_connection_rendering_enabled = enabled
 	connection_lines_thickness = 0.0 if enabled else 3.5
@@ -361,14 +506,14 @@ func _update_native_connection_layer() -> void:
 
 
 func find_connection_at(local_position: Vector2, tolerance := 10.0) -> Dictionary:
+	var obstacle_signature := _graph_obstacle_signature()
 	for connection in get_connection_list():
 		var from_node := get_node_or_null(NodePath(str(connection.get("from_node", "")))) as BTGraphNode
 		var to_node := get_node_or_null(NodePath(str(connection.get("to_node", "")))) as BTGraphNode
 		if from_node == null or to_node == null:
 			continue
-		var from_position := _output_port_position(from_node)
-		var to_position := _input_port_position(to_node)
-		var points := _route_connection_line(from_position, to_position)
+		var cache_key := "%s>%s" % [from_node.name, to_node.name]
+		var points := _cached_connection_between(cache_key, from_node, to_node, obstacle_signature)
 		for index in range(points.size() - 1):
 			if Geometry2D.get_closest_point_to_segment(local_position, points[index], points[index + 1]).distance_to(local_position) <= tolerance:
 				return connection

@@ -682,6 +682,60 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	view._set_feature_enabled("single_connection", true, false)
 	_expect(view.graph_edit.connection_lines_thickness == 0.0 and not view.graph_edit.native_connection_layer.visible and _graph_node(view, 2).single_connection_rendering_enabled, "re-enabling single-connection mode restores custom rendering without graph changes")
 
+	var edge_test_tree := view.current_tree
+	var edge_test_selection := view.selected_node_id
+	var edge_test_auto_spacing := view._feature_enabled("auto_spacing")
+	view._set_feature_enabled("auto_spacing", false, false)
+	view.current_tree = _make_edge_obstacle_tree()
+	view.selected_node_id = -1
+	view._rebuild_graph()
+	await process_frame
+	await process_frame
+	_expect(_connection_node_intersections(view).is_empty(), "default connection routing avoids unrelated node cards")
+	_expect(_duplicate_connection_routes(view).is_empty(), "separate child branches never collapse into one complete connection route")
+	var edge_fixture_positions := _resource_positions(view.current_tree)
+	view._set_feature_enabled("edge_avoidance", false, false)
+	_expect(not _connection_node_intersections(view).is_empty(), "disabling edge avoidance safely restores the original baseline route")
+	view._set_feature_enabled("edge_avoidance", true, false)
+	_expect(_connection_node_intersections(view).is_empty() and _resource_positions_equal(view.current_tree, edge_fixture_positions), "re-enabling edge avoidance restores clear routes without changing saved node positions")
+	var route_source := _graph_node(view, 2)
+	var route_target := _graph_node(view, 3)
+	var route_obstacle := _graph_node(view, 4)
+	var avoided_route := view.graph_edit._cached_connection_between("2>3", route_source, route_target)
+	_expect(
+		avoided_route[0].is_equal_approx(view.graph_edit._output_port_position(route_source))
+			and avoided_route[avoided_route.size() - 1].is_equal_approx(view.graph_edit._input_port_position(route_target)),
+		"obstacle avoidance preserves exact behavior-tree port endpoints"
+	)
+	var avoided_hit := view.graph_edit.find_connection_at(avoided_route[avoided_route.size() / 2], 12.0)
+	_expect(int(str(avoided_hit.get("from_node", "-1"))) == 2 and int(str(avoided_hit.get("to_node", "-1"))) == 3, "custom edge hit testing follows the visible detour route")
+	var edge_test_zoom := view.graph_edit.zoom
+	for compact_state in [false, true]:
+		view._set_feature_enabled("compact", compact_state, false)
+		await process_frame
+		for zoom_value in [view.graph_edit.zoom_min, 1.0, view.graph_edit.zoom_max]:
+			view.graph_edit.zoom = zoom_value
+			var scaled_route := view.graph_edit._route_connection_between(route_source, route_target)
+			_expect(
+				scaled_route[0].is_equal_approx(view.graph_edit._output_port_position(route_source))
+					and scaled_route[scaled_route.size() - 1].is_equal_approx(view.graph_edit._input_port_position(route_target))
+					and _connection_node_intersections(view).is_empty(),
+				"edge routes preserve ports and avoid cards at compact=%s zoom=%.3f" % [compact_state, view.graph_edit.zoom]
+			)
+	view._set_feature_enabled("compact", false, false)
+	view.graph_edit.zoom = edge_test_zoom
+	await process_frame
+	route_obstacle.position_offset = Vector2(1000.0, -500.0)
+	await process_frame
+	var unobstructed_route := view.graph_edit._cached_connection_between("2>3", route_source, route_target)
+	_expect(unobstructed_route != avoided_route and unobstructed_route == view.graph_edit._route_connection_line(unobstructed_route[0], unobstructed_route[unobstructed_route.size() - 1]), "moving an unrelated card invalidates the cached route and restores the direct channel")
+	view.current_tree = edge_test_tree
+	view.selected_node_id = edge_test_selection
+	view._rebuild_graph()
+	view._set_feature_enabled("auto_spacing", edge_test_auto_spacing, false)
+	await process_frame
+	await process_frame
+
 	var snapshot := {
 		"actor": "TestActor", "path_ids": [1, 2, 3, 4],
 		"path_titles": ["Root", "Decision", "Combat", "Attack Target"],
@@ -1008,7 +1062,7 @@ func _test_compact_display_toolbar(view: BTEditorView) -> void:
 	_expect(legacy_creation != null and not legacy_creation.visible, "duplicate node creation toolbar stays hidden in favor of the canvas context menu")
 	_expect(layout_popup.item_count == 9 and layout_popup.get_item_index(view.LAYOUT_MENU_FIT_ID) >= 0, "layout actions are consolidated into one menu")
 	_expect(view.feature_menu_button.text == "Display", "display options use a compact menu label")
-	_expect(popup.item_count == 10 and view.advanced_display_menu.item_count == 14 and grid_index >= 0, "Display shows common options and moves low-frequency switches into Advanced Display")
+	_expect(popup.item_count == 10 and view.advanced_display_menu.item_count == 15 and grid_index >= 0, "Display shows common options and moves low-frequency switches into Advanced Display")
 	_expect(not view.fisheye_toggle.visible and not view.compact_toggle.visible and not view.semantic_zoom_toggle.visible and not view.path_summary_toggle.visible and not view.grid_toggle.visible and not view.minimap_toggle.visible, "redundant display checkboxes stay hidden from the toolbar")
 	var toolbar := view.get_node_or_null("ViewToolbar") as HBoxContainer
 	_expect(toolbar != null and not toolbar.visible, "legacy view toolbar no longer consumes a separate row")
@@ -1057,6 +1111,19 @@ func _make_dense_zoom_tree() -> BTTreeResource:
 		_node(1, BTNodeResource.TYPE_ROOT, -1, "Dense Root", 540.0, 80.0),
 		_node(2, BTNodeResource.TYPE_ACTION, 1, "Dense Left", 400.0, 245.0),
 		_node(3, BTNodeResource.TYPE_ACTION, 1, "Dense Right", 680.0, 245.0),
+	]
+	return tree
+
+
+func _make_edge_obstacle_tree() -> BTTreeResource:
+	var tree := BTTreeResource.new()
+	tree.tree_name = "Edge Obstacle Test"
+	tree.root_node_id = 1
+	tree.nodes = [
+		_node(1, BTNodeResource.TYPE_ROOT, -1, "Root", -400.0, -300.0),
+		_node(2, BTNodeResource.TYPE_SELECTOR, 1, "Route Source", 0.0, 0.0),
+		_node(3, BTNodeResource.TYPE_ACTION, 2, "Route Target", 600.0, 500.0),
+		_node(4, BTNodeResource.TYPE_ACTION, 2, "Unrelated Obstacle", 250.0, 250.0),
 	]
 	return tree
 
@@ -1188,16 +1255,33 @@ func _connection_node_intersections(view: BTEditorView) -> Array[String]:
 		var to_node := _graph_node(view, to_id)
 		if from_node == null or to_node == null:
 			continue
-		var points := view.graph_edit._route_connection_line(
-			view.graph_edit._output_port_position(from_node),
-			view.graph_edit._input_port_position(to_node)
-		)
+		var points := view.graph_edit._route_connection_between(from_node, to_node)
 		for graph_child in view.graph_edit.get_children():
 			if not (graph_child is BTGraphNode) or graph_child == from_node or graph_child == to_node:
 				continue
 			var obstacle := Rect2(graph_child.position, graph_child.size * graph_child.scale).grow(-4.0)
 			if _polyline_enters_rect(points, obstacle):
 				failures.append("%d>%d through %s" % [from_id, to_id, graph_child.name])
+	return failures
+
+
+func _duplicate_connection_routes(view: BTEditorView) -> Array[String]:
+	var failures: Array[String] = []
+	var route_points: Array[PackedVector2Array] = []
+	var route_names: Array[String] = []
+	for connection in view.graph_edit.get_connection_list():
+		var from_id := int(str(connection.get("from_node", "-1")))
+		var to_id := int(str(connection.get("to_node", "-1")))
+		var from_node := _graph_node(view, from_id)
+		var to_node := _graph_node(view, to_id)
+		if from_node == null or to_node == null:
+			continue
+		var points := view.graph_edit._route_connection_between(from_node, to_node)
+		for index in range(route_points.size()):
+			if route_points[index] == points:
+				failures.append("%s equals %d>%d" % [route_names[index], from_id, to_id])
+		route_points.append(points)
+		route_names.append("%d>%d" % [from_id, to_id])
 	return failures
 
 

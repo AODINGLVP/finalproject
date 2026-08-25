@@ -86,7 +86,7 @@ func _run() -> void:
 	await _settle()
 	var display_menu := await _capture_case("01a_display_menu")
 	_assert_image_valid(display_menu, "compact Display menu renders")
-	_expect(display_popup.visible and display_popup.item_count == 10 and view.advanced_display_menu.item_count == 14, "Display popup keeps common options concise and exposes advanced options in a submenu")
+	_expect(display_popup.visible and display_popup.item_count == 10 and view.advanced_display_menu.item_count == 15, "Display popup keeps common options concise and exposes advanced options in a submenu")
 	display_popup.hide()
 	await _settle()
 	var debug_popup := view.debug_menu_button.get_popup()
@@ -400,6 +400,44 @@ func _run() -> void:
 	_expect(_overlapping_node_pairs().is_empty(), "saved 241-node overview remains overlap-free with Auto Spacing disabled")
 	_expect(view.graph_edit.zoom <= 0.35 and view.graph_edit.minimap_enabled, "zoomed-out 241-node screenshot includes the complete minimap context")
 	_expect(_resource_positions_equal(view.current_tree, playable_positions), "zooming the 241-node tree preserves every saved coordinate")
+
+	view._set_feature_enabled("semantic_zoom", false, false)
+	view._set_feature_enabled("compact", true, false)
+	view._set_feature_enabled("auto_spacing", false, false)
+	await _settle()
+	var edge_source := _graph_node(view, 2)
+	var edge_target := _graph_node(view, 3)
+	var edge_obstacle := _graph_node(view, 4)
+	_expect(edge_source != null and edge_target != null and edge_obstacle != null, "playable 241-node edge comparison has a deterministic parent, child, and obstacle fixture")
+	if edge_source != null and edge_target != null and edge_obstacle != null:
+		edge_source.set_visual_offset(Vector2(500.0, 100.0) - edge_source.node_resource.position)
+		edge_target.set_visual_offset(Vector2(1100.0, 650.0) - edge_target.node_resource.position)
+		edge_obstacle.set_visual_offset(Vector2(750.0, 370.0) - edge_obstacle.node_resource.position)
+		view.graph_edit.zoom = 1.0
+		view._focus_graph_node(3)
+		await _settle()
+		var edge_comparison_zoom := view.graph_edit.zoom
+		var edge_comparison_scroll := view.graph_edit.scroll_offset
+		view._set_feature_enabled("edge_avoidance", false, false)
+		view.graph_edit.zoom = edge_comparison_zoom
+		view.graph_edit.scroll_offset = edge_comparison_scroll
+		await _settle()
+		var edge_baseline_crosses := _connection_enters_node(2, 3, 4)
+		var edge_baseline := await _capture_case("11a1_playable_241_edge_baseline")
+		_assert_image_valid(edge_baseline, "playable 241-node baseline edge comparison renders")
+		view._set_feature_enabled("edge_avoidance", true, false)
+		view.graph_edit.zoom = edge_comparison_zoom
+		view.graph_edit.scroll_offset = edge_comparison_scroll
+		await _settle()
+		var edge_avoided_crosses := _connection_enters_node(2, 3, 4)
+		var edge_avoided := await _capture_case("11a2_playable_241_edge_avoidance")
+		_assert_image_valid(edge_avoided, "playable 241-node obstacle-avoiding edge comparison renders")
+		_expect(edge_baseline_crosses and not edge_avoided_crosses, "edge avoidance reroutes the same 241-node parent-child edge around the unrelated card")
+		_expect(view.graph_edit.zoom == edge_comparison_zoom and view.graph_edit.scroll_offset.is_equal_approx(edge_comparison_scroll), "paired 241-node edge screenshots keep the same zoom and viewport")
+		_expect(_resource_positions_equal(view.current_tree, playable_positions), "edge comparison uses visual-only positions and preserves all 241-node resource coordinates")
+
+	view._rebuild_graph()
+	view._set_feature_enabled("semantic_zoom", true, false)
 
 	view._set_feature_enabled("compact", false, false)
 	view._set_feature_enabled("auto_spacing", true, false)
@@ -801,10 +839,7 @@ func _connection_node_intersections() -> Array[String]:
 		var to_node := _graph_node(view, to_id)
 		if from_node == null or to_node == null:
 			continue
-		var points := view.graph_edit._route_connection_line(
-			view.graph_edit._output_port_position(from_node),
-			view.graph_edit._input_port_position(to_node)
-		)
+		var points := view.graph_edit._route_connection_between(from_node, to_node)
 		for graph_child in view.graph_edit.get_children():
 			if not (graph_child is BTGraphNode) or graph_child == from_node or graph_child == to_node:
 				continue
@@ -812,6 +847,17 @@ func _connection_node_intersections() -> Array[String]:
 			if _polyline_enters_rect(points, obstacle):
 				failures.append("%d>%d through %s" % [from_id, to_id, graph_child.name])
 	return failures
+
+
+func _connection_enters_node(from_id: int, to_id: int, obstacle_id: int) -> bool:
+	var from_node := _graph_node(view, from_id)
+	var to_node := _graph_node(view, to_id)
+	var obstacle_node := _graph_node(view, obstacle_id)
+	if from_node == null or to_node == null or obstacle_node == null:
+		return false
+	var points := view.graph_edit._route_connection_between(from_node, to_node)
+	var obstacle := Rect2(obstacle_node.position, obstacle_node.size * obstacle_node.scale).grow(-4.0)
+	return _polyline_enters_rect(points, obstacle)
 
 
 func _polyline_enters_rect(points: PackedVector2Array, rect: Rect2) -> bool:
