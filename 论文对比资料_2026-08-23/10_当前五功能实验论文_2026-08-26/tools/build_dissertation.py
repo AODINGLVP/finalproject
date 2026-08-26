@@ -537,6 +537,7 @@ def configure_docx(document: Document, language: str) -> None:
 
     for name, base, size, bold, alignment in (
         ("Front Matter Heading", "Heading 1", 16, True, WD_ALIGN_PARAGRAPH.CENTER),
+        ("Unlisted Front Heading", "Normal", 16, True, WD_ALIGN_PARAGRAPH.CENTER),
         ("Figure Caption", "Caption", 9.5, False, WD_ALIGN_PARAGRAPH.CENTER),
         ("Table Caption", "Caption", 9.5, False, WD_ALIGN_PARAGRAPH.CENTER),
         ("Code Block", "Normal", 9, False, WD_ALIGN_PARAGRAPH.LEFT),
@@ -597,7 +598,9 @@ def add_title_page(document: Document, model: MarkdownDocument, language: str) -
 
 
 def add_docx_field_page(document: Document, heading: str, instruction: str, placeholder: str) -> None:
-    paragraph = document.add_paragraph(heading, style="Front Matter Heading")
+    # Contents/list headings use the same appearance as other front matter,
+    # but must not add themselves to the Table of Contents.
+    paragraph = document.add_paragraph(heading, style="Unlisted Front Heading")
     paragraph.paragraph_format.space_after = Pt(12)
     field_paragraph = document.add_paragraph()
     field_paragraph.paragraph_format.first_line_indent = Pt(0)
@@ -955,6 +958,7 @@ def render_latex(model: MarkdownDocument, staging: Path, language: str) -> Path:
                 lines.extend(
                     [
                         rf"\chapter*{{{latex_inline(block.text)}}}",
+                        rf"\markboth{{{latex_inline(block.text)}}}{{{latex_inline(block.text)}}}",
                         rf"\addcontentsline{{toc}}{{chapter}}{{{latex_inline(block.text)}}}",
                         "",
                     ]
