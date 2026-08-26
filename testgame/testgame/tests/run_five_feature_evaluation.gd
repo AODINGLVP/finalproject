@@ -169,7 +169,7 @@ func _run() -> void:
 						"on_safe": _state_is_safe(pair_states[1]),
 					})
 					failures += _expect(_state_is_safe(pair_states[0]) and _state_is_safe(pair_states[1]), "%s preserves structure and saved non-drag state" % pair_id)
-		print("BT_FIVE_FEATURE_PROGRESS screen=%s tree=%d" % [str(screen["key"]), int(tree_profile["size"])])
+			print("BT_FIVE_FEATURE_PROGRESS screen=%s tree=%d" % [str(screen["key"]), int(tree_profile["size"])])
 
 	_write_csv(output_dir.path_join("raw_observations.csv"), raw_rows)
 	_write_manifest()
@@ -313,7 +313,7 @@ func _run_adaptive_state(enabled: bool, screen: Dictionary, tree_size: int, targ
 func _run_overlay_state(enabled: bool, target_id: int, task_index: int) -> Dictionary:
 	view.feature_states["translucent_cards"] = enabled
 	view.graph_edit.zoom = 0.75
-	var fixture := _prepare_edge_crossing_fixture(task_index)
+	var fixture: Dictionary = await _prepare_edge_crossing_fixture(task_index)
 	view._apply_feature_states()
 	var target := _graph_node(target_id)
 	if fixture.has("blocker_id"):
@@ -425,7 +425,7 @@ func _run_fisheye_state(enabled: bool, screen: Dictionary, tree_size: int, targe
 			magnified_count += 1
 			if graph_node.node_resource.id != target_id:
 				nonfocus_magnified += 1
-		var center := view._fisheye_reference_screen_center(graph_node.node_resource.id)
+		var center: Vector2 = view._fisheye_reference_screen_center(graph_node)
 		if center.distance_to(view.graph_edit.fisheye_focus_position) > view.FISHEYE_FADE_RADIUS_PX:
 			far_alpha_sum += graph_node.fisheye_visibility_alpha
 			far_scale_sum += graph_node.fisheye_magnification
@@ -476,7 +476,7 @@ func _build_task_targets(tree: BTTreeResource) -> Array[Dictionary]:
 	var drag_pairs := _drag_pairs(tree)
 	var targets: Array[Dictionary] = []
 	for task_index in range(TASK_COUNT):
-		var fraction := [0.22, 0.50, 0.78][task_index]
+		var fraction: float = float([0.22, 0.50, 0.78][task_index])
 		var card_index := clampi(roundi(float(cards.size() - 1) * fraction), 0, cards.size() - 1)
 		var secondary_index := clampi(card_index + maxi(1, cards.size() / 7), 0, cards.size() - 1)
 		if secondary_index == card_index:
@@ -677,7 +677,7 @@ func _related_sets(tree: BTTreeResource, selected_ids: Array[int]) -> Dictionary
 			current = tree.find_node(current.parent_id)
 		var queue: Array[int] = [selected_id]
 		while not queue.is_empty():
-			var parent_id := queue.pop_front()
+			var parent_id: int = queue.pop_front()
 			for child in tree.get_children_of(parent_id):
 				if child.decorator_parent_id == -1:
 					descendants[child.id] = true
@@ -710,13 +710,13 @@ func _count_translucent_text_masks() -> int:
 
 
 func _overview_zoom(screen: Dictionary, tree_size: int) -> float:
-	var laptop_zoom := {
+	var laptop_zoom: float = float({
 		31: 0.60,
 		61: 0.45,
 		121: 0.32,
 		241: 0.22,
 		364: 0.16,
-	}.get(tree_size, 0.22)
+	}.get(tree_size, 0.22))
 	var width_factor := float((screen["canvas"] as Vector2i).x) / 1190.0
 	return clampf(float(laptop_zoom) * width_factor, 0.10, 0.75)
 
@@ -792,20 +792,20 @@ func _segment_length_inside_rect(start: Vector2, finish: Vector2, rect: Rect2) -
 	var delta := finish - start
 	var t_min := 0.0
 	var t_max := 1.0
-	var checks := [
+	var checks: Array[Vector2] = [
 		Vector2(-delta.x, start.x - rect.position.x),
 		Vector2(delta.x, rect.end.x - start.x),
 		Vector2(-delta.y, start.y - rect.position.y),
 		Vector2(delta.y, rect.end.y - start.y),
 	]
-	for check in checks:
-		var p := check.x
-		var q := check.y
+	for check: Vector2 in checks:
+		var p: float = check.x
+		var q: float = check.y
 		if is_zero_approx(p):
 			if q < 0.0:
 				return 0.0
 			continue
-		var ratio := q / p
+		var ratio: float = q / p
 		if p < 0.0:
 			t_min = maxf(t_min, ratio)
 		else:
