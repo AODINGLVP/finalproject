@@ -1,4 +1,4 @@
-# 当前五功能论文构建说明
+# 综述精简与近期文献扩充版论文构建说明
 
 本目录中的构建器把 Markdown 当作唯一正文来源，不会从旧 DOCX 或 PDF 提取、补写或改写正文。
 
@@ -11,9 +11,9 @@
 
 默认输出到 `output/`：
 
-- `行为树论文_中文_鱼眼与高亮更新_个人文风版_2026-08-26.docx`
-- `行为树论文_中文_鱼眼与高亮更新_个人文风版_2026-08-26.pdf`
-- `Behaviour_Tree_Dissertation_English_Fisheye_Highlight_Update_2026-08-26.pdf`
+- `行为树论文_中文_综述精简与近期文献扩充_2026-08-26.docx`
+- `行为树论文_中文_综述精简与近期文献扩充_2026-08-26.pdf`
+- `Behaviour_Tree_Dissertation_English_Literature_Review_Update_2026-08-26.pdf`
 - `build_manifest.json`（记录正文、模板和成品的 SHA-256）
 
 英文 Markdown 尚未建立时，构建器会正常生成中文 DOCX 和中文 PDF，并明确提示跳过英文 PDF。
@@ -23,7 +23,7 @@
 在仓库根目录运行完整构建：
 
 ```powershell
-.\论文对比资料_2026-08-23\11_鱼眼与高亮更新_个人文风版_2026-08-26\tools\build.ps1 -UpdateWordFields
+.\论文对比资料_2026-08-23\13_综述精简与近期文献扩充_2026-08-26\tools\build.ps1 -UpdateWordFields
 ```
 
 `-UpdateWordFields` 会调用本机 Microsoft Word 更新目录、图目录和表目录。没有 Word 时可省略；生成文件已经设置为打开时自动更新域，也可以在 Word 中全选后按 `F9`。
@@ -31,19 +31,19 @@
 正文尚未完成、只想检查中文 DOCX 与 LaTeX 中间文件时：
 
 ```powershell
-.\论文对比资料_2026-08-23\11_鱼眼与高亮更新_个人文风版_2026-08-26\tools\build.ps1 -SkipPdf
+.\论文对比资料_2026-08-23\13_综述精简与近期文献扩充_2026-08-26\tools\build.ps1 -SkipPdf
 ```
 
 运行不保留成品的完整自测：
 
 ```powershell
-.\论文对比资料_2026-08-23\11_鱼眼与高亮更新_个人文风版_2026-08-26\tools\build.ps1 -SelfTest
+.\论文对比资料_2026-08-23\13_综述精简与近期文献扩充_2026-08-26\tools\build.ps1 -SelfTest
 ```
 
 只检查当前 Markdown 语法和必需元数据、完全不创建文档：
 
 ```powershell
-.\论文对比资料_2026-08-23\11_鱼眼与高亮更新_个人文风版_2026-08-26\tools\build.ps1 -ValidateOnly
+.\论文对比资料_2026-08-23\13_综述精简与近期文献扩充_2026-08-26\tools\build.ps1 -ValidateOnly
 ```
 
 ## Markdown 约定
