@@ -875,6 +875,7 @@ func _build_feature_menu() -> void:
 	popup.clear()
 	advanced_display_menu = PopupMenu.new()
 	advanced_display_menu.name = "AdvancedDisplayMenu"
+	add_child(advanced_display_menu)
 	for feature_key in FINAL_DISPLAY_FEATURE_KEYS:
 		for index in range(FEATURE_DEFINITIONS.size()):
 			var definition: Array = FEATURE_DEFINITIONS[index]
