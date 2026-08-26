@@ -9,12 +9,16 @@ signal custom_edge_disconnect_requested(from_node: StringName, to_node: StringNa
 signal manual_connection_requested(from_node: StringName, to_node: StringName)
 signal canvas_selection_changed(selected_ids: Array)
 
-const FISHEYE_RADIUS := 82.0
+const FISHEYE_RADIUS := 124.0
+const FISHEYE_CONTEXT_RADIUS := 280.0
 const ENHANCED_MINIMAP_SIZE := Vector2(230.0, 150.0)
 const ENHANCED_MINIMAP_OPACITY := 0.72
 const CANVAS_GESTURE_DRAG_THRESHOLD := 3.0
 
 var fisheye_focus_position := Vector2.ZERO
+var fisheye_active := false
+var fisheye_radius := FISHEYE_RADIUS
+var fisheye_context_radius := FISHEYE_CONTEXT_RADIUS
 var orthogonal_edges_enabled := false
 var edge_bundling_enabled := false
 var always_curved_edges_enabled := false
@@ -163,9 +167,10 @@ func _is_wheel_button(button_index: int) -> bool:
 func _draw() -> void:
 	_draw_behavior_tree_connections()
 	_draw_manual_connection_preview()
-	if fisheye_focus_position != Vector2.ZERO:
-		draw_circle(fisheye_focus_position, FISHEYE_RADIUS, Color(0.45, 0.75, 1.0, 0.055))
-		draw_arc(fisheye_focus_position, FISHEYE_RADIUS, 0.0, TAU, 96, Color(0.45, 0.75, 1.0, 0.18), 2.0)
+	if fisheye_active:
+		draw_circle(fisheye_focus_position, fisheye_radius, Color(0.45, 0.75, 1.0, 0.045))
+		draw_arc(fisheye_focus_position, fisheye_radius, 0.0, TAU, 96, Color(0.45, 0.75, 1.0, 0.28), 2.0)
+		draw_arc(fisheye_focus_position, fisheye_context_radius, 0.0, TAU, 128, Color(0.45, 0.75, 1.0, 0.09), 1.0)
 	if box_selection_active:
 		var selection_rect := _box_selection_rect()
 		draw_rect(selection_rect, Color(0.32, 0.67, 1.0, 0.18), true)
@@ -288,6 +293,10 @@ func _draw_behavior_tree_connections() -> void:
 		elif selection_context_enabled and not selection_context_selected_ids.is_empty():
 			color.a *= 0.18
 			thickness = 2.5
+		# Keep edges near the lens readable without letting one bright endpoint make
+		# an extremely long focus-to-distant edge fully opaque through the view.
+		var endpoint_visibility := sqrt(maxf(0.0, from_node.fisheye_visibility_alpha * to_node.fisheye_visibility_alpha))
+		color.a *= endpoint_visibility
 		draw_polyline(points, color, thickness, true)
 
 

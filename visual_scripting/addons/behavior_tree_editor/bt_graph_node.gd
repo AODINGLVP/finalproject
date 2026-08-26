@@ -32,6 +32,8 @@ const TRANSLUCENT_TEXT_FAILURE_COLOR := Color("fecaca")
 const TRANSLUCENT_TEXT_DECORATOR_COLOR := Color("f3e8ff")
 const TRANSLUCENT_TEXT_OUTLINE_COLOR := Color("020617")
 const TRANSLUCENT_TEXT_BASELINE_META := &"_bt_translucent_text_baseline"
+const FISHEYE_MIN_MAGNIFICATION := 0.62
+const FISHEYE_MAX_MAGNIFICATION := 7.2
 const TRANSLUCENT_CARD_STYLE_NAMES := [
 	&"panel",
 	&"panel_focus",
@@ -99,6 +101,7 @@ var runtime_reason := ""
 var runtime_snapshot_active := false
 var fisheye_magnification := 1.0
 var fisheye_detail_focus := false
+var fisheye_visibility_alpha := 1.0
 var manual_connection_dragging := false
 var visual_offset := Vector2.ZERO
 var fisheye_base_size := Vector2.ZERO
@@ -530,10 +533,12 @@ func _translucent_text_outline_color() -> Color:
 	# Branch dimming intentionally fades the text fill. Compensate only the dark
 	# glyph silhouette so the independently rendered connection cannot bleed
 	# through it, even when the owning card is dimmed.
-	if selection_context_enabled and selection_context_role == SELECTION_ROLE_UNRELATED:
-		# Related Focus deliberately fades the complete unrelated card, including
-		# its text mask. Its connections are faded as well, so full compensation is
-		# neither necessary nor visually desirable here.
+	var intentionally_faded := (selection_context_enabled and selection_context_role == SELECTION_ROLE_UNRELATED) \
+		or fisheye_visibility_alpha < 0.999
+	if intentionally_faded:
+		# Related Focus and Fisheye deliberately fade the complete card, including
+		# its text mask. Their connections are faded as well, so full compensation
+		# is neither necessary nor visually desirable here.
 		outline_color.a = 1.0
 	else:
 		outline_color.a = 1.0 / maxf(modulate.a, 0.05)
@@ -650,23 +655,48 @@ func _reset_size_after_layout() -> void:
 
 
 func set_fisheye_magnification(value: float) -> void:
-	var next_value := clampf(value, 0.7, 1.25)
+	var next_value := clampf(value, FISHEYE_MIN_MAGNIFICATION, FISHEYE_MAX_MAGNIFICATION)
 	if is_equal_approx(fisheye_magnification, next_value):
 		return
-	if is_equal_approx(fisheye_magnification, 1.0) or fisheye_base_size.is_zero_approx():
+	if fisheye_base_size.is_zero_approx():
 		fisheye_base_size = size
 	fisheye_magnification = next_value
 	_apply_information_density()
 
 
+func capture_fisheye_base_geometry() -> void:
+	if fisheye_base_size.is_zero_approx():
+		# The real GraphNode size can be taller than the nominal card constant when
+		# it contains long text or Decorator badges. Preserve that exact geometry so
+		# magnification remains centred on the card the user was actually viewing.
+		fisheye_base_size = size
+
+
+func clear_fisheye_base_geometry() -> void:
+	fisheye_base_size = Vector2.ZERO
+	_apply_render_position()
+
+
 func set_fisheye_detail_focus(enabled: bool) -> void:
 	if fisheye_detail_focus == enabled:
 		return
+	capture_fisheye_base_geometry()
 	fisheye_detail_focus = enabled
-	# Density changes alter the unscaled card geometry. Keep the compensation base
-	# aligned with that geometry so the magnified card remains centered.
-	fisheye_base_size = NORMAL_CARD_SIZE if enabled or not compact_mode else COMPACT_CARD_SIZE
 	_apply_information_density()
+
+
+func set_fisheye_visibility_alpha(value: float) -> void:
+	var next_value := clampf(value, 0.0, 1.0)
+	if is_equal_approx(fisheye_visibility_alpha, next_value):
+		return
+	var faded_state_changed := (fisheye_visibility_alpha < 0.999) != (next_value < 0.999)
+	fisheye_visibility_alpha = next_value
+	# Opacity changes happen for every card while the pointer moves. Recompose the
+	# stable factors directly instead of rebuilding Search, focus frames and every
+	# translucent text mask on each pointer sample.
+	_apply_composed_card_modulate()
+	if translucent_cards_enabled and faded_state_changed:
+		_apply_translucent_text_masks()
 
 
 func _fisheye_position_compensation() -> Vector2:
@@ -692,6 +722,7 @@ func _refresh_connection_slots(color: Color) -> void:
 func _apply_search_style() -> void:
 	if runtime_active and runtime_highlight_enabled:
 		self_modulate = Color.WHITE
+		_apply_fisheye_visibility()
 		return
 	if search_active:
 		self_modulate = Color.WHITE if search_matches else Color(0.45, 0.45, 0.45, 0.32)
@@ -701,6 +732,7 @@ func _apply_search_style() -> void:
 			header_bar.color = Color("fbbf24")
 		elif node_resource != null:
 			header_bar.color = _type_color(node_resource.node_type)
+		_apply_fisheye_visibility()
 		return
 	self_modulate = Color.WHITE
 	if node_resource != null:
@@ -745,7 +777,16 @@ func _apply_composed_card_modulate() -> void:
 			# Related Focus is the user's current navigation task. Keep every selected
 			# family fully visible even if Live Debug would normally dim inactive paths.
 			composed.a = 1.0
+	# Fisheye fading is a final whole-card factor. Applying it here keeps text,
+	# ports, selection frames, Search and Live Debug visually synchronized.
+	composed.a *= fisheye_visibility_alpha
 	modulate = composed
+
+
+func _apply_fisheye_visibility() -> void:
+	# Recompute from stable feature factors instead of multiplying the previous
+	# frame. This prevents stationary-pointer fading from accumulating over time.
+	_apply_composed_card_modulate()
 
 
 func _on_collapse_button_pressed() -> void:
@@ -801,6 +842,7 @@ func _apply_runtime_style() -> void:
 	runtime_card_modulate = Color(1.0, 0.96, 0.68, 1.0)
 	_apply_composed_card_modulate()
 	self_modulate = Color.WHITE
+	_apply_fisheye_visibility()
 	header_bar.color = highlight
 	input_square.color = highlight.darkened(0.2)
 	output_square.color = highlight
