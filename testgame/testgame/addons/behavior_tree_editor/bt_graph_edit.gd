@@ -293,9 +293,10 @@ func _draw_behavior_tree_connections() -> void:
 		elif selection_context_enabled and not selection_context_selected_ids.is_empty():
 			color.a *= 0.18
 			thickness = 2.5
-		# Far-away connections follow their most visible endpoint. A line leading
-		# into the lens stays useful, while unrelated distant lines fade away.
-		color.a *= maxf(from_node.fisheye_visibility_alpha, to_node.fisheye_visibility_alpha)
+		# Keep edges near the lens readable without letting one bright endpoint make
+		# an extremely long focus-to-distant edge fully opaque through the view.
+		var endpoint_visibility := sqrt(maxf(0.0, from_node.fisheye_visibility_alpha * to_node.fisheye_visibility_alpha))
+		color.a *= endpoint_visibility
 		draw_polyline(points, color, thickness, true)
 
 

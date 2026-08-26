@@ -33,7 +33,7 @@ const TRANSLUCENT_TEXT_DECORATOR_COLOR := Color("f3e8ff")
 const TRANSLUCENT_TEXT_OUTLINE_COLOR := Color("020617")
 const TRANSLUCENT_TEXT_BASELINE_META := &"_bt_translucent_text_baseline"
 const FISHEYE_MIN_MAGNIFICATION := 0.62
-const FISHEYE_MAX_MAGNIFICATION := 6.0
+const FISHEYE_MAX_MAGNIFICATION := 7.2
 const TRANSLUCENT_CARD_STYLE_NAMES := [
 	&"panel",
 	&"panel_focus",
@@ -664,13 +664,24 @@ func set_fisheye_magnification(value: float) -> void:
 	_apply_information_density()
 
 
+func capture_fisheye_base_geometry() -> void:
+	if fisheye_base_size.is_zero_approx():
+		# The real GraphNode size can be taller than the nominal card constant when
+		# it contains long text or Decorator badges. Preserve that exact geometry so
+		# magnification remains centred on the card the user was actually viewing.
+		fisheye_base_size = size
+
+
+func clear_fisheye_base_geometry() -> void:
+	fisheye_base_size = Vector2.ZERO
+	_apply_render_position()
+
+
 func set_fisheye_detail_focus(enabled: bool) -> void:
 	if fisheye_detail_focus == enabled:
 		return
+	capture_fisheye_base_geometry()
 	fisheye_detail_focus = enabled
-	# Density changes alter the unscaled card geometry. Keep the compensation base
-	# aligned with that geometry so the magnified card remains centered.
-	fisheye_base_size = NORMAL_CARD_SIZE if enabled or not compact_mode else COMPACT_CARD_SIZE
 	_apply_information_density()
 
 
@@ -678,8 +689,14 @@ func set_fisheye_visibility_alpha(value: float) -> void:
 	var next_value := clampf(value, 0.0, 1.0)
 	if is_equal_approx(fisheye_visibility_alpha, next_value):
 		return
+	var faded_state_changed := (fisheye_visibility_alpha < 0.999) != (next_value < 0.999)
 	fisheye_visibility_alpha = next_value
-	_apply_search_style()
+	# Opacity changes happen for every card while the pointer moves. Recompose the
+	# stable factors directly instead of rebuilding Search, focus frames and every
+	# translucent text mask on each pointer sample.
+	_apply_composed_card_modulate()
+	if translucent_cards_enabled and faded_state_changed:
+		_apply_translucent_text_masks()
 
 
 func _fisheye_position_compensation() -> Vector2:

@@ -23,10 +23,10 @@ const NODE_TYPES := [
 	BTNodeResource.TYPE_WAIT,
 	BTNodeResource.TYPE_DECORATOR
 ]
-const FISHEYE_MAX_SCALE := 6.0
+const FISHEYE_MAX_SCALE := 7.2
 const FISHEYE_CONTEXT_SCALE := 0.68
 const FISHEYE_MIN_FOCUS_SCALE := 1.12
-const FISHEYE_MIN_FOCUS_SCREEN_WIDTH := 140.0
+const FISHEYE_MIN_FOCUS_SCREEN_WIDTH := 180.0
 const FISHEYE_DETAIL_RADIUS_PX := 124.0
 const FISHEYE_EFFECT_RADIUS_PX := 280.0
 const FISHEYE_LAYOUT_RADIUS_PX := 340.0
@@ -4504,9 +4504,11 @@ func _update_fisheye_at(mouse_position: Vector2, delta: float) -> void:
 		_capture_fisheye_reference_geometry()
 	var graph_local := graph_edit.get_global_transform_with_canvas().affine_inverse() * mouse_position
 	var focused_node := _nearest_fisheye_reference_node(graph_local)
-	if focused_node == null or _fisheye_reference_screen_center(focused_node).distance_to(graph_local) > FISHEYE_FADE_RADIUS_PX:
+	if focused_node == null:
 		_reset_fisheye(delta)
 		return
+	# A lens over empty canvas is still a lens: all distant cards remain compact and
+	# faded instead of snapping back to normal size and appearing "all enlarged".
 	_apply_fisheye_lens(graph_local, focused_node, delta)
 
 
@@ -4550,8 +4552,8 @@ func _apply_fisheye_lens(lens_center: Vector2, focused_node: BTGraphNode, delta:
 	fisheye_layout_node_ids.clear()
 	for candidate in layout_candidates:
 		fisheye_layout_node_ids.append(int(candidate.get("id", -1)))
-	if fisheye_layout_node_ids.is_empty():
-		fisheye_layout_node_ids.append(focused_node.node_resource.id)
+	# Empty canvas may have no card inside the protected layout radius. In that case
+	# leave the set empty: distant cards are deliberately faded and must not move.
 	graph_edit.queue_redraw()
 
 
@@ -4560,6 +4562,7 @@ func _capture_fisheye_reference_geometry() -> void:
 	fisheye_base_auto_spacing_offsets = _capture_current_auto_spacing_offsets()
 	for child in graph_edit.get_children():
 		if child is BTGraphNode and child.visible and child.node_resource != null:
+			child.capture_fisheye_base_geometry()
 			fisheye_reference_tree_centers[child.node_resource.id] = child.position_offset + child.size * 0.5
 
 
@@ -4804,7 +4807,14 @@ func _apply_node_fisheye_scale(graph_node: BTGraphNode, target_scale: float, inf
 func _reset_fisheye(delta := 0.0) -> void:
 	if not is_instance_valid(graph_edit):
 		return
-	var was_active := fisheye_focus_node_id != -1 or graph_edit.fisheye_active
+	var has_node_lens_state := false
+	for child in graph_edit.get_children():
+		if child is BTGraphNode and (not is_equal_approx(child.fisheye_magnification, 1.0) or not is_equal_approx(child.fisheye_visibility_alpha, 1.0) or child.fisheye_detail_focus or not child.fisheye_base_size.is_zero_approx()):
+			has_node_lens_state = true
+			break
+	var was_active := fisheye_focus_node_id != -1 or graph_edit.fisheye_active or has_node_lens_state
+	if not was_active:
+		return
 	var restore_offsets := fisheye_base_auto_spacing_offsets.duplicate(true)
 	graph_edit.fisheye_focus_position = Vector2.ZERO
 	graph_edit.fisheye_active = false
@@ -4823,12 +4833,16 @@ func _reset_fisheye(delta := 0.0) -> void:
 		var graph_node: BTGraphNode = child
 		graph_node.set_fisheye_detail_focus(false)
 		var next_scale := lerpf(graph_node.fisheye_magnification, 1.0, blend)
+		var next_alpha := lerpf(graph_node.fisheye_visibility_alpha, 1.0, blend)
 		graph_node.set_fisheye_magnification(next_scale)
-		graph_node.set_fisheye_visibility_alpha(lerpf(graph_node.fisheye_visibility_alpha, 1.0, blend))
+		graph_node.set_fisheye_visibility_alpha(next_alpha)
 		# Clear transforms left by plugin versions that scaled GraphNode directly.
-		graph_node.scale = Vector2.ONE
-		graph_node.pivot_offset = Vector2.ZERO
-		if is_equal_approx(next_scale, 1.0):
+		var expected_graph_scale := Vector2.ONE * graph_edit.zoom
+		if not graph_node.scale.is_equal_approx(expected_graph_scale) or not graph_node.pivot_offset.is_zero_approx():
+			graph_node.scale = expected_graph_scale
+			graph_node.pivot_offset = Vector2.ZERO
+		if is_equal_approx(next_scale, 1.0) and is_equal_approx(next_alpha, 1.0):
+			graph_node.clear_fisheye_base_geometry()
 			graph_node.z_index = 0
 	graph_edit.queue_redraw()
 
