@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-08-26T02:40:41.810541+00:00",
+  "analysis_git_commit": "de27cd948650ea367bf8f2f339ff11fedc8cf0d5",
+  "experiment_git_commit": "a87d7acc49165e66966039a66ad596c57e710c44",
+  "interpretation": "paired descriptive display metrics; no participant usability inference",
+  "input_sha256": {
+    "raw_observations.csv": "4F0E5B850E716ECD235CA3388253ADBFC8F96D2E67660F1A2D31BE5E1AD26C48",
+    "manifest.json": "56AE73515695C0E1F811C6A71F83FA2184B648C375026E2A2032A8592A737911",
+    "E:\\course pdf\\project\\finalproject\\research\\display_optimization\\five_feature_evaluation\\analyze_results.py": "2AF4AD863E3DB20A29B7850651DCC6E964D01639E5C16889345A798AC9945D6D"
+  },
+  "output_sha256": {
+    "all_five_features_before_after.png": "09CFF385494F87997C28273196F52C91D97069E4D93C416F9AD352C344F3FCF2",
+    "comparisons\\auto_spacing_before_after.png": "B7C067EDAB6C2184424A7FFC6104099FBDEED7F71F489762566B7ED6B0176938",
+    "comparisons\\breadcrumb_before_after.png": "1963A9EBBB596129BD5AC36D43F7460C71BD80576280CAF5A999F155228D6A90",
+    "comparisons\\fisheye_before_after.png": "6E1E38E38F76B6A9AB704F71909C78D49957AD95072813C8AA4D86FDE6BD74FC",
+    "comparisons\\semantic_zoom_before_after.png": "E3C48B20B0077B3E9CC9BEB59CC573A38A1E32795AFC57E1E6516AE6FDDBC942",
+    "comparisons\\translucent_cards_before_after.png": "C4DB4CC6BFFD023F44EC4687B8394DA2D835178E68863BEEADAF5F98CA5F6CFE",
+    "effect_by_screen.png": "D7BEF7E31ADA54B20096240562C2A98D0474F5BE9441BEB41BC73766702CA578",
+    "effect_by_tree_size.png": "AB7124E3FF5B23F1A3C91E9CECEA293B5CA28C93C2EE44B96289096DCF8BEAB0",
+    "feature_summary.csv": "0FA098D06B6450C66FC0B6D7CAE2387359F6DE1A3A6821068F265EC345EACFD2",
+    "paired_results.csv": "6F846C202D245751FD2477D70C1FA88E9D71DA38CB528E01380A2C1B5640F39C",
+    "RESULTS_ZH.md": "466165C0CFD22103786C73A39312441B562A296AEE1E9A9BD7DE89BD2F2B791F",
+    "screen_size_summary.csv": "37452F43AD680114D2576A6832822DC9C3B046EFDC80B4C749DA5D000ECC50F8",
+    "structured_developer_evaluation.csv": "CBC2434EA832E589D166A2BD13AEB8F8C7AC476B33F641FF322C639CD6E1858D",
+    "tree_size_summary.csv": "22AE26EF91DCE9D4223E31D4F95BF2A1687C8568BA4D30AB2E8DE3159EE7BC52"
+  },
+  "validation": {
+    "observations": 450,
+    "pairs": 225,
+    "effect_contract_passes": 225,
+    "topology_safe_pairs": 225,
+    "execution_order_safe_pairs": 225,
+    "resource_position_safe_pairs": 225
+  }
+}

@@ -1,0 +1,6 @@
+﻿feature_key,feature_zh,cases,effect_contract_passes,primary_metric,primary_effect_mean_pct,primary_effect_median_pct,primary_effect_min_pct,primary_effect_max_pct,cases_with_new_overlap,cases_with_new_hierarchy_violation,secondary_metric,secondary_median,secondary_range
+auto_spacing,智能拖拽重排,45,45,induced_overlap_area_reduction_pct,100.0,100.0,100.0,100.0,0,0,other_cards_moved,1.0,1–4
+semantic_zoom,自适应缩放细节,45,45,card_area_reduction_pct,45.1417251078845,54.67358686100997,21.120689655172413,58.127099255996725,0,0,information_field_reduction_pct,52.083333333333336,25.83–52.53
+translucent_cards,可读连线覆盖,45,45,edge_reveal_proxy_pct,28.000000000000004,28.000000000000004,28.000000000000004,28.000000000000004,0,0,protected_text_masks,728.0,210–2107
+breadcrumb,相关节点聚焦,45,45,unrelated_nodes_dimmed_pct,100.0,100.0,100.0,100.0,0,0,salience_ratio,5.55555533479762,5.56–5.56
+fisheye,鱼眼聚焦,45,45,target_width_gain_pct,106.51678189088138,86.17511434326282,10.150368411227696,440.86540445420894,17,8,target_field_gain,2.0,1–3
