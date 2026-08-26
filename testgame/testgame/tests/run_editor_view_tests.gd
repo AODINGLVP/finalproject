@@ -1224,6 +1224,9 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	# The original bug was most visible when the pointer stopped over a large blank
 	# part of the canvas: resetting the lens made every card return to scale 1.0.
 	view._reset_fisheye()
+	# Let the normal spacing system finish restoring the pre-lens offsets before
+	# measuring whether a distant blank-canvas lens moves any cards itself.
+	view._update_auto_spacing(0.0, true)
 	var scroll_before_blank_lens := view.graph_edit.scroll_offset
 	view.graph_edit.scroll_offset += Vector2(5000.0, 5000.0)
 	var blank_local_point := view.graph_edit.size * 0.5
