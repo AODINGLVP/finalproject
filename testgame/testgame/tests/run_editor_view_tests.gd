@@ -141,6 +141,7 @@ func _run() -> void:
 	_test_blackboard_schema_editor(view)
 	_test_live_blackboard_panel(view)
 	_test_live_debug_bridge_resilience(view)
+	await _test_multi_selection_related_focus(view)
 	await _test_canvas_selection_and_navigation(view)
 
 	print("BT_EDITOR_TEST_SUMMARY passed=%d failed=%d" % [passed, failed])
@@ -626,6 +627,78 @@ func _test_live_debug_bridge_resilience(view: BTEditorView) -> void:
 	view._poll_runtime_debug(1.0)
 	_expect(view.last_runtime_snapshot.get("actor", "") == "BridgeActor" and _graph_node(view, 4).runtime_active, "Live Debug recovers on next complete snapshot")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(bridge_path))
+
+
+func _test_multi_selection_related_focus(view: BTEditorView) -> void:
+	view.current_tree = _make_multi_focus_tree()
+	view.current_tree_path = "res://behavior_trees/multi_focus_test.tres"
+	view.selected_node_id = -1
+	view.selected_graph_node_ids.clear()
+	view.search_query = ""
+	view.last_runtime_snapshot = {}
+	view._set_feature_enabled("breadcrumb", true, false)
+	view._set_feature_enabled("auto_spacing", false, false)
+	view.graph_edit.zoom = 1.0
+	view.graph_edit.scroll_offset = Vector2.ZERO
+	view._refresh_entire_ui()
+	await process_frame
+	await process_frame
+
+	# Nodes 3 and 7 are siblings with separate subtrees. Their merged context also
+	# leaves a second root branch unrelated, so every visual role is exercised.
+	view._on_canvas_selection_changed([3, 7])
+	var selected_ok := view.selected_graph_node_ids == [3, 7] \
+		and _graph_node(view, 3).selected and _graph_node(view, 7).selected \
+		and _graph_node(view, 3).selection_context_role == BTGraphNode.SELECTION_ROLE_SELECTED \
+		and _graph_node(view, 7).selection_context_role == BTGraphNode.SELECTION_ROLE_SELECTED \
+		and _graph_node(view, 3).selection_outline_color == BTGraphNode.SELECTION_SELECTED_COLOR \
+		and _graph_node(view, 7).selection_outline_color == BTGraphNode.SELECTION_SELECTED_COLOR
+	_expect(selected_ok, "box-selected cards all receive the white Related Focus frame")
+
+	var yellow_ids := [1, 2, 4, 5, 8, 9]
+	var yellow_ok := true
+	for node_id in yellow_ids:
+		var graph_node := _graph_node(view, node_id)
+		yellow_ok = yellow_ok \
+			and graph_node.selection_outline_color == BTGraphNode.SELECTION_RELATED_COLOR \
+			and is_equal_approx(graph_node.modulate.a, 1.0)
+	_expect(yellow_ok, "multi-selection gives every merged ancestor and descendant a yellow frame")
+
+	var sibling := _graph_node(view, 6)
+	_expect(sibling.selection_context_role == BTGraphNode.SELECTION_ROLE_SIBLING and sibling.selection_outline_color == BTGraphNode.SELECTION_SIBLING_COLOR and is_equal_approx(sibling.modulate.a, 1.0), "multi-selection gives merged same-level siblings a green frame")
+	var unrelated_ok := true
+	for node_id in [10, 11]:
+		var graph_node := _graph_node(view, node_id)
+		unrelated_ok = unrelated_ok \
+			and graph_node.selection_context_role == BTGraphNode.SELECTION_ROLE_UNRELATED \
+			and is_equal_approx(graph_node.modulate.a, BTGraphNode.SELECTION_UNRELATED_ALPHA) \
+			and graph_node.selection_outline_color == Color.TRANSPARENT
+	_expect(unrelated_ok, "multi-selection fades the complete unrelated branch")
+
+	var merged_edges_ok := view.graph_edit._selection_connection_role(1, 2) == "path" \
+		and view.graph_edit._selection_connection_role(2, 3) == "path" \
+		and view.graph_edit._selection_connection_role(2, 7) == "path" \
+		and view.graph_edit._selection_connection_role(3, 4) == "child" \
+		and view.graph_edit._selection_connection_role(3, 5) == "child" \
+		and view.graph_edit._selection_connection_role(7, 8) == "child" \
+		and view.graph_edit._selection_connection_role(7, 9) == "child" \
+		and view.graph_edit._selection_connection_role(2, 6) == "sibling" \
+		and view.graph_edit._selection_connection_role(1, 10).is_empty() \
+		and view.graph_edit._selection_connection_role(10, 11).is_empty()
+	_expect(merged_edges_ok, "multi-selection merges all related paths without highlighting unrelated edges")
+
+	view._on_canvas_selection_changed([])
+	var reset_ok := not view.graph_edit.selection_context_enabled \
+		and view.graph_edit.selection_context_selected_ids.is_empty() \
+		and view.graph_edit.selection_context_ancestor_ids.is_empty() \
+		and view.graph_edit.selection_context_descendant_ids.is_empty()
+	for node_id in range(1, 12):
+		var graph_node := _graph_node(view, node_id)
+		reset_ok = reset_ok \
+			and graph_node.selection_context_role == BTGraphNode.SELECTION_ROLE_NONE \
+			and graph_node.selection_outline_color == Color.TRANSPARENT \
+			and graph_node.modulate == graph_node.runtime_card_modulate
+	_expect(reset_ok, "clearing a box selection restores every card and connection exactly")
 
 
 func _test_canvas_selection_and_navigation(view: BTEditorView) -> void:
@@ -1280,34 +1353,31 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	_expect(view.current_tree.find_node(4).position == stable_position, "stable layout preserves non-overlapping positions")
 	view._set_feature_enabled("stable_layout", false, false)
 
-	view.selected_node_id = 2
+	view._set_graph_node_selection([2], 2)
 	view._set_feature_enabled("breadcrumb", true, false)
 	view._refresh_navigation_paths()
-	_expect(_graph_node(view, 2).selection_context_role == BTGraphNode.SELECTION_ROLE_SELECTED, "Related Node Focus marks the selected node")
-	_expect(_graph_node(view, 1).selection_context_role == BTGraphNode.SELECTION_ROLE_ANCESTOR, "Related Node Focus marks every ancestor")
-	_expect(_graph_node(view, 3).selection_context_role == BTGraphNode.SELECTION_ROLE_DIRECT_CHILD and _graph_node(view, 4).selection_context_role == BTGraphNode.SELECTION_ROLE_DIRECT_CHILD and _graph_node(view, 5).selection_context_role == BTGraphNode.SELECTION_ROLE_DIRECT_CHILD, "Related Node Focus includes direct and deep descendants")
+	_expect(_graph_node(view, 2).selection_context_role == BTGraphNode.SELECTION_ROLE_SELECTED and _graph_node(view, 2).selection_outline_color == BTGraphNode.SELECTION_SELECTED_COLOR, "Related Node Focus gives the selected node a white frame")
+	_expect(_graph_node(view, 1).selection_context_role == BTGraphNode.SELECTION_ROLE_ANCESTOR and _graph_node(view, 1).selection_outline_color == BTGraphNode.SELECTION_RELATED_COLOR, "Related Node Focus gives every ancestor a yellow frame")
+	_expect(_graph_node(view, 3).selection_context_role == BTGraphNode.SELECTION_ROLE_DIRECT_CHILD and _graph_node(view, 4).selection_context_role == BTGraphNode.SELECTION_ROLE_DIRECT_CHILD and _graph_node(view, 5).selection_context_role == BTGraphNode.SELECTION_ROLE_DIRECT_CHILD and _graph_node(view, 4).selection_outline_color == BTGraphNode.SELECTION_RELATED_COLOR, "Related Node Focus gives direct and deep descendants yellow frames")
 	_expect(view.graph_edit._selection_connection_role(1, 2) == "path" and view.graph_edit._selection_connection_role(2, 3) == "child" and view.graph_edit._selection_connection_role(3, 4) == "child" and view.graph_edit._selection_connection_role(2, 5) == "child", "Related Node Focus highlights the complete selected subtree")
-	view.selected_node_id = 3
-	view._refresh_inspector()
-	_expect(_graph_node(view, 4).selection_context_role == BTGraphNode.SELECTION_ROLE_DIRECT_CHILD and _graph_node(view, 5).selection_context_role == BTGraphNode.SELECTION_ROLE_SIBLING, "Related Node Focus includes the selected node's siblings")
-	view.selected_node_id = 4
-	view._refresh_inspector()
-	_expect(_graph_node(view, 5).selection_context_role == BTGraphNode.SELECTION_ROLE_UNRELATED and _graph_node(view, 5).self_modulate.a < 0.5, "Related Node Focus fades nodes outside the selected family")
+	view._set_graph_node_selection([3], 3)
+	_expect(_graph_node(view, 4).selection_context_role == BTGraphNode.SELECTION_ROLE_DIRECT_CHILD and _graph_node(view, 5).selection_context_role == BTGraphNode.SELECTION_ROLE_SIBLING and _graph_node(view, 5).selection_outline_color == BTGraphNode.SELECTION_SIBLING_COLOR, "Related Node Focus gives siblings a green frame")
+	view._set_graph_node_selection([4], 4)
+	_expect(_graph_node(view, 5).selection_context_role == BTGraphNode.SELECTION_ROLE_UNRELATED and is_equal_approx(_graph_node(view, 5).modulate.a, _graph_node(view, 5).runtime_card_modulate.a * BTGraphNode.SELECTION_UNRELATED_ALPHA), "Related Node Focus fades the complete card outside the selected family")
 	_expect(not view.selection_path_row.visible and view.selection_path_container.get_child_count() == 0, "Selection Context uses the graph itself without restoring a separate breadcrumb row")
 	view.selected_node_id = 6
 	view._refresh_inspector()
 	_expect(view.graph_edit.selection_context_selected_id == 4 and _graph_node(view, 4).selection_context_role == BTGraphNode.SELECTION_ROLE_SELECTED, "selecting an attached Decorator maps context to its owner card")
-	view.selected_node_id = 3
-	view._refresh_inspector()
+	view._set_graph_node_selection([3], 3)
 	view._set_feature_enabled("search", true, false)
 	view._on_search_changed("patrol")
 	_expect(_graph_node(view, 5).header_bar.color == Color("fbbf24") and _graph_node(view, 3).self_modulate.a < 0.4, "Search styling takes priority over Selection Context")
 	view._on_search_changed("")
-	_expect(_graph_node(view, 3).header_bar.color == Color("a78bfa") and _graph_node(view, 5).header_bar.color == Color("c4b5fd"), "clearing Search restores Selection Context styling")
+	_expect(_graph_node(view, 3).selection_outline_color == BTGraphNode.SELECTION_SELECTED_COLOR and _graph_node(view, 5).selection_outline_color == BTGraphNode.SELECTION_SIBLING_COLOR, "clearing Search preserves the white and green Related Focus frames")
 	view._apply_runtime_snapshot(snapshot)
-	_expect(_graph_node(view, 4).runtime_active and _graph_node(view, 4).self_modulate == Color.WHITE, "Live Debug active styling takes priority over Selection Context")
+	_expect(_graph_node(view, 4).runtime_active and _graph_node(view, 4).self_modulate == Color.WHITE and _graph_node(view, 3).selection_outline_color == BTGraphNode.SELECTION_SELECTED_COLOR, "Live Debug colors compose with the Related Focus frame")
 	view._set_feature_enabled("breadcrumb", false, false)
-	_expect(not view.graph_edit.selection_context_enabled and _graph_node(view, 3).selection_context_role == BTGraphNode.SELECTION_ROLE_NONE and _graph_node(view, 5).self_modulate == Color.WHITE, "disabling Selection Context clears every node and connection state")
+	_expect(not view.graph_edit.selection_context_enabled and _graph_node(view, 3).selection_context_role == BTGraphNode.SELECTION_ROLE_NONE and _graph_node(view, 3).selection_outline_color == Color.TRANSPARENT and _graph_node(view, 5).modulate == _graph_node(view, 5).runtime_card_modulate, "disabling Selection Context clears every frame and restores the underlying card alpha")
 	view._set_feature_enabled("breadcrumb", true, false)
 
 	view._set_feature_enabled("failure_reason", true, false)
@@ -1738,6 +1808,37 @@ func _path_button_for_node(view: BTEditorView, node_id: int) -> Button:
 		if child is Button and int(child.get_meta("node_id", -1)) == node_id:
 			return child
 	return null
+
+
+func _make_multi_focus_tree() -> BTTreeResource:
+	var tree := BTTreeResource.new()
+	tree.tree_name = "Multi-selection Related Focus Test"
+	tree.root_node_id = 1
+	var root_node := _node(1, BTNodeResource.TYPE_ROOT, -1, "Root", 720.0, 40.0)
+	var main_selector := _node(2, BTNodeResource.TYPE_SELECTOR, 1, "Main Decision", 430.0, 250.0)
+	var selected_left := _node(3, BTNodeResource.TYPE_SEQUENCE, 2, "Selected Left", 160.0, 460.0)
+	var left_child_a := _node(4, BTNodeResource.TYPE_ACTION, 3, "Left Action A", 40.0, 670.0)
+	var left_child_b := _node(5, BTNodeResource.TYPE_ACTION, 3, "Left Action B", 280.0, 670.0)
+	var sibling := _node(6, BTNodeResource.TYPE_ACTION, 2, "Sibling", 520.0, 460.0)
+	var selected_right := _node(7, BTNodeResource.TYPE_SELECTOR, 2, "Selected Right", 760.0, 460.0)
+	var right_child_a := _node(8, BTNodeResource.TYPE_ACTION, 7, "Right Action A", 680.0, 670.0)
+	var right_child_b := _node(9, BTNodeResource.TYPE_ACTION, 7, "Right Action B", 920.0, 670.0)
+	var unrelated_branch := _node(10, BTNodeResource.TYPE_SEQUENCE, 1, "Unrelated Branch", 1120.0, 250.0)
+	var unrelated_child := _node(11, BTNodeResource.TYPE_ACTION, 10, "Unrelated Action", 1120.0, 460.0)
+	tree.nodes = [
+		root_node,
+		main_selector,
+		selected_left,
+		left_child_a,
+		left_child_b,
+		sibling,
+		selected_right,
+		right_child_a,
+		right_child_b,
+		unrelated_branch,
+		unrelated_child,
+	]
+	return tree
 
 
 func _make_view_tree() -> BTTreeResource:

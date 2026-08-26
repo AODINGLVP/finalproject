@@ -52,6 +52,8 @@ func _run() -> void:
 	_expect(view.graph_edit.minimap_enabled and not view.graph_edit.show_grid, "visual baseline keeps the built-in overview on and hidden Grid off")
 	_expect(view.graph_edit.straight_connections_enabled and not view.graph_edit.always_curved_edges_enabled and not view.graph_edit.orthogonal_edges_enabled and not view.graph_edit.edge_bundling_enabled, "visual baseline uses the fixed straight route and no alternate edge style")
 
+	var baseline_parallel_color := _graph_node(view, 6).header_bar.color
+	var baseline_parallel_alpha := _graph_node(view, 6).modulate.a
 	var baseline := await _capture_case("01_baseline")
 	var diagnostic_child := _graph_node(view, 2)
 	var expected_input_port := diagnostic_child.position + Vector2(diagnostic_child.size.x * diagnostic_child.scale.x * 0.5, 7.0 * diagnostic_child.scale.y)
@@ -61,7 +63,7 @@ func _run() -> void:
 	_assert_image_valid(baseline, "baseline renders complete editor")
 	_expect(_count_near_color(baseline, Color("34d399"), 0.12) > 1, "baseline contains Action type color")
 	_expect(_count_near_color(baseline, Color("f59e0b"), 0.12) > 2, "baseline contains Selector type color")
-	_expect(_count_near_color(baseline, Color("14b8a6"), 0.12) > 2, "baseline contains Parallel type color")
+	_expect(baseline_parallel_color == Color("14b8a6") and baseline_parallel_alpha <= BTGraphNode.SELECTION_UNRELATED_ALPHA + 0.001, "baseline retains the Parallel type color beneath default Related Focus dimming")
 	_expect(_count_near_color(baseline, Color("fb923c"), 0.12) > 2, "baseline contains Random Selector type color")
 	_expect(_count_near_color(baseline, Color("a78bfa"), 0.12) > 2, "baseline contains Repeat type color")
 	_expect(_count_near_color(baseline, Color("facc15"), 0.12) > 2, "baseline contains Wait type color")
@@ -277,7 +279,8 @@ func _run() -> void:
 	_assert_image_valid(selection_context, "Selection Context screenshot renders")
 	_expect(_graph_node(view, 3).selection_context_role == BTGraphNode.SELECTION_ROLE_SELECTED and _graph_node(view, 1).selection_context_role == BTGraphNode.SELECTION_ROLE_ANCESTOR and _graph_node(view, 4).selection_context_role == BTGraphNode.SELECTION_ROLE_DIRECT_CHILD and _graph_node(view, 6).selection_context_role == BTGraphNode.SELECTION_ROLE_SIBLING and _graph_node(view, 7).selection_context_role == BTGraphNode.SELECTION_ROLE_UNRELATED, "Related Node Focus screenshot contains selected, ancestor, descendant, sibling, and faded unrelated roles")
 	_expect(view.graph_edit._selection_connection_role(1, 2) == "path" and view.graph_edit._selection_connection_role(2, 3) == "path" and view.graph_edit._selection_connection_role(3, 4) == "child" and view.graph_edit._selection_connection_role(2, 6) == "sibling" and view.graph_edit._selection_connection_role(6, 7).is_empty(), "Related Node Focus screenshot classifies related and unrelated connections")
-	_expect(_count_near_color(selection_context, Color("a78bfa"), 0.15) > 3 and _count_near_color(selection_context, Color("60a5fa"), 0.15) > 3 and _count_near_color(selection_context, Color("34d399"), 0.15) > 3, "Selection Context screenshot visibly distinguishes its main node roles")
+	_expect(_graph_node(view, 3).selection_outline_color == BTGraphNode.SELECTION_SELECTED_COLOR and _graph_node(view, 1).selection_outline_color == BTGraphNode.SELECTION_RELATED_COLOR and _graph_node(view, 6).selection_outline_color == BTGraphNode.SELECTION_SIBLING_COLOR and _graph_node(view, 7).modulate.a <= BTGraphNode.SELECTION_UNRELATED_ALPHA + 0.001, "Selection Context applies white, yellow, green, and full-card faded styles")
+	_expect(_count_near_color(selection_context, BTGraphNode.SELECTION_RELATED_COLOR, 0.15) > 6 and _count_near_color(selection_context, BTGraphNode.SELECTION_SIBLING_COLOR, 0.15) > 3, "Selection Context screenshot visibly contains the related and sibling frames")
 	var box_rect := Rect2(_graph_node(view, 3).position, _graph_node(view, 3).size).merge(
 		Rect2(_graph_node(view, 4).position, _graph_node(view, 4).size)
 	).grow(4.0)
@@ -288,6 +291,9 @@ func _run() -> void:
 	_assert_image_valid(box_selection, "box-selection overlay renders")
 	_expect(view.graph_edit.box_selection_active and _count_near_color(box_selection, Color(0.52, 0.78, 1.0, 0.92), 0.16) > 4, "box-selection screenshot contains the visible blue selection rectangle")
 	view.graph_edit._finish_canvas_gesture(box_rect.end)
+	# Isolate the following Live Debug evidence from Related Focus. Its own branch
+	# dimming assertion must not depend on whichever cards the box selected above.
+	view._on_canvas_selection_changed([])
 
 	var failure_snapshot := {
 		"actor": "VisualTestNPC", "tree_path": view.current_tree_path,

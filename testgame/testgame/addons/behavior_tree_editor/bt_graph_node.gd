@@ -13,6 +13,12 @@ const SELECTION_ROLE_SIBLING := 2
 const SELECTION_ROLE_DIRECT_CHILD := 3
 const SELECTION_ROLE_ANCESTOR := 4
 const SELECTION_ROLE_SELECTED := 5
+const SELECTION_SELECTED_COLOR := Color("ffffff")
+const SELECTION_RELATED_COLOR := Color("facc15")
+const SELECTION_SIBLING_COLOR := Color("4ade80")
+const SELECTION_UNRELATED_ALPHA := 0.18
+const SELECTION_OUTLINE_WIDTH := 4.0
+const SELECTION_SELECTED_OUTLINE_WIDTH := 5.0
 const NORMAL_CONTENT_WIDTH := 230.0
 const COMPACT_CONTENT_WIDTH := 172.0
 const TRANSPARENT_EDGE_COLOR := Color(0.0, 0.0, 0.0, 0.0)
@@ -75,6 +81,9 @@ var search_active := false
 var search_current := false
 var selection_context_enabled := false
 var selection_context_role := SELECTION_ROLE_NONE
+var selection_outline_color := Color.TRANSPARENT
+var selection_outline_width := 0.0
+var runtime_card_modulate := Color.WHITE
 var subtree_collapse_enabled := true
 var decorator_badges_enabled := true
 var type_encoding_enabled := false
@@ -191,6 +200,18 @@ func _ready() -> void:
 
 	_refresh_connection_slots(_type_color(BTNodeResource.TYPE_ACTION))
 	_make_children_ignore_mouse(self)
+
+
+func _draw() -> void:
+	if selection_outline_color.a <= 0.0 or selection_outline_width <= 0.0:
+		return
+	# Draw inside the card bounds so the complete frame remains visible even when
+	# GraphEdit clips cards at the edge of its viewport.
+	var inset := selection_outline_width * 0.5 + 1.0
+	var outline_size := Vector2(maxf(0.0, size.x - inset * 2.0), maxf(0.0, size.y - inset * 2.0))
+	if outline_size.x <= 0.0 or outline_size.y <= 0.0:
+		return
+	draw_rect(Rect2(Vector2.ONE * inset, outline_size), selection_outline_color, false, selection_outline_width, true)
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -509,7 +530,13 @@ func _translucent_text_outline_color() -> Color:
 	# Branch dimming intentionally fades the text fill. Compensate only the dark
 	# glyph silhouette so the independently rendered connection cannot bleed
 	# through it, even when the owning card is dimmed.
-	outline_color.a = 1.0 / maxf(modulate.a, 0.05)
+	if selection_context_enabled and selection_context_role == SELECTION_ROLE_UNRELATED:
+		# Related Focus deliberately fades the complete unrelated card, including
+		# its text mask. Its connections are faded as well, so full compensation is
+		# neither necessary nor visually desirable here.
+		outline_color.a = 1.0
+	else:
+		outline_color.a = 1.0 / maxf(modulate.a, 0.05)
 	return outline_color
 
 
@@ -565,6 +592,9 @@ func set_search_state(has_query: bool, matches_query: bool, is_current_result :=
 func set_selection_context(enabled: bool, role: int = SELECTION_ROLE_NONE) -> void:
 	selection_context_enabled = enabled
 	selection_context_role = role if enabled else SELECTION_ROLE_NONE
+	# Selection focus is an independent visual layer. Apply it even when Search or
+	# Live Debug currently owns the header and card colors.
+	_apply_selection_style()
 	_apply_search_style()
 
 
@@ -672,27 +702,50 @@ func _apply_search_style() -> void:
 		elif node_resource != null:
 			header_bar.color = _type_color(node_resource.node_type)
 		return
+	self_modulate = Color.WHITE
+	if node_resource != null:
+		header_bar.color = _type_color(node_resource.node_type)
 	_apply_selection_style()
 
 
 func _apply_selection_style() -> void:
-	self_modulate = Color.WHITE
-	if node_resource == null:
-		return
-	header_bar.color = _type_color(node_resource.node_type)
+	selection_outline_color = Color.TRANSPARENT
+	selection_outline_width = 0.0
 	if not selection_context_enabled:
+		_apply_composed_card_modulate()
+		if translucent_cards_enabled:
+			_apply_translucent_text_masks()
+		queue_redraw()
 		return
 	match selection_context_role:
 		SELECTION_ROLE_SELECTED:
-			header_bar.color = Color("a78bfa")
+			selection_outline_color = SELECTION_SELECTED_COLOR
+			selection_outline_width = SELECTION_SELECTED_OUTLINE_WIDTH
 		SELECTION_ROLE_ANCESTOR:
-			header_bar.color = Color("60a5fa")
+			selection_outline_color = SELECTION_RELATED_COLOR
+			selection_outline_width = SELECTION_OUTLINE_WIDTH
 		SELECTION_ROLE_DIRECT_CHILD:
-			header_bar.color = Color("34d399")
+			selection_outline_color = SELECTION_RELATED_COLOR
+			selection_outline_width = SELECTION_OUTLINE_WIDTH
 		SELECTION_ROLE_SIBLING:
-			header_bar.color = Color("c4b5fd")
-		SELECTION_ROLE_UNRELATED:
-			self_modulate = Color(0.72, 0.75, 0.82, 0.48)
+			selection_outline_color = SELECTION_SIBLING_COLOR
+			selection_outline_width = SELECTION_OUTLINE_WIDTH
+	_apply_composed_card_modulate()
+	if translucent_cards_enabled:
+		_apply_translucent_text_masks()
+	queue_redraw()
+
+
+func _apply_composed_card_modulate() -> void:
+	var composed := runtime_card_modulate
+	if selection_context_enabled:
+		if selection_context_role == SELECTION_ROLE_UNRELATED:
+			composed.a *= SELECTION_UNRELATED_ALPHA
+		else:
+			# Related Focus is the user's current navigation task. Keep every selected
+			# family fully visible even if Live Debug would normally dim inactive paths.
+			composed.a = 1.0
+	modulate = composed
 
 
 func _on_collapse_button_pressed() -> void:
@@ -738,13 +791,15 @@ func _apply_runtime_style() -> void:
 		input_square.color = color.darkened(0.2)
 		output_square.color = color
 		order_label.modulate = color
-		modulate = Color(enabled_color.r, enabled_color.g, enabled_color.b, INACTIVE_BRANCH_ALPHA) if runtime_snapshot_active and runtime_dim_non_active and not runtime_active else enabled_color
+		runtime_card_modulate = Color(enabled_color.r, enabled_color.g, enabled_color.b, INACTIVE_BRANCH_ALPHA) if runtime_snapshot_active and runtime_dim_non_active and not runtime_active else enabled_color
+		_apply_composed_card_modulate()
 		runtime_label.text = ""
 		_apply_search_style()
 		_apply_translucent_text_masks()
 		return
 	var highlight := _runtime_highlight_color()
-	modulate = Color(1.0, 0.96, 0.68, 1.0)
+	runtime_card_modulate = Color(1.0, 0.96, 0.68, 1.0)
+	_apply_composed_card_modulate()
 	self_modulate = Color.WHITE
 	header_bar.color = highlight
 	input_square.color = highlight.darkened(0.2)

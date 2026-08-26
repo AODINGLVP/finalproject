@@ -1088,29 +1088,72 @@ func _refresh_navigation_paths() -> void:
 
 
 func _selection_context_data() -> Dictionary:
-	var selected := _get_selected_node()
-	if selected != null and selected.decorator_parent_id != -1:
-		selected = current_tree.find_node(selected.decorator_parent_id)
-	if selected == null or current_tree == null:
-		return {"selected_id": -1, "path_ids": [], "child_ids": [], "sibling_ids": []}
-	var path_ids: Array[int] = []
-	var cursor := selected
-	while cursor != null:
-		path_ids.push_front(cursor.id)
-		cursor = current_tree.find_node(cursor.parent_id)
-	# The focus view follows the complete selected subtree rather than stopping at
-	# direct children. This keeps a deep behavior branch readable as one unit.
-	var child_ids: Array[int] = _collect_descendant_ids(selected.id)
+	var empty_data := {
+		"active_id": -1,
+		"selected_ids": [],
+		"ancestor_ids": [],
+		"descendant_ids": [],
+		"sibling_ids": [],
+		"sibling_parent_ids": [],
+	}
+	if current_tree == null:
+		return empty_data
+
+	# The graph selection is authoritative here. It can contain several cards after
+	# a box selection, while selected_node_id only identifies the card shown in the
+	# Inspector. Map attached Decorators back to their visible owner card.
+	var selected_ids: Array[int] = []
+	for selected_id_variant in selected_graph_node_ids:
+		var selected := current_tree.find_node(int(selected_id_variant))
+		if selected == null:
+			continue
+		var owner_id := selected.decorator_parent_id if selected.decorator_parent_id != -1 else selected.id
+		if not selected_ids.has(owner_id):
+			selected_ids.append(owner_id)
+	if selected_ids.is_empty():
+		var selected := _get_selected_node()
+		if selected != null:
+			var owner_id := selected.decorator_parent_id if selected.decorator_parent_id != -1 else selected.id
+			selected_ids.append(owner_id)
+	if selected_ids.is_empty():
+		return empty_data
+
+	var active_id := selected_node_id
+	var active_node := current_tree.find_node(active_id)
+	if active_node != null and active_node.decorator_parent_id != -1:
+		active_id = active_node.decorator_parent_id
+	if not selected_ids.has(active_id):
+		active_id = selected_ids[selected_ids.size() - 1]
+
+	var ancestor_ids: Array[int] = []
+	var descendant_ids: Array[int] = []
 	var sibling_ids: Array[int] = []
-	if selected.parent_id != -1:
-		for sibling in current_tree.get_children_of(selected.parent_id):
-			if sibling.id != selected.id:
-				sibling_ids.append(sibling.id)
+	var sibling_parent_ids: Array[int] = []
+	for selected_id in selected_ids:
+		var selected := current_tree.find_node(selected_id)
+		if selected == null:
+			continue
+		var cursor := current_tree.find_node(selected.parent_id)
+		while cursor != null:
+			if not selected_ids.has(cursor.id) and not ancestor_ids.has(cursor.id):
+				ancestor_ids.append(cursor.id)
+			cursor = current_tree.find_node(cursor.parent_id)
+		for descendant_id in _collect_descendant_ids(selected.id):
+			if not selected_ids.has(descendant_id) and not descendant_ids.has(descendant_id):
+				descendant_ids.append(descendant_id)
+		if selected.parent_id != -1:
+			if not sibling_parent_ids.has(selected.parent_id):
+				sibling_parent_ids.append(selected.parent_id)
+			for sibling in current_tree.get_children_of(selected.parent_id):
+				if sibling.id != selected.id and not selected_ids.has(sibling.id) and not sibling_ids.has(sibling.id):
+					sibling_ids.append(sibling.id)
 	return {
-		"selected_id": selected.id,
-		"path_ids": path_ids,
-		"child_ids": child_ids,
+		"active_id": active_id,
+		"selected_ids": selected_ids,
+		"ancestor_ids": ancestor_ids,
+		"descendant_ids": descendant_ids,
 		"sibling_ids": sibling_ids,
+		"sibling_parent_ids": sibling_parent_ids,
 	}
 
 
@@ -1118,30 +1161,40 @@ func _apply_selection_context() -> void:
 	if not is_instance_valid(graph_edit):
 		return
 	var enabled := _feature_enabled("breadcrumb")
-	var data := _selection_context_data() if enabled else {"selected_id": -1, "path_ids": [], "child_ids": [], "sibling_ids": []}
-	var selected_id := int(data.get("selected_id", -1))
-	var path_ids: Array = data.get("path_ids", [])
-	var child_ids: Array = data.get("child_ids", [])
+	var data := _selection_context_data() if enabled else {
+		"active_id": -1,
+		"selected_ids": [],
+		"ancestor_ids": [],
+		"descendant_ids": [],
+		"sibling_ids": [],
+		"sibling_parent_ids": [],
+	}
+	var active_id := int(data.get("active_id", -1))
+	var selected_ids: Array = data.get("selected_ids", [])
+	var ancestor_ids: Array = data.get("ancestor_ids", [])
+	var descendant_ids: Array = data.get("descendant_ids", [])
 	var sibling_ids: Array = data.get("sibling_ids", [])
-	graph_edit.set_selection_context(enabled, selected_id, path_ids, child_ids, sibling_ids)
+	var sibling_parent_ids: Array = data.get("sibling_parent_ids", [])
+	var has_selection := enabled and not selected_ids.is_empty()
+	graph_edit.set_selection_context(has_selection, active_id, selected_ids, ancestor_ids, descendant_ids, sibling_ids, sibling_parent_ids)
 	for child in graph_edit.get_children():
 		if not (child is BTGraphNode) or child.node_resource == null:
 			continue
 		var graph_node: BTGraphNode = child
 		var role := BTGraphNode.SELECTION_ROLE_NONE
 		var node_id: int = graph_node.node_resource.id
-		if enabled and selected_id != -1:
-			if node_id == selected_id:
+		if has_selection:
+			if selected_ids.has(node_id):
 				role = BTGraphNode.SELECTION_ROLE_SELECTED
-			elif path_ids.has(node_id):
+			elif ancestor_ids.has(node_id):
 				role = BTGraphNode.SELECTION_ROLE_ANCESTOR
-			elif child_ids.has(node_id):
+			elif descendant_ids.has(node_id):
 				role = BTGraphNode.SELECTION_ROLE_DIRECT_CHILD
 			elif sibling_ids.has(node_id):
 				role = BTGraphNode.SELECTION_ROLE_SIBLING
 			else:
 				role = BTGraphNode.SELECTION_ROLE_UNRELATED
-		graph_node.set_selection_context(enabled and selected_id != -1, role)
+		graph_node.set_selection_context(has_selection, role)
 
 
 func _populate_path_buttons(container: HBoxContainer, ids: Array, titles: Array, empty_text: String, mark_current := false) -> void:

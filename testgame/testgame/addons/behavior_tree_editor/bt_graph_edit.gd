@@ -22,9 +22,11 @@ var straight_connections_enabled := false
 var active_path_ids: Array[int] = []
 var selection_context_enabled := false
 var selection_context_selected_id := -1
-var selection_context_path_ids: Array[int] = []
-var selection_context_child_ids: Array[int] = []
+var selection_context_selected_ids: Array[int] = []
+var selection_context_ancestor_ids: Array[int] = []
+var selection_context_descendant_ids: Array[int] = []
 var selection_context_sibling_ids: Array[int] = []
+var selection_context_sibling_parent_ids: Array[int] = []
 var single_connection_rendering_enabled := true
 var native_connection_layer: Control
 var manual_connection_active := false
@@ -275,16 +277,16 @@ func _draw_behavior_tree_connections() -> void:
 			color = Color("f8fafc")
 			thickness = 5.0
 		elif selection_role == "path":
-			color = Color("60a5fa")
+			color = Color("facc15")
 			thickness = 4.6
 		elif selection_role == "child":
-			color = Color("34d399")
+			color = Color("facc15")
 			thickness = 4.3
 		elif selection_role == "sibling":
-			color = Color("c4b5fd")
+			color = Color("4ade80")
 			thickness = 3.9
-		elif selection_context_enabled and selection_context_selected_id != -1:
-			color.a *= 0.34
+		elif selection_context_enabled and not selection_context_selected_ids.is_empty():
+			color.a *= 0.18
 			thickness = 2.5
 		draw_polyline(points, color, thickness, true)
 
@@ -397,19 +399,20 @@ func _is_active_connection(from_id: int, to_id: int) -> bool:
 
 
 func _selection_connection_role(from_id: int, to_id: int) -> String:
-	if not selection_context_enabled or selection_context_selected_id == -1:
+	if not selection_context_enabled or selection_context_selected_ids.is_empty():
 		return ""
-	for index in range(selection_context_path_ids.size() - 1):
-		if selection_context_path_ids[index] == from_id and selection_context_path_ids[index + 1] == to_id:
-			return "path"
-	# Keep every edge inside the selected subtree visible, including edges below
-	# the first child level.
-	if selection_context_child_ids.has(to_id) and (from_id == selection_context_selected_id or selection_context_child_ids.has(from_id)):
+	# The union of all selected paths remains highlighted. In a tree, an edge whose
+	# endpoints are ancestors or selected cards necessarily belongs to one of those
+	# paths, even when several box-selected branches share part of the route.
+	var from_on_path := selection_context_ancestor_ids.has(from_id) or selection_context_selected_ids.has(from_id)
+	var to_on_path := selection_context_ancestor_ids.has(to_id) or selection_context_selected_ids.has(to_id)
+	if from_on_path and to_on_path:
+		return "path"
+	# Keep every edge inside every selected subtree visible, including deep edges.
+	if selection_context_descendant_ids.has(to_id) and (selection_context_selected_ids.has(from_id) or selection_context_descendant_ids.has(from_id)):
 		return "child"
-	if selection_context_path_ids.size() >= 2:
-		var selected_parent_id := selection_context_path_ids[selection_context_path_ids.size() - 2]
-		if from_id == selected_parent_id and selection_context_sibling_ids.has(to_id):
-			return "sibling"
+	if selection_context_sibling_parent_ids.has(from_id) and selection_context_sibling_ids.has(to_id):
+		return "sibling"
 	return ""
 
 
@@ -570,19 +573,25 @@ func set_active_path(path_ids: Array) -> void:
 	queue_redraw()
 
 
-func set_selection_context(enabled: bool, selected_id: int, path_ids: Array, child_ids: Array, sibling_ids: Array) -> void:
-	selection_context_enabled = enabled and selected_id != -1
-	selection_context_selected_id = selected_id if selection_context_enabled else -1
-	selection_context_path_ids.clear()
-	selection_context_child_ids.clear()
+func set_selection_context(enabled: bool, active_id: int, selected_ids: Array, ancestor_ids: Array, descendant_ids: Array, sibling_ids: Array, sibling_parent_ids: Array) -> void:
+	selection_context_enabled = enabled and not selected_ids.is_empty()
+	selection_context_selected_id = active_id if selection_context_enabled else -1
+	selection_context_selected_ids.clear()
+	selection_context_ancestor_ids.clear()
+	selection_context_descendant_ids.clear()
 	selection_context_sibling_ids.clear()
+	selection_context_sibling_parent_ids.clear()
 	if selection_context_enabled:
-		for value in path_ids:
-			selection_context_path_ids.append(int(value))
-		for value in child_ids:
-			selection_context_child_ids.append(int(value))
+		for value in selected_ids:
+			selection_context_selected_ids.append(int(value))
+		for value in ancestor_ids:
+			selection_context_ancestor_ids.append(int(value))
+		for value in descendant_ids:
+			selection_context_descendant_ids.append(int(value))
 		for value in sibling_ids:
 			selection_context_sibling_ids.append(int(value))
+		for value in sibling_parent_ids:
+			selection_context_sibling_parent_ids.append(int(value))
 	queue_redraw()
 
 
