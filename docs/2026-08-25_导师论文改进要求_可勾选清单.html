@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>导师论文改进要求 · 可勾选清单</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: light-dark(#f3f6fa, #11151b);
+      --panel: light-dark(#ffffff, #1a2029);
+      --panel-soft: light-dark(#f7f9fc, #202833);
+      --text: light-dark(#182230, #e8edf4);
+      --muted: light-dark(#657286, #a7b2c1);
+      --line: light-dark(#d9e1ec, #35404e);
+      --primary: light-dark(#1f63cc, #73a7ff);
+      --primary-soft: light-dark(#e9f1ff, #1c3154);
+      --green: light-dark(#16744c, #67d59e);
+      --green-soft: light-dark(#e8f6ef, #17392b);
+      --amber: light-dark(#995500, #ffc56a);
+      --amber-soft: light-dark(#fff2da, #493017);
+      --red: light-dark(#a52f3f, #ff8d9b);
+      --red-soft: light-dark(#ffebee, #472028);
+      --shadow: 0 12px 32px light-dark(rgba(26, 43, 67, .08), rgba(0, 0, 0, .28));
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+      line-height: 1.62;
+    }
+
+    button, input, textarea { font: inherit; }
+
+    a { color: var(--primary); }
+
+    .page {
+      width: min(1080px, calc(100% - 28px));
+      margin: 26px auto 56px;
+    }
+
+    .hero {
+      padding: 28px;
+      color: #fff;
+      background: linear-gradient(125deg, #153c70, #2767c7 58%, #4f86d8);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.55rem, 4vw, 2.25rem);
+      font-weight: 700;
+    }
+
+    .hero p {
+      max-width: 850px;
+      margin: 7px 0 0;
+      color: rgba(255, 255, 255, .88);
+    }
+
+    .hero-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 17px;
+    }
+
+    .hero-links a {
+      padding: 7px 11px;
+      color: #153c70;
+      background: #fff;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 650;
+    }
+
+    .overview {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: center;
+      margin: 18px 0;
+      padding: 18px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      box-shadow: var(--shadow);
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+      color: var(--muted);
+    }
+
+    .progress-label strong {
+      color: var(--text);
+      font-size: 1.15rem;
+    }
+
+    .progress {
+      height: 11px;
+      overflow: hidden;
+      background: light-dark(#e8edf4, #2b3440);
+      border-radius: 999px;
+    }
+
+    .progress-bar {
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, #2367ce, #27a06b);
+      transition: width .2s ease;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .button {
+      min-height: 38px;
+      padding: 7px 11px;
+      color: var(--text);
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      cursor: pointer;
+    }
+
+    .button:hover { border-color: var(--primary); }
+
+    .button-danger {
+      color: var(--red);
+      background: var(--red-soft);
+    }
+
+    .switch {
+      display: inline-flex;
+      gap: 7px;
+      align-items: center;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .switch input, .section-check, .check-item {
+      accent-color: var(--green);
+    }
+
+    .source-note, .not-required {
+      margin: 18px 0;
+      padding: 15px 17px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--amber);
+      border-radius: 12px;
+    }
+
+    .source-note p, .not-required p { margin: 4px 0; }
+
+    .section-title {
+      margin: 28px 0 12px;
+      font-size: 1.35rem;
+    }
+
+    .requirement-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .requirement {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      box-shadow: 0 7px 20px light-dark(rgba(34, 52, 76, .055), rgba(0, 0, 0, .18));
+      overflow: hidden;
+    }
+
+    .requirement.complete {
+      border-color: light-dark(#9fd3bb, #377c5a);
+      background: light-dark(#fbfffd, #17251f);
+    }
+
+    .requirement.hidden { display: none; }
+
+    .requirement-head {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: start;
+      padding: 17px 18px 14px;
+      background: var(--panel-soft);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-check {
+      width: 23px;
+      height: 23px;
+      margin-top: 2px;
+      cursor: pointer;
+    }
+
+    .requirement h3 {
+      margin: 0;
+      font-size: 1.08rem;
+    }
+
+    .requirement.complete h3 {
+      color: var(--green);
+      text-decoration: line-through;
+    }
+
+    .teacher-meaning {
+      margin: 6px 0 0;
+      color: var(--muted);
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 9px;
+    }
+
+    .tag {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: .78rem;
+      white-space: nowrap;
+    }
+
+    .tag-p0 { color: var(--red); background: var(--red-soft); }
+    .tag-p1 { color: var(--amber); background: var(--amber-soft); }
+    .tag-source { color: var(--primary); background: var(--primary-soft); }
+
+    .group-count {
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .requirement-body { padding: 14px 18px 17px 53px; }
+
+    .checklist {
+      display: grid;
+      gap: 9px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .checklist label {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      cursor: pointer;
+    }
+
+    .check-item {
+      width: 19px;
+      height: 19px;
+      margin-top: 3px;
+      cursor: pointer;
+    }
+
+    .check-item:checked + span {
+      color: var(--muted);
+      text-decoration: line-through;
+    }
+
+    .evidence-label {
+      display: grid;
+      gap: 5px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .evidence {
+      width: 100%;
+      min-height: 67px;
+      resize: vertical;
+      padding: 9px 10px;
+      color: var(--text);
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      border-radius: 9px;
+    }
+
+    .not-required ul {
+      margin: 8px 0 0;
+      padding-left: 22px;
+      columns: 2;
+    }
+
+    .save-status {
+      margin-top: 10px;
+      color: var(--muted);
+      text-align: right;
+      font-size: .86rem;
+    }
+
+    @media (max-width: 760px) {
+      .page { width: min(100% - 18px, 1080px); margin-top: 10px; }
+      .hero { padding: 21px; border-radius: 14px; }
+      .overview { grid-template-columns: 1fr; }
+      .controls { justify-content: flex-start; }
+      .requirement-head { grid-template-columns: auto minmax(0, 1fr); }
+      .group-count { grid-column: 2; }
+      .requirement-body { padding-left: 18px; }
+      .not-required ul { columns: 1; }
+    }
+
+    @media print {
+      body { background: #fff; color: #111; }
+      .page { width: 100%; margin: 0; }
+      .hero { color: #111; background: #fff; box-shadow: none; border: 1px solid #bbb; }
+      .hero p { color: #333; }
+      .hero-links, .controls, .save-status { display: none; }
+      .overview, .requirement { box-shadow: none; break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <h1>导师对论文的改进要求</h1>
+      <p>依据 2026 年 8 月 25 日会议的 AI 翻译、英文时间戳转写和既有会议清单整理。勾选状态与每项证据备注会自动保存在当前浏览器中。</p>
+      <div class="hero-links">
+        <a href="./2026-08-25_导师对论文的改进要求_根据会议翻译整理.docx">打开完整 DOCX</a>
+        <a href="./2026-08-25_导师对论文的改进要求_根据会议翻译整理.md">打开 Markdown 原文</a>
+      </div>
+    </header>
+
+    <section class="overview" aria-label="完成进度">
+      <div>
+        <div class="progress-label">
+          <span>论文修改总进度</span>
+          <strong id="progressText">0 / 0（0%）</strong>
+        </div>
+        <div class="progress" role="progressbar" aria-label="论文修改总进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+      </div>
+      <div class="controls">
+        <label class="switch"><input id="pendingOnly" type="checkbox"> 只显示未完成要求</label>
+        <button class="button" id="expandAll" type="button">展开所有要求</button>
+        <button class="button button-danger" id="resetAll" type="button">清空全部记录</button>
+      </div>
+    </section>
+
+    <aside class="source-note">
+      <p><strong>老师的总体判断：</strong>项目本身有意思，客观的节点显示数量指标也有价值；但论文偏短、文献不足、评价过于集中在“能放下多少节点”。论文需要补充文献、完整介绍系统、使用成对截图，并结合数值结果和诚实的开发者评价。</p>
+      <p><strong>证据边界：</strong>语义缩放只是学生在会议中提出的当前候选，不是老师指定的答案；老师也没有强制要求招募真人参与者。</p>
+    </aside>
+
+    <h2 class="section-title">P0：提交前优先完成</h2>
+    <section class="requirement-list" aria-label="提交前优先要求">
+      <article class="requirement" data-group="literature">
+        <div class="requirement-head">
+          <input class="section-check" type="checkbox" data-group-toggle="literature" aria-label="完成扩充文献综述">
+          <div>
+            <h3>1. 扩充文献综述</h3>
+            <p class="teacher-meaning">当前文献综述太短，需要补充树布局、图布局、鱼眼算法以及实际保留的显示功能研究。</p>
+            <div class="meta"><span class="tag tag-p0">P0</span><span class="tag tag-source">19:17–20:12；30:41–31:46</span></div>
+          </div>
+          <span class="group-count" data-group-count="literature">0 / 5</span>
+        </div>
+        <div class="requirement-body">
+          <ul class="checklist">
+            <li><label><input class="check-item" data-group="literature" data-id="lit-large-graph" type="checkbox"><span>补充大型树和大型图可视化研究。</span></label></li>
+            <li><label><input class="check-item" data-group="literature" data-id="lit-layout" type="checkbox"><span>补充层次树布局、可变尺寸节点布局和连线路由研究。</span></label></li>
+            <li><label><input class="check-item" data-group="literature" data-id="lit-focus" type="checkbox"><span>补充焦点与上下文、鱼眼视图和语义缩放研究。</span></label></li>
+            <li><label><input class="check-item" data-group="literature" data-id="lit-feature" type="checkbox"><span>为论文最终保留的每项主要显示功能找到直接相关的可信来源。</span></label></li>
+            <li><label><input class="check-item" data-group="literature" data-id="lit-critical" type="checkbox"><span>说明已有工作与本项目的关系，而不是只罗列论文；不把“20 篇”写成硬性要求。</span></label></li>
+          </ul>
+          <label class="evidence-label">完成证据、参考文献或章节位置<textarea class="evidence" data-note="literature" placeholder="例如：第 2.3 节；新增文献 DOI；引用核验记录……"></textarea></label>
+        </div>
+      </article>
+
+      <article class="requirement" data-group="scope">
+        <div class="requirement-head">
+          <input class="section-check" type="checkbox" data-group-toggle="scope" aria-label="完成项目功能说明">
+          <div>
+            <h3>2. 完整说明项目实际交付的功能</h3>
+            <p class="teacher-meaning">报告要清楚交代研究输出、导航与概览、屏幕实验、可玩游戏和复杂 NPC，并说明功能能够独立测试。</p>
+            <div class="meta"><span class="tag tag-p0">P0</span><span class="tag tag-source">15:29–18:36；24:34–24:52</span></div>
+          </div>
+          <span class="group-count" data-group-count="scope">0 / 5</span>
+        </div>
+        <div class="requirement-body">
+          <ul class="checklist">
+            <li><label><input class="check-item" data-group="scope" data-id="scope-list" type="checkbox"><span>在系统设计章节提供当前功能总览。</span></label></li>
+            <li><label><input class="check-item" data-group="scope" data-id="scope-operation" type="checkbox"><span>对每项功能直白说明问题、操作方法和画面变化。</span></label></li>
+            <li><label><input class="check-item" data-group="scope" data-id="scope-separate" type="checkbox"><span>区分完整系统功能和正式受控实验所比较的功能。</span></label></li>
+            <li><label><input class="check-item" data-group="scope" data-id="scope-game" type="checkbox"><span>用简短游戏证据证明复杂行为树确实运行，但不新增“基础行为树是否有用”的研究问题。</span></label></li>
+            <li><label><input class="check-item" data-group="scope" data-id="scope-current" type="checkbox"><span>只写当前项目真实存在的功能；对失败或删除的尝试说明原因。</span></label></li>
+          </ul>
+          <label class="evidence-label">完成证据或章节位置<textarea class="evidence" data-note="scope" placeholder="例如：第 4.2–4.6 节；功能总览图……"></textarea></label>
+        </div>
+      </article>
+
+      <article class="requirement" data-group="screenshots">
+        <div class="requirement-head">
+          <input class="section-check" type="checkbox" data-group-toggle="screenshots" aria-label="完成成对截图">
+          <div>
+            <h3>3. 增加同内容、开关前后的成对截图</h3>
+            <p class="teacher-meaning">读者应能从并排图片直接看出功能开启前后改变了什么。</p>
+            <div class="meta"><span class="tag tag-p0">P0</span><span class="tag tag-source">20:12–21:13</span></div>
+          </div>
+          <span class="group-count" data-group-count="screenshots">0 / 5</span>
+        </div>
+        <div class="requirement-body">
+          <ul class="checklist">
+            <li><label><input class="check-item" data-group="screenshots" data-id="shot-same-tree" type="checkbox"><span>每组使用同一棵树、同一视口、同一缩放和同一目标。</span></label></li>
+            <li><label><input class="check-item" data-group="screenshots" data-id="shot-pair" type="checkbox"><span>左图为关闭或基线，右图为开启状态。</span></label></li>
+            <li><label><input class="check-item" data-group="screenshots" data-id="shot-caption" type="checkbox"><span>图注明确告诉读者应观察的变化。</span></label></li>
+            <li><label><input class="check-item" data-group="screenshots" data-id="shot-current" type="checkbox"><span>全部截图来自当前项目版本，不混用旧界面。</span></label></li>
+            <li><label><input class="check-item" data-group="screenshots" data-id="shot-reference" type="checkbox"><span>每张图在正文中被引用，并避免重复展示相同信息。</span></label></li>
+          </ul>
+          <label class="evidence-label">图号、截图路径或完成备注<textarea class="evidence" data-note="screenshots" placeholder="例如：图 5.1–5.6；固定相机参数……"></textarea></label>
+        </div>
+      </article>
+
+      <article class="requirement" data-group="evaluation">
+        <div class="requirement-head">
+          <input class="section-check" type="checkbox" data-group-toggle="evaluation" aria-label="完成评价方法扩充">
+          <div>
+            <h3>4. 保留定量数据，同时增加结构化开发者评价</h3>
+            <p class="teacher-meaning">节点覆盖数量是有效的客观指标，但不能成为唯一评价；还要判断功能是否真正有助于编程。</p>
+            <div class="meta"><span class="tag tag-p0">P0</span><span class="tag tag-source">21:16–24:52；31:46–35:27</span></div>
+          </div>
+          <span class="group-count" data-group-count="evaluation">0 / 6</span>
+        </div>
+        <div class="requirement-body">
+          <ul class="checklist">
+            <li><label><input class="check-item" data-group="evaluation" data-id="eval-node" type="checkbox"><span>保留不同节点数量下的定量比较。</span></label></li>
+            <li><label><input class="check-item" data-group="evaluation" data-id="eval-screen" type="checkbox"><span>保留不同物理屏幕尺寸下的定量比较。</span></label></li>
+            <li><label><input class="check-item" data-group="evaluation" data-id="eval-boundary" type="checkbox"><span>说明指标实际测量什么，不把几何变化直接写成人类可用性证明。</span></label></li>
+            <li><label><input class="check-item" data-group="evaluation" data-id="eval-method" type="checkbox"><span>把定性部分明确命名为“结构化开发者评价”或“结构化作者评价”。</span></label></li>
+            <li><label><input class="check-item" data-group="evaluation" data-id="eval-tasks" type="checkbox"><span>预先固定评价任务、步骤、问题和判断标准。</span></label></li>
+            <li><label><input class="check-item" data-group="evaluation" data-id="eval-separate" type="checkbox"><span>分别报告数值结果和开发者观察，再在讨论中结合解释。</span></label></li>
+          </ul>
+          <label class="evidence-label">实验方法、原始数据或评价记录<textarea class="evidence" data-note="evaluation" placeholder="例如：第 3.4 节；评价任务表；CSV 路径……"></textarea></label>
+        </div>
+      </article>
+
+      <article class="requirement" data-group="feature-table">
+        <div class="requirement-head">
+          <input class="section-check" type="checkbox" data-group-toggle="feature-table" aria-label="完成功能评价表">
+          <div>
+            <h3>5. 制作统一的功能优缺点评价表</h3>
+            <p class="teacher-meaning">逐项写清功能的帮助、问题、适用场景和是否值得保留，允许出现负面结果。</p>
+            <div class="meta"><span class="tag tag-p0">P0</span><span class="tag tag-source">32:02–35:27</span></div>
+          </div>
+          <span class="group-count" data-group-count="feature-table">0 / 5</span>
+        </div>
+        <div class="requirement-body">
+          <ul class="checklist">
+            <li><label><input class="check-item" data-group="feature-table" data-id="table-task" type="checkbox"><span>为每项功能记录固定评价任务。</span></label></li>
+            <li><label><input class="check-item" data-group="feature-table" data-id="table-help" type="checkbox"><span>记录最明显的帮助及其证据。</span></label></li>
+            <li><label><input class="check-item" data-group="feature-table" data-id="table-cost" type="checkbox"><span>记录最明显的问题、副作用或代价。</span></label></li>
+            <li><label><input class="check-item" data-group="feature-table" data-id="table-context" type="checkbox"><span>说明适用的树规模、屏幕或编辑场景。</span></label></li>
+            <li><label><input class="check-item" data-group="feature-table" data-id="table-default" type="checkbox"><span>给出默认开启、按需开启或不保留的建议。</span></label></li>
+          </ul>
+          <label class="evidence-label">表号或评价记录<textarea class="evidence" data-note="feature-table" placeholder="例如：表 6.1；功能逐项评价结果……"></textarea></label>
+        </div>
+      </article>
+
+      <article class="requirement" data-group="best-feature">
+        <div class="requirement-head">
+          <input class="section-check" type="checkbox" data-group-toggle="best-feature" aria-label="完成最有价值功能结论">
+          <div>
+            <h3>6. 明确指出最有价值的功能或功能组合</h3>
+            <p class="teacher-meaning">论文必须回答“哪个成果对程序员最有用”，并用证据解释原因。</p>
+            <div class="meta"><span class="tag tag-p0">P0</span><span class="tag tag-source">21:36–22:51</span></div>
+          </div>
+          <span class="group-count" data-group-count="best-feature">0 / 5</span>
+        </div>
+        <div class="requirement-body">
+          <ul class="checklist">
+            <li><label><input class="check-item" data-group="best-feature" data-id="best-after-data" type="checkbox"><span>在完成定量结果和开发者评价后再作判断。</span></label></li>
+            <li><label><input class="check-item" data-group="best-feature" data-id="best-criteria" type="checkbox"><span>明确判断标准：适用范围、帮助程度、操作自然性和副作用。</span></label></li>
+            <li><label><input class="check-item" data-group="best-feature" data-id="best-answer" type="checkbox"><span>明确给出一个最有价值的功能或组合。</span></label></li>
+            <li><label><input class="check-item" data-group="best-feature" data-id="best-others" type="checkbox"><span>解释其他功能为什么没有排在第一位。</span></label></li>
+            <li><label><input class="check-item" data-group="best-feature" data-id="best-consistency" type="checkbox"><span>结果、讨论和结论使用一致的最终判断；不把语义缩放写成导师指定答案。</span></label></li>
+          </ul>
+          <label class="evidence-label">最终判断及证据位置<textarea class="evidence" data-note="best-feature" placeholder="例如：最有价值功能为……；依据图 5.x、表 6.x……"></textarea></label>
+        </div>
+      </article>
+
+      <article class="requirement" data-group="honesty">
+        <div class="requirement-head">
+          <input class="section-check" type="checkbox" data-group-toggle="honesty" aria-label="完成负面结果说明">
+          <div>
+            <h3>7. 诚实解释效果有限或失败的功能</h3>
+            <p class="teacher-meaning">尤其要说明鱼眼等功能为什么不理想；不能因为效果有限就从论文中删除相关讨论。</p>
+            <div class="meta"><span class="tag tag-p0">P0</span><span class="tag tag-source">15:29–17:09；32:02–35:27</span></div>
+          </div>
+          <span class="group-count" data-group-count="honesty">0 / 4</span>
+        </div>
+        <div class="requirement-body">
+          <ul class="checklist">
+            <li><label><input class="check-item" data-group="honesty" data-id="honest-problem" type="checkbox"><span>记录具体问题，而不是只写“效果不好”。</span></label></li>
+            <li><label><input class="check-item" data-group="honesty" data-id="honest-fixed" type="checkbox"><span>若问题已修复，说明原问题、修改方案和最新结果。</span></label></li>
+            <li><label><input class="check-item" data-group="honesty" data-id="honest-limit" type="checkbox"><span>若仍未解决，将其写成限制或负面发现。</span></label></li>
+            <li><label><input class="check-item" data-group="honesty" data-id="honest-current" type="checkbox"><span>确保论文描述与当前项目状态一致。</span></label></li>
+          </ul>
+          <label class="evidence-label">限制、负面结果或修复证据<textarea class="evidence" data-note="honesty" placeholder="例如：鱼眼边缘场景；布局跳动；最终保留理由……"></textarea></label>
+        </div>
+      </article>
+
+      <article class="requirement" data-group="discussion">
+        <div class="requirement-head">
+          <input class="section-check" type="checkbox" data-group-toggle="discussion" aria-label="完成讨论和结论改写">
+          <div>
+            <h3>8. 重写讨论和结论</h3>
+            <p class="teacher-meaning">讨论不能只复述数字，还要用程序员视角解释功能好坏、适用环境和设计取舍。</p>
+            <div class="meta"><span class="tag tag-p0">P0</span><span class="tag tag-source">23:17–24:52；32:02–35:27</span></div>
+          </div>
+          <span class="group-count" data-group-count="discussion">0 / 6</span>
+        </div>
+        <div class="requirement-body">
+          <ul class="checklist">
+            <li><label><input class="check-item" data-group="discussion" data-id="disc-scale" type="checkbox"><span>解释节点数量增加后各项优化的作用变化。</span></label></li>
+            <li><label><input class="check-item" data-group="discussion" data-id="disc-screen" type="checkbox"><span>解释不同物理屏幕尺寸下哪些功能优势更明显。</span></label></li>
+            <li><label><input class="check-item" data-group="discussion" data-id="disc-task" type="checkbox"><span>区分真正帮助定位、理解、编辑的功能与仅减少画面占用的功能。</span></label></li>
+            <li><label><input class="check-item" data-group="discussion" data-id="disc-best" type="checkbox"><span>讨论最有价值的功能、效果有限的功能和失败尝试。</span></label></li>
+            <li><label><input class="check-item" data-group="discussion" data-id="disc-boundary" type="checkbox"><span>清楚区分测量结果、开发者观察和推论。</span></label></li>
+            <li><label><input class="check-item" data-group="discussion" data-id="disc-conclusion" type="checkbox"><span>结论直接回答研究问题，并给出基于证据的功能推荐。</span></label></li>
+          </ul>
+          <label class="evidence-label">讨论与结论章节位置<textarea class="evidence" data-note="discussion" placeholder="例如：第 6.2 节；第 7.1 节……"></textarea></label>
+        </div>
+      </article>
+    </section>
+
+    <h2 class="section-title">P1：与论文证据直接相关的设计说明</h2>
+    <section class="requirement-list" aria-label="设计说明要求">
+      <article class="requirement" data-group="layout">
+        <div class="requirement-head">
+          <input class="section-check" type="checkbox" data-group-toggle="layout" aria-label="完成树布局说明">
+          <div>
+            <h3>9. 补充树布局和层级关系的设计解释</h3>
+            <p class="teacher-meaning">节点避让不等于完整树布局；父节点应在上、子节点应在下，连线应清楚表达逻辑关系。</p>
+            <div class="meta"><span class="tag tag-p1">P1</span><span class="tag tag-source">26:29–30:08</span></div>
+          </div>
+          <span class="group-count" data-group-count="layout">0 / 5</span>
+        </div>
+        <div class="requirement-body">
+          <ul class="checklist">
+            <li><label><input class="check-item" data-group="layout" data-id="layout-hierarchy" type="checkbox"><span>解释为什么行为树需要保持父子层级。</span></label></li>
+            <li><label><input class="check-item" data-group="layout" data-id="layout-order" type="checkbox"><span>解释为什么兄弟节点顺序可能影响执行顺序。</span></label></li>
+            <li><label><input class="check-item" data-group="layout" data-id="layout-free" type="checkbox"><span>说明系统如何兼顾自由拖动、局部避让和明确自动布局。</span></label></li>
+            <li><label><input class="check-item" data-group="layout" data-id="layout-size" type="checkbox"><span>说明缩放和节点尺寸变化为什么影响布局计算。</span></label></li>
+            <li><label><input class="check-item" data-group="layout" data-id="layout-literature" type="checkbox"><span>用真实文献支持采用或放弃的布局和边路由方案。</span></label></li>
+          </ul>
+          <label class="evidence-label">设计章节、算法或测试证据<textarea class="evidence" data-note="layout" placeholder="例如：第 4.4 节；层级测试结果……"></textarea></label>
+        </div>
+      </article>
+
+      <article class="requirement" data-group="edge-tests">
+        <div class="requirement-head">
+          <input class="section-check" type="checkbox" data-group-toggle="edge-tests" aria-label="完成连线探索记录">
+          <div>
+            <h3>10. 写入曲线连线与半透明卡片的小型尝试</h3>
+            <p class="teacher-meaning">每个探索都要实际尝试、截图、分析、找相关文献并记录发现；不要求得到正面结果。</p>
+            <div class="meta"><span class="tag tag-p1">P1</span><span class="tag tag-source">36:27–39:52</span></div>
+          </div>
+          <span class="group-count" data-group-count="edge-tests">0 / 5</span>
+        </div>
+        <div class="requirement-body">
+          <ul class="checklist">
+            <li><label><input class="check-item" data-group="edge-tests" data-id="edge-try" type="checkbox"><span>在当前项目中实际测试曲线连线和半透明卡片。</span></label></li>
+            <li><label><input class="check-item" data-group="edge-tests" data-id="edge-shot" type="checkbox"><span>保存相同内容的开启前后截图。</span></label></li>
+            <li><label><input class="check-item" data-group="edge-tests" data-id="edge-analysis" type="checkbox"><span>分别写明动机、做法、观察结果和副作用。</span></label></li>
+            <li><label><input class="check-item" data-group="edge-tests" data-id="edge-reference" type="checkbox"><span>为两项尝试补充直接相关的参考资料。</span></label></li>
+            <li><label><input class="check-item" data-group="edge-tests" data-id="edge-decision" type="checkbox"><span>明确最终采用、作为可选项保留或放弃。</span></label></li>
+          </ul>
+          <label class="evidence-label">截图、文献和结论<textarea class="evidence" data-note="edge-tests" placeholder="例如：曲线开关截图；透明度比较；最终设计决定……"></textarea></label>
+        </div>
+      </article>
+    </section>
+
+    <h2 class="section-title">提交与一致性检查</h2>
+    <section class="requirement-list" aria-label="提交检查">
+      <article class="requirement" data-group="review">
+        <div class="requirement-head">
+          <input class="section-check" type="checkbox" data-group-toggle="review" aria-label="完成导师审阅稿">
+          <div>
+            <h3>11. 尽快准备并发送导师审阅稿</h3>
+            <p class="teacher-meaning">老师表示可以在提交前再看报告，应主动发送并预留吸收反馈的时间。</p>
+            <div class="meta"><span class="tag tag-p0">P0</span><span class="tag tag-source">39:52–40:07</span></div>
+          </div>
+          <span class="group-count" data-group-count="review">0 / 4</span>
+        </div>
+        <div class="requirement-body">
+          <ul class="checklist">
+            <li><label><input class="check-item" data-group="review" data-id="review-p0" type="checkbox"><span>先完成上述 P0 论文修改。</span></label></li>
+            <li><label><input class="check-item" data-group="review" data-id="review-pdf" type="checkbox"><span>生成编号明确、可以独立阅读的导师审阅 PDF。</span></label></li>
+            <li><label><input class="check-item" data-group="review" data-id="review-message" type="checkbox"><span>发送时请老师优先检查实验方法、结构化评价、讨论和结论。</span></label></li>
+            <li><label><input class="check-item" data-group="review" data-id="review-copy" type="checkbox"><span>保存发送版本并预留修改时间。</span></label></li>
+          </ul>
+          <label class="evidence-label">发送版本、日期或导师回复<textarea class="evidence" data-note="review" placeholder="例如：review-v2.pdf；发送日期；反馈摘要……"></textarea></label>
+        </div>
+      </article>
+
+      <article class="requirement" data-group="consistency">
+        <div class="requirement-head">
+          <input class="section-check" type="checkbox" data-group-toggle="consistency" aria-label="完成最终一致性检查">
+          <div>
+            <h3>12. 完成引用、证据和版本一致性检查</h3>
+            <p class="teacher-meaning">这是把老师的要求可靠落实到最终提交版本所必需的收尾检查。</p>
+            <div class="meta"><span class="tag tag-p0">P0</span><span class="tag tag-source">最终提交检查</span></div>
+          </div>
+          <span class="group-count" data-group-count="consistency">0 / 5</span>
+        </div>
+        <div class="requirement-body">
+          <ul class="checklist">
+            <li><label><input class="check-item" data-group="consistency" data-id="consistent-citations" type="checkbox"><span>所有新增引用真实存在，链接可访问并能支持相应论述。</span></label></li>
+            <li><label><input class="check-item" data-group="consistency" data-id="consistent-data" type="checkbox"><span>正文数字、图表和原始数据一致。</span></label></li>
+            <li><label><input class="check-item" data-group="consistency" data-id="consistent-rq" type="checkbox"><span>摘要、引言、方法、讨论和结论中的研究问题及贡献一致。</span></label></li>
+            <li><label><input class="check-item" data-group="consistency" data-id="consistent-formats" type="checkbox"><span>DOCX、LaTeX 和 PDF 使用同一版文字、图表和引用。</span></label></li>
+            <li><label><input class="check-item" data-group="consistency" data-id="consistent-current" type="checkbox"><span>最终论文没有写入已删除功能、未完成设想或不存在的参与者数据。</span></label></li>
+          </ul>
+          <label class="evidence-label">最终检查记录<textarea class="evidence" data-note="consistency" placeholder="例如：引用核验报告；版本号；最终 PDF……"></textarea></label>
+        </div>
+      </article>
+    </section>
+
+    <aside class="not-required">
+      <p><strong>本次会议没有提出的硬性要求</strong></p>
+      <ul>
+        <li>引用必须刚好达到 20 篇或其他固定数量。</li>
+        <li>必须招募真人参与者。</li>
+        <li>所有功能必须进入同一个定量实验。</li>
+        <li>所有功能都必须证明有效。</li>
+        <li>曲线连线和半透明卡片必须默认开启。</li>
+        <li>提交前必须公开发布插件。</li>
+        <li>显示节点更多就自动证明可读性提高。</li>
+      </ul>
+    </aside>
+
+    <p class="save-status" id="saveStatus" aria-live="polite">尚未修改</p>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const storageKey = "supervisor-paper-requirements-2026-08-25-v1";
+      const items = Array.from(document.querySelectorAll(".check-item"));
+      const groups = Array.from(document.querySelectorAll(".requirement"));
+      const notes = Array.from(document.querySelectorAll(".evidence"));
+      const pendingOnly = document.getElementById("pendingOnly");
+      const progressText = document.getElementById("progressText");
+      const progressBar = document.getElementById("progressBar");
+      const progressRoot = document.querySelector(".progress");
+      const saveStatus = document.getElementById("saveStatus");
+
+      let state = { completed: {}, notes: {}, pendingOnly: false };
+
+      function loadState() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(storageKey));
+          if (saved && typeof saved === "object") {
+            state.completed = saved.completed || {};
+            state.notes = saved.notes || {};
+            state.pendingOnly = Boolean(saved.pendingOnly);
+          }
+        } catch (error) {
+          console.warn("无法读取保存的清单状态", error);
+        }
+      }
+
+      function saveState() {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(state));
+          saveStatus.textContent = `已自动保存：${new Date().toLocaleString("zh-CN", { hour12: false })}`;
+        } catch (error) {
+          saveStatus.textContent = "浏览器未允许保存；本次勾选仅在页面打开期间有效。";
+        }
+      }
+
+      function groupItems(groupName) {
+        return items.filter(item => item.dataset.group === groupName);
+      }
+
+      function updateGroup(group) {
+        const name = group.dataset.group;
+        const children = groupItems(name);
+        const done = children.filter(item => item.checked).length;
+        const toggle = group.querySelector(".section-check");
+        const count = group.querySelector(`[data-group-count="${name}"]`);
+        const complete = children.length > 0 && done === children.length;
+
+        toggle.checked = complete;
+        toggle.indeterminate = done > 0 && !complete;
+        group.classList.toggle("complete", complete);
+        count.textContent = `${done} / ${children.length}`;
+        group.classList.toggle("hidden", state.pendingOnly && complete);
+      }
+
+      function updateProgress() {
+        const done = items.filter(item => item.checked).length;
+        const percent = items.length ? Math.round(done * 100 / items.length) : 0;
+        progressText.textContent = `${done} / ${items.length}（${percent}%）`;
+        progressBar.style.width = `${percent}%`;
+        progressRoot.setAttribute("aria-valuenow", String(percent));
+        groups.forEach(updateGroup);
+      }
+
+      function restoreControls() {
+        items.forEach(item => {
+          item.checked = Boolean(state.completed[item.dataset.id]);
+        });
+        notes.forEach(note => {
+          note.value = String(state.notes[note.dataset.note] || "");
+        });
+        pendingOnly.checked = state.pendingOnly;
+      }
+
+      items.forEach(item => {
+        item.addEventListener("change", () => {
+          state.completed[item.dataset.id] = item.checked;
+          updateProgress();
+          saveState();
+        });
+      });
+
+      document.querySelectorAll(".section-check").forEach(toggle => {
+        toggle.addEventListener("change", () => {
+          groupItems(toggle.dataset.groupToggle).forEach(item => {
+            item.checked = toggle.checked;
+            state.completed[item.dataset.id] = toggle.checked;
+          });
+          updateProgress();
+          saveState();
+        });
+      });
+
+      notes.forEach(note => {
+        note.addEventListener("input", () => {
+          state.notes[note.dataset.note] = note.value;
+          saveState();
+        });
+      });
+
+      pendingOnly.addEventListener("change", () => {
+        state.pendingOnly = pendingOnly.checked;
+        updateProgress();
+        saveState();
+      });
+
+      document.getElementById("expandAll").addEventListener("click", () => {
+        groups.forEach(group => group.scrollIntoView ? group.classList.remove("hidden") : null);
+        pendingOnly.checked = false;
+        state.pendingOnly = false;
+        updateProgress();
+        saveState();
+      });
+
+      document.getElementById("resetAll").addEventListener("click", () => {
+        if (!window.confirm("确定要清空所有勾选和证据备注吗？此操作无法撤销。")) return;
+        state = { completed: {}, notes: {}, pendingOnly: false };
+        restoreControls();
+        updateProgress();
+        saveState();
+      });
+
+      loadState();
+      restoreControls();
+      updateProgress();
+    })();
+  </script>
+</body>
+</html>
