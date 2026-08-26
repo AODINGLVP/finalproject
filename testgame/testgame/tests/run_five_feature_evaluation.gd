@@ -73,6 +73,8 @@ var view: BTEditorView
 var root_control: Control
 var raw_rows: Array[PackedStringArray] = []
 var pair_manifest: Array[Dictionary] = []
+var quick_mode := false
+var configured_task_count := TASK_COUNT
 
 
 func _initialize() -> void:
@@ -80,6 +82,8 @@ func _initialize() -> void:
 
 
 func _run() -> void:
+	quick_mode = OS.get_environment("BT_FIVE_FEATURE_QUICK") == "1"
+	configured_task_count = 1 if quick_mode else TASK_COUNT
 	output_dir = OS.get_environment("BT_FIVE_FEATURE_OUTPUT_DIR").replace("\\", "/")
 	if output_dir.is_empty():
 		output_dir = ProjectSettings.globalize_path(DEFAULT_OUTPUT_DIR)
@@ -101,10 +105,10 @@ func _run() -> void:
 	await _settle()
 
 	raw_rows.append(_raw_header())
-	for screen_variant in SCREEN_PROFILES:
+	for screen_variant in _active_screen_profiles():
 		var screen: Dictionary = screen_variant
 		await _configure_screen(screen)
-		for tree_variant in TREE_PROFILES:
+		for tree_variant in _active_tree_profiles():
 			var tree_profile: Dictionary = tree_variant
 			var canonical := ResourceLoader.load(
 				str(tree_profile["path"]), "", ResourceLoader.CACHE_MODE_IGNORE
@@ -118,7 +122,7 @@ func _run() -> void:
 			failures += _expect(target_sets.size() == TASK_COUNT, "%d-node tree supplies three deterministic task targets" % int(tree_profile["size"]))
 			if target_sets.size() != TASK_COUNT:
 				continue
-			for task_index in range(TASK_COUNT):
+			for task_index in range(configured_task_count):
 				for feature_key_variant in FEATURE_KEYS:
 					var feature_key := str(feature_key_variant)
 					var pair_id := "%s|%03d|t%d|%s" % [
@@ -187,6 +191,14 @@ func _configure_screen(screen: Dictionary) -> void:
 	viewport.size = canvas
 	view.size = Vector2(canvas)
 	await _settle()
+
+
+func _active_screen_profiles() -> Array:
+	return [SCREEN_PROFILES[0]] if quick_mode else SCREEN_PROFILES
+
+
+func _active_tree_profiles() -> Array:
+	return [TREE_PROFILES[0], TREE_PROFILES[3]] if quick_mode else TREE_PROFILES
 
 
 func _prepare_baseline(tree: BTTreeResource, tree_profile: Dictionary) -> void:
@@ -820,6 +832,8 @@ func _is_evidence_case(screen: Dictionary, tree_profile: Dictionary, task_index:
 
 
 func _capture_evidence(feature_key: String, enabled: bool) -> void:
+	if RenderingServer.get_current_rendering_method() == "dummy":
+		return
 	viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 	RenderingServer.force_draw(false, 0.0)
 	await process_frame
@@ -896,7 +910,8 @@ func _write_manifest() -> void:
 		"features": FEATURE_NAMES,
 		"tree_profiles": TREE_PROFILES,
 		"screen_profiles": SCREEN_PROFILES,
-		"task_count_per_tree": TASK_COUNT,
+		"task_count_per_tree": configured_task_count,
+		"quick_mode": quick_mode,
 		"pair_count": pair_manifest.size(),
 		"observation_count": raw_rows.size() - 1,
 		"failures": failures,
