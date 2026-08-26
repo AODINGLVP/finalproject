@@ -10,14 +10,6 @@ language: en
 version: Fisheye and Highlight Update, Personal Writing Style Version 2026-08-26
 ---
 
-# Acknowledgements
-
-This section is reserved for the author to thank the supervisor and the people who helped to test the software and review the dissertation. The author should complete the final wording before submission.
-
-# Declaration
-
-This dissertation is submitted to the University of Warwick in support of my application for the degree of Master of Science in Games Engineering. It is my own work and has not been submitted for a degree at another university. Except where sources are explicitly cited, the software, test data and analysis described in this dissertation were produced through this project. This dissertation does not report any participant-study results. Before final submission, the author must review and personalise this declaration in accordance with University requirements, including an accurate statement of how generative artificial intelligence was used.
-
 # Abstract
 
 This project developed a visual behaviour-tree plugin for Godot 4.6 and focused mainly on the display problems of large behaviour trees. Conventional node–link editors occupy a large canvas as the tree grows, while dragging, connections and unrelated branches can all interfere with inspection. To address these problems, the current Display menu contains five switchable features: Smart Drag Reflow, Adaptive Zoom Detail, Readable Edge Overlay, Related Node Focus and Fisheye Focus. Search, straight connections, active paths, failure explanations and overview controls are fixed plugin capabilities and are not included in this five-feature comparison.
