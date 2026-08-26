@@ -82,7 +82,8 @@ func _initialize() -> void:
 
 func _run() -> void:
 	quick_mode = OS.get_environment("BT_FIVE_FEATURE_QUICK") == "1"
-	configured_task_count = 1 if quick_mode else TASK_COUNT
+	var quick_task_count := int(OS.get_environment("BT_FIVE_FEATURE_QUICK_TASKS"))
+	configured_task_count = clampi(quick_task_count, 1, TASK_COUNT) if quick_mode and quick_task_count > 0 else (1 if quick_mode else TASK_COUNT)
 	output_dir = OS.get_environment("BT_FIVE_FEATURE_OUTPUT_DIR").replace("\\", "/")
 	if output_dir.is_empty():
 		output_dir = ProjectSettings.globalize_path(DEFAULT_OUTPUT_DIR)
@@ -198,6 +199,7 @@ func _active_tree_profiles() -> Array:
 
 
 func _prepare_baseline(tree: BTTreeResource, tree_profile: Dictionary) -> void:
+	view.set_process(true)
 	view.current_tree = tree
 	view.current_tree_path = str(tree_profile["path"])
 	view.next_node_id = tree.nodes.size() + 1
@@ -321,6 +323,10 @@ func _run_adaptive_state(enabled: bool, screen: Dictionary, tree_size: int, targ
 
 
 func _run_overlay_state(enabled: bool, target_id: int, task_index: int) -> Dictionary:
+	# Hold the controlled visual-only blocker in place. The editor's normal idle
+	# cleanup correctly removes temporary offsets, but that would also remove the
+	# paired congestion fixture before it can be measured.
+	view.set_process(false)
 	view.feature_states["translucent_cards"] = enabled
 	view.graph_edit.zoom = 0.75
 	var fixture: Dictionary = await _prepare_edge_crossing_fixture(task_index)
@@ -486,6 +492,8 @@ func _cleanup_interaction(feature_key: String) -> void:
 	if feature_key == "fisheye":
 		view._reset_fisheye()
 		view.set_process(true)
+	elif feature_key == "translucent_cards":
+		view.set_process(true)
 	await _settle()
 
 
@@ -501,23 +509,45 @@ func _build_task_targets(tree: BTTreeResource) -> Array[Dictionary]:
 			return left.position.y < right.position.y
 		return left.id < right.id
 	)
+	var focus_cards: Array = []
+	for card in cards:
+		if card.parent_id == -1:
+			continue
+		var single_selection: Array[int] = [card.id]
+		if int((_related_sets(tree, single_selection)["related"] as Dictionary).size()) < cards.size():
+			focus_cards.append(card)
+	if focus_cards.is_empty():
+		focus_cards = cards.duplicate()
 	var drag_pairs := _drag_pairs(tree)
 	var targets: Array[Dictionary] = []
 	for task_index in range(TASK_COUNT):
 		var fraction: float = float([0.22, 0.50, 0.78][task_index])
-		var card_index := clampi(roundi(float(cards.size() - 1) * fraction), 0, cards.size() - 1)
-		var secondary_index := clampi(card_index + maxi(1, cards.size() / 7), 0, cards.size() - 1)
-		if secondary_index == card_index:
-			secondary_index = maxi(0, card_index - 1)
+		var card_index := clampi(roundi(float(focus_cards.size() - 1) * fraction), 0, focus_cards.size() - 1)
+		var primary = focus_cards[card_index]
+		var secondary = _choose_related_secondary(tree, focus_cards, card_index, cards.size())
 		var pair: Vector2i = drag_pairs[task_index % drag_pairs.size()]
 		targets.append({
 			"task_index": task_index,
-			"target_id": cards[card_index].id,
-			"secondary_id": cards[secondary_index].id,
+			"target_id": primary.id,
+			"secondary_id": secondary.id,
 			"drag_source_id": pair.x,
 			"drag_target_id": pair.y,
 		})
 	return targets
+
+
+func _choose_related_secondary(tree: BTTreeResource, focus_cards: Array, primary_index: int, total_cards: int):
+	var primary = focus_cards[primary_index]
+	var preferred_offset := maxi(1, focus_cards.size() / 7)
+	for step in range(focus_cards.size()):
+		var candidate_index := (primary_index + preferred_offset + step) % focus_cards.size()
+		var candidate = focus_cards[candidate_index]
+		if candidate.id == primary.id:
+			continue
+		var selected_ids: Array[int] = [primary.id, candidate.id]
+		if int((_related_sets(tree, selected_ids)["related"] as Dictionary).size()) < total_cards:
+			return candidate
+	return focus_cards[(primary_index + 1) % focus_cards.size()]
 
 
 func _drag_pairs(tree: BTTreeResource) -> Array[Vector2i]:
@@ -896,7 +926,7 @@ func _is_evidence_case(screen: Dictionary, tree_profile: Dictionary, task_index:
 
 
 func _capture_evidence(feature_key: String, enabled: bool) -> void:
-	if RenderingServer.get_current_rendering_method() == "dummy":
+	if DisplayServer.get_name() == "headless" or RenderingServer.get_current_rendering_method() == "dummy":
 		return
 	viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 	RenderingServer.force_draw(false, 0.0)
