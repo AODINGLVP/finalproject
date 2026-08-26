@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-08-26T13:20:54.670923+00:00",
+  "analysis_git_commit": "85937cec390ac5ba00c5a31d7cc3ad285537c6b6",
+  "experiment_git_commit": "85937ce",
+  "interpretation": "paired descriptive display metrics; no participant usability inference",
+  "input_sha256": {
+    "raw_observations.csv": "1310F8C6E2842824380BA329AF99EE9CF34B8A84787F647F9D91F62DB577FE16",
+    "manifest.json": "1D80A15C373767A2D2594C774CD1332429C03B6AD7F6FCC2B52132120C0D91C4",
+    "E:\\course pdf\\project\\finalproject\\research\\display_optimization\\five_feature_evaluation\\analyze_results.py": "C84866743AB13C99A9FF880437FD4D6555DD3A42FAAAB0E41C6A84EBFAEEFB75"
+  },
+  "output_sha256": {
+    "all_five_features_before_after.png": "2DCEB896137ED6B7D6289481D2DF7587C471CE5B8A2D00C8DFEF5742ABD4AF22",
+    "comparisons\\auto_spacing_before_after.png": "B7C067EDAB6C2184424A7FFC6104099FBDEED7F71F489762566B7ED6B0176938",
+    "comparisons\\breadcrumb_before_after.png": "1963A9EBBB596129BD5AC36D43F7460C71BD80576280CAF5A999F155228D6A90",
+    "comparisons\\fisheye_before_after.png": "03261532D4A6D05A31844FF07C976447871F3BC014CFC5E96DB7B6E5143D955C",
+    "comparisons\\semantic_zoom_before_after.png": "E3C48B20B0077B3E9CC9BEB59CC573A38A1E32795AFC57E1E6516AE6FDDBC942",
+    "comparisons\\translucent_cards_before_after.png": "C4DB4CC6BFFD023F44EC4687B8394DA2D835178E68863BEEADAF5F98CA5F6CFE",
+    "effect_by_screen.png": "2A2E0CA8A9BD999C1E7817FDC8C414CE901D2F5091BE8598A229B7C8401F5EF0",
+    "effect_by_tree_size.png": "858314372095EBCE3D8C339952EC6187AA6A11BA74A6A5E37C82D4751F687AC5",
+    "feature_summary.csv": "966F48F5EDDB3B6F681229F96046535BF75D54EA19FE232303317C4B84ED3481",
+    "paired_results.csv": "9BD517E72163EA8B1A0FECE1D3639F4DF31EEBB9FE8D3B3C6A906756D42B45CF",
+    "RESULTS_ZH.md": "A0BC7A81CF123FD639E30F34829EBB3B36C6558F07A86E945BC95423699C48BF",
+    "screen_size_summary.csv": "DCC6B02B9A277FACE7C71CDD74EADD67E3D0C22588D5929421C8CA3F2449CC0F",
+    "structured_developer_evaluation.csv": "4BD716170F079BA36972E5C201CD730E97560EFD315D4744456A9512059F320B",
+    "tree_size_summary.csv": "E7F942C04FD2240A908BCB26875DB22200E85802A2F2D67438E58E86A7B1DCF9"
+  },
+  "validation": {
+    "observations": 450,
+    "pairs": 225,
+    "effect_contract_passes": 225,
+    "topology_safe_pairs": 225,
+    "execution_order_safe_pairs": 225,
+    "resource_position_safe_pairs": 225
+  }
+}

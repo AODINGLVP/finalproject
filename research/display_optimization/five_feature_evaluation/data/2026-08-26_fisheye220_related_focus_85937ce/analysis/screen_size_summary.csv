@@ -1,0 +1,16 @@
+﻿feature_key,feature_zh,screen_key,cases,primary_metric,primary_effect_mean_pct,primary_effect_median_pct,effect_contract_pass_rate_pct,secondary_effect_mean,secondary_metric
+auto_spacing,智能拖拽重排,laptop_15_94,15,induced_overlap_area_reduction_pct,100.0,100.0,100.0,1.6666666666666667,other_cards_moved
+auto_spacing,智能拖拽重排,medium_26_96,15,induced_overlap_area_reduction_pct,100.0,100.0,100.0,1.6666666666666667,other_cards_moved
+auto_spacing,智能拖拽重排,large_31_55,15,induced_overlap_area_reduction_pct,100.0,100.0,100.0,1.6666666666666667,other_cards_moved
+semantic_zoom,自适应缩放细节,laptop_15_94,15,card_area_reduction_pct,57.13710320189313,57.63565633653381,100.0,51.82483369274923,information_field_reduction_pct
+semantic_zoom,自适应缩放细节,medium_26_96,15,card_area_reduction_pct,42.613531607512975,54.67358558140314,100.0,41.91255299099485,information_field_reduction_pct
+semantic_zoom,自适应缩放细节,large_31_55,15,card_area_reduction_pct,35.67454051424739,22.940701020184605,100.0,37.09773817618002,information_field_reduction_pct
+translucent_cards,可读连线覆盖,laptop_15_94,15,edge_reveal_proxy_pct,28.000000000000004,28.000000000000004,100.0,132.1921734608151,controlled_crossing_length_px
+translucent_cards,可读连线覆盖,medium_26_96,15,edge_reveal_proxy_pct,28.000000000000004,28.000000000000004,100.0,132.1921734608151,controlled_crossing_length_px
+translucent_cards,可读连线覆盖,large_31_55,15,edge_reveal_proxy_pct,28.000000000000004,28.000000000000004,100.0,132.1921734608151,controlled_crossing_length_px
+breadcrumb,相关节点聚焦,laptop_15_94,15,unrelated_nodes_dimmed_pct,100.0,100.0,100.0,52.83062431711196,full_bright_view_reduction_pct
+breadcrumb,相关节点聚焦,medium_26_96,15,unrelated_nodes_dimmed_pct,100.0,100.0,100.0,60.462914910066324,full_bright_view_reduction_pct
+breadcrumb,相关节点聚焦,large_31_55,15,unrelated_nodes_dimmed_pct,100.0,100.0,100.0,61.60768958455238,full_bright_view_reduction_pct
+fisheye,鱼眼聚焦,laptop_15_94,15,target_width_gain_pct,258.9800346991225,230.52885827757214,100.0,2.066666666666667,target_field_gain
+fisheye,鱼眼聚焦,medium_26_96,15,target_width_gain_pct,104.90196772863838,89.42307017787786,100.0,1.6666666666666667,target_field_gain
+fisheye,鱼眼聚焦,large_31_55,15,target_width_gain_pct,75.90377013221674,28.947360172301593,100.0,1.4666666666666666,target_field_gain

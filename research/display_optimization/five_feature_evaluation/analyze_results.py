@@ -343,7 +343,11 @@ def feature_summary(paired: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def structured_evaluation() -> pd.DataFrame:
+def structured_evaluation(paired: pd.DataFrame) -> pd.DataFrame:
+    fisheye = paired[paired["feature_key"] == "fisheye"]
+    fisheye_min_width = fisheye["on_target_width_px"].min()
+    fisheye_overlap_cases = int((fisheye["new_overlap_pairs"] > 0).sum())
+    fisheye_hierarchy_cases = int((fisheye["new_hierarchy_violations"] > 0).sum())
     return pd.DataFrame(
         [
             {
@@ -382,8 +386,8 @@ def structured_evaluation() -> pd.DataFrame:
                 "feature_zh": FEATURE_NAMES_ZH["fisheye"],
                 "best_use": "在概览缩放下临时恢复指针附近节点的可读尺寸",
                 "strongest_context": "小屏幕与 241–364 节点树",
-                "measured_advantage": "目标卡片保持至少 180 px，规模越大相对增益越高",
-                "observed_cost": "17/45 个场景新增局部重叠，8/45 个场景新增视觉层级遮挡",
+                "measured_advantage": f"目标卡片保持至少 {fisheye_min_width:.0f} px，规模越大相对增益越高",
+                "observed_cost": f"{fisheye_overlap_cases}/45 个场景新增局部重叠，{fisheye_hierarchy_cases}/45 个场景新增视觉层级遮挡",
                 "recommendation": "特定环境增益最大，但应按需使用而不是作为全局整洁布局",
             },
             {
@@ -594,7 +598,7 @@ def write_results_markdown(
             {"全亮节点减少（%）": "{:.2f}"},
         ),
         "",
-        "结果表明，小屏幕不是简单地让所有功能都更有优势。Adaptive 和 Fisheye 在 15.94 英寸配置上的相对效果最大：前者用更少面积维持概览，后者把原本很小的目标恢复到至少 180 px。Related Focus 在中、大屏幕上的全亮节点减少比例更高，因为更大的画布起初同时容纳了更多无关分支。Smart Drag 和 Overlay 是局部操作，其主要比例在三种尺寸下保持相同。",
+        f"结果表明，小屏幕不是简单地让所有功能都更有优势。Adaptive 和 Fisheye 在 15.94 英寸配置上的相对效果最大：前者用更少面积维持概览，后者把原本很小的目标恢复到至少 {fisheye['on_target_width_px'].min():.0f} px。Related Focus 在中、大屏幕上的全亮节点减少比例更高，因为更大的画布起初同时容纳了更多无关分支。Smart Drag 和 Overlay 是局部操作，其主要比例在三种尺寸下保持相同。",
         "",
         "## 4　节点规模下的差异",
         "",
@@ -650,7 +654,7 @@ def main() -> int:
     features = feature_summary(paired)
     by_screen = aggregate_long(paired, "screen_key")
     by_tree = aggregate_long(paired, "tree_size")
-    decisions = structured_evaluation()
+    decisions = structured_evaluation(paired)
 
     paired.to_csv(output_dir / "paired_results.csv", index=False, encoding="utf-8-sig")
     features.to_csv(output_dir / "feature_summary.csv", index=False, encoding="utf-8-sig")
