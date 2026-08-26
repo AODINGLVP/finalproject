@@ -9,8 +9,8 @@ signal custom_edge_disconnect_requested(from_node: StringName, to_node: StringNa
 signal manual_connection_requested(from_node: StringName, to_node: StringName)
 signal canvas_selection_changed(selected_ids: Array)
 
-const FISHEYE_RADIUS := 124.0
-const FISHEYE_CONTEXT_RADIUS := 280.0
+const FISHEYE_RADIUS := 150.0
+const FISHEYE_CONTEXT_RADIUS := 320.0
 const ENHANCED_MINIMAP_SIZE := Vector2(230.0, 150.0)
 const ENHANCED_MINIMAP_OPACITY := 0.72
 const CANVAS_GESTURE_DRAG_THRESHOLD := 3.0

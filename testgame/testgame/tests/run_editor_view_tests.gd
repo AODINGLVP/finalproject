@@ -1248,7 +1248,7 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	_expect(blank_lens_keeps_positions, "a blank-canvas fisheye does not reflow distant cards")
 	view._reset_fisheye()
 	view.graph_edit.scroll_offset = scroll_before_blank_lens
-	view.graph_edit.zoom = 0.2
+	view.graph_edit.zoom = 0.1
 	view._update_semantic_zoom()
 	view._apply_fisheye_focus(focused_fisheye_node, 1.0)
 	var focused_scale_at_low_zoom := focused_fisheye_node.fisheye_magnification
