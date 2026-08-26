@@ -1,0 +1,34 @@
+{
+  "generator": "论文对比资料_2026-08-23/10_当前五功能实验论文_2026-08-26/tools/build_dissertation.py",
+  "template": {
+    "path": "thesis_draft/chinese/uwthesis.sty",
+    "sha256": "C8C25B361DF8B4DF6E201D1347D006F453A25FDB7261BCCD46E17D0AA74A4BA6"
+  },
+  "sources": [
+    {
+      "path": "论文对比资料_2026-08-23/10_当前五功能实验论文_2026-08-26/source/论文内容_中文.md",
+      "sha256": "87330B7F590DE9C25906482B57F3D3B352A7A8F1A555ECAFCD88ADFF4D34611A"
+    },
+    {
+      "path": "论文对比资料_2026-08-23/10_当前五功能实验论文_2026-08-26/source/dissertation_content_en.md",
+      "sha256": "B899450603572581FF8CD1D285C3E67A23934B391898F25A083874A9500D125A"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "行为树论文_中文_当前五功能实验版.docx",
+      "bytes": 2141882,
+      "sha256": "785522EC142D52DA69CA45F2B2C6E58DA96DCBFA0A5D192AB286ECB41D228A07"
+    },
+    {
+      "path": "行为树论文_中文_当前五功能实验版.pdf",
+      "bytes": 2339367,
+      "sha256": "CAD2CE4BC1F13691FF75A51D4934C263F465AE8EEDF3549B1559488F214EDBE3"
+    },
+    {
+      "path": "Behaviour_Tree_Dissertation_English_Current_Five_Features.pdf",
+      "bytes": 2039136,
+      "sha256": "10F59A8D7FB9B2F19F2949FE741C0C49422D8732F159452B63A72E42E8D81AE3"
+    }
+  ]
+}

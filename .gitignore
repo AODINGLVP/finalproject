@@ -34,6 +34,9 @@ Godot_v*_win64_console.exe
 research/translated_papers/*_source.md
 translation/*_source.md
 
+# Regenerable LaTeX staging for the current five-feature dissertation.
+论文对比资料_2026-08-23/10_当前五功能实验论文_2026-08-26/output/.build/
+
 # OS/editor noise
 Thumbs.db
 Desktop.ini
