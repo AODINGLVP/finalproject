@@ -1083,13 +1083,19 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	_expect(view.current_tree.find_node(4).position == stable_position, "stable layout preserves non-overlapping positions")
 	view._set_feature_enabled("stable_layout", false, false)
 
-	view.selected_node_id = 3
+	view.selected_node_id = 2
 	view._set_feature_enabled("breadcrumb", true, false)
 	view._refresh_navigation_paths()
-	_expect(_graph_node(view, 3).selection_context_role == BTGraphNode.SELECTION_ROLE_SELECTED, "Selection Context marks the selected node")
-	_expect(_graph_node(view, 1).selection_context_role == BTGraphNode.SELECTION_ROLE_ANCESTOR and _graph_node(view, 2).selection_context_role == BTGraphNode.SELECTION_ROLE_ANCESTOR, "Selection Context marks only the ancestor path")
-	_expect(_graph_node(view, 4).selection_context_role == BTGraphNode.SELECTION_ROLE_DIRECT_CHILD and _graph_node(view, 5).selection_context_role == BTGraphNode.SELECTION_ROLE_SIBLING, "Selection Context distinguishes direct children from siblings")
-	_expect(view.graph_edit._selection_connection_role(1, 2) == "path" and view.graph_edit._selection_connection_role(2, 3) == "path" and view.graph_edit._selection_connection_role(3, 4) == "child" and view.graph_edit._selection_connection_role(2, 5) == "sibling", "Selection Context classifies the related connections without expanding the whole descendant tree")
+	_expect(_graph_node(view, 2).selection_context_role == BTGraphNode.SELECTION_ROLE_SELECTED, "Related Node Focus marks the selected node")
+	_expect(_graph_node(view, 1).selection_context_role == BTGraphNode.SELECTION_ROLE_ANCESTOR, "Related Node Focus marks every ancestor")
+	_expect(_graph_node(view, 3).selection_context_role == BTGraphNode.SELECTION_ROLE_DIRECT_CHILD and _graph_node(view, 4).selection_context_role == BTGraphNode.SELECTION_ROLE_DIRECT_CHILD and _graph_node(view, 5).selection_context_role == BTGraphNode.SELECTION_ROLE_DIRECT_CHILD, "Related Node Focus includes direct and deep descendants")
+	_expect(view.graph_edit._selection_connection_role(1, 2) == "path" and view.graph_edit._selection_connection_role(2, 3) == "child" and view.graph_edit._selection_connection_role(3, 4) == "child" and view.graph_edit._selection_connection_role(2, 5) == "child", "Related Node Focus highlights the complete selected subtree")
+	view.selected_node_id = 3
+	view._refresh_inspector()
+	_expect(_graph_node(view, 4).selection_context_role == BTGraphNode.SELECTION_ROLE_DIRECT_CHILD and _graph_node(view, 5).selection_context_role == BTGraphNode.SELECTION_ROLE_SIBLING, "Related Node Focus includes the selected node's siblings")
+	view.selected_node_id = 4
+	view._refresh_inspector()
+	_expect(_graph_node(view, 5).selection_context_role == BTGraphNode.SELECTION_ROLE_UNRELATED and _graph_node(view, 5).self_modulate.a < 0.5, "Related Node Focus fades nodes outside the selected family")
 	_expect(not view.selection_path_row.visible and view.selection_path_container.get_child_count() == 0, "Selection Context uses the graph itself without restoring a separate breadcrumb row")
 	view.selected_node_id = 6
 	view._refresh_inspector()
@@ -1229,7 +1235,7 @@ func _test_compact_display_toolbar(view: BTEditorView) -> void:
 	for label in hidden_default_labels:
 		default_labels_are_hidden = default_labels_are_hidden and not display_labels.has(label) and not advanced_labels.has(label)
 	_expect(default_labels_are_hidden, "fixed display capabilities and hidden alternatives have no Display switch")
-	var expected_display_labels := ["Smart Drag Reflow", "Adaptive Zoom Detail", "Readable Edge Overlay", "Selection Context Highlight", "Fisheye Focus"]
+	var expected_display_labels := ["Smart Drag Reflow", "Adaptive Zoom Detail", "Readable Edge Overlay", "Related Node Focus", "Fisheye Focus"]
 	_expect(display_labels == expected_display_labels and advanced_labels.is_empty(), "Display presents the five consolidated features in a stable order")
 	_expect(popup.is_item_checked(popup.get_item_index(14)) and popup.is_item_checked(popup.get_item_index(13)) and not popup.is_item_checked(popup.get_item_index(8)) and popup.is_item_checked(popup.get_item_index(22)) and popup.is_item_checked(popup.get_item_index(0)), "the five Display defaults are Smart on, Adaptive on, Readable Edge off, Selection on, and Fisheye on")
 	var fixed_menu_callbacks_are_inert := true

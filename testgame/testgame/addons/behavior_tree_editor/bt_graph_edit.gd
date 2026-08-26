@@ -280,7 +280,9 @@ func _selection_connection_role(from_id: int, to_id: int) -> String:
 	for index in range(selection_context_path_ids.size() - 1):
 		if selection_context_path_ids[index] == from_id and selection_context_path_ids[index + 1] == to_id:
 			return "path"
-	if from_id == selection_context_selected_id and selection_context_child_ids.has(to_id):
+	# Keep every edge inside the selected subtree visible, including edges below
+	# the first child level.
+	if selection_context_child_ids.has(to_id) and (from_id == selection_context_selected_id or selection_context_child_ids.has(from_id)):
 		return "child"
 	if selection_context_path_ids.size() >= 2:
 		var selected_parent_id := selection_context_path_ids[selection_context_path_ids.size() - 2]

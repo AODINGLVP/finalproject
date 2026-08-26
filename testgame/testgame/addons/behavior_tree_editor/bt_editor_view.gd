@@ -124,7 +124,7 @@ const FEATURE_DEFINITIONS := [
 	["orthogonal_edges", "Orthogonal Edges", false],
 	["edge_bundling", "Edge Bundling", false],
 	["stable_layout", "Stable Incremental Layout", false],
-	["breadcrumb", "Selection Context Highlight", true],
+	["breadcrumb", "Related Node Focus", true],
 	["failure_reason", "Failure Reason Annotation", true],
 ]
 
@@ -1090,9 +1090,9 @@ func _selection_context_data() -> Dictionary:
 	while cursor != null:
 		path_ids.push_front(cursor.id)
 		cursor = current_tree.find_node(cursor.parent_id)
-	var child_ids: Array[int] = []
-	for child in current_tree.get_children_of(selected.id):
-		child_ids.append(child.id)
+	# The focus view follows the complete selected subtree rather than stopping at
+	# direct children. This keeps a deep behavior branch readable as one unit.
+	var child_ids: Array[int] = _collect_descendant_ids(selected.id)
 	var sibling_ids: Array[int] = []
 	if selected.parent_id != -1:
 		for sibling in current_tree.get_children_of(selected.parent_id):
