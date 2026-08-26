@@ -922,7 +922,11 @@ func _segment_length_inside_rect(start: Vector2, finish: Vector2, rect: Rect2) -
 
 
 func _is_evidence_case(screen: Dictionary, tree_profile: Dictionary, task_index: int) -> bool:
-	return str(screen["key"]) == EVIDENCE_SCREEN_KEY and int(tree_profile["size"]) == EVIDENCE_TREE_SIZE and task_index == EVIDENCE_TASK_INDEX
+	var requested_task := OS.get_environment("BT_FIVE_FEATURE_EVIDENCE_TASK").strip_edges()
+	var evidence_task_index := EVIDENCE_TASK_INDEX
+	if not requested_task.is_empty():
+		evidence_task_index = clampi(int(requested_task) - 1, 0, TASK_COUNT - 1)
+	return str(screen["key"]) == EVIDENCE_SCREEN_KEY and int(tree_profile["size"]) == EVIDENCE_TREE_SIZE and task_index == evidence_task_index
 
 
 func _capture_evidence(feature_key: String, enabled: bool) -> void:
