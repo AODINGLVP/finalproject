@@ -23,11 +23,24 @@ const NODE_TYPES := [
 	BTNodeResource.TYPE_WAIT,
 	BTNodeResource.TYPE_DECORATOR
 ]
-const FISHEYE_MAX_SCALE := 1.25
-const FISHEYE_CONTEXT_SCALE := 0.78
+const FISHEYE_MAX_SCALE := 6.0
+const FISHEYE_CONTEXT_SCALE := 0.68
+const FISHEYE_MIN_FOCUS_SCALE := 1.12
+const FISHEYE_MIN_FOCUS_SCREEN_WIDTH := 140.0
+const FISHEYE_DETAIL_RADIUS_PX := 124.0
+const FISHEYE_EFFECT_RADIUS_PX := 280.0
+const FISHEYE_LAYOUT_RADIUS_PX := 340.0
+const FISHEYE_FADE_RADIUS_PX := 520.0
+const FISHEYE_FAR_ALPHA := 0.12
+const FISHEYE_REFLOW_MAX_AFFECTED_CARDS := 8
+const FISHEYE_REFLOW_ITERATIONS := 4
+const FISHEYE_REFLOW_MAX_STEP_PX := 32.0
+const FISHEYE_REFLOW_MAX_OFFSET_PX := 96.0
+const FISHEYE_PROTECTED_RECT_RATIO := 0.72
+const FISHEYE_LAYOUT_SIGNATURE_POSITION_BUCKET_PX := 24.0
+const FISHEYE_LAYOUT_SIGNATURE_SIZE_BUCKET := 12.0
 const FISHEYE_LERP_SPEED := 12.0
 const FISHEYE_WHEEL_PAUSE := 0.2
-const FISHEYE_RESUME_POINTER_DISTANCE := 6.0
 const ADAPTIVE_COMPACT_ZOOM_THRESHOLD := 0.62
 const ADAPTIVE_FULL_DETAIL_ZOOM_THRESHOLD := 0.88
 const VIEW_SETTINGS_PATH := "user://behavior_tree_editor_view.cfg"
@@ -148,6 +161,10 @@ var fisheye_wheel_pause_elapsed := 0.0
 var fisheye_focus_node_id := -1
 var fisheye_waiting_for_pointer_motion := false
 var fisheye_resume_pointer_position := Vector2.ZERO
+var fisheye_reference_tree_centers: Dictionary = {}
+var fisheye_base_auto_spacing_offsets: Dictionary = {}
+var fisheye_layout_node_ids: Array[int] = []
+var fisheye_last_reflow_moved_ids: Array[int] = []
 var compact_mode_enabled := false
 var semantic_zoom_enabled := false
 var semantic_detail_level := 2
@@ -294,9 +311,9 @@ func _process(delta: float) -> void:
 	_poll_runtime_debug(delta)
 	zoom_layout_anchor_release_elapsed = maxf(0.0, zoom_layout_anchor_release_elapsed - delta)
 	_prepare_zoom_layout_anchor()
+	_update_semantic_zoom()
 	if drag_history_node_id == -1:
 		_update_fisheye(delta)
-	_update_semantic_zoom()
 	_update_auto_spacing(delta)
 	_restore_zoom_layout_anchor()
 	_queue_zoom_layout_anchor_post_layout_restore()
@@ -1543,6 +1560,13 @@ func _refresh_entire_ui() -> void:
 func _rebuild_graph() -> void:
 	minimap_status_signature = ""
 	last_runtime_visual_signature = ""
+	fisheye_focus_node_id = -1
+	fisheye_reference_tree_centers.clear()
+	fisheye_base_auto_spacing_offsets.clear()
+	fisheye_layout_node_ids.clear()
+	fisheye_last_reflow_moved_ids.clear()
+	graph_edit.fisheye_active = false
+	graph_edit.fisheye_focus_position = Vector2.ZERO
 	auto_spacing_signature = ""
 	auto_spacing_targets.clear()
 	pending_auto_spacing_anchor_id = -1
@@ -2648,9 +2672,10 @@ func _update_auto_spacing(delta: float, immediate := false) -> void:
 		if dragged_node_id == -1:
 			# A zoom/detail/global-spacing solve establishes a new visual baseline.
 			# Do not later restore offsets captured for an older card geometry.
-			settled_drag_reflow_anchor_id = -1
-			settled_drag_reflow_restore_targets.clear()
-		overlap_repair_required = dragged_node_id == -1 and _rendered_auto_spacing_has_overlap()
+			if fisheye_focus_node_id == -1:
+				settled_drag_reflow_anchor_id = -1
+				settled_drag_reflow_restore_targets.clear()
+				overlap_repair_required = _rendered_auto_spacing_has_overlap()
 		auto_spacing_signature = signature
 		var anchor_node_id := dragged_node_id if dragged_node_id != -1 else (fisheye_focus_node_id if fisheye_focus_node_id != -1 else pending_auto_spacing_anchor_id)
 		var grouped_drag_solve := drag_auto_spacing_active
@@ -2659,6 +2684,8 @@ func _update_auto_spacing(delta: float, immediate := false) -> void:
 			seed_targets = drag_auto_spacing_base_targets
 		elif not pending_auto_spacing_seed_targets.is_empty():
 			seed_targets = pending_auto_spacing_seed_targets
+		elif fisheye_focus_node_id != -1 and not fisheye_base_auto_spacing_offsets.is_empty():
+			seed_targets = fisheye_base_auto_spacing_offsets
 		auto_spacing_targets = _solve_auto_spacing_offsets(anchor_node_id, seed_targets, grouped_drag_solve) if enabled else {}
 		pending_auto_spacing_anchor_id = -1
 		pending_auto_spacing_seed_targets.clear()
@@ -2684,6 +2711,8 @@ func _update_auto_spacing(delta: float, immediate := false) -> void:
 
 
 func _auto_spacing_layout_signature() -> String:
+	if fisheye_focus_node_id != -1:
+		return _fisheye_auto_spacing_layout_signature()
 	var values: Array[String] = [str(semantic_detail_level), "compact:%s" % str(_effective_compact_mode()), "focus:%d" % fisheye_focus_node_id]
 	for child in graph_edit.get_children():
 		if child is BTGraphNode and child.node_resource != null:
@@ -2700,8 +2729,33 @@ func _auto_spacing_layout_signature() -> String:
 	return "|".join(values)
 
 
+func _fisheye_auto_spacing_layout_signature() -> String:
+	var center := graph_edit.fisheye_focus_position if is_instance_valid(graph_edit) else Vector2.ZERO
+	var values: Array[String] = [
+		"fisheye",
+		str(semantic_detail_level),
+		"compact:%s" % str(_effective_compact_mode()),
+		"focus:%d" % fisheye_focus_node_id,
+		"zoom:%d" % roundi(graph_edit.zoom * 20.0),
+		"lens:%d:%d" % [
+			roundi(center.x / FISHEYE_LAYOUT_SIGNATURE_POSITION_BUCKET_PX),
+			roundi(center.y / FISHEYE_LAYOUT_SIGNATURE_POSITION_BUCKET_PX),
+		],
+	]
+	for node_id in fisheye_layout_node_ids:
+		var graph_node := graph_edit.get_node_or_null(NodePath(str(node_id))) as BTGraphNode
+		if graph_node == null:
+			continue
+		values.append("%d:%d:%d" % [
+			node_id,
+			roundi(graph_node.size.x / FISHEYE_LAYOUT_SIGNATURE_SIZE_BUCKET),
+			roundi(graph_node.size.y / FISHEYE_LAYOUT_SIGNATURE_SIZE_BUCKET),
+		])
+	return "|".join(values)
+
+
 func _auto_spacing_density_signature() -> String:
-	return "%d:%s:%d" % [semantic_detail_level, str(_effective_compact_mode()), fisheye_focus_node_id]
+	return "%d:%s:%d:%d" % [semantic_detail_level, str(_effective_compact_mode()), fisheye_focus_node_id, roundi(graph_edit.zoom * 20.0)]
 
 
 func _solve_auto_spacing_offsets(anchor_node_id := -1, initial_offsets: Dictionary = {}, grouped_drag_solve := false) -> Dictionary:
@@ -2725,10 +2779,13 @@ func _solve_auto_spacing_offsets(anchor_node_id := -1, initial_offsets: Dictiona
 		offsets[node_id] = Vector2(initial_offsets.get(node_id, Vector2.ZERO))
 	var anchor_influence: Dictionary = {}
 	if nodes_by_id.has(anchor_node_id):
-		offsets[anchor_node_id] = Vector2.ZERO
+		if fisheye_focus_node_id == -1:
+			offsets[anchor_node_id] = Vector2.ZERO
 		anchor_influence[anchor_node_id] = 0
 	if grouped_drag_solve and nodes_by_id.has(anchor_node_id) and not drag_reflow_context.is_empty():
 		return _solve_local_drag_group_offsets(nodes, nodes_by_id, base_positions, offsets, source_order, anchor_node_id, drag_reflow_context)
+	if fisheye_focus_node_id != -1:
+		return _solve_fisheye_local_offsets(nodes, nodes_by_id, base_positions, offsets, source_order)
 
 	# Old or damaged resources can contain many cards at the exact same point.
 	# There is no relative layout to preserve in such a group, so seed only that
@@ -2759,6 +2816,102 @@ func _solve_auto_spacing_offsets(anchor_node_id := -1, initial_offsets: Dictiona
 			# residual collisions, then recheck the hierarchy on the next pass.
 			_resolve_auto_spacing_residual_collisions(nodes, base_positions, offsets, source_order, anchor_influence)
 	return offsets
+
+
+func _solve_fisheye_local_offsets(nodes: Array[BTGraphNode], nodes_by_id: Dictionary, base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary) -> Dictionary:
+	# Fisheye deliberately protects only a small screen-space neighbourhood. Far
+	# cards stay at their pre-lens offsets and may overlap because they are dimmed
+	# and rendered below the readable lens area.
+	var protected_nodes: Array[BTGraphNode] = []
+	for node_id in fisheye_layout_node_ids:
+		if nodes_by_id.has(node_id):
+			protected_nodes.append(nodes_by_id[node_id] as BTGraphNode)
+	fisheye_last_reflow_moved_ids.clear()
+	if protected_nodes.size() <= 1:
+		return offsets
+	for _iteration in range(FISHEYE_REFLOW_ITERATIONS):
+		var changed := false
+		for left_index in range(protected_nodes.size()):
+			for right_index in range(left_index + 1, protected_nodes.size()):
+				changed = _apply_fisheye_local_collision(
+					protected_nodes[left_index],
+					protected_nodes[right_index],
+					base_positions,
+					offsets,
+					source_order
+				) or changed
+		_clamp_fisheye_local_offsets(offsets)
+		if not changed:
+			break
+	for graph_node in protected_nodes:
+		var node_id: int = graph_node.node_resource.id
+		var baseline := Vector2(fisheye_base_auto_spacing_offsets.get(node_id, Vector2.ZERO))
+		if Vector2(offsets.get(node_id, Vector2.ZERO)).distance_to(baseline) > AUTO_SPACING_EPSILON:
+			fisheye_last_reflow_moved_ids.append(node_id)
+	return offsets
+
+
+func _apply_fisheye_local_collision(left: BTGraphNode, right: BTGraphNode, base_positions: Dictionary, offsets: Dictionary, source_order: Dictionary) -> bool:
+	var left_rect := _fisheye_protected_rect(left, base_positions, offsets)
+	var right_rect := _fisheye_protected_rect(right, base_positions, offsets)
+	if not left_rect.intersects(right_rect):
+		return false
+	var overlap_x := minf(left_rect.end.x, right_rect.end.x) - maxf(left_rect.position.x, right_rect.position.x)
+	var overlap_y := minf(left_rect.end.y, right_rect.end.y) - maxf(left_rect.position.y, right_rect.position.y)
+	if overlap_x <= 0.0 or overlap_y <= 0.0:
+		return false
+	var left_id: int = left.node_resource.id
+	var right_id: int = right.node_resource.id
+	var left_is_parent := right.node_resource.parent_id == left_id and _saved_parent_child_vertical_gap(left, right) >= -AUTO_SPACING_SEPARATION_EPSILON
+	var right_is_parent := left.node_resource.parent_id == right_id and _saved_parent_child_vertical_gap(right, left) >= -AUTO_SPACING_SEPARATION_EPSILON
+	var axis := Vector2.DOWN if left_is_parent or right_is_parent else (Vector2.RIGHT if overlap_x <= overlap_y else Vector2.DOWN)
+	var left_center := left_rect.get_center()
+	var right_center := right_rect.get_center()
+	var left_axis_value := left_center.x if axis == Vector2.RIGHT else left_center.y
+	var right_axis_value := right_center.x if axis == Vector2.RIGHT else right_center.y
+	var left_precedes := left_is_parent if left_is_parent or right_is_parent else left_axis_value < right_axis_value
+	if right_is_parent:
+		left_precedes = false
+	if not left_is_parent and not right_is_parent and is_equal_approx(left_axis_value, right_axis_value):
+		left_precedes = int(source_order.get(left_id, left_id)) < int(source_order.get(right_id, right_id))
+	var left_distance := _fisheye_reference_screen_center(left).distance_to(graph_edit.fisheye_focus_position)
+	var right_distance := _fisheye_reference_screen_center(right).distance_to(graph_edit.fisheye_focus_position)
+	var move_left := false
+	if left_id == fisheye_focus_node_id:
+		move_left = false
+	elif right_id == fisheye_focus_node_id:
+		move_left = true
+	else:
+		move_left = left_distance > right_distance
+	var penetration := 0.0
+	if axis == Vector2.RIGHT:
+		penetration = left_rect.end.x - right_rect.position.x if left_precedes else right_rect.end.x - left_rect.position.x
+	else:
+		penetration = left_rect.end.y - right_rect.position.y if left_precedes else right_rect.end.y - left_rect.position.y
+	var clearance := 2.0 / maxf(graph_edit.zoom, 0.01)
+	var translation := Vector2.ZERO
+	if move_left:
+		translation = (-axis if left_precedes else axis) * (penetration + clearance)
+	else:
+		translation = (axis if left_precedes else -axis) * (penetration + clearance)
+	translation = translation.limit_length(FISHEYE_REFLOW_MAX_STEP_PX / maxf(graph_edit.zoom, 0.01))
+	var moving_id := left_id if move_left else right_id
+	offsets[moving_id] = Vector2(offsets.get(moving_id, Vector2.ZERO)) + translation
+	return not translation.is_zero_approx()
+
+
+func _fisheye_protected_rect(graph_node: BTGraphNode, base_positions: Dictionary, offsets: Dictionary) -> Rect2:
+	var full_rect := _auto_spacing_rect(graph_node, base_positions, offsets, false)
+	var inset := full_rect.size * ((1.0 - FISHEYE_PROTECTED_RECT_RATIO) * 0.5)
+	return Rect2(full_rect.position + inset, full_rect.size - inset * 2.0)
+
+
+func _clamp_fisheye_local_offsets(offsets: Dictionary) -> void:
+	var maximum_graph_distance := FISHEYE_REFLOW_MAX_OFFSET_PX / maxf(graph_edit.zoom, 0.01)
+	for node_id in fisheye_layout_node_ids:
+		var baseline := Vector2(fisheye_base_auto_spacing_offsets.get(node_id, Vector2.ZERO))
+		var delta := Vector2(offsets.get(node_id, baseline)) - baseline
+		offsets[node_id] = baseline + delta.limit_length(maximum_graph_distance)
 
 
 func _build_drag_reflow_context(anchor_node_id: int) -> Dictionary:
@@ -4332,41 +4485,131 @@ func _update_fisheye(delta: float) -> void:
 	if fisheye_wheel_pause_elapsed > 0.0 or zoom_layout_anchor_id != -1 or zoom_anchor_candidate_id != -1:
 		fisheye_wheel_pause_elapsed = maxf(0.0, fisheye_wheel_pause_elapsed - delta)
 		return
-	var mouse_position := get_viewport().get_mouse_position()
 	if fisheye_waiting_for_pointer_motion:
-		if mouse_position.distance_to(fisheye_resume_pointer_position) < FISHEYE_RESUME_POINTER_DISTANCE:
-			return
+		# A wheel gesture pauses geometry changes briefly, then resumes at the same
+		# pointer position. Requiring another mouse move left every node expanded
+		# indefinitely when the user stopped moving the mouse after zooming.
 		fisheye_waiting_for_pointer_motion = false
-		return
 	if not fisheye_enabled:
-		fisheye_focus_node_id = -1
-		graph_edit.fisheye_focus_position = Vector2.ZERO
-		graph_edit.queue_redraw()
+		_reset_fisheye(delta)
 		return
+	_update_fisheye_at(get_viewport().get_mouse_position(), delta)
+
+
+func _update_fisheye_at(mouse_position: Vector2, delta: float) -> void:
 	if not graph_edit.get_global_rect().has_point(mouse_position):
 		_reset_fisheye(delta)
 		return
-	var focused_node := _fisheye_node_at(mouse_position)
-	if focused_node == null:
+	if fisheye_reference_tree_centers.is_empty():
+		_capture_fisheye_reference_geometry()
+	var graph_local := graph_edit.get_global_transform_with_canvas().affine_inverse() * mouse_position
+	var focused_node := _nearest_fisheye_reference_node(graph_local)
+	if focused_node == null or _fisheye_reference_screen_center(focused_node).distance_to(graph_local) > FISHEYE_FADE_RADIUS_PX:
 		_reset_fisheye(delta)
 		return
-	_apply_fisheye_focus(focused_node, delta)
+	_apply_fisheye_lens(graph_local, focused_node, delta)
 
 
 func _apply_fisheye_focus(focused_node: BTGraphNode, delta: float) -> void:
 	if focused_node == null or focused_node.node_resource == null:
 		_reset_fisheye(delta)
 		return
+	if fisheye_reference_tree_centers.is_empty():
+		_capture_fisheye_reference_geometry()
+	_apply_fisheye_lens(_fisheye_reference_screen_center(focused_node), focused_node, delta)
+
+
+func _apply_fisheye_lens(lens_center: Vector2, focused_node: BTGraphNode, delta: float) -> void:
 	fisheye_focus_node_id = focused_node.node_resource.id
+	graph_edit.fisheye_active = true
+	graph_edit.fisheye_focus_position = lens_center
+	graph_edit.fisheye_radius = FISHEYE_DETAIL_RADIUS_PX
+	graph_edit.fisheye_context_radius = FISHEYE_EFFECT_RADIUS_PX
+	var maximum_scale := _fisheye_focus_scale_for_zoom(graph_edit.zoom)
+	var layout_candidates: Array[Dictionary] = []
 	for child in graph_edit.get_children():
 		if not (child is BTGraphNode):
 			continue
 		var graph_node: BTGraphNode = child
-		var is_focused := graph_node == focused_node
-		graph_node.set_fisheye_detail_focus(is_focused)
-		_apply_node_fisheye_scale(graph_node, FISHEYE_MAX_SCALE if is_focused else FISHEYE_CONTEXT_SCALE, 1.0 if is_focused else 0.0, delta)
-	graph_edit.fisheye_focus_position = focused_node.position_offset + focused_node.size * 0.5
+		var distance := _fisheye_reference_screen_center(graph_node).distance_to(lens_center)
+		var influence := _fisheye_influence(distance)
+		var target_scale := lerpf(FISHEYE_CONTEXT_SCALE, maximum_scale, pow(influence, 0.72))
+		var detail_visible := distance <= FISHEYE_DETAIL_RADIUS_PX and influence > 0.0
+		graph_node.set_fisheye_detail_focus(detail_visible)
+		_apply_node_fisheye_scale(graph_node, target_scale, influence, delta)
+		var target_alpha := _fisheye_alpha(distance, influence)
+		var alpha_blend := clampf(delta * FISHEYE_LERP_SPEED, 0.0, 1.0)
+		graph_node.set_fisheye_visibility_alpha(lerpf(graph_node.fisheye_visibility_alpha, target_alpha, alpha_blend))
+		if distance <= FISHEYE_LAYOUT_RADIUS_PX:
+			layout_candidates.append({"id": graph_node.node_resource.id, "distance": distance})
+	layout_candidates.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
+		return float(left.get("distance", INF)) < float(right.get("distance", INF))
+	)
+	if layout_candidates.size() > FISHEYE_REFLOW_MAX_AFFECTED_CARDS:
+		layout_candidates.resize(FISHEYE_REFLOW_MAX_AFFECTED_CARDS)
+	fisheye_layout_node_ids.clear()
+	for candidate in layout_candidates:
+		fisheye_layout_node_ids.append(int(candidate.get("id", -1)))
+	if fisheye_layout_node_ids.is_empty():
+		fisheye_layout_node_ids.append(focused_node.node_resource.id)
 	graph_edit.queue_redraw()
+
+
+func _capture_fisheye_reference_geometry() -> void:
+	fisheye_reference_tree_centers.clear()
+	fisheye_base_auto_spacing_offsets = _capture_current_auto_spacing_offsets()
+	for child in graph_edit.get_children():
+		if child is BTGraphNode and child.visible and child.node_resource != null:
+			fisheye_reference_tree_centers[child.node_resource.id] = child.position_offset + child.size * 0.5
+
+
+func _nearest_fisheye_reference_node(lens_center: Vector2) -> BTGraphNode:
+	var nearest: BTGraphNode
+	var nearest_distance := INF
+	for child in graph_edit.get_children():
+		if not (child is BTGraphNode) or not child.visible or child.node_resource == null:
+			continue
+		var graph_node := child as BTGraphNode
+		var distance := _fisheye_reference_screen_center(graph_node).distance_squared_to(lens_center)
+		if nearest == null or distance < nearest_distance:
+			nearest = graph_node
+			nearest_distance = distance
+	return nearest
+
+
+func _fisheye_reference_screen_center(graph_node: BTGraphNode) -> Vector2:
+	if graph_node == null or graph_node.node_resource == null:
+		return Vector2.INF
+	var tree_center := Vector2(fisheye_reference_tree_centers.get(
+		graph_node.node_resource.id,
+		graph_node.position_offset + graph_node.size * 0.5
+	))
+	return tree_center * graph_edit.zoom - graph_edit.scroll_offset
+
+
+func _fisheye_influence(distance: float) -> float:
+	if distance >= FISHEYE_EFFECT_RADIUS_PX:
+		return 0.0
+	var normalized := clampf(distance / FISHEYE_EFFECT_RADIUS_PX, 0.0, 1.0)
+	return 1.0 - smoothstep(0.0, 1.0, normalized)
+
+
+func _fisheye_alpha(distance: float, influence: float) -> float:
+	if distance <= FISHEYE_EFFECT_RADIUS_PX:
+		return lerpf(0.72, 1.0, influence)
+	if distance >= FISHEYE_FADE_RADIUS_PX:
+		return FISHEYE_FAR_ALPHA
+	var fade := smoothstep(
+		0.0,
+		1.0,
+		(distance - FISHEYE_EFFECT_RADIUS_PX) / (FISHEYE_FADE_RADIUS_PX - FISHEYE_EFFECT_RADIUS_PX)
+	)
+	return lerpf(0.72, FISHEYE_FAR_ALPHA, fade)
+
+
+func _fisheye_focus_scale_for_zoom(zoom_value: float) -> float:
+	var readable_scale := FISHEYE_MIN_FOCUS_SCREEN_WIDTH / (BTGraphNode.NORMAL_CARD_SIZE.x * maxf(zoom_value, 0.01))
+	return clampf(readable_scale, FISHEYE_MIN_FOCUS_SCALE, FISHEYE_MAX_SCALE)
 
 
 func _on_graph_view_wheel_scrolled(local_position: Vector2) -> void:
@@ -4382,7 +4625,6 @@ func _on_graph_view_wheel_scrolled(local_position: Vector2) -> void:
 	if fisheye_enabled:
 		fisheye_waiting_for_pointer_motion = true
 		fisheye_resume_pointer_position = graph_edit.get_global_transform_with_canvas() * local_position
-		_reset_fisheye()
 
 
 func _capture_zoom_layout_anchor(_local_position: Vector2) -> void:
@@ -4562,8 +4804,18 @@ func _apply_node_fisheye_scale(graph_node: BTGraphNode, target_scale: float, inf
 func _reset_fisheye(delta := 0.0) -> void:
 	if not is_instance_valid(graph_edit):
 		return
+	var was_active := fisheye_focus_node_id != -1 or graph_edit.fisheye_active
+	var restore_offsets := fisheye_base_auto_spacing_offsets.duplicate(true)
 	graph_edit.fisheye_focus_position = Vector2.ZERO
+	graph_edit.fisheye_active = false
 	fisheye_focus_node_id = -1
+	fisheye_reference_tree_centers.clear()
+	fisheye_layout_node_ids.clear()
+	fisheye_last_reflow_moved_ids.clear()
+	fisheye_base_auto_spacing_offsets.clear()
+	if was_active and not restore_offsets.is_empty():
+		pending_auto_spacing_seed_targets = restore_offsets
+		auto_spacing_signature = ""
 	var blend := 1.0 if delta <= 0.0 else clampf(delta * FISHEYE_LERP_SPEED, 0.0, 1.0)
 	for child in graph_edit.get_children():
 		if not (child is BTGraphNode):
@@ -4572,6 +4824,7 @@ func _reset_fisheye(delta := 0.0) -> void:
 		graph_node.set_fisheye_detail_focus(false)
 		var next_scale := lerpf(graph_node.fisheye_magnification, 1.0, blend)
 		graph_node.set_fisheye_magnification(next_scale)
+		graph_node.set_fisheye_visibility_alpha(lerpf(graph_node.fisheye_visibility_alpha, 1.0, blend))
 		# Clear transforms left by plugin versions that scaled GraphNode directly.
 		graph_node.scale = Vector2.ONE
 		graph_node.pivot_offset = Vector2.ZERO

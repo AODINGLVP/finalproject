@@ -1168,33 +1168,61 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	_expect(_all_visual_offsets_zero(view) and _render_positions_match_resources(view), "disabling auto spacing clears all temporary layout residue")
 	view._set_feature_enabled("semantic_zoom", false, false)
 
-	view.current_tree = _make_dense_zoom_tree()
+	view.current_tree = _make_fisheye_profile_tree()
 	view._rebuild_graph()
 	var fisheye_positions := _resource_positions(view.current_tree)
-	var fisheye_order := _child_ids(view.current_tree, 1)
 	view._set_feature_enabled("semantic_zoom", true, false)
+	view._set_feature_enabled("auto_spacing", false, false)
+	view._set_feature_enabled("breadcrumb", true, false)
 	view.graph_edit.zoom = 0.5
 	view._update_semantic_zoom()
+	view._update_auto_spacing(0.0, true)
+	await process_frame
+	view.selected_node_id = 2
+	view._refresh_inspector()
 	view._set_feature_enabled("fisheye", true, false)
 	var focused_fisheye_node := _graph_node(view, 2)
+	view.graph_edit.scroll_offset = (focused_fisheye_node.position_offset + focused_fisheye_node.size * 0.5) * view.graph_edit.zoom - view.graph_edit.size * 0.5
 	var fisheye_local_point := (focused_fisheye_node.position_offset + focused_fisheye_node.size * 0.5) * view.graph_edit.zoom - view.graph_edit.scroll_offset
 	var fisheye_test_point := view.graph_edit.get_global_transform_with_canvas() * fisheye_local_point
 	var fisheye_hit := view._fisheye_node_at(fisheye_test_point)
 	_expect(fisheye_hit == focused_fisheye_node, "fisheye hit testing selects the node directly under the pointer")
 	view._apply_fisheye_focus(focused_fisheye_node, 1.0)
 	view._update_auto_spacing(0.0, true)
-	_expect(_count_magnified_nodes(view) == 1 and _graph_node(view, 2).fisheye_magnification >= 1.24, "fisheye magnifies only the focused node")
-	_expect(_graph_node(view, 2).fisheye_detail_focus and _graph_node(view, 2).description_label.visible and _graph_node(view, 2).custom_minimum_size.x >= BTGraphNode.NORMAL_CARD_SIZE.x * 1.24, "Fisheye Focus restores full information and normal-card geometry for the focal node at overview zoom")
-	_expect(not _graph_node(view, 3).fisheye_detail_focus and not _graph_node(view, 3).description_label.visible, "Fisheye Focus leaves surrounding nodes in Adaptive overview density")
-	_expect(_all_unfocused_nodes_shrunk(view, 2), "fisheye shrinks every surrounding node")
-	_expect(_rendered_overlaps(view).is_empty(), "fisheye context layout prevents card overlap")
-	_expect(_child_ids(view.current_tree, 1) == fisheye_order and _rendered_child_order(view, 1) == fisheye_order, "fisheye preserves sibling left-to-right order")
-	_expect(_rendered_parent_above_children(view), "fisheye preserves parent-above-child topology")
+	var focused_scale_at_half_zoom := focused_fisheye_node.fisheye_magnification
+	var far_fisheye_node := _graph_node(view, 7)
+	_expect(_fisheye_profile_is_monotonic(view, view.graph_edit.fisheye_focus_position), "fisheye scale and opacity decrease monotonically with screen distance")
+	_expect(_count_magnified_nodes(view) >= 1 and _count_magnified_nodes(view) < _graph_node_count(view), "fisheye never magnifies every node around a fixed pointer")
+	_expect(focused_fisheye_node.fisheye_detail_focus and focused_fisheye_node.description_label.visible and focused_fisheye_node.custom_minimum_size.x * view.graph_edit.zoom >= view.FISHEYE_MIN_FOCUS_SCREEN_WIDTH - 0.5, "Fisheye Focus restores readable detail at overview zoom")
+	_expect(far_fisheye_node.fisheye_magnification <= view.FISHEYE_CONTEXT_SCALE + 0.01 and far_fisheye_node.fisheye_visibility_alpha <= view.FISHEYE_FAR_ALPHA + 0.01, "nodes outside the lens shrink and become strongly faded")
+	_expect(far_fisheye_node.self_modulate.a <= far_fisheye_node.fisheye_visibility_alpha * 0.5, "fisheye fading composes with Related Node Focus instead of replacing it")
+	_expect(view.fisheye_layout_node_ids.size() <= view.FISHEYE_REFLOW_MAX_AFFECTED_CARDS and not view.fisheye_layout_node_ids.has(7) and view.fisheye_last_reflow_moved_ids.size() <= view.FISHEYE_REFLOW_MAX_AFFECTED_CARDS, "fisheye reflow is limited to the local protected neighbourhood")
 	_expect(_resource_positions_equal(view.current_tree, fisheye_positions), "fisheye layout never changes saved resource coordinates")
+	var stable_focus_id := view.fisheye_focus_node_id
+	var stable_far_position := far_fisheye_node.position_offset
+	var stable_scales := _fisheye_scale_signature(view)
+	for _frame in range(30):
+		view._apply_fisheye_lens(view.graph_edit.fisheye_focus_position, focused_fisheye_node, 1.0 / 60.0)
+		view._update_auto_spacing(1.0 / 60.0)
+	_expect(view.fisheye_focus_node_id == stable_focus_id and _fisheye_scale_signature(view) == stable_scales, "a stationary fisheye converges without changing focus or spreading magnification")
+	_expect((far_fisheye_node.position_offset - stable_far_position).length() * view.graph_edit.zoom <= 0.5, "stationary fisheye leaves distant node positions fixed")
+	var scales_before_wheel := _fisheye_scale_signature(view)
+	view._on_graph_view_wheel_scrolled(view.graph_edit.fisheye_focus_position)
+	_expect(view.fisheye_focus_node_id == stable_focus_id and _fisheye_scale_signature(view) == scales_before_wheel, "wheel zoom pauses the lens without resetting every node to normal size")
+	view.fisheye_wheel_pause_elapsed = 0.0
+	view._update_fisheye_at(fisheye_test_point, 1.0)
+	_expect(view.fisheye_focus_node_id == stable_focus_id, "fisheye resumes at a stationary pointer after the wheel pause")
+	view._reset_fisheye()
+	view.graph_edit.zoom = 0.2
+	view._update_semantic_zoom()
+	view._apply_fisheye_focus(focused_fisheye_node, 1.0)
+	var focused_scale_at_low_zoom := focused_fisheye_node.fisheye_magnification
+	_expect(focused_scale_at_low_zoom > focused_scale_at_half_zoom + 0.5 and focused_fisheye_node.custom_minimum_size.x * view.graph_edit.zoom >= view.FISHEYE_MIN_FOCUS_SCREEN_WIDTH - 0.5, "fisheye increases magnification at lower zoom to preserve a readable screen width")
 	view._reset_fisheye()
 	view._update_auto_spacing(0.0, true)
-	_expect(_all_fisheye_state_reset(view) and not _graph_node(view, 2).description_label.visible, "leaving Fisheye restores Adaptive density and an overlap-free layout")
+	_expect(_all_fisheye_state_reset(view) and not _graph_node(view, 2).description_label.visible, "leaving Fisheye restores scale, opacity, detail and lens state")
 	view._set_feature_enabled("semantic_zoom", false, false)
+	view._set_feature_enabled("auto_spacing", true, false)
 	view.graph_edit.zoom = 1.0
 
 	view.current_tree = _make_view_tree()
@@ -1583,6 +1611,23 @@ func _make_dense_zoom_tree() -> BTTreeResource:
 	return tree
 
 
+func _make_fisheye_profile_tree() -> BTTreeResource:
+	var tree := BTTreeResource.new()
+	tree.tree_name = "Fisheye Distance Profile"
+	tree.root_node_id = 1
+	tree.nodes = [
+		_node(1, BTNodeResource.TYPE_ROOT, -1, "Profile Root", 100.0, -800.0),
+		_node(2, BTNodeResource.TYPE_ACTION, -1, "Lens Centre", 500.0, 300.0),
+		_node(3, BTNodeResource.TYPE_ACTION, -1, "Near Context", 650.0, 300.0),
+		_node(4, BTNodeResource.TYPE_ACTION, -1, "Middle Context", 850.0, 300.0),
+		_node(5, BTNodeResource.TYPE_ACTION, -1, "Lens Boundary", 1050.0, 300.0),
+		_node(6, BTNodeResource.TYPE_ACTION, -1, "Fade Context", 1350.0, 300.0),
+		_node(7, BTNodeResource.TYPE_ACTION, -1, "Distant Context", 1750.0, 300.0),
+		_node(8, BTNodeResource.TYPE_ACTION, -1, "Vertical Context", 500.0, 1200.0),
+	]
+	return tree
+
+
 func _resource_positions(tree: BTTreeResource) -> Dictionary:
 	var positions := {}
 	for node in tree.nodes:
@@ -1709,6 +1754,35 @@ func _count_magnified_nodes(view: BTEditorView) -> int:
 	return count
 
 
+func _fisheye_profile_is_monotonic(view: BTEditorView, lens_center: Vector2) -> bool:
+	var profile: Array[Dictionary] = []
+	for child in view.graph_edit.get_children():
+		if child is BTGraphNode and child.node_resource != null:
+			profile.append({
+				"distance": view._fisheye_reference_screen_center(child).distance_to(lens_center),
+				"scale": child.fisheye_magnification,
+				"alpha": child.fisheye_visibility_alpha,
+			})
+	profile.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
+		return float(left.get("distance", INF)) < float(right.get("distance", INF))
+	)
+	for index in range(1, profile.size()):
+		if float(profile[index].get("scale", 0.0)) > float(profile[index - 1].get("scale", 0.0)) + 0.01:
+			return false
+		if float(profile[index].get("alpha", 0.0)) > float(profile[index - 1].get("alpha", 0.0)) + 0.01:
+			return false
+	return profile.size() >= 5 and float(profile[0].get("scale", 0.0)) - float(profile[-1].get("scale", 0.0)) >= 0.3
+
+
+func _fisheye_scale_signature(view: BTEditorView) -> String:
+	var values: Array[String] = []
+	for child in view.graph_edit.get_children():
+		if child is BTGraphNode and child.node_resource != null:
+			values.append("%d:%.4f:%.4f" % [child.node_resource.id, child.fisheye_magnification, child.fisheye_visibility_alpha])
+	values.sort()
+	return "|".join(values)
+
+
 func _all_unfocused_nodes_shrunk(view: BTEditorView, focused_id: int) -> bool:
 	for child in view.graph_edit.get_children():
 		if child is BTGraphNode and child.node_resource.id != focused_id and child.fisheye_magnification > view.FISHEYE_CONTEXT_SCALE + 0.01:
@@ -1740,9 +1814,9 @@ func _rendered_parent_above_children(view: BTEditorView) -> bool:
 
 func _all_fisheye_state_reset(view: BTEditorView) -> bool:
 	for child in view.graph_edit.get_children():
-		if child is BTGraphNode and (not is_equal_approx(child.fisheye_magnification, 1.0) or child.fisheye_detail_focus):
+		if child is BTGraphNode and (not is_equal_approx(child.fisheye_magnification, 1.0) or child.fisheye_detail_focus or not is_equal_approx(child.fisheye_visibility_alpha, 1.0)):
 			return false
-	return view.fisheye_focus_node_id == -1 and _rendered_overlaps(view).is_empty()
+	return view.fisheye_focus_node_id == -1 and not view.graph_edit.fisheye_active and view.fisheye_layout_node_ids.is_empty()
 
 
 func _all_node_scales_reset(view: BTEditorView) -> bool:

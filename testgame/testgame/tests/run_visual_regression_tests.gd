@@ -229,22 +229,25 @@ func _run() -> void:
 	await _settle()
 	var fisheye := await _capture_case("03_fisheye")
 	_assert_image_valid(fisheye, "fisheye focus renders")
-	_expect(_count_magnified_nodes() == 1 and _graph_node(view, 3).fisheye_magnification >= 1.24, "fisheye screenshot magnifies only the focused node")
+	var farthest_fisheye_node := _farthest_fisheye_node_from(view.graph_edit.fisheye_focus_position)
+	_expect(_count_magnified_nodes() >= 1 and _count_magnified_nodes() < _graph_node_count(), "fisheye screenshot never magnifies every visible node")
+	_expect(_fisheye_profile_is_monotonic(view.graph_edit.fisheye_focus_position) and focused.fisheye_magnification >= view.FISHEYE_MIN_FOCUS_SCALE, "fisheye screenshot shows a distance-based magnification profile")
+	_expect(farthest_fisheye_node != null and farthest_fisheye_node.fisheye_magnification <= view.FISHEYE_CONTEXT_SCALE + 0.01 and farthest_fisheye_node.fisheye_visibility_alpha < focused.fisheye_visibility_alpha, "fisheye screenshot shrinks and fades distant context")
+	_expect(view.graph_edit.fisheye_active and view.graph_edit.fisheye_focus_position.distance_to(focused_local_point) <= 0.5, "fisheye ring is centred on the real pointer position")
 	_expect((_graph_node(view, 3).position_offset + _graph_node(view, 3).size * 0.5).distance_to(expected_focused_center) < 6.0, "fisheye keeps the focused card centered while resizing")
-	_expect(_all_unfocused_nodes_shrunk(3), "fisheye screenshot shrinks every surrounding node")
-	_expect(_overlapping_node_pairs().is_empty(), "fisheye focus-and-context layout does not overlap cards")
-	_expect(_rendered_tree_order_is_valid() and _resource_positions_equal(view.current_tree, fisheye_positions), "fisheye preserves topology and saved positions")
+	_expect(view.fisheye_layout_node_ids.size() <= view.FISHEYE_REFLOW_MAX_AFFECTED_CARDS and view.fisheye_last_reflow_moved_ids.size() <= view.FISHEYE_REFLOW_MAX_AFFECTED_CARDS, "fisheye screenshot uses only the bounded local reflow set")
+	_expect(_rendered_tree_order_is_valid() and _resource_positions_equal(view.current_tree, fisheye_positions), "fisheye preserves topology and saved positions while allowing distant overlap")
 	view._reset_fisheye()
 	view._set_feature_enabled("semantic_zoom", true, false)
-	view.graph_edit.zoom = 0.5
+	view.graph_edit.zoom = 0.25
 	view._update_semantic_zoom()
 	view._apply_fisheye_focus(focused, 1.0)
 	view._update_auto_spacing(0.0, true)
 	await _settle()
 	var fisheye_adaptive := await _capture_case("03a_fisheye_adaptive_overview")
 	_assert_image_valid(fisheye_adaptive, "Fisheye Focus at Adaptive overview zoom renders")
-	_expect(focused.fisheye_detail_focus and focused.description_label.visible and not _graph_node(view, 6).description_label.visible, "Fisheye overview screenshot restores full focal information while keeping context compact")
-	_expect(_overlapping_node_pairs().is_empty() and _resource_positions_equal(view.current_tree, fisheye_positions), "Fisheye overview screenshot remains overlap-free without changing saved positions")
+	_expect(focused.fisheye_detail_focus and focused.description_label.visible and focused.custom_minimum_size.x * view.graph_edit.zoom >= view.FISHEYE_MIN_FOCUS_SCREEN_WIDTH - 0.5 and not _graph_node(view, 6).description_label.visible, "Fisheye overview screenshot restores readable focal information while keeping distant context compact")
+	_expect(_resource_positions_equal(view.current_tree, fisheye_positions) and view.fisheye_layout_node_ids.size() <= view.FISHEYE_REFLOW_MAX_AFFECTED_CARDS, "Fisheye overview keeps saved positions and bounds local reflow")
 	view._set_feature_enabled("fisheye", false, false)
 	view._set_feature_enabled("semantic_zoom", false, false)
 	view.graph_edit.zoom = 1.0
@@ -709,9 +712,9 @@ func _first_connection_midpoint() -> Vector2:
 func _all_node_transforms_reset() -> bool:
 	var expected_graph_scale := Vector2.ONE * view.graph_edit.zoom
 	for child in view.graph_edit.get_children():
-		if child is BTGraphNode and (not is_equal_approx(child.fisheye_magnification, 1.0) or not child.scale.is_equal_approx(expected_graph_scale) or not child.pivot_offset.is_zero_approx() or child.z_index != 0):
+		if child is BTGraphNode and (not is_equal_approx(child.fisheye_magnification, 1.0) or not is_equal_approx(child.fisheye_visibility_alpha, 1.0) or not child.scale.is_equal_approx(expected_graph_scale) or not child.pivot_offset.is_zero_approx() or child.z_index != 0):
 			return false
-	return true
+	return not view.graph_edit.fisheye_active
 
 
 func _count_magnified_nodes() -> int:
@@ -720,6 +723,39 @@ func _count_magnified_nodes() -> int:
 		if child is BTGraphNode and child.fisheye_magnification > 1.001:
 			count += 1
 	return count
+
+
+func _fisheye_profile_is_monotonic(lens_center: Vector2) -> bool:
+	var profile: Array[Dictionary] = []
+	for child in view.graph_edit.get_children():
+		if child is BTGraphNode and child.node_resource != null:
+			profile.append({
+				"distance": view._fisheye_reference_screen_center(child).distance_to(lens_center),
+				"scale": child.fisheye_magnification,
+				"alpha": child.fisheye_visibility_alpha,
+			})
+	profile.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
+		return float(left.get("distance", INF)) < float(right.get("distance", INF))
+	)
+	for index in range(1, profile.size()):
+		if float(profile[index].get("scale", 0.0)) > float(profile[index - 1].get("scale", 0.0)) + 0.01:
+			return false
+		if float(profile[index].get("alpha", 0.0)) > float(profile[index - 1].get("alpha", 0.0)) + 0.01:
+			return false
+	return not profile.is_empty()
+
+
+func _farthest_fisheye_node_from(lens_center: Vector2) -> BTGraphNode:
+	var farthest: BTGraphNode
+	var farthest_distance := -1.0
+	for child in view.graph_edit.get_children():
+		if not (child is BTGraphNode) or child.node_resource == null:
+			continue
+		var distance := view._fisheye_reference_screen_center(child).distance_squared_to(lens_center)
+		if distance > farthest_distance:
+			farthest = child
+			farthest_distance = distance
+	return farthest
 
 
 func _all_unfocused_nodes_shrunk(focused_id: int) -> bool:
