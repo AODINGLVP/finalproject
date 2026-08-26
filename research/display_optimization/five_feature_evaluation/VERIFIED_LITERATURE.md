@@ -18,7 +18,7 @@
 | Z1 | Bederson, B. B., Hollan, J. D., Perlin, K., Meyer, J., Bacon, D. and Furnas, G. W. (1996). “Pad++: A Zoomable Graphical Sketchpad for Exploring Alternate Interface Physics.” *Journal of Visual Languages & Computing*, 7(1), 3–32. [DOI: 10.1006/jvlc.1996.0002](https://doi.org/10.1006/jvlc.1996.0002) | 缩放界面和随尺度改变信息表示的设计背景。 | Pad++ 不是行为树编辑器，也没有评价本项目的离散卡片层级。 |
 | Z2 | Summers, K. L., Goldsmith, T. E., Kubica, S. and Caudell, T. P. (2003). “An Experimental Evaluation of Continuous Semantic Zooming in Program Visualization.” *IEEE Symposium on Information Visualization*, 155–162. [DOI: 10.1109/INFVIS.2003.1249021](https://doi.org/10.1109/INFVIS.2003.1249021) | 语义缩放可以在程序可视化中按视图尺度改变表示；为 Adaptive Zoom Detail 提供相近领域先例。 | 其连续语义缩放、程序、任务和参与者与本项目不同；其速度和准确率不能转移到本文。 |
 | Z3 | Shneiderman, B. (1996). “The Eyes Have It: A Task by Data Type Taxonomy for Information Visualizations.” *IEEE Symposium on Visual Languages*, 336–343. [DOI: 10.1109/VL.1996.545307](https://doi.org/10.1109/VL.1996.545307) | “概览—缩放/过滤—按需细节”可以作为大型树交互的设计框架。 | 这是设计框架，不是对本项目五项功能的实证评价。 |
-| Z4 | Cockburn, A., Karlson, A. and Bederson, B. B. (2008). “A Review of Overview+Detail, Zooming, and Focus+Context Interfaces.” *ACM Computing Surveys*, 41(1), Article 2. [DOI: 10.1145/1456650.1456652](https://doi.org/10.1145/1456650.1456652) | 区分概览+细节、缩放和焦点+上下文，帮助准确定位 Adaptive 与 Fisheye 的设计类别。 | 综述指出不同任务下结果不统一，因此不能预设任何一种方法必然最好。 |
+| Z4 | Cockburn, A., Karlson, A. and Bederson, B. B. (2009). “A Review of Overview+Detail, Zooming, and Focus+Context Interfaces.” *ACM Computing Surveys*, 41(1), Article 2, 1–31. [DOI: 10.1145/1456650.1456652](https://doi.org/10.1145/1456650.1456652) | 区分概览+细节、缩放和焦点+上下文，帮助准确定位 Adaptive 与 Fisheye 的设计类别。 | 综述指出不同任务下结果不统一，因此不能预设任何一种方法必然最好。 |
 
 ## 3. 鱼眼与局部焦点
 
