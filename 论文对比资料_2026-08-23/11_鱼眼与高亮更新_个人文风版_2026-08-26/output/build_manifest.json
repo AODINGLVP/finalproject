@@ -8,13 +8,27 @@
     {
       "path": "论文对比资料_2026-08-23/11_鱼眼与高亮更新_个人文风版_2026-08-26/source/论文内容_中文.md",
       "sha256": "CC1D4296B792E06D0CF170293824E7CB4F51B40E5AEF62C1036C4699023F4B82"
+    },
+    {
+      "path": "论文对比资料_2026-08-23/11_鱼眼与高亮更新_个人文风版_2026-08-26/source/dissertation_content_en.md",
+      "sha256": "A61CA6A6E4A25175B62842BC800EAB0790ECFB530FFD42D1134C85BCBC5FDBFB"
     }
   ],
   "outputs": [
     {
       "path": "行为树论文_中文_鱼眼与高亮更新_个人文风版_2026-08-26.docx",
       "bytes": 2033840,
-      "sha256": "6727B9BB49883FB7782029D61B0502F0C35CA7EE56919A13BB69EA52CB8062EB"
+      "sha256": "8590BEBEED87BBB95D2CC0642D3DEC4F7E399BB613560915BCD031AEEE13598B"
+    },
+    {
+      "path": "行为树论文_中文_鱼眼与高亮更新_个人文风版_2026-08-26.pdf",
+      "bytes": 2351087,
+      "sha256": "15414CD7A26895B672DA427FCC2E295AF7FE0CA68682368788B8FD56B8157FAE"
+    },
+    {
+      "path": "Behaviour_Tree_Dissertation_English_Fisheye_Highlight_Update_2026-08-26.pdf",
+      "bytes": 2050939,
+      "sha256": "523628E8CA86A24951AB8165CF8E6FCCBD1FF2E5D5B9B0BED2A6E5BF706ED7C0"
     }
   ]
 }
