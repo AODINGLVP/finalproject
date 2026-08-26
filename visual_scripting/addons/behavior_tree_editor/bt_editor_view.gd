@@ -85,7 +85,6 @@ const BUILT_IN_FEATURE_KEYS := [
 	"zoom_anchor",
 ]
 const HIDDEN_DISABLED_FEATURE_KEYS := [
-	"always_curved_edges",
 	"multi_column",
 	"path_summary",
 	"edge_bundling",
@@ -101,6 +100,7 @@ const FINAL_DISPLAY_FEATURE_KEYS := [
 	"translucent_cards",
 	"breadcrumb",
 	"fisheye",
+	"always_curved_edges",
 ]
 const DEBUG_MENU_LIVE_ID := 0
 const DEBUG_MENU_DIM_ID := 1
@@ -1062,11 +1062,12 @@ func _apply_feature_states() -> void:
 	if is_instance_valid(search_next_button):
 		search_next_button.disabled = not _feature_enabled("search") or search_result_ids.is_empty()
 	if is_instance_valid(graph_edit):
+		var always_curved_enabled := _feature_enabled("always_curved_edges")
 		graph_edit.set_edge_display(
 			_feature_enabled("orthogonal_edges"),
 			_feature_enabled("edge_bundling"),
-			_feature_enabled("always_curved_edges"),
-			_feature_enabled("straight_connections")
+			always_curved_enabled,
+			_feature_enabled("straight_connections") and not always_curved_enabled
 		)
 		graph_edit.set_single_connection_rendering(_feature_enabled("single_connection"))
 		graph_edit.set_enhanced_minimap(_feature_enabled("enhanced_minimap"))

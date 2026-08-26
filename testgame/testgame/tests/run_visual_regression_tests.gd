@@ -96,8 +96,8 @@ func _run() -> void:
 	var advanced_labels: Array[String] = []
 	for item_index in range(view.advanced_display_menu.item_count):
 		advanced_labels.append(view.advanced_display_menu.get_item_text(item_index))
-	_expect(display_popup.visible and display_popup.item_count == 5 and view.advanced_display_menu.item_count == 0, "Display popup contains exactly the five consolidated choices")
-	var fixed_labels := ["Grid", "Search + Highlight", "Overview + Detail / Enhanced Minimap", "Active Path Highlight", "Non-active Branch Dimming", "Failure Reason Annotation", "Decorator Condition Badges", "Straight Connections", "Always Curved Edges (Experiment)", "Multi-column Layout", "Path Summary View", "Edge Bundling", "Orthogonal Edges"]
+	_expect(display_popup.visible and display_popup.item_count == 6 and view.advanced_display_menu.item_count == 0 and display_labels.has("Always Curved Edges (Experiment)"), "Display popup contains the five consolidated choices plus the temporary curved-edge switch")
+	var fixed_labels := ["Grid", "Search + Highlight", "Overview + Detail / Enhanced Minimap", "Active Path Highlight", "Non-active Branch Dimming", "Failure Reason Annotation", "Decorator Condition Badges", "Straight Connections", "Multi-column Layout", "Path Summary View", "Edge Bundling", "Orthogonal Edges"]
 	var fixed_labels_are_hidden := true
 	for label in fixed_labels:
 		fixed_labels_are_hidden = fixed_labels_are_hidden and not display_labels.has(label) and not advanced_labels.has(label)

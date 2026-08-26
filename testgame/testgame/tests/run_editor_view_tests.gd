@@ -1402,9 +1402,9 @@ func _test_display_feature_switches(view: BTEditorView) -> void:
 	_expect(not view.graph_edit.find_connection_at(curved_connection[curved_connection.size() / 2], 12.0).is_empty(), "always-curved edges remain interactively hittable")
 	view._set_feature_enabled("straight_connections", true, false)
 	var straight_priority_route := view.graph_edit._get_connection_line(Vector2(10.0, 20.0), Vector2(190.0, 220.0))
-	_expect(view.graph_edit.straight_connections_enabled and view.graph_edit.always_curved_edges_enabled and straight_priority_route.size() == 2, "straight connections take explicit priority over previously enabled edge styles")
+	_expect(not view.graph_edit.straight_connections_enabled and view.graph_edit.always_curved_edges_enabled and straight_priority_route == always_curve_route, "the visible Always Curved Edges switch takes priority over the hidden default straight style")
 	view._set_feature_enabled("straight_connections", false, false)
-	_expect(view.graph_edit._get_connection_line(Vector2(10.0, 20.0), Vector2(190.0, 220.0)) == always_curve_route, "disabling straight connections restores the previous curved style")
+	_expect(view.graph_edit._get_connection_line(Vector2(10.0, 20.0), Vector2(190.0, 220.0)) == always_curve_route, "changing the hidden straight state leaves the selected curved style active")
 	view._set_feature_enabled("always_curved_edges", false, false)
 	_expect(not view.graph_edit.always_curved_edges_enabled and view.graph_edit.orthogonal_edges_enabled and view.graph_edit.edge_bundling_enabled and view.graph_edit._get_connection_line(Vector2(10.0, 20.0), Vector2(190.0, 220.0)) == pre_curve_route and _child_ids(view.current_tree, 2) == curved_tree_order, "disabling always-curved edges restores the previous edge styles and tree order")
 	view._set_feature_enabled("edge_bundling", false, false)
@@ -1536,7 +1536,7 @@ func _test_compact_display_toolbar(view: BTEditorView) -> void:
 	_expect(legacy_creation != null and not legacy_creation.visible, "duplicate node creation toolbar stays hidden in favor of the canvas context menu")
 	_expect(layout_popup.item_count == 9 and layout_popup.get_item_index(view.LAYOUT_MENU_FIT_ID) >= 0, "layout actions are consolidated into one menu")
 	_expect(view.feature_menu_button.text == "Display", "display options use a compact menu label")
-	_expect(popup.item_count == 5 and view.advanced_display_menu.item_count == 0 and grid_index == -1, "Display exposes exactly the five consolidated user choices")
+	_expect(popup.item_count == 6 and view.advanced_display_menu.item_count == 0 and grid_index == -1, "Display exposes the five consolidated features plus the temporary curved-edge switch")
 	var display_labels: Array[String] = []
 	for item_index in range(popup.item_count):
 		display_labels.append(popup.get_item_text(item_index))
@@ -1551,7 +1551,6 @@ func _test_compact_display_toolbar(view: BTEditorView) -> void:
 		"Failure Reason Annotation",
 		"Decorator Condition Badges",
 		"Straight Connections",
-		"Always Curved Edges (Experiment)",
 		"Multi-column Layout",
 		"Path Summary View",
 		"Edge Bundling",
@@ -1565,9 +1564,9 @@ func _test_compact_display_toolbar(view: BTEditorView) -> void:
 	for label in hidden_default_labels:
 		default_labels_are_hidden = default_labels_are_hidden and not display_labels.has(label) and not advanced_labels.has(label)
 	_expect(default_labels_are_hidden, "fixed display capabilities and hidden alternatives have no Display switch")
-	var expected_display_labels := ["Smart Drag Reflow", "Adaptive Zoom Detail", "Readable Edge Overlay", "Related Node Focus", "Fisheye Focus"]
-	_expect(display_labels == expected_display_labels and advanced_labels.is_empty(), "Display presents the five consolidated features in a stable order")
-	_expect(popup.is_item_checked(popup.get_item_index(14)) and popup.is_item_checked(popup.get_item_index(13)) and not popup.is_item_checked(popup.get_item_index(8)) and popup.is_item_checked(popup.get_item_index(22)) and popup.is_item_checked(popup.get_item_index(0)), "the five Display defaults are Smart on, Adaptive on, Readable Edge off, Selection on, and Fisheye on")
+	var expected_display_labels := ["Smart Drag Reflow", "Adaptive Zoom Detail", "Readable Edge Overlay", "Related Node Focus", "Fisheye Focus", "Always Curved Edges (Experiment)"]
+	_expect(display_labels == expected_display_labels and advanced_labels.is_empty(), "Display presents the consolidated features and temporary curved-edge switch in a stable order")
+	_expect(popup.is_item_checked(popup.get_item_index(14)) and popup.is_item_checked(popup.get_item_index(13)) and not popup.is_item_checked(popup.get_item_index(8)) and popup.is_item_checked(popup.get_item_index(22)) and popup.is_item_checked(popup.get_item_index(0)) and not popup.is_item_checked(popup.get_item_index(7)), "the five main Display defaults stay unchanged and curved edges start off")
 	var fixed_menu_callbacks_are_inert := true
 	for definition_index in range(view.FEATURE_DEFINITIONS.size()):
 		var key := str(view.FEATURE_DEFINITIONS[definition_index][0])
@@ -1584,6 +1583,18 @@ func _test_compact_display_toolbar(view: BTEditorView) -> void:
 			break
 	var straight_menu_index := view.advanced_display_menu.get_item_index(straight_definition_index)
 	_expect(straight_definition_index >= 0 and straight_menu_index == -1 and view.graph_edit.straight_connections_enabled, "Straight Connections is enabled without an Advanced Display entry")
+	var curved_definition_index := -1
+	for definition_index in range(view.FEATURE_DEFINITIONS.size()):
+		if str(view.FEATURE_DEFINITIONS[definition_index][0]) == "always_curved_edges":
+			curved_definition_index = definition_index
+			break
+	var curved_menu_index := popup.get_item_index(curved_definition_index)
+	view._on_feature_menu_pressed(curved_definition_index)
+	var curved_route := view.graph_edit._get_connection_line(Vector2(10.0, 20.0), Vector2(190.0, 220.0))
+	_expect(curved_menu_index >= 0 and popup.is_item_checked(curved_menu_index) and view.graph_edit.always_curved_edges_enabled and not view.graph_edit.straight_connections_enabled and curved_route.size() == 13, "Always Curved Edges menu switch temporarily replaces straight routes with Bezier curves")
+	view._on_feature_menu_pressed(curved_definition_index)
+	var restored_straight_route := view.graph_edit._get_connection_line(Vector2(10.0, 20.0), Vector2(190.0, 220.0))
+	_expect(not popup.is_item_checked(curved_menu_index) and not view.graph_edit.always_curved_edges_enabled and view.graph_edit.straight_connections_enabled and restored_straight_route.size() == 2, "disabling Always Curved Edges restores the default straight routes")
 	_expect(not advanced_labels.has("Edge Obstacle Avoidance"), "removed edge-obstacle feature has no menu entry")
 	_expect(not view.fisheye_toggle.visible and not view.compact_toggle.visible and not view.semantic_zoom_toggle.visible and not view.path_summary_toggle.visible and not view.grid_toggle.visible and not view.minimap_toggle.visible, "redundant display checkboxes stay hidden from the toolbar")
 	var toolbar := view.get_node_or_null("ViewToolbar") as HBoxContainer
