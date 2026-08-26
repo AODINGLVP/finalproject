@@ -141,6 +141,7 @@ func _run() -> void:
 	_test_blackboard_schema_editor(view)
 	_test_live_blackboard_panel(view)
 	_test_live_debug_bridge_resilience(view)
+	await _test_canvas_selection_and_navigation(view)
 
 	print("BT_EDITOR_TEST_SUMMARY passed=%d failed=%d" % [passed, failed])
 	view.queue_free()
@@ -625,6 +626,202 @@ func _test_live_debug_bridge_resilience(view: BTEditorView) -> void:
 	view._poll_runtime_debug(1.0)
 	_expect(view.last_runtime_snapshot.get("actor", "") == "BridgeActor" and _graph_node(view, 4).runtime_active, "Live Debug recovers on next complete snapshot")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(bridge_path))
+
+
+func _test_canvas_selection_and_navigation(view: BTEditorView) -> void:
+	view.current_tree = _make_view_tree()
+	view.current_tree_path = "res://behavior_trees/selection_interaction_test.tres"
+	view.selected_node_id = -1
+	view.selected_graph_node_ids.clear()
+	view.undo_stack.clear()
+	view.redo_stack.clear()
+	view._set_feature_enabled("auto_spacing", false, false)
+	view._set_feature_enabled("semantic_zoom", true, false)
+	view.graph_edit.zoom = 1.0
+	view.graph_edit.scroll_offset = Vector2.ZERO
+	view._refresh_entire_ui()
+	await process_frame
+	await process_frame
+
+	# Shift + blank-canvas drag selects the cards touched by the rectangle.
+	var graph_node_3 := _graph_node(view, 3)
+	var graph_node_4 := _graph_node(view, 4)
+	var graph_node_5 := _graph_node(view, 5)
+	var selection_rect := Rect2(graph_node_3.position, graph_node_3.size * graph_node_3.scale).merge(
+		Rect2(graph_node_4.position, graph_node_4.size * graph_node_4.scale)
+	).grow(2.0)
+	var box_press := InputEventMouseButton.new()
+	box_press.button_index = MOUSE_BUTTON_LEFT
+	box_press.pressed = true
+	box_press.shift_pressed = true
+	box_press.position = selection_rect.position
+	view.graph_edit._gui_input(box_press)
+	view.graph_edit._update_canvas_gesture(selection_rect.end)
+	view.graph_edit._finish_canvas_gesture(selection_rect.end)
+	_expect(view.selected_graph_node_ids.size() == 2 and view.selected_graph_node_ids.has(3) and view.selected_graph_node_ids.has(4), "Shift-drag box selects exactly the intersecting behavior-tree cards")
+	_expect(graph_node_3.selected and graph_node_4.selected and not graph_node_5.selected, "box selection synchronizes the visible selected outlines")
+
+	# Dragging one boxed card moves the selection as a rigid group and creates one
+	# history entry. Resource coordinates remain untouched until release.
+	var old_render_3 := graph_node_3.position_offset
+	var old_render_4 := graph_node_4.position_offset
+	var old_render_5 := graph_node_5.position_offset
+	var old_resource_3 := view.current_tree.find_node(3).position
+	var old_resource_4 := view.current_tree.find_node(4).position
+	var local_pointer := Vector2(38.0, graph_node_3.size.y * 0.5)
+	var node_press := InputEventMouseButton.new()
+	node_press.button_index = MOUSE_BUTTON_LEFT
+	node_press.button_mask = MOUSE_BUTTON_MASK_LEFT
+	node_press.pressed = true
+	node_press.position = local_pointer
+	graph_node_3._gui_input(node_press)
+	view._on_graph_node_gui_input(node_press, graph_node_3)
+	var screen_delta := Vector2(48.0, 32.0)
+	var node_motion := InputEventMouseMotion.new()
+	node_motion.button_mask = MOUSE_BUTTON_MASK_LEFT
+	node_motion.position = local_pointer + screen_delta
+	node_motion.relative = screen_delta
+	graph_node_3._gui_input(node_motion)
+	# Crossing a Semantic Zoom density threshold while the mouse is still held must
+	# not reset non-anchor group members to their stale saved coordinates.
+	view.graph_edit.zoom = 0.5
+	view._update_semantic_zoom()
+	await process_frame
+	await process_frame
+	var resources_deferred := view.current_tree.find_node(3).position.is_equal_approx(old_resource_3) and view.current_tree.find_node(4).position.is_equal_approx(old_resource_4)
+	_expect(resources_deferred and graph_node_4.manual_group_dragging, "multi-node drag defers resource writes across a Semantic Zoom change")
+	_expect((graph_node_3.position_offset - old_render_3).is_equal_approx(screen_delta) and (graph_node_4.position_offset - old_render_4).is_equal_approx(screen_delta), "multi-node drag moves every selected card by the same distance")
+	_expect(graph_node_5.position_offset.is_equal_approx(old_render_5) and not view.drag_auto_spacing_active, "multi-node drag leaves unselected cards fixed and does not split the group with Smart Drag")
+	var released_resource_3 := graph_node_3.get_rendered_drop_position()
+	var released_resource_4 := graph_node_4.get_rendered_drop_position()
+	var node_release := InputEventMouseButton.new()
+	node_release.button_index = MOUSE_BUTTON_LEFT
+	node_release.pressed = false
+	node_release.position = local_pointer + screen_delta
+	graph_node_3._gui_input(node_release)
+	_expect(view.current_tree.find_node(3).position.is_equal_approx(released_resource_3) and view.current_tree.find_node(4).position.is_equal_approx(released_resource_4), "multi-node drag saves every selected card's final logical position on release")
+	_expect(view.undo_stack.size() == 1, "multi-node drag creates one combined Undo step")
+	view._undo()
+	await process_frame
+	_expect(view.current_tree.find_node(3).position.is_equal_approx(old_resource_3) and view.current_tree.find_node(4).position.is_equal_approx(old_resource_4), "one Undo restores the complete moved group")
+	view._redo()
+	await process_frame
+	_expect(view.current_tree.find_node(3).position.is_equal_approx(released_resource_3) and view.current_tree.find_node(4).position.is_equal_approx(released_resource_4), "one Redo reapplies the complete moved group")
+	view._undo()
+	await process_frame
+
+	# A click on a boxed member collapses the group to that node; the next ordinary
+	# node click replaces it instead of accumulating another selection.
+	view._on_canvas_selection_changed([3, 4])
+	graph_node_3 = _graph_node(view, 3)
+	local_pointer = Vector2(38.0, graph_node_3.size.y * 0.5)
+	node_press.position = local_pointer
+	graph_node_3._gui_input(node_press)
+	view._on_graph_node_gui_input(node_press, graph_node_3)
+	node_release.position = local_pointer
+	graph_node_3._gui_input(node_release)
+	_expect(view.selected_graph_node_ids == [3] and view.selected_node_id == 3, "clicking a boxed member changes the group to one selected node")
+	graph_node_5 = _graph_node(view, 5)
+	local_pointer = Vector2(38.0, graph_node_5.size.y * 0.5)
+	node_press.position = local_pointer
+	graph_node_5._gui_input(node_press)
+	view._on_graph_node_gui_input(node_press, graph_node_5)
+	node_release.position = local_pointer
+	graph_node_5._gui_input(node_release)
+	_expect(view.selected_graph_node_ids == [5] and view.selected_node_id == 5 and not _graph_node(view, 3).selected, "ordinary node clicks keep exactly one node selected")
+
+	# Plain blank-canvas left drag pans without editing resources or selection.
+	view._on_canvas_selection_changed([3, 4])
+	view.graph_edit.zoom = 0.5
+	view.graph_edit.scroll_offset = Vector2(500.0, 400.0)
+	await process_frame
+	var pan_start_scroll := view.graph_edit.scroll_offset
+	var card_start_position := _graph_node(view, 3).position
+	var pan_start := Vector2(1100.0, 120.0)
+	var pan_delta := Vector2(60.0, 30.0)
+	var history_before_pan := view.undo_stack.size()
+	var pan_press := InputEventMouseButton.new()
+	pan_press.button_index = MOUSE_BUTTON_LEFT
+	pan_press.button_mask = MOUSE_BUTTON_MASK_LEFT
+	pan_press.pressed = true
+	pan_press.position = pan_start
+	view.graph_edit._gui_input(pan_press)
+	var pan_target_global := view.graph_edit.get_global_transform_with_canvas() * (pan_start + pan_delta)
+	var pan_motion := InputEventMouseMotion.new()
+	pan_motion.button_mask = MOUSE_BUTTON_MASK_LEFT
+	pan_motion.position = pan_target_global
+	pan_motion.relative = pan_delta
+	view.graph_edit._input(pan_motion)
+	var pan_release := InputEventMouseButton.new()
+	pan_release.button_index = MOUSE_BUTTON_LEFT
+	pan_release.pressed = false
+	pan_release.position = pan_target_global
+	view.graph_edit._input(pan_release)
+	await process_frame
+	_expect(view.graph_edit.scroll_offset.is_equal_approx(pan_start_scroll - pan_delta) and (_graph_node(view, 3).position - card_start_position).is_equal_approx(pan_delta), "blank-canvas left drag follows the pointer one-to-one at reduced zoom")
+	_expect(view.selected_graph_node_ids.size() == 2 and view.undo_stack.size() == history_before_pan and view.current_tree.find_node(3).position.is_equal_approx(old_resource_3), "canvas panning preserves selection, history, and tree coordinates")
+
+	# A blank click still clears selection, while the old middle-button gesture no
+	# longer starts either custom canvas action.
+	var scroll_before_blank_click := view.graph_edit.scroll_offset
+	view.graph_edit._begin_canvas_pan(pan_start)
+	view.graph_edit._update_canvas_gesture(pan_start + Vector2(2.0, 1.0))
+	view.graph_edit._finish_canvas_gesture(pan_start + Vector2(2.0, 1.0))
+	_expect(view.selected_graph_node_ids.is_empty() and view.selected_node_id == -1, "blank-canvas click clears the current selection")
+	_expect(view.graph_edit.scroll_offset.is_equal_approx(scroll_before_blank_click), "sub-threshold click jitter does not move the canvas")
+	var middle_press := InputEventMouseButton.new()
+	middle_press.button_index = MOUSE_BUTTON_MIDDLE
+	middle_press.pressed = true
+	middle_press.position = pan_start
+	view.graph_edit._gui_input(middle_press)
+	_expect(not view.graph_edit.canvas_pan_active and not view.graph_edit.box_selection_active, "middle button no longer starts canvas panning or box selection")
+
+	# Finish with one real viewport-dispatched gesture. The release ends outside the
+	# graph, proving that GraphEdit keeps ownership of an active blank-canvas drag.
+	var real_start_local := Vector2(view.graph_edit.size.x - 45.0, 100.0)
+	var real_start_global := view.graph_edit.get_global_transform_with_canvas() * real_start_local
+	var real_delta := Vector2(90.0, 18.0)
+	var real_pan_start_scroll := view.graph_edit.scroll_offset
+	var real_press := InputEventMouseButton.new()
+	real_press.button_index = MOUSE_BUTTON_LEFT
+	real_press.button_mask = MOUSE_BUTTON_MASK_LEFT
+	real_press.pressed = true
+	real_press.position = real_start_global
+	root.push_input(real_press, false)
+	await process_frame
+	var real_motion := InputEventMouseMotion.new()
+	real_motion.button_mask = MOUSE_BUTTON_MASK_LEFT
+	real_motion.position = real_start_global + real_delta
+	real_motion.relative = real_delta
+	root.push_input(real_motion, false)
+	await process_frame
+	var real_release := InputEventMouseButton.new()
+	real_release.button_index = MOUSE_BUTTON_LEFT
+	real_release.pressed = false
+	real_release.position = real_start_global + real_delta
+	root.push_input(real_release, false)
+	await process_frame
+	_expect(view.graph_edit.scroll_offset.is_equal_approx(real_pan_start_scroll - real_delta) and not view.graph_edit.canvas_pan_active, "real blank-canvas left drag pans and releases safely outside the graph")
+
+	var scroll_before_real_middle := view.graph_edit.scroll_offset
+	var real_middle_press := InputEventMouseButton.new()
+	real_middle_press.button_index = MOUSE_BUTTON_MIDDLE
+	real_middle_press.button_mask = MOUSE_BUTTON_MASK_MIDDLE
+	real_middle_press.pressed = true
+	real_middle_press.position = real_start_global
+	root.push_input(real_middle_press, false)
+	var real_middle_motion := InputEventMouseMotion.new()
+	real_middle_motion.button_mask = MOUSE_BUTTON_MASK_MIDDLE
+	real_middle_motion.position = real_start_global + Vector2(40.0, 20.0)
+	real_middle_motion.relative = Vector2(40.0, 20.0)
+	root.push_input(real_middle_motion, false)
+	var real_middle_release := InputEventMouseButton.new()
+	real_middle_release.button_index = MOUSE_BUTTON_MIDDLE
+	real_middle_release.pressed = false
+	real_middle_release.position = real_middle_motion.position
+	root.push_input(real_middle_release, false)
+	await process_frame
+	_expect(view.graph_edit.scroll_offset.is_equal_approx(scroll_before_real_middle), "real middle-button drag leaves the canvas fixed")
 
 
 func _test_display_feature_switches(view: BTEditorView) -> void:

@@ -7,10 +7,12 @@ signal node_type_dropped(node_type: String, local_position: Vector2)
 signal viewport_wheel_scrolled(local_position: Vector2)
 signal custom_edge_disconnect_requested(from_node: StringName, to_node: StringName)
 signal manual_connection_requested(from_node: StringName, to_node: StringName)
+signal canvas_selection_changed(selected_ids: Array)
 
 const FISHEYE_RADIUS := 82.0
 const ENHANCED_MINIMAP_SIZE := Vector2(230.0, 150.0)
 const ENHANCED_MINIMAP_OPACITY := 0.72
+const CANVAS_GESTURE_DRAG_THRESHOLD := 3.0
 
 var fisheye_focus_position := Vector2.ZERO
 var orthogonal_edges_enabled := false
@@ -31,6 +33,13 @@ var manual_connection_pointer := Vector2.ZERO
 var zoom_boundary_min: GraphNode
 var zoom_boundary_max: GraphNode
 var connection_route_cache: Dictionary = {}
+var canvas_pan_active := false
+var canvas_pan_start_position := Vector2.ZERO
+var canvas_pan_start_scroll := Vector2.ZERO
+var canvas_pan_moved := false
+var box_selection_active := false
+var box_selection_start := Vector2.ZERO
+var box_selection_end := Vector2.ZERO
 
 
 func _ready() -> void:
@@ -97,19 +106,48 @@ func _gui_input(event: InputEvent) -> void:
 			return
 		canvas_context_requested.emit(event.position)
 		accept_event()
+		return
+	# Middle-button panning is intentionally disabled. The primary blank-canvas
+	# gesture is now left-drag, matching the rest of the editor interaction.
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_MIDDLE:
+		accept_event()
+		return
+	if event is InputEventMouseMotion and (event.button_mask & MOUSE_BUTTON_MASK_MIDDLE) != 0:
+		accept_event()
+		return
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			if event.shift_pressed:
+				_begin_box_selection(event.position)
+			else:
+				_begin_canvas_pan(event.position)
+			accept_event()
+		elif canvas_pan_active or box_selection_active:
+			_finish_canvas_gesture(event.position)
+			accept_event()
 
 
 func _input(event: InputEvent) -> void:
 	# A drag can leave its source GraphNode, so GraphEdit must own the pointer
 	# until release. Otherwise the target node consumes the release event.
-	if not manual_connection_active or not (event is InputEventMouse):
+	if not (event is InputEventMouse):
 		return
 	var local_event := make_input_local(event) as InputEventMouse
 	var local_position: Vector2 = local_event.position
+	if manual_connection_active:
+		if event is InputEventMouseMotion:
+			update_manual_connection(local_position)
+		elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
+			finish_manual_connection(local_position)
+			get_viewport().set_input_as_handled()
+		return
+	if not canvas_pan_active and not box_selection_active:
+		return
 	if event is InputEventMouseMotion:
-		update_manual_connection(local_position)
+		_update_canvas_gesture(local_position)
+		get_viewport().set_input_as_handled()
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
-		finish_manual_connection(local_position)
+		_finish_canvas_gesture(local_position)
 		get_viewport().set_input_as_handled()
 
 
@@ -123,10 +161,94 @@ func _is_wheel_button(button_index: int) -> bool:
 func _draw() -> void:
 	_draw_behavior_tree_connections()
 	_draw_manual_connection_preview()
-	if fisheye_focus_position == Vector2.ZERO:
+	if fisheye_focus_position != Vector2.ZERO:
+		draw_circle(fisheye_focus_position, FISHEYE_RADIUS, Color(0.45, 0.75, 1.0, 0.055))
+		draw_arc(fisheye_focus_position, FISHEYE_RADIUS, 0.0, TAU, 96, Color(0.45, 0.75, 1.0, 0.18), 2.0)
+	if box_selection_active:
+		var selection_rect := _box_selection_rect()
+		draw_rect(selection_rect, Color(0.32, 0.67, 1.0, 0.18), true)
+		draw_rect(selection_rect, Color(0.52, 0.78, 1.0, 0.92), false, 2.0)
+
+
+func _begin_canvas_pan(local_position: Vector2) -> void:
+	canvas_pan_active = true
+	canvas_pan_start_position = local_position
+	canvas_pan_start_scroll = scroll_offset
+	canvas_pan_moved = false
+	box_selection_active = false
+
+
+func _begin_box_selection(local_position: Vector2) -> void:
+	box_selection_active = true
+	box_selection_start = local_position
+	box_selection_end = local_position
+	canvas_pan_active = false
+	queue_redraw()
+
+
+func _update_canvas_gesture(local_position: Vector2) -> void:
+	if canvas_pan_active:
+		var pointer_delta := local_position - canvas_pan_start_position
+		canvas_pan_moved = canvas_pan_moved or pointer_delta.length() >= CANVAS_GESTURE_DRAG_THRESHOLD
+		# GraphEdit stores scroll_offset in screen pixels. Applying the pointer delta
+		# directly keeps blank-canvas panning one-to-one at every zoom level.
+		scroll_offset = canvas_pan_start_scroll - pointer_delta
+		queue_redraw()
+	elif box_selection_active:
+		box_selection_end = local_position
+		queue_redraw()
+
+
+func _finish_canvas_gesture(local_position: Vector2) -> void:
+	if box_selection_active:
+		box_selection_end = local_position
+		box_selection_active = false
+		_apply_box_selection(_box_selection_rect())
+		queue_redraw()
 		return
-	draw_circle(fisheye_focus_position, FISHEYE_RADIUS, Color(0.45, 0.75, 1.0, 0.055))
-	draw_arc(fisheye_focus_position, FISHEYE_RADIUS, 0.0, TAU, 96, Color(0.45, 0.75, 1.0, 0.18), 2.0)
+	if canvas_pan_active:
+		_update_canvas_gesture(local_position)
+		canvas_pan_active = false
+		if not canvas_pan_moved:
+			# Treat sub-threshold pointer jitter as a click, including restoring the
+			# exact viewport position before clearing the selection.
+			scroll_offset = canvas_pan_start_scroll
+			set_selected_bt_node_ids([])
+			canvas_selection_changed.emit([])
+		canvas_pan_moved = false
+
+
+func _box_selection_rect() -> Rect2:
+	var top_left := Vector2(minf(box_selection_start.x, box_selection_end.x), minf(box_selection_start.y, box_selection_end.y))
+	return Rect2(top_left, (box_selection_end - box_selection_start).abs())
+
+
+func _apply_box_selection(selection_rect: Rect2) -> void:
+	var selected_ids: Array[int] = []
+	if selection_rect.size.length() >= CANVAS_GESTURE_DRAG_THRESHOLD:
+		for child in get_children():
+			if not (child is BTGraphNode) or not child.visible or child.node_resource == null:
+				continue
+			var graph_node: BTGraphNode = child
+			var rendered_rect := Rect2(graph_node.position, graph_node.size * graph_node.scale)
+			if selection_rect.intersects(rendered_rect):
+				selected_ids.append(graph_node.node_resource.id)
+	set_selected_bt_node_ids(selected_ids)
+	canvas_selection_changed.emit(selected_ids)
+
+
+func get_selected_bt_node_ids() -> Array[int]:
+	var selected_ids: Array[int] = []
+	for child in get_children():
+		if child is BTGraphNode and child.node_resource != null and child.selected:
+			selected_ids.append(child.node_resource.id)
+	return selected_ids
+
+
+func set_selected_bt_node_ids(selected_ids: Array) -> void:
+	for child in get_children():
+		if child is BTGraphNode and child.node_resource != null:
+			child.selected = selected_ids.has(child.node_resource.id)
 
 
 func _draw_behavior_tree_connections() -> void:

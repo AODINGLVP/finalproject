@@ -66,6 +66,7 @@ var runtime_active := false
 var runtime_leaf := false
 var runtime_status := ""
 var manual_dragging := false
+var manual_group_dragging := false
 var manual_drag_moved := false
 var compact_mode := false
 var semantic_detail_level := 2
@@ -285,7 +286,7 @@ func sync_rendered_position_to_resource() -> void:
 		return
 	# A manual drop owns the visible position. Temporary spacing must not be
 	# subtracted here, otherwise a previously displaced card jumps on release.
-	node_resource.position = position_offset + _fisheye_position_compensation()
+	node_resource.position = get_rendered_drop_position()
 	visual_offset = Vector2.ZERO
 	_apply_render_position()
 
@@ -297,8 +298,16 @@ func capture_rendered_position_for_manual_drag() -> void:
 	visual_offset = Vector2.ZERO
 
 
+func set_manual_group_dragging(enabled: bool) -> void:
+	manual_group_dragging = enabled
+
+
 func get_logical_position() -> Vector2:
 	return position_offset - visual_offset + _fisheye_position_compensation()
+
+
+func get_rendered_drop_position() -> Vector2:
+	return position_offset + _fisheye_position_compensation()
 
 
 func set_visual_offset(value: Vector2) -> void:
@@ -310,7 +319,7 @@ func _apply_render_position() -> void:
 	# Card contents may resize while the pointer is held (Semantic Zoom, Compact,
 	# or a deferred GraphNode reset). The live pointer position must win over the
 	# deliberately stale resource coordinate until release.
-	if node_resource != null and not manual_dragging:
+	if node_resource != null and not manual_dragging and not manual_group_dragging:
 		position_offset = node_resource.position + visual_offset - _fisheye_position_compensation()
 
 

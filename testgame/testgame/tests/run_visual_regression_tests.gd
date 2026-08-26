@@ -278,6 +278,16 @@ func _run() -> void:
 	_expect(_graph_node(view, 3).selection_context_role == BTGraphNode.SELECTION_ROLE_SELECTED and _graph_node(view, 1).selection_context_role == BTGraphNode.SELECTION_ROLE_ANCESTOR and _graph_node(view, 4).selection_context_role == BTGraphNode.SELECTION_ROLE_DIRECT_CHILD and _graph_node(view, 6).selection_context_role == BTGraphNode.SELECTION_ROLE_SIBLING and _graph_node(view, 7).selection_context_role == BTGraphNode.SELECTION_ROLE_UNRELATED, "Related Node Focus screenshot contains selected, ancestor, descendant, sibling, and faded unrelated roles")
 	_expect(view.graph_edit._selection_connection_role(1, 2) == "path" and view.graph_edit._selection_connection_role(2, 3) == "path" and view.graph_edit._selection_connection_role(3, 4) == "child" and view.graph_edit._selection_connection_role(2, 6) == "sibling" and view.graph_edit._selection_connection_role(6, 7).is_empty(), "Related Node Focus screenshot classifies related and unrelated connections")
 	_expect(_count_near_color(selection_context, Color("a78bfa"), 0.15) > 3 and _count_near_color(selection_context, Color("60a5fa"), 0.15) > 3 and _count_near_color(selection_context, Color("34d399"), 0.15) > 3, "Selection Context screenshot visibly distinguishes its main node roles")
+	var box_rect := Rect2(_graph_node(view, 3).position, _graph_node(view, 3).size).merge(
+		Rect2(_graph_node(view, 4).position, _graph_node(view, 4).size)
+	).grow(4.0)
+	view.graph_edit._begin_box_selection(box_rect.position)
+	view.graph_edit._update_canvas_gesture(box_rect.end)
+	await _settle()
+	var box_selection := await _capture_case("06c_box_selection")
+	_assert_image_valid(box_selection, "box-selection overlay renders")
+	_expect(view.graph_edit.box_selection_active and _count_near_color(box_selection, Color(0.52, 0.78, 1.0, 0.92), 0.16) > 4, "box-selection screenshot contains the visible blue selection rectangle")
+	view.graph_edit._finish_canvas_gesture(box_rect.end)
 
 	var failure_snapshot := {
 		"actor": "VisualTestNPC", "tree_path": view.current_tree_path,

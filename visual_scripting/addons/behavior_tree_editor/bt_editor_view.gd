@@ -132,6 +132,8 @@ var plugin: EditorPlugin
 var current_tree: BTTreeResource
 var current_tree_path: String = "res://behavior_trees/new_behavior_tree.tres"
 var selected_node_id: int = -1
+var selected_graph_node_ids: Array[int] = []
+var pending_single_selection_id := -1
 var next_node_id: int = 1
 var undo_stack: Array[BTTreeResource] = []
 var redo_stack: Array[BTTreeResource] = []
@@ -159,6 +161,11 @@ var last_runtime_visual_signature := ""
 var drag_history_snapshot: BTTreeResource
 var drag_history_node_id := -1
 var drag_history_position := Vector2.ZERO
+var multi_drag_node_ids: Array[int] = []
+var multi_drag_resource_positions: Dictionary = {}
+var multi_drag_last_anchor_position := Vector2.ZERO
+var multi_drag_claimed := false
+var suppress_multi_drag_position_changes := false
 
 var graph_edit: BTGraphEdit
 var tree_name_edit: LineEdit
@@ -702,6 +709,7 @@ func _build_ui() -> void:
 	graph_edit.canvas_context_requested.connect(_on_canvas_context_requested)
 	graph_edit.node_type_dropped.connect(_on_node_type_dropped)
 	graph_edit.viewport_wheel_scrolled.connect(_on_graph_view_wheel_scrolled)
+	graph_edit.canvas_selection_changed.connect(_on_canvas_selection_changed)
 	content.add_child(graph_edit)
 
 	context_menu = PopupMenu.new()
@@ -1500,6 +1508,7 @@ func _rebuild_graph() -> void:
 	settled_drag_reflow_anchor_id = -1
 	settled_drag_reflow_restore_targets.clear()
 	suppress_drag_reflow_position_changes = false
+	_clear_multi_drag_state()
 	_refresh_search_results(true)
 	graph_edit.cancel_manual_connection()
 	graph_edit.clear_connections()
@@ -1542,6 +1551,7 @@ func _rebuild_graph() -> void:
 		var child_name := str(node_resource.id)
 		if graph_edit.get_node_or_null(NodePath(parent_name)) != null and graph_edit.get_node_or_null(NodePath(child_name)) != null:
 			graph_edit.connect_node(parent_name, 0, child_name, 0)
+	_apply_graph_selection_after_rebuild()
 	_apply_feature_states()
 	_refresh_auto_spacing_deferred.call_deferred()
 	_refresh_minimap_node_counts()
@@ -1550,6 +1560,7 @@ func _rebuild_graph() -> void:
 
 func _refresh_inspector() -> void:
 	var node := _get_selected_node()
+	_sync_graph_selection_for_inspector(node)
 	suppress_inspector_changes = true
 	if node == null:
 		selected_label.text = "No node selected"
@@ -1573,6 +1584,34 @@ func _refresh_inspector() -> void:
 	_refresh_decorator_picker(node)
 	suppress_inspector_changes = false
 	_refresh_navigation_paths()
+
+
+func _apply_graph_selection_after_rebuild() -> void:
+	var visible_ids: Array[int] = []
+	for node_id in selected_graph_node_ids:
+		if graph_edit.get_node_or_null(NodePath(str(node_id))) != null:
+			visible_ids.append(node_id)
+	selected_graph_node_ids.assign(visible_ids)
+	var selected := _get_selected_node()
+	if selected_graph_node_ids.is_empty() and selected != null:
+		var owner_id := selected.decorator_parent_id if selected.decorator_parent_id != -1 else selected.id
+		if graph_edit.get_node_or_null(NodePath(str(owner_id))) != null:
+			selected_graph_node_ids.append(owner_id)
+	graph_edit.set_selected_bt_node_ids(selected_graph_node_ids)
+
+
+func _sync_graph_selection_for_inspector(node: BTNodeResource) -> void:
+	if not is_instance_valid(graph_edit):
+		return
+	if node == null:
+		selected_graph_node_ids.clear()
+		graph_edit.set_selected_bt_node_ids([])
+		return
+	var owner_id := node.decorator_parent_id if node.decorator_parent_id != -1 else node.id
+	if selected_graph_node_ids.has(owner_id):
+		return
+	selected_graph_node_ids.assign([owner_id])
+	graph_edit.set_selected_bt_node_ids(selected_graph_node_ids)
 
 
 func _refresh_decorator_picker(node: BTNodeResource) -> void:
@@ -1631,25 +1670,78 @@ func _on_graph_node_gui_input(event: InputEvent, graph_node: BTGraphNode) -> voi
 		return
 	if not event.pressed:
 		return
-	selected_node_id = int(String(graph_node.name))
-	_refresh_inspector()
-	_refresh_navigation_paths()
+	var node_id := int(String(graph_node.name))
 	if event.button_index == MOUSE_BUTTON_RIGHT:
+		pending_single_selection_id = -1
+		_set_graph_node_selection([node_id], node_id)
 		pending_context_position = graph_node.position_offset
 		_popup_context_menu()
-	else:
+	elif event.button_index == MOUSE_BUTTON_LEFT:
+		if selected_graph_node_ids.size() > 1 and selected_graph_node_ids.has(node_id):
+			# Preserve a boxed group while the pointer may become a drag. A click
+			# without movement is collapsed to this one node on release.
+			pending_single_selection_id = node_id
+			selected_node_id = node_id
+			graph_edit.set_selected_bt_node_ids(selected_graph_node_ids)
+			_refresh_inspector()
+		else:
+			pending_single_selection_id = -1
+			_set_graph_node_selection([node_id], node_id)
 		_set_status("Selected node #%d." % selected_node_id)
+
+
+func _on_canvas_selection_changed(selected_ids: Array) -> void:
+	pending_single_selection_id = -1
+	var active_id := int(selected_ids[selected_ids.size() - 1]) if not selected_ids.is_empty() else -1
+	_set_graph_node_selection(selected_ids, active_id)
+	if selected_graph_node_ids.is_empty():
+		_set_status("Selection cleared.")
+	else:
+		_set_status("Selected %d nodes. Drag any selected node to move the group." % selected_graph_node_ids.size())
+
+
+func _set_graph_node_selection(node_ids: Array, active_id := -1, refresh_inspector := true) -> void:
+	selected_graph_node_ids.clear()
+	for node_id_variant in node_ids:
+		var node_id := int(node_id_variant)
+		var resource := current_tree.find_node(node_id) if current_tree != null else null
+		if resource == null or resource.decorator_parent_id != -1 or selected_graph_node_ids.has(node_id):
+			continue
+		if is_instance_valid(graph_edit) and graph_edit.get_node_or_null(NodePath(str(node_id))) == null:
+			continue
+		selected_graph_node_ids.append(node_id)
+	if selected_graph_node_ids.is_empty():
+		selected_node_id = -1
+	elif selected_graph_node_ids.has(active_id):
+		selected_node_id = active_id
+	else:
+		selected_node_id = selected_graph_node_ids[selected_graph_node_ids.size() - 1]
+	if is_instance_valid(graph_edit):
+		graph_edit.set_selected_bt_node_ids(selected_graph_node_ids)
+	if refresh_inspector:
+		_refresh_inspector()
 
 
 func _on_graph_node_position_changed(graph_node: BTGraphNode) -> void:
 	# Resource mutation emits change notifications into the editor. On a large tree,
 	# doing that for every pointer sample is much more expensive than the visual move.
 	# Keep the card responsive and persist the final logical position on release.
+	if suppress_multi_drag_position_changes:
+		graph_edit.queue_redraw()
+		return
+	if graph_node.manual_group_dragging and not graph_node.manual_dragging:
+		# Non-anchor group members may resize during Semantic Zoom. Their rendered
+		# drag position must remain authoritative until the group is released.
+		graph_edit.queue_redraw()
+		return
 	if graph_node.manual_dragging:
 		# Layout/size notifications can arrive while the button is merely held. Only
 		# real pointer motion is allowed to claim the card or arm reflow.
 		if suppress_drag_reflow_position_changes or not graph_node.manual_drag_moved:
 			graph_edit.queue_redraw()
+			return
+		if multi_drag_node_ids.size() > 1:
+			_update_multi_node_drag(graph_node)
 			return
 		_accumulate_drag_screen_offset(graph_node.position_offset)
 		_claim_dragged_render_position(graph_node)
@@ -1675,6 +1767,33 @@ func _on_graph_node_position_changed(graph_node: BTGraphNode) -> void:
 			auto_spacing_signature = _auto_spacing_layout_signature()
 	else:
 		graph_node.sync_to_resource()
+	graph_edit.queue_redraw()
+
+
+func _update_multi_node_drag(anchor: BTGraphNode) -> void:
+	var delta := anchor.position_offset - multi_drag_last_anchor_position
+	if delta.is_zero_approx():
+		return
+	if not multi_drag_claimed:
+		_reset_fisheye()
+		for node_id in multi_drag_node_ids:
+			var member := graph_edit.get_node_or_null(NodePath(str(node_id))) as BTGraphNode
+			if member != null:
+				member.capture_rendered_position_for_manual_drag()
+				auto_spacing_targets[node_id] = Vector2.ZERO
+		multi_drag_claimed = true
+	multi_drag_last_anchor_position = anchor.position_offset
+	suppress_multi_drag_position_changes = true
+	for node_id in multi_drag_node_ids:
+		if node_id == anchor.node_resource.id:
+			continue
+		var member := graph_edit.get_node_or_null(NodePath(str(node_id))) as BTGraphNode
+		if member != null:
+			member.position_offset += delta
+	suppress_multi_drag_position_changes = false
+	# The selected cards form one rigid editing group. Do not let the single-anchor
+	# Smart Drag solver split that group while the pointer is held.
+	auto_spacing_signature = _auto_spacing_layout_signature()
 	graph_edit.queue_redraw()
 
 
@@ -1733,6 +1852,20 @@ func _on_graph_node_drag_started(node_id: int) -> void:
 	var node := current_tree.find_node(node_id)
 	if node == null:
 		return
+	_clear_multi_drag_state()
+	if selected_graph_node_ids.size() > 1 and selected_graph_node_ids.has(node_id):
+		multi_drag_node_ids.assign(selected_graph_node_ids)
+		for selected_id in multi_drag_node_ids:
+			var selected_resource := current_tree.find_node(selected_id)
+			if selected_resource != null:
+				multi_drag_resource_positions[selected_id] = selected_resource.position
+			var selected_graph_node := graph_edit.get_node_or_null(NodePath(str(selected_id))) as BTGraphNode
+			if selected_graph_node != null:
+				selected_graph_node.set_manual_group_dragging(true)
+		# A rigid group has no relationship to the temporary neighbour restore
+		# targets left by an earlier single-node Smart Drag.
+		settled_drag_reflow_anchor_id = -1
+		settled_drag_reflow_restore_targets.clear()
 	# A restore target belongs only to the card whose previous drag created it.
 	# Manually grabbing another card makes those old coordinates stale.
 	if settled_drag_reflow_anchor_id != node_id:
@@ -1748,6 +1881,7 @@ func _on_graph_node_drag_started(node_id: int) -> void:
 		drag_auto_spacing_start_position = graph_node.position_offset
 		drag_auto_spacing_last_refresh_position = graph_node.position_offset
 		drag_reflow_last_observed_position = graph_node.position_offset
+		multi_drag_last_anchor_position = graph_node.position_offset
 	else:
 		drag_auto_spacing_start_position = node.position
 		drag_auto_spacing_last_refresh_position = node.position
@@ -1782,6 +1916,7 @@ func _on_graph_node_drag_finished(node_id: int) -> void:
 		pending_drag_reflow_release = false
 		drag_history_snapshot = null
 		drag_history_node_id = -1
+		_clear_multi_drag_state()
 		return
 	var graph_node := graph_edit.get_node_or_null(NodePath(str(node_id))) as BTGraphNode
 	if graph_node != null and not graph_node.manual_drag_moved:
@@ -1804,6 +1939,13 @@ func _on_graph_node_drag_finished(node_id: int) -> void:
 		auto_spacing_signature = _auto_spacing_layout_signature()
 		drag_history_snapshot = null
 		drag_history_node_id = -1
+		_clear_multi_drag_state()
+		if pending_single_selection_id == node_id:
+			pending_single_selection_id = -1
+			_set_graph_node_selection([node_id], node_id)
+		return
+	if graph_node != null and multi_drag_node_ids.size() > 1:
+		_finish_multi_node_drag(node_id)
 		return
 	if graph_node != null:
 		# A press, motion, and release can arrive in one rendered frame. Complete the
@@ -1867,6 +2009,64 @@ func _on_graph_node_drag_finished(node_id: int) -> void:
 		pending_drag_reflow_release = false
 		auto_spacing_signature = _auto_spacing_layout_signature()
 		graph_edit.queue_redraw()
+
+
+func _finish_multi_node_drag(_anchor_id: int) -> void:
+	var changed := false
+	for node_id in multi_drag_node_ids:
+		var member := graph_edit.get_node_or_null(NodePath(str(node_id))) as BTGraphNode
+		if member == null:
+			continue
+		member.sync_rendered_position_to_resource()
+		var old_position := Vector2(multi_drag_resource_positions.get(node_id, member.node_resource.position))
+		changed = changed or not member.node_resource.position.is_equal_approx(old_position)
+		auto_spacing_targets[node_id] = Vector2.ZERO
+	if changed:
+		var undo_snapshot := current_tree.duplicate_tree()
+		for node_id in multi_drag_node_ids:
+			var snapshot_node := undo_snapshot.find_node(node_id)
+			if snapshot_node != null and multi_drag_resource_positions.has(node_id):
+				snapshot_node.position = Vector2(multi_drag_resource_positions[node_id])
+		undo_stack.append(undo_snapshot)
+		redo_stack.clear()
+		if undo_stack.size() > 50:
+			undo_stack.pop_front()
+		_update_history_buttons()
+	pending_single_selection_id = -1
+	drag_history_snapshot = null
+	drag_history_node_id = -1
+	drag_auto_spacing_base_targets.clear()
+	drag_auto_spacing_original_targets.clear()
+	drag_auto_spacing_start_position = Vector2.ZERO
+	drag_auto_spacing_last_refresh_position = Vector2.ZERO
+	drag_reflow_last_observed_position = Vector2.ZERO
+	drag_reflow_screen_offset = Vector2.ZERO
+	drag_reflow_last_refresh_screen_offset = Vector2.ZERO
+	drag_auto_spacing_active = false
+	drag_visual_offset_claimed = false
+	drag_reflow_context.clear()
+	pending_drag_reflow_release = false
+	pending_auto_spacing_anchor_id = -1
+	pending_auto_spacing_seed_targets.clear()
+	settled_drag_reflow_anchor_id = -1
+	settled_drag_reflow_restore_targets.clear()
+	_clear_multi_drag_state()
+	auto_spacing_signature = _auto_spacing_layout_signature()
+	graph_edit.queue_redraw()
+	_set_status("Moved %d selected nodes as one group." % selected_graph_node_ids.size())
+
+
+func _clear_multi_drag_state() -> void:
+	if is_instance_valid(graph_edit):
+		for node_id in multi_drag_node_ids:
+			var member := graph_edit.get_node_or_null(NodePath(str(node_id))) as BTGraphNode
+			if member != null:
+				member.set_manual_group_dragging(false)
+	multi_drag_node_ids.clear()
+	multi_drag_resource_positions.clear()
+	multi_drag_last_anchor_position = Vector2.ZERO
+	multi_drag_claimed = false
+	suppress_multi_drag_position_changes = false
 
 
 func _on_graph_node_collapse_toggled(node_id: int) -> void:
