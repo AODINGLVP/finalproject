@@ -1,0 +1,46 @@
+{
+  "purpose": "Paper figures for the current five Display features",
+  "formal_data_commit": "85937cec390ac5ba00c5a31d7cc3ad285537c6b6",
+  "inputs": {
+    "research\\display_optimization\\five_feature_evaluation\\data\\2026-08-26_fisheye220_related_focus_85937ce\\evidence\\auto_spacing_off.png": "9bd6536f3a21f0307dc5e3ff1ea478d5dc2c4a98bda008122ea4415268755506",
+    "research\\display_optimization\\five_feature_evaluation\\data\\2026-08-26_fisheye220_related_focus_85937ce\\evidence\\auto_spacing_on.png": "c59f984290dfeb87ba3cedc4aebfac60788804e3f50856bdedf3cc4e4f70c1e0",
+    "research\\display_optimization\\five_feature_evaluation\\data\\2026-08-26_fisheye220_related_focus_85937ce\\evidence\\breadcrumb_off.png": "db5ea1941687280589544244c7c4af6e8d10234cc59825c4554d69959c12210c",
+    "research\\display_optimization\\five_feature_evaluation\\data\\2026-08-26_fisheye220_related_focus_85937ce\\evidence\\breadcrumb_on.png": "a07cb615e530acbbf664327f695deff885038ccb26ffb2edab3a379c0a58650a",
+    "research\\display_optimization\\five_feature_evaluation\\data\\2026-08-26_fisheye220_related_focus_85937ce\\evidence\\fisheye_off.png": "3ba4c949187b288770ffdf586c38fca845197de08a04b914ca5bb0ee4bc4f249",
+    "research\\display_optimization\\five_feature_evaluation\\data\\2026-08-26_fisheye220_related_focus_85937ce\\evidence\\fisheye_on.png": "94387d51c0e5c692638aa32965f51014abdf6e0183ac972639d60b4165e1ff28",
+    "research\\display_optimization\\five_feature_evaluation\\data\\2026-08-26_fisheye220_related_focus_85937ce\\evidence\\semantic_zoom_off.png": "f774ea6c5a0cd5e90604e6e2d83955b7d2f0e6393b2f84a5a8fac358062f67f1",
+    "research\\display_optimization\\five_feature_evaluation\\data\\2026-08-26_fisheye220_related_focus_85937ce\\evidence\\semantic_zoom_on.png": "6b23f41b182f46831c8f3bf61c78ad4f642817b05513eca00581d69db022d6a1",
+    "research\\display_optimization\\five_feature_evaluation\\data\\2026-08-26_fisheye220_related_focus_85937ce\\evidence\\translucent_cards_off.png": "2ebdc7ef91a8db359307ef07cf41f3de38251725362a48622e2854ff0feae7b0",
+    "research\\display_optimization\\five_feature_evaluation\\data\\2026-08-26_fisheye220_related_focus_85937ce\\evidence\\translucent_cards_on.png": "4f746ed3ae2162d9c31e6cccd674030c2f89c0ed8c999f31200fa6fd2ba78200",
+    "testgame\\testgame\\test_results\\arena_multiscale_five_enemies.png": "e28fce4fd1cdf0d9d1711d8cb78848453bcad97dbada0bfc0f35a98556abda72",
+    "testgame\\testgame\\test_results\\supervisor_game_evidence\\02_tactician_241_live_debug.png": "22b8b9845f4d7036cc76cfe5b277dd0b950ee6a3e53eeb6a18fff31eaf09a300",
+    "thesis_draft\\chinese\\figures\\architecture.png": "ca1e6d73627849e353811d69561b540e82043daaba79a0dde5bf2fa4a97cc12b"
+  },
+  "outputs": {
+    "figures\\en\\figure_4_1_architecture.png": "157e31a38509d89752d6a8804533b91b545a8fed9ce09675fdd53c1d13e1b65a",
+    "figures\\en\\figure_4_2_live_debug.png": "22b8b9845f4d7036cc76cfe5b277dd0b950ee6a3e53eeb6a18fff31eaf09a300",
+    "figures\\en\\figure_4_3_five_enemy_game.png": "e28fce4fd1cdf0d9d1711d8cb78848453bcad97dbada0bfc0f35a98556abda72",
+    "figures\\en\\figure_5_1_smart_drag_comparison.png": "ce97a066af3f05c64a35e89dbab7057f08e4b3a0ee6e101189731f4d1d4f69d5",
+    "figures\\en\\figure_5_2_adaptive_comparison.png": "cb939d69c45128a0ec74034e30d9dc574de5d52ed68b30503b26f51ffdfe3558",
+    "figures\\en\\figure_5_3_overlay_comparison.png": "9e1f90dd4c7eda6485df0cf7b58a34b3113f58e1da4d7cc78e64d3ab8fb54c17",
+    "figures\\en\\figure_5_4_related_comparison.png": "98541f8e1b5f396218d2aecfd700c31b595fb43b4badb6c9501d0c98aad6afce",
+    "figures\\en\\figure_5_5_fisheye_comparison.png": "cb93c66608de364ee535437e14dcdc74ac843deeca61341fb8657b21ca146405",
+    "figures\\en\\figure_5_6_effect_by_tree.png": "82b50906bb70ba8edbb0ef77a97f0f2e1c7d88d12519f212cc0348df1cb76b26",
+    "figures\\en\\figure_5_7_effect_by_screen.png": "c1c1794dd84378daa12458698327323f3bb7066bfc3dc2d4d63a67e184e5e6ec",
+    "figures\\zh\\figure_4_1_architecture.png": "ca1e6d73627849e353811d69561b540e82043daaba79a0dde5bf2fa4a97cc12b",
+    "figures\\zh\\figure_4_2_live_debug.png": "22b8b9845f4d7036cc76cfe5b277dd0b950ee6a3e53eeb6a18fff31eaf09a300",
+    "figures\\zh\\figure_4_3_five_enemy_game.png": "e28fce4fd1cdf0d9d1711d8cb78848453bcad97dbada0bfc0f35a98556abda72",
+    "figures\\zh\\figure_5_1_smart_drag_comparison.png": "bae35de08457c314515ac380b261e31343602bede5ffe8c1dfab45fa66442aaf",
+    "figures\\zh\\figure_5_2_adaptive_comparison.png": "0f774e45d817bec72fd9d7062514bfdbddb774970abec3266658440f1048d359",
+    "figures\\zh\\figure_5_3_overlay_comparison.png": "f806ea3ec80a7c7af857ec7fa7a9fce2827289991f7057fd5f45003d7a963528",
+    "figures\\zh\\figure_5_4_related_comparison.png": "f65c67041f02a06454ba7df60c348af1bd27e5e8e1735b93b626736241dd4b56",
+    "figures\\zh\\figure_5_5_fisheye_comparison.png": "2e7b70a2bf67e0f9a3c63a9f44fc72fa944a83caac48b055b52fa56dc2d64444",
+    "figures\\zh\\figure_5_6_effect_by_tree.png": "af1367635961adf78f2127d6101e067ad4c0e64104ace5324f473e7a4e4d722f",
+    "figures\\zh\\figure_5_7_effect_by_screen.png": "43486be92f185ea90da9c801372eec1ed2ba9f8c4348ff2ebb9c4f24c8d752ff"
+  },
+  "notes": [
+    "Five comparisons use identical off/on source states from the updated formal dataset.",
+    "All quantitative conclusions remain based on the formal 450-observation dataset.",
+    "Fisheye chart percentages are ratios of group-mean on/off target widths, not means of per-pair percentages."
+  ]
+}
