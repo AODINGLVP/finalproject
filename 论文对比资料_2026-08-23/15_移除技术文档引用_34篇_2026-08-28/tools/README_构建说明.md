@@ -1,4 +1,4 @@
-# 35篇参考文献精简版论文构建说明
+# 移除技术文档引用的34篇参考文献版论文构建说明
 
 本目录中的构建器把 Markdown 当作唯一正文来源，不会从旧 DOCX 或 PDF 提取、补写或改写正文。
 
@@ -11,9 +11,9 @@
 
 默认输出到 `output/`：
 
-- `行为树论文_中文_35篇参考文献精简版_2026-08-28.docx`
-- `行为树论文_中文_35篇参考文献精简版_2026-08-28.pdf`
-- `Behaviour_Tree_Dissertation_English_35_References_2026-08-28.pdf`
+- `行为树论文_中文_移除技术文档引用_34篇_2026-08-28.docx`
+- `行为树论文_中文_移除技术文档引用_34篇_2026-08-28.pdf`
+- `Behaviour_Tree_Dissertation_English_34_References_No_Technical_Documentation_2026-08-28.pdf`
 - `build_manifest.json`（记录正文、模板和成品的 SHA-256）
 
 英文 Markdown 尚未建立时，构建器会正常生成中文 DOCX 和中文 PDF，并明确提示跳过英文 PDF。
@@ -23,7 +23,7 @@
 在仓库根目录运行完整构建：
 
 ```powershell
-.\论文对比资料_2026-08-23\14_参考文献精简至35篇_2026-08-28\tools\build.ps1 -UpdateWordFields
+.\论文对比资料_2026-08-23\15_移除技术文档引用_34篇_2026-08-28\tools\build.ps1 -UpdateWordFields
 ```
 
 `-UpdateWordFields` 会调用本机 Microsoft Word 更新目录、图目录和表目录。没有 Word 时可省略；生成文件已经设置为打开时自动更新域，也可以在 Word 中全选后按 `F9`。
@@ -31,19 +31,19 @@
 正文尚未完成、只想检查中文 DOCX 与 LaTeX 中间文件时：
 
 ```powershell
-.\论文对比资料_2026-08-23\14_参考文献精简至35篇_2026-08-28\tools\build.ps1 -SkipPdf
+.\论文对比资料_2026-08-23\15_移除技术文档引用_34篇_2026-08-28\tools\build.ps1 -SkipPdf
 ```
 
 运行不保留成品的完整自测：
 
 ```powershell
-.\论文对比资料_2026-08-23\14_参考文献精简至35篇_2026-08-28\tools\build.ps1 -SelfTest
+.\论文对比资料_2026-08-23\15_移除技术文档引用_34篇_2026-08-28\tools\build.ps1 -SelfTest
 ```
 
 只检查当前 Markdown 语法和必需元数据、完全不创建文档：
 
 ```powershell
-.\论文对比资料_2026-08-23\14_参考文献精简至35篇_2026-08-28\tools\build.ps1 -ValidateOnly
+.\论文对比资料_2026-08-23\15_移除技术文档引用_34篇_2026-08-28\tools\build.ps1 -ValidateOnly
 ```
 
 ## Markdown 约定

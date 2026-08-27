@@ -7,7 +7,7 @@ institution: University of Warwick
 department: WMG
 submission: September 2026
 language: en
-version: 35-Reference Literature Review Version 2026-08-28
+version: 34-Reference Version without Technical Documentation 2026-08-28
 ---
 
 # Abstract
@@ -68,7 +68,7 @@ A behaviour tree repeatedly evaluates a rooted hierarchy and returns `success`, 
 
 Behaviour trees have been used in genuine game tasks. Flórez-Puga et al. (2009) added queries and reuse of existing behaviours to game behaviour trees, while Lim et al. (2010) evolved a game agent for the commercial real-time strategy game DEFCON. Although their aims differ, both studies show that a behaviour tree can organise non-trivial game decisions containing multiple conditions and actions rather than only small demonstrations.
 
-This also explains why the runtime is validated before the display experiment in this project. A Sequence can remember its current execution position, whereas a Reactive Selector needs to recheck high-priority conditions. A Random Selector should retain one choice during a running episode, while Repeat and Wait must clear their memory when restarted. A blackboard shares state between perception, conditions and actions, and Unreal Engine's technical documentation shows how blackboards, Decorators and runtime observation are combined in a practical tool (Epic Games, n.d.). The editor cannot treat node order and Decorators as purely visual information because they affect execution results. However, these basic capabilities are correctness prerequisites for the experimental platform, rather than separate research objects whose usefulness needs to be proved in this dissertation.
+This also explains why the runtime is validated before the display experiment in this project. A Sequence can remember its current execution position, whereas a Reactive Selector needs to recheck high-priority conditions. A Random Selector should retain one choice during a running episode, while Repeat and Wait must clear their memory when restarted. A blackboard shares state between perception, conditions and actions, while a Decorator limits or changes branch execution without modifying the child node itself. The editor cannot treat node order and Decorators as purely visual information because they affect execution results. However, these basic capabilities are correctness prerequisites for the experimental platform, rather than separate research objects whose usefulness needs to be proved in this dissertation.
 
 ## 2.2 Node–link trees, hierarchy and scale
 
@@ -516,8 +516,6 @@ Di Bartolomeo, S., Crnovrsanin, T., Saffo, D., Puerta, E., Wilson, C. and Dunne,
 Dwyer, T., Marriott, K. and Stuckey, P. J. (2006) ‘Fast Node Overlap Removal’, in Healy, P. and Nikolov, N. S. (eds.) *Graph Drawing 2005*, LNCS 3843, pp. 153–164. Available at: https://doi.org/10.1007/11618058_15.
 
 Dwyer, T., Marriott, K. and Wybrow, M. (2009) ‘Topology Preserving Constrained Graph Layout’, in Tollis, I. G. and Patrignani, M. (eds.) *Graph Drawing 2008*, LNCS 5417, pp. 230–241. Available at: https://doi.org/10.1007/978-3-642-00219-9_22.
-
-Epic Games (n.d.) ‘Behavior Tree in Unreal Engine—Overview’. Available at: https://dev.epicgames.com/documentation/en-us/unreal-engine/behavior-tree-in-unreal-engine---overview (Accessed: 26 August 2026).
 
 Flórez-Puga, G., Gómez-Martín, M. A., Gómez-Martín, P. P., Díaz-Agudo, B. and González-Calero, P. A. (2009) ‘Query-Enabled Behavior Trees’, *IEEE Transactions on Computational Intelligence and AI in Games*, 1(4), pp. 298–308. Available at: https://doi.org/10.1109/TCIAIG.2009.2036369.
 
