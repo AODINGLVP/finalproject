@@ -45,9 +45,9 @@ DEFAULT_ZH_SOURCE = VERSION_DIR / "source" / "论文内容_中文.md"
 DEFAULT_EN_SOURCE = VERSION_DIR / "source" / "dissertation_content_en.md"
 DEFAULT_OUTPUT_DIR = VERSION_DIR / "output"
 
-ZH_DOCX_NAME = "行为树论文_中文_综述精简与近期文献扩充_2026-08-26.docx"
-ZH_PDF_NAME = "行为树论文_中文_综述精简与近期文献扩充_2026-08-26.pdf"
-EN_PDF_NAME = "Behaviour_Tree_Dissertation_English_Literature_Review_Update_2026-08-26.pdf"
+ZH_DOCX_NAME = "行为树论文_中文_35篇参考文献精简版_2026-08-28.docx"
+ZH_PDF_NAME = "行为树论文_中文_35篇参考文献精简版_2026-08-28.pdf"
+EN_PDF_NAME = "Behaviour_Tree_Dissertation_English_35_References_2026-08-28.pdf"
 
 REQUIRED_METADATA = ("title", "author", "student_number", "degree", "department", "submission")
 FRONT_HEADINGS_ZH = {"致谢", "声明", "摘要", "缩略语", "缩略词"}

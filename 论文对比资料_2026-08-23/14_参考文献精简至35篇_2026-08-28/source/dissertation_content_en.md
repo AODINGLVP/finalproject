@@ -7,7 +7,7 @@ institution: University of Warwick
 department: WMG
 submission: September 2026
 language: en
-version: Literature Review Simplification and Recent Reference Expansion Version 2026-08-26
+version: 35-Reference Literature Review Version 2026-08-28
 ---
 
 # Abstract
@@ -66,45 +66,45 @@ The display study has three kinds of success criterion. First, a feature must pr
 
 A behaviour tree repeatedly evaluates a rooted hierarchy and returns `success`, `failure` or `running`. A Sequence normally stops at the first child that fails or is still running, while a Selector stops at the first child that succeeds or is still running. Marzinotto et al. (2014) proposed a unified behaviour-tree framework, while Colledanchise and Ögren (2017, 2018) later analysed this form of composition from the perspectives of hybrid control and modularity. These studies show that the basic nodes appear simple, but Tick, `running`, interruption and subtree composition require explicit rules. The review by Iovino et al. (2022) also notes that precise semantics can still differ between fields and tools.
 
-Behaviour trees have been used in genuine game tasks. Flórez-Puga et al. (2009) added queries and reuse of existing behaviours to game behaviour trees. Lim et al. (2010) evolved a game agent for the commercial real-time strategy game DEFCON, while Perez et al. (2011) built behaviour-tree controllers for the Mario AI Competition. These studies have different aims, but all show that a behaviour tree can organise non-trivial game decisions containing multiple conditions and actions rather than only small demonstrations.
+Behaviour trees have been used in genuine game tasks. Flórez-Puga et al. (2009) added queries and reuse of existing behaviours to game behaviour trees, while Lim et al. (2010) evolved a game agent for the commercial real-time strategy game DEFCON. Although their aims differ, both studies show that a behaviour tree can organise non-trivial game decisions containing multiple conditions and actions rather than only small demonstrations.
 
 This also explains why the runtime is validated before the display experiment in this project. A Sequence can remember its current execution position, whereas a Reactive Selector needs to recheck high-priority conditions. A Random Selector should retain one choice during a running episode, while Repeat and Wait must clear their memory when restarted. A blackboard shares state between perception, conditions and actions, and Unreal Engine's technical documentation shows how blackboards, Decorators and runtime observation are combined in a practical tool (Epic Games, n.d.). The editor cannot treat node order and Decorators as purely visual information because they affect execution results. However, these basic capabilities are correctness prerequisites for the experimental platform, rather than separate research objects whose usefulness needs to be proved in this dissertation.
 
 ## 2.2 Node–link trees, hierarchy and scale
 
-Node–link diagrams are suitable for behaviour trees because connections can show parent–child relationships directly. The tidy-tree layout proposed by Reingold and Tilford (1981) emphasises centred parents, spacing within a level and separated subtrees. Sugiyama et al. (1981) further discuss within-layer ordering and node positions, while Buchheim et al. (2006) provide a more efficient drawing method for rooted trees. Taken together, these methods are useful for generating an orderly tree automatically, but they do not completely solve interactive editing because users still want to drag nodes freely.
+Node–link diagrams are suitable for behaviour trees because connections can show parent–child relationships directly. The tidy-tree layout proposed by Reingold and Tilford (1981) emphasises centred parents, spacing within a level and separated subtrees, while Sugiyama et al. (1981) further discuss within-layer ordering and node positions. Taken together, these methods are useful for generating an orderly tree automatically, but they do not completely solve interactive editing because users still want to drag nodes freely.
 
 Whether a layout is better cannot be judged only from whether it looks tidy. Purchase (1997) found that edge crossings had a strong effect among the tested graph aesthetics. Ware et al. (2002) further show that path continuity, crossings and branches affect path finding in node–link diagrams. Results from Purchase, Carrington and Allder (2002) indicate that only some aesthetic measures consistently affect task performance, and that the semantic domain of the graph can also change the outcome. This dissertation therefore records direct measures such as overlap, area and structure, but does not describe these values as a direct improvement in human understanding.
 
 As scale increases, both nodes and connections become more difficult to inspect. Ghoniem et al. (2005) compare node–link and matrix representations and show that results are affected by size, density and task together. SpaceTree adds dynamic layout and selective display to a node–link tree, also showing that representation and interaction need to be evaluated together (Plaisant et al., 2002). For behaviour trees, the node–link representation is still the clearest way to show parent–child direction and sibling order. This project therefore retains it and controls information density only during zooming and selection.
 
-Recent visual workflow systems show that large node canvases are no longer limited to conventional programming tools. AI Chains combines several large-language-model steps into an inspectable chain (Wu, Terry and Cai, 2022), while PromptChainer uses visual programming to edit these steps (Wu et al., 2022). ChainForge places prompts, models and evaluation nodes in the same graphical interface (Arawjo et al., 2024), and InstructPipe lets users generate and continue editing machine-learning workflows in a node graph (Zhou et al., 2025). These systems do not study behaviour trees and do not answer the display questions in this project directly. However, they show that node positioning, connection tracing and navigation through complex workflows remain practical issues in recent development tools.
+Recent visual workflow systems show that large node canvases are no longer limited to conventional programming tools. InstructPipe lets users generate and continue editing machine-learning workflows in a node graph (Zhou et al., 2025). Although this system does not study behaviour trees or answer the display questions in this project directly, it shows that node positioning, connection tracing and navigation through complex workflows remain practical issues in recent development tools.
 
 Recent research also warns that general layout rules cannot be separated from domain semantics. Helmke et al. (2024) found that domain experts sometimes prioritise preservation of a technical structure instead of always reducing crossings or edge length. Behaviour trees similarly have parent–child direction and sibling execution order, so automatic layout cannot optimise only for minimum area. The systematic review by Di Bartolomeo et al. (2024) also shows that algorithms, datasets, scales and metrics need to be reported together when graph layouts are evaluated. This supports the use of genuine behaviour trees, several scales and several direct measures in this dissertation, rather than a single total score with no clear meaning.
 
 ## 2.3 Local overlap avoidance and positional stability
 
-Interactive editing differs from a one-off automatic layout. If the system rearranges the whole tree after the user drags one node, overlap may disappear but the memory of the original positions may also be disrupted. Böhringer and Paulisch (1990) considered how to maintain stability between manual placement and automatic layout, while Misue et al. (1995) described the broader problems of layout adjustment and the mental map. Dwyer et al. (2006) proposed that nodes should be separated while their new positions remain as close as possible to their originals. Later work also showed that existing topology needs to be preserved when constraints are introduced (Dwyer et al., 2009).
+Interactive editing differs from a one-off automatic layout. If the system rearranges the whole tree after the user drags one node, overlap may disappear but the memory of the original positions may also be disrupted. Misue et al. (1995) described the problems of layout adjustment and the mental map, while Dwyer et al. (2006) proposed that nodes should be separated with their new positions remaining as close as possible to their originals. Later work also showed that existing topology needs to be preserved when constraints are introduced (Dwyer et al., 2009).
 
-Behaviour-tree cards have real width, height, text and labels, so they cannot be treated simply as points with no area. Marriott et al. (2003) formulate overlap removal as constrained optimisation applied after the original layout, while Gansner and Hu (2010) emphasise preservation of proximity and the original graph shape during overlap removal. These studies suggest the direction of Smart Drag: the system should handle new overlap, but it should not use this as a reason to take control of the complete canvas.
+Behaviour-tree cards have real width, height, text and labels, so they cannot be treated simply as points with no area. Gansner and Hu (2010) emphasise preservation of proximity and the original graph shape during overlap removal. This principle suggests the direction of Smart Drag: the system should handle new overlap, but it should not use this as a reason to take control of the complete canvas.
 
 This project does not directly reproduce one complete published algorithm. Instead, it limits activation distance, update frequency, propagation depth and the maximum affected region, and then uses parent–child and sibling relationships to decide which nodes should avoid each other together. The system preserves only parent-above-child relationships that were already valid before the drag. If the user originally chose a free layout, the plugin does not force it into a standard tree arrangement.
 
-Purchase, Hoggan and Görg (2007) and Archambault and Purchase (2013) both show that the value of position preservation depends on the task. This project therefore treats unchanged structure and minimal movement of unrelated nodes as engineering requirements rather than describing them directly as a usability improvement. Whether the tree is genuinely easier to understand still requires a user study.
+Experimental work on dynamic graph drawing shows that the effects of position preservation can depend on the task (Archambault and Purchase, 2013). This project therefore treats unchanged structure and minimal movement of unrelated nodes as engineering requirements rather than describing them directly as a usability improvement. Whether the tree is genuinely easier to understand still requires a user study.
 
 ## 2.4 Semantic zoom and focus plus context
 
-Semantic zoom does more than make a view smaller; it also changes the displayed content. Pad++ shows that a representation can change with the zoom level (Bederson et al., 1996). Summers et al. (2003) compared different semantic-zoom methods in program visualisation, while Frisch, Dachselt and Brückmann (2008) applied a related approach to UML diagrams. These studies show that hiding secondary fields while zoomed out and restoring detail after zooming in is a viable approach. However, their programs and tasks differ from behaviour-tree editing, so their reported speed or accuracy cannot be transferred directly to this project.
+Semantic zoom does more than make a view smaller; it also changes the displayed content. Pad++ shows that a representation can change with the zoom level (Bederson et al., 1996), while Summers et al. (2003) compared different semantic-zoom methods in program visualisation. These studies show that hiding secondary fields while zoomed out and restoring detail after zooming in is a viable approach. However, their programs and tasks differ from behaviour-tree editing, so their reported speed or accuracy cannot be transferred directly to this project.
 
-Focus-and-context methods address a different problem. Furnas (1986) uses degree of interest to distinguish the focus from surrounding content, while Sarkar and Brown (1994) and Lamping et al. (1995) apply related ideas to graphs and hierarchies. Gansner, Koren and North (2005) construct a topological fisheye using coarsened graphs at different levels. Storey, Fracchia and Müller (1999) discuss preservation of the mental map during fisheye transformation, while Wang et al. (2019) propose a structure-aware fisheye for reducing distortion in large graphs. These methods are more complex than the card magnification currently implemented in this project, but they show that fisheye should not be evaluated only by its magnification factor; structural change and local occlusion also need to be checked.
+Focus-and-context methods address a different problem. Furnas (1986) uses degree of interest to distinguish the focus from surrounding content, Sarkar and Brown (1994) apply geometric fisheye transformations to graphs, and Wang et al. (2019) propose a structure-aware fisheye for reducing distortion in large graphs. These methods are more complex than the card magnification currently implemented in this project, but they show that fisheye should not be evaluated only by its magnification factor; structural change and local occlusion also need to be checked.
 
 The review by Cockburn et al. (2009) notes that overview, zoom and focus plus context each have costs and that no method suits every task. Büring et al. (2006) also found no necessary completion-time advantage for fisheye in a small-screen scatterplot study, although more participants preferred it. In other words, fisheye may support local inspection, but it still needs to be tested separately in the current behaviour-tree editor.
 
-Physical screen size changes the actual size of cards in an overview. Jakobsen and Hornbæk (2013) show that display size, information space and scale can affect interaction together, while Tan et al. (2004) also found that physical size can affect particular spatial tasks. However, their tasks are not behaviour-tree editing, so these results only show that screen size is worth including as an experimental condition; they cannot supply an effect size for this project. This dissertation therefore includes three profiles derived from real device dimensions in the same switch comparison instead of retaining a separate literature-review section for screen size.
+Physical screen size changes the actual size of cards in an overview. Jakobsen and Hornbæk (2013) show that display size, information space and scale can affect interaction together. However, the tasks in that study are not behaviour-tree editing, so its results only show that screen size is worth including as an experimental condition; they cannot supply an effect size for this project.
 
 ## 2.5 Relationship emphasis and edge occlusion
 
-A large graph does not always need to hide nodes first. Ware and Bobrow (2005) use interactive emphasis to help users query node–link diagrams. TreePlus starts from a selected node and displays and expands its neighbours (Lee et al., 2006), while van Ham and Perer (2009) retain context from a target of interest. For a behaviour tree, this approach can preserve original spatial positions while reducing the visual intensity of unrelated branches. Related Node Focus therefore uses frames and opacity to distinguish selected nodes, ancestors, descendants, siblings and unrelated branches.
+A large graph does not always need to hide nodes first. Ware and Bobrow (2005) use interactive emphasis to help users query node–link diagrams, while van Ham and Perer (2009) retain context around a target of interest through degree-of-interest exploration. For a behaviour tree, this approach can preserve original spatial positions while reducing the visual intensity of unrelated branches. Related Node Focus therefore uses frames and opacity to distinguish selected nodes, ancestors, descendants, siblings and unrelated branches.
 
 Connections can also be hidden by nodes or other edges. EdgeLens by Wong et al. (2003) bends connections near a focus to make space in a congested region, while the hierarchical edge bundles proposed by Holten (2006) organise many connections along the hierarchy. The experiment by McGee and Dingliana (2012) shows that bundling may help inspection of overall clusters but can reduce the speed and accuracy of tracing an individual path. Reducing visual clutter therefore does not mean that every connection task becomes easier.
 
@@ -501,13 +501,7 @@ The principal value of this project is not to prove that behaviour trees are sup
 
 Archambault, D. and Purchase, H. C. (2013) ‘The “Map” in the Mental Map: Experimental Results in Dynamic Graph Drawing’, *International Journal of Human-Computer Studies*, 71(11), pp. 1044–1055. Available at: https://doi.org/10.1016/j.ijhcs.2013.08.004.
 
-Arawjo, I., Swoopes, C., Vaithilingam, P., Wattenberg, M. and Glassman, E. L. (2024) ‘ChainForge: A Visual Toolkit for Prompt Engineering and LLM Hypothesis Testing’, in *Proceedings of the CHI Conference on Human Factors in Computing Systems*, pp. 1–18. Available at: https://doi.org/10.1145/3613904.3642016.
-
 Bederson, B. B., Hollan, J. D., Perlin, K., Meyer, J., Bacon, D. and Furnas, G. W. (1996) ‘Pad++: A Zoomable Graphical Sketchpad for Exploring Alternate Interface Physics’, *Journal of Visual Languages & Computing*, 7(1), pp. 3–32. Available at: https://doi.org/10.1006/jvlc.1996.0002.
-
-Böhringer, K.-F. and Paulisch, F. N. (1990) ‘Using Constraints to Achieve Stability in Automatic Graph Layout Algorithms’, in *Proceedings of CHI ’90*, pp. 43–51. Available at: https://doi.org/10.1145/97243.97250.
-
-Buchheim, C., Jünger, M. and Leipert, S. (2006) ‘Drawing Rooted Trees in Linear Time’, *Software: Practice and Experience*, 36(6), pp. 651–665. Available at: https://doi.org/10.1002/spe.713.
 
 Büring, T., Gerken, J. and Reiterer, H. (2006) ‘User Interaction with Scatterplots on Small Screens: A Comparative Evaluation of Geometric-Semantic Zoom and Fisheye Distortion’, *IEEE Transactions on Visualization and Computer Graphics*, 12(5), pp. 829–836. Available at: https://doi.org/10.1109/TVCG.2006.187.
 
@@ -527,13 +521,9 @@ Epic Games (n.d.) ‘Behavior Tree in Unreal Engine—Overview’. Available at:
 
 Flórez-Puga, G., Gómez-Martín, M. A., Gómez-Martín, P. P., Díaz-Agudo, B. and González-Calero, P. A. (2009) ‘Query-Enabled Behavior Trees’, *IEEE Transactions on Computational Intelligence and AI in Games*, 1(4), pp. 298–308. Available at: https://doi.org/10.1109/TCIAIG.2009.2036369.
 
-Frisch, M., Dachselt, R. and Brückmann, T. (2008) ‘Towards Seamless Semantic Zooming Techniques for UML Diagrams’, in *Proceedings of the 4th ACM Symposium on Software Visualization*, pp. 207–208. Available at: https://doi.org/10.1145/1409720.1409758.
-
 Furnas, G. W. (1986) ‘Generalized Fisheye Views’, in *Proceedings of CHI ’86*, pp. 16–23. Available at: https://doi.org/10.1145/22627.22342.
 
 Gansner, E. R. and Hu, Y. (2010) ‘Efficient, Proximity-Preserving Node Overlap Removal’, *Journal of Graph Algorithms and Applications*, 14(1), pp. 53–74. Available at: https://doi.org/10.7155/jgaa.00198.
-
-Gansner, E. R., Koren, Y. and North, S. C. (2005) ‘Topological Fisheye Views for Visualizing Large Graphs’, *IEEE Transactions on Visualization and Computer Graphics*, 11(4), pp. 457–468. Available at: https://doi.org/10.1109/TVCG.2005.66.
 
 Ghoniem, M., Fekete, J.-D. and Castagliola, P. (2005) ‘On the Readability of Graphs Using Node-Link and Matrix-Based Representations: A Controlled Experiment and Statistical Analysis’, *Information Visualization*, 4(2), pp. 114–135. Available at: https://doi.org/10.1057/palgrave.ivs.9500092.
 
@@ -545,13 +535,7 @@ Iovino, M., Scukins, E., Styrud, J., Ögren, P. and Smith, C. (2022) ‘A Survey
 
 Jakobsen, M. R. and Hornbæk, K. (2013) ‘Interactive Visualizations on Large and Small Displays: The Interrelation of Display Size, Information Space, and Scale’, *IEEE Transactions on Visualization and Computer Graphics*, 19(12), pp. 2336–2345. Available at: https://doi.org/10.1109/TVCG.2013.170.
 
-Lamping, J., Rao, R. and Pirolli, P. (1995) ‘A Focus+Context Technique Based on Hyperbolic Geometry for Visualizing Large Hierarchies’, in *Proceedings of CHI ’95*, pp. 401–408. Available at: https://doi.org/10.1145/223904.223956.
-
-Lee, B., Parr, C. S., Plaisant, C., Bederson, B. B., Veksler, V. D., Gray, W. D. and Kotfila, C. (2006) ‘TreePlus: Interactive Exploration of Networks with Enhanced Tree Layouts’, *IEEE Transactions on Visualization and Computer Graphics*, 12(6), pp. 1414–1426. Available at: https://doi.org/10.1109/TVCG.2006.106.
-
 Lim, C.-U., Baumgarten, R. and Colton, S. (2010) ‘Evolving Behaviour Trees for the Commercial Game DEFCON’, in *Applications of Evolutionary Computation: EvoApplications 2010*, LNCS 6024, pp. 100–110. Available at: https://doi.org/10.1007/978-3-642-12239-2_11.
-
-Marriott, K., Stuckey, P. J., Tam, V. and He, W. (2003) ‘Removing Node Overlapping in Graph Layout Using Constrained Optimization’, *Constraints*, 8(2), pp. 143–171. Available at: https://doi.org/10.1023/A:1022371615202.
 
 Marzinotto, A., Colledanchise, M., Smith, C. and Ögren, P. (2014) ‘Towards a Unified Behavior Trees Framework for Robot Control’, in *2014 IEEE International Conference on Robotics and Automation*, pp. 5420–5427. Available at: https://doi.org/10.1109/ICRA.2014.6907656.
 
@@ -559,27 +543,19 @@ McGee, F. and Dingliana, J. (2012) ‘An Empirical Study on the Impact of Edge B
 
 Misue, K., Eades, P., Lai, W. and Sugiyama, K. (1995) ‘Layout Adjustment and the Mental Map’, *Journal of Visual Languages & Computing*, 6(2), pp. 183–210. Available at: https://doi.org/10.1006/jvlc.1995.1010.
 
-Perez, D., Nicolau, M., O’Neill, M. and Brabazon, A. (2011) ‘Evolving Behaviour Trees for the Mario AI Competition Using Grammatical Evolution’, in *Applications of Evolutionary Computation: EvoApplications 2011*, LNCS 6624, pp. 123–132. Available at: https://doi.org/10.1007/978-3-642-20525-5_13.
-
 Plaisant, C., Grosjean, J. and Bederson, B. B. (2002) ‘SpaceTree: Supporting Exploration in Large Node Link Tree, Design Evolution and Empirical Evaluation’, in *IEEE Symposium on Information Visualization*, pp. 57–64. Available at: https://doi.org/10.1109/INFVIS.2002.1173148.
 
 Purchase, H. C. (1997) ‘Which Aesthetic Has the Greatest Effect on Human Understanding?’, in Di Battista, G. (ed.) *Graph Drawing, GD 1997*, LNCS 1353, pp. 248–261. Available at: https://doi.org/10.1007/3-540-63938-1_67.
 
 Purchase, H. C., Carrington, D. and Allder, J.-A. (2002) ‘Empirical Evaluation of Aesthetics-Based Graph Layout’, *Empirical Software Engineering*, 7(3), pp. 233–255. Available at: https://doi.org/10.1023/A:1016344215610.
 
-Purchase, H. C., Hoggan, E. and Görg, C. (2007) ‘How Important Is the “Mental Map”?—An Empirical Investigation of a Dynamic Graph Layout Algorithm’, in *Graph Drawing, GD 2006*, LNCS 4372, pp. 184–195. Available at: https://doi.org/10.1007/978-3-540-70904-6_19.
-
 Reingold, E. M. and Tilford, J. S. (1981) ‘Tidier Drawings of Trees’, *IEEE Transactions on Software Engineering*, SE-7(2), pp. 223–228. Available at: https://doi.org/10.1109/TSE.1981.234519.
 
 Sarkar, M. and Brown, M. H. (1994) ‘Graphical Fisheye Views’, *Communications of the ACM*, 37(12), pp. 73–84. Available at: https://doi.org/10.1145/198366.198384.
 
-Storey, M.-A. D., Fracchia, F. D. and Müller, H. A. (1999) ‘Customizing a Fisheye View Algorithm to Preserve the Mental Map’, *Journal of Visual Languages & Computing*, 10(3), pp. 245–267. Available at: https://doi.org/10.1006/jvlc.1999.0124.
-
 Sugiyama, K., Tagawa, S. and Toda, M. (1981) ‘Methods for Visual Understanding of Hierarchical System Structures’, *IEEE Transactions on Systems, Man, and Cybernetics*, 11(2), pp. 109–125. Available at: https://doi.org/10.1109/TSMC.1981.4308636.
 
 Summers, K. L., Goldsmith, T. E., Kubica, S. and Caudell, T. P. (2003) ‘An Experimental Evaluation of Continuous Semantic Zooming in Program Visualization’, in *IEEE Symposium on Information Visualization*, pp. 155–162. Available at: https://doi.org/10.1109/INFVIS.2003.1249021.
-
-Tan, D. S., Gergle, D., Scupelli, P. G. and Pausch, R. (2004) ‘Physically Large Displays Improve Path Integration in 3D Virtual Navigation Tasks’, in *Proceedings of CHI ’04*, pp. 439–446. Available at: https://doi.org/10.1145/985692.985748.
 
 van Ham, F. and Perer, A. (2009) ‘Search, Show Context, Expand on Demand: Supporting Large Graph Exploration with Degree-of-Interest’, *IEEE Transactions on Visualization and Computer Graphics*, 15(6), pp. 953–960. Available at: https://doi.org/10.1109/TVCG.2009.108.
 
@@ -590,9 +566,5 @@ Ware, C., Purchase, H., Colpoys, L. and McGill, M. (2002) ‘Cognitive Measureme
 Wang, Y., Wang, Y., Zhang, H., Sun, Y., Fu, C.-W., Sedlmair, M., Chen, B. and Deussen, O. (2019) ‘Structure-Aware Fisheye Views for Efficient Large Graph Exploration’, *IEEE Transactions on Visualization and Computer Graphics*, 25(1), pp. 566–575. Available at: https://doi.org/10.1109/TVCG.2018.2864911.
 
 Wong, N., Carpendale, S. and Greenberg, S. (2003) ‘EdgeLens: An Interactive Method for Managing Edge Congestion in Graphs’, in *IEEE Symposium on Information Visualization*, pp. 51–58. Available at: https://doi.org/10.1109/INFVIS.2003.1249008.
-
-Wu, T., Jiang, E., Donsbach, A., Gray, J., Molina, A., Terry, M. and Cai, C. J. (2022) ‘PromptChainer: Chaining Large Language Model Prompts through Visual Programming’, in *Extended Abstracts of the 2022 CHI Conference on Human Factors in Computing Systems*, Article 359, pp. 1–10. Available at: https://doi.org/10.1145/3491101.3519729.
-
-Wu, T., Terry, M. and Cai, C. J. (2022) ‘AI Chains: Transparent and Controllable Human-AI Interaction by Chaining Large Language Model Prompts’, in *Proceedings of the 2022 CHI Conference on Human Factors in Computing Systems*, Article 385, pp. 1–22. Available at: https://doi.org/10.1145/3491102.3517582.
 
 Zhou, Z., Jin, J., Phadnis, V., Yuan, X., Jiang, J., Qian, X., Wright, K., Sherwood, M., Mayes, J., Zhou, J., Huang, Y., Xu, Z., Zhang, Y., Lee, J., Olwal, A., Kim, D., Iyengar, R., Li, N. and Du, R. (2025) ‘InstructPipe: Generating Visual Blocks Pipelines with Human Instructions and LLMs’, in *Proceedings of the 2025 CHI Conference on Human Factors in Computing Systems*, Article 877, pp. 1–22. Available at: https://doi.org/10.1145/3706598.3713905.
