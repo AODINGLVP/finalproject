@@ -1,0 +1,24 @@
+{
+  "generator": "论文对比资料_2026-08-23/15_移除技术文档引用_34篇_2026-08-28/tools/build_dissertation.py",
+  "template": {
+    "path": "thesis_draft/chinese/uwthesis.sty",
+    "sha256": "C8C25B361DF8B4DF6E201D1347D006F453A25FDB7261BCCD46E17D0AA74A4BA6"
+  },
+  "sources": [
+    {
+      "path": "论文对比资料_2026-08-23/15_移除技术文档引用_34篇_2026-08-28/source/论文内容_中文.md",
+      "sha256": "08C2FDBFF72F9013F5E0C1446F8A598905AA1358F95569CCFB2C4427266D7A8D"
+    },
+    {
+      "path": "论文对比资料_2026-08-23/15_移除技术文档引用_34篇_2026-08-28/source/dissertation_content_en.md",
+      "sha256": "6AF2E730564CB155795ED549CB71C1CB5A284E96A382E53839E2D3C235201C26"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "行为树论文_中文_移除技术文档引用_34篇_2026-08-28.docx",
+      "bytes": 2035898,
+      "sha256": "FFDF84CCB2F63CD42173453672E189BFA2AAB612B449687F71BAE71A3E27A827"
+    }
+  ]
+}
