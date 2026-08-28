@@ -220,9 +220,7 @@ Before carrying out the display experiment, the basic functions of the behaviour
 
 The system consists of five parts: editor plugin, resource model, execution system, debug bridge and test game. The editor plugin runs inside the Godot editor and is responsible for displaying behaviour tree resources as an operable GraphEdit canvas. The resource model stores nodes, parent-child relationships, Decorators, blackboard Schema and node coordinates. The execution system reads the same resource and passes Tick results to the game Actor. The debug bridge sends the current state, failure reasons and blackboard values back to the editor.
 
-![](../figures/en/figure_4_1_architecture.png)
-
-Figure 4.1 Relationship between the plugin, resources, execution system, debug bridge and test game
+![Figure 4.1 Relationship between the plugin, resources, execution system, debug bridge and test game](../figures/en/figure_4_1_architecture.png)
 
 This division allows the same tree to be used for editing, saving, automated testing and game running. Display optimisation functions only modify temporary card size, opacity, border or canvas offset, and do not rewrite node types or connections. The new coordinates of nodes that the user actually drags and releases are saved normally, and can be undone or redone. Other cards moved automatically for avoidance are not written back to the resource.
 
@@ -258,9 +256,7 @@ The user creates nodes by right-clicking on the blank canvas, builds parent-chil
 
 When the game is running, the debug bridge records active nodes, node return values, failure reasons and blackboard snapshots for the current Actor. The editor displays the active path on the original behaviour tree canvas and shows the current value and type of blackboard keys in the sidebar. Failure explanations are directly marked near the failed node, such as condition not satisfied, method not found, or Decorator blocking a branch.
 
-![](../figures/extracted/figure_2.png)
-
-Figure 4.2 The current version showing Live Debug on a real 241-node behaviour tree
+![Figure 4.2 The current version showing Live Debug on a real 241-node behaviour tree](../figures/extracted/figure_2.png)
 
 ## 4.6 Display optimisation functions
 
@@ -300,9 +296,7 @@ This design prioritises keeping the focus and nearby nodes clear, instead of ens
 
 The test game assigns the five behaviour trees of different sizes to five enemies. The player needs to use movement, jumping and attack to defeat these enemies one by one. The scene contains ranged attack, melee, obstacles, jumping routes, ladders, healing items and hazard areas. Enemies can patrol, detect the player, chase, search the last position where the player appeared, traverse obstacles, climb, retreat and recover.
 
-![](../figures/extracted/figure_3.png)
-
-Figure 4.3 Five behaviour tree sizes controlling five enemies in the playable scene
+![Figure 4.3 Five behaviour tree sizes controlling five enemies in the playable scene](../figures/extracted/figure_3.png)
 
 Smaller trees use fewer branches to complete basic behaviours, while larger trees take on more combat and environmental responses. After all five enemies are defeated, the game enters the end state.
 
@@ -345,9 +339,7 @@ Table 5.2 Main results before and after enabling the display optimisation functi
 
 Smart Drag Reflow is used to handle new occlusion caused when the user drags a node. In the experiment, the program drags the same leaf node near another node to actively create occlusion. After the function is enabled, surrounding nodes avoid it without changing the behaviour tree logic.
 
-![](../figures/extracted/figure_4.png)
-
-Figure 5.1 Smart Drag Reflow disabled and enabled: removing card occlusion at the same drag position
+![Figure 5.1 Smart Drag Reflow disabled and enabled: removing card occlusion at the same drag position](../figures/extracted/figure_4.png)
 
 Figure 5.1 compares the screen before and after the function is enabled when a node is dragged to the same position. After enabling it, the system moves surrounding nodes to avoid overlap. Sometimes, in order to keep the original tree-shaped structure, farther nodes in the same group also move together. Therefore, Smart Reflow limits the affected range, but it does not necessarily only move the node closest to the drag position.
 
@@ -355,9 +347,7 @@ Figure 5.1 compares the screen before and after the function is enabled when a n
 
 After Adaptive is enabled, both card area and field count clearly decrease. In some conditions, the number of cards fully inside the viewport also increases. In other conditions, even though the number of full cards does not increase, canvas occupation is still reduced. This result matches the expected function.
 
-![](../figures/extracted/figure_5.png)
-
-Figure 5.2 Adaptive Zoom Detail disabled and enabled: reducing card area and fields under the same overview zoom
+![Figure 5.2 Adaptive Zoom Detail disabled and enabled: reducing card area and fields under the same overview zoom](../figures/extracted/figure_5.png)
 
 In Figure 5.2, the enabled state keeps node identity and structure information, but no longer shows all parameters. It clearly reduces the space occupied by nodes in the viewport, which allows the user to place more nodes under a limited viewport size.
 
@@ -365,25 +355,19 @@ In Figure 5.2, the enabled state keeps node identity and structure information, 
 
 After Overlay is enabled, connections that pass through card backgrounds can be partly shown. The connection route does not change, and the text foreground and outline remain opaque.
 
-![](../figures/extracted/figure_6.png)
-
-Figure 5.3 Readable Edge Overlay disabled and enabled: the same route passes through card background but avoids text
+![Figure 5.3 Readable Edge Overlay disabled and enabled: the same route passes through card background but avoids text](../figures/extracted/figure_6.png)
 
 ### 5.3.4 Related Node Focus
 
 After Related Focus is enabled, unrelated nodes in the experiment are all correctly dimmed, and the fully bright candidates in the viewport are clearly reduced. At the same time, node coordinates, card area and connection routes do not change. The user can still see the position of the whole tree, but content unrelated to the current selection is no longer equally prominent.
 
-![](../figures/extracted/figure_7.png)
-
-Figure 5.4 Related Node Focus disabled and enabled: selected nodes and their related branches remain highlighted
+![Figure 5.4 Related Node Focus disabled and enabled: selected nodes and their related branches remain highlighted](../figures/extracted/figure_7.png)
 
 ### 5.3.5 Fisheye Focus
 
 Fisheye enlarges the target card and shows more fields at the same time, while cards farther from the focus shrink and dim. Figure 5.5 shows the actual effect in the same overview.
 
-![](../figures/extracted/figure_8.png)
-
-Figure 5.5 Fisheye Focus disabled and enabled: restoring target size in the overview and dimming distant nodes
+![Figure 5.5 Fisheye Focus disabled and enabled: restoring target size in the overview and dimming distant nodes](../figures/extracted/figure_8.png)
 
 ## 5.4 Results under different node scales
 
