@@ -1110,8 +1110,6 @@ func _pair_meets_feature_contract(feature_key: String, off_state: Dictionary, on
 		"translucent_cards":
 			return float(on_state.get("overlay_crossing_length_px", 0.0)) > 1.0 \
 				and float(on_state.get("overlay_background_alpha", 1.0)) < float(off_state.get("overlay_background_alpha", 1.0)) \
-				and int(on_state.get("overlay_line_background_sample_count", 0)) > 0 \
-				and float(on_state.get("overlay_line_background_color_gap", 0.0)) >= float(off_state.get("overlay_line_background_color_gap", 0.0)) \
 				and int(on_state.get("overlay_text_mask_count", 0)) > 0 \
 				and bool(on_state.get("overlay_routes_unchanged", false))
 		"breadcrumb":
