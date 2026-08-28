@@ -1,0 +1,25 @@
+{
+  "generator": "论文对比资料_2026-08-23/17_执行系统术语统一_2026-08-28/tools/build_dissertation.py",
+  "template": {
+    "path": "thesis_draft/chinese/uwthesis.sty",
+    "sha256": "C8C25B361DF8B4DF6E201D1347D006F453A25FDB7261BCCD46E17D0AA74A4BA6"
+  },
+  "sources": [
+    {
+      "path": "论文对比资料_2026-08-23/17_执行系统术语统一_2026-08-28/source/论文内容_中文.md",
+      "sha256": "45B49D658D0ABDBEA591733958876999534EC25087417A1558ACCC5EC0D052F0"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "行为树论文_中文_执行系统术语统一版_2026-08-28.docx",
+      "bytes": 2167856,
+      "sha256": "3D5101280092C19FC3A56B28A379381D68929DE436C86B96FBBE49CEF31C3619"
+    },
+    {
+      "path": "行为树论文_中文_执行系统术语统一版_2026-08-28.pdf",
+      "bytes": 2362468,
+      "sha256": "2CB42EDB9C96A562741778161F9A14D4A1D660BE092C5D791A1FAEE37CBCF96E"
+    }
+  ]
+}

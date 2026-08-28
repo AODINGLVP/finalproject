@@ -1,0 +1,25 @@
+{
+  "generator": "论文对比资料_2026-08-23/18_用户修订与测试名称直白化_2026-08-28/tools/build_dissertation.py",
+  "template": {
+    "path": "thesis_draft/chinese/uwthesis.sty",
+    "sha256": "C8C25B361DF8B4DF6E201D1347D006F453A25FDB7261BCCD46E17D0AA74A4BA6"
+  },
+  "sources": [
+    {
+      "path": "论文对比资料_2026-08-23/18_用户修订与测试名称直白化_2026-08-28/source/论文内容_中文.md",
+      "sha256": "ECD7946B9C93D6A825C3B4423337FCD9A006DAC588A13981E77E720BCA90C2D7"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "行为树论文_中文_用户修订与测试名称直白化版_2026-08-28.docx",
+      "bytes": 2165400,
+      "sha256": "6548E7A33D0507FB110E9D24420C320C0FB7B4D8DCE358FCF8D5D2D3C97CA662"
+    },
+    {
+      "path": "行为树论文_中文_用户修订与测试名称直白化版_2026-08-28.pdf",
+      "bytes": 2351573,
+      "sha256": "E6724E7FB73CEC56119CAF6F4D3DE43DD94F5C53ABB61A2E34998E70F2CB1C58"
+    }
+  ]
+}

@@ -1,20 +1,24 @@
-[gd_scene load_steps=25 format=3]
+[gd_scene format=3 uid="uid://ctproghgqvkbk"]
 
-[ext_resource type="Script" path="res://scripts/player_controller.gd" id="1_player_script"]
-[ext_resource type="Script" path="res://scripts/enemy_actor.gd" id="2_enemy_script"]
-[ext_resource type="Script" path="res://addons/behavior_tree_editor/runtime/behavior_tree_component.gd" id="3_bt_component"]
+[ext_resource type="Script" uid="uid://bo5kcda2bcegg" path="res://scripts/player_controller.gd" id="1_player_script"]
+[ext_resource type="Script" uid="uid://bri2l6r7lfrxc" path="res://scripts/enemy_actor.gd" id="2_enemy_script"]
+[ext_resource type="Script" uid="uid://cy8haxerf4cnq" path="res://addons/behavior_tree_editor/runtime/behavior_tree_component.gd" id="3_bt_component"]
 [ext_resource type="Resource" path="res://behavior_trees/arena_scout_31.tres" id="4_tree_scout"]
-[ext_resource type="Texture2D" path="res://assets/player_idle.svg" id="5_player_idle"]
-[ext_resource type="Texture2D" path="res://assets/player_attack.svg" id="6_player_attack"]
-[ext_resource type="Texture2D" path="res://assets/enemy_idle.svg" id="7_enemy_idle"]
-[ext_resource type="Texture2D" path="res://assets/enemy_attack.svg" id="8_enemy_attack"]
-[ext_resource type="Script" path="res://scripts/arena_controller.gd" id="9_arena_script"]
+[ext_resource type="Texture2D" uid="uid://k7v2r76dbkve" path="res://assets/player_idle.svg" id="5_player_idle"]
+[ext_resource type="Texture2D" uid="uid://dbekxxta8vr4g" path="res://assets/player_attack.svg" id="6_player_attack"]
+[ext_resource type="Texture2D" uid="uid://c4dc7qjsubuwx" path="res://assets/enemy_idle.svg" id="7_enemy_idle"]
+[ext_resource type="Texture2D" uid="uid://c12e57pjo161k" path="res://assets/enemy_attack.svg" id="8_enemy_attack"]
+[ext_resource type="Script" uid="uid://k73b2hdy4sbd" path="res://scripts/arena_controller.gd" id="9_arena_script"]
 [ext_resource type="Resource" path="res://behavior_trees/arena_skirmisher_61.tres" id="10_tree_skirmisher"]
-[ext_resource type="Script" path="res://scripts/medkit_pickup.gd" id="11_medkit_script"]
-[ext_resource type="Script" path="res://scripts/damage_zone.gd" id="12_damage_script"]
+[ext_resource type="Script" uid="uid://yt58tw8ftyww" path="res://scripts/medkit_pickup.gd" id="11_medkit_script"]
+[ext_resource type="Script" uid="uid://dq3kxfhvcyxl0" path="res://scripts/damage_zone.gd" id="12_damage_script"]
 [ext_resource type="Resource" path="res://behavior_trees/arena_hunter_121.tres" id="13_tree_hunter"]
 [ext_resource type="Resource" path="res://behavior_trees/arena_tactician_241.tres" id="14_tree_tactician"]
 [ext_resource type="Resource" path="res://behavior_trees/arena_commander_364.tres" id="15_tree_commander"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
+size = Vector2(1280, 64)
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
 size = Vector2(34, 54)
 
@@ -23,9 +27,6 @@ size = Vector2(58, 42)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_enemy"]
 size = Vector2(36, 54)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
-size = Vector2(1280, 64)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_medkit"]
 size = Vector2(30, 30)
@@ -54,29 +55,29 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[node name="TestGame" type="Node2D"]
+[node name="TestGame" type="Node2D" unique_id=1144636518]
 script = ExtResource("9_arena_script")
 
-[node name="WorldBackground" type="ColorRect" parent="."]
+[node name="WorldBackground" type="ColorRect" parent="." unique_id=1578815153]
 z_index = -100
 offset_right = 1280.0
 offset_bottom = 720.0
 color = Color(0.035, 0.075, 0.1, 1)
 
-[node name="Ground" type="StaticBody2D" parent="."]
+[node name="Ground" type="StaticBody2D" parent="." unique_id=494560051]
 position = Vector2(640, 610)
 
-[node name="GroundVisual" type="ColorRect" parent="Ground"]
+[node name="GroundVisual" type="ColorRect" parent="Ground" unique_id=170335686]
 offset_left = -640.0
 offset_top = -32.0
 offset_right = 640.0
 offset_bottom = 32.0
 color = Color(0.22, 0.32, 0.26, 1)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Ground"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ground" unique_id=16698628]
 shape = SubResource("RectangleShape2D_ground")
 
-[node name="Player" type="CharacterBody2D" parent="."]
+[node name="Player" type="CharacterBody2D" parent="." unique_id=1586553812]
 position = Vector2(180, 520)
 script = ExtResource("1_player_script")
 attack_damage = 2
@@ -84,23 +85,22 @@ infinite_health = true
 idle_texture = ExtResource("5_player_idle")
 attack_texture = ExtResource("6_player_attack")
 
-[node name="Sprite2D" type="Sprite2D" parent="Player"]
+[node name="Sprite2D" type="Sprite2D" parent="Player" unique_id=1841255025]
 texture = ExtResource("5_player_idle")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player" unique_id=2102284151]
 shape = SubResource("RectangleShape2D_player")
 
-[node name="AttackArea" type="Area2D" parent="Player"]
+[node name="AttackArea" type="Area2D" parent="Player" unique_id=529621547]
 position = Vector2(42, 0)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Player/AttackArea"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player/AttackArea" unique_id=292592246]
 shape = SubResource("RectangleShape2D_attack")
 
-[node name="Camera2D" type="Camera2D" parent="Player"]
+[node name="Camera2D" type="Camera2D" parent="Player" unique_id=494201002]
 position = Vector2(220, -120)
-enabled = true
 
-[node name="EnemyScout" type="CharacterBody2D" parent="."]
+[node name="EnemyScout" type="CharacterBody2D" parent="." unique_id=2142833778]
 position = Vector2(390, 520)
 script = ExtResource("2_enemy_script")
 max_health = 2
@@ -110,20 +110,20 @@ detection_range = 250.0
 idle_texture = ExtResource("7_enemy_idle")
 attack_texture = ExtResource("8_enemy_attack")
 
-[node name="Sprite2D" type="Sprite2D" parent="EnemyScout"]
-texture = ExtResource("7_enemy_idle")
+[node name="Sprite2D" type="Sprite2D" parent="EnemyScout" unique_id=1360156218]
 modulate = Color(0.62, 1, 0.72, 1)
+texture = ExtResource("7_enemy_idle")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyScout"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyScout" unique_id=369955446]
 shape = SubResource("RectangleShape2D_enemy")
 
-[node name="BehaviorTreeComponent" type="Node" parent="EnemyScout"]
+[node name="BehaviorTreeComponent" type="Node" parent="EnemyScout" unique_id=173640610]
 script = ExtResource("3_bt_component")
 behavior_tree = ExtResource("4_tree_scout")
 tick_on_process = false
 tick_on_physics = true
 
-[node name="EnemySkirmisher" type="CharacterBody2D" parent="."]
+[node name="EnemySkirmisher" type="CharacterBody2D" parent="." unique_id=2132954604]
 position = Vector2(555, 520)
 script = ExtResource("2_enemy_script")
 max_health = 3
@@ -133,20 +133,20 @@ detection_range = 275.0
 idle_texture = ExtResource("7_enemy_idle")
 attack_texture = ExtResource("8_enemy_attack")
 
-[node name="Sprite2D" type="Sprite2D" parent="EnemySkirmisher"]
-texture = ExtResource("7_enemy_idle")
+[node name="Sprite2D" type="Sprite2D" parent="EnemySkirmisher" unique_id=1462071594]
 modulate = Color(1, 0.76, 0.42, 1)
+texture = ExtResource("7_enemy_idle")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemySkirmisher"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemySkirmisher" unique_id=1081941220]
 shape = SubResource("RectangleShape2D_enemy")
 
-[node name="BehaviorTreeComponent" type="Node" parent="EnemySkirmisher"]
+[node name="BehaviorTreeComponent" type="Node" parent="EnemySkirmisher" unique_id=1867607853]
 script = ExtResource("3_bt_component")
 behavior_tree = ExtResource("10_tree_skirmisher")
 tick_on_process = false
 tick_on_physics = true
 
-[node name="EnemyHunter" type="CharacterBody2D" parent="."]
+[node name="EnemyHunter" type="CharacterBody2D" parent="." unique_id=42369204]
 position = Vector2(790, 365)
 script = ExtResource("2_enemy_script")
 max_health = 4
@@ -156,20 +156,20 @@ detection_range = 300.0
 idle_texture = ExtResource("7_enemy_idle")
 attack_texture = ExtResource("8_enemy_attack")
 
-[node name="Sprite2D" type="Sprite2D" parent="EnemyHunter"]
-texture = ExtResource("7_enemy_idle")
+[node name="Sprite2D" type="Sprite2D" parent="EnemyHunter" unique_id=656227548]
 modulate = Color(0.48, 0.9, 1, 1)
+texture = ExtResource("7_enemy_idle")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyHunter"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyHunter" unique_id=7560654]
 shape = SubResource("RectangleShape2D_enemy")
 
-[node name="BehaviorTreeComponent" type="Node" parent="EnemyHunter"]
+[node name="BehaviorTreeComponent" type="Node" parent="EnemyHunter" unique_id=1279517498]
 script = ExtResource("3_bt_component")
 behavior_tree = ExtResource("13_tree_hunter")
 tick_on_process = false
 tick_on_physics = true
 
-[node name="EnemyTactician" type="CharacterBody2D" parent="."]
+[node name="EnemyTactician" type="CharacterBody2D" parent="." unique_id=387747723]
 position = Vector2(970, 520)
 script = ExtResource("2_enemy_script")
 max_health = 5
@@ -179,180 +179,179 @@ detection_range = 325.0
 idle_texture = ExtResource("7_enemy_idle")
 attack_texture = ExtResource("8_enemy_attack")
 
-[node name="Sprite2D" type="Sprite2D" parent="EnemyTactician"]
-texture = ExtResource("7_enemy_idle")
+[node name="Sprite2D" type="Sprite2D" parent="EnemyTactician" unique_id=509980423]
 modulate = Color(0.82, 0.62, 1, 1)
+texture = ExtResource("7_enemy_idle")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyTactician"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyTactician" unique_id=2112943781]
 shape = SubResource("RectangleShape2D_enemy")
 
-[node name="BehaviorTreeComponent" type="Node" parent="EnemyTactician"]
+[node name="BehaviorTreeComponent" type="Node" parent="EnemyTactician" unique_id=1459673745]
 script = ExtResource("3_bt_component")
 behavior_tree = ExtResource("14_tree_tactician")
 tick_on_process = false
 tick_on_physics = true
 
-[node name="EnemyCommander" type="CharacterBody2D" parent="."]
+[node name="EnemyCommander" type="CharacterBody2D" parent="." unique_id=1516041091]
 position = Vector2(1080, 275)
 script = ExtResource("2_enemy_script")
-max_health = 6
 respawns_enabled = false
 archetype_name = "Commander"
 detection_range = 350.0
 idle_texture = ExtResource("7_enemy_idle")
 attack_texture = ExtResource("8_enemy_attack")
 
-[node name="Sprite2D" type="Sprite2D" parent="EnemyCommander"]
-texture = ExtResource("7_enemy_idle")
+[node name="Sprite2D" type="Sprite2D" parent="EnemyCommander" unique_id=1130540798]
 modulate = Color(1, 0.48, 0.48, 1)
+texture = ExtResource("7_enemy_idle")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyCommander"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EnemyCommander" unique_id=2012930200]
 shape = SubResource("RectangleShape2D_enemy")
 
-[node name="BehaviorTreeComponent" type="Node" parent="EnemyCommander"]
+[node name="BehaviorTreeComponent" type="Node" parent="EnemyCommander" unique_id=1568728531]
 script = ExtResource("3_bt_component")
 behavior_tree = ExtResource("15_tree_commander")
 tick_on_process = false
 tick_on_physics = true
 
-[node name="Medkit" type="Area2D" parent="."]
+[node name="Medkit" type="Area2D" parent="." unique_id=960781362]
 position = Vector2(710, 555)
 script = ExtResource("11_medkit_script")
 
-[node name="Visual" type="Polygon2D" parent="Medkit"]
-polygon = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+[node name="Visual" type="Polygon2D" parent="Medkit" unique_id=1573837734]
 color = Color(0.2, 0.9, 0.55, 1)
+polygon = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
 
-[node name="Horizontal" type="Polygon2D" parent="Medkit"]
+[node name="Horizontal" type="Polygon2D" parent="Medkit" unique_id=484258152]
+color = Color(0.95, 1, 0.97, 1)
 polygon = PackedVector2Array(-11, -3, 11, -3, 11, 3, -11, 3)
-color = Color(0.95, 1, 0.97, 1)
 
-[node name="Vertical" type="Polygon2D" parent="Medkit"]
+[node name="Vertical" type="Polygon2D" parent="Medkit" unique_id=1504111535]
+color = Color(0.95, 1, 0.97, 1)
 polygon = PackedVector2Array(-3, -11, 3, -11, 3, 11, -3, 11)
-color = Color(0.95, 1, 0.97, 1)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Medkit"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Medkit" unique_id=155731486]
 shape = SubResource("RectangleShape2D_medkit")
 
-[node name="DamageZone" type="Area2D" parent="."]
+[node name="DamageZone" type="Area2D" parent="." unique_id=1836259765]
 position = Vector2(925, 550)
 script = ExtResource("12_damage_script")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DamageZone"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DamageZone" unique_id=859195295]
 shape = SubResource("RectangleShape2D_damage")
 
-[node name="ObstacleA" type="StaticBody2D" parent="." groups=["obstacles"]]
+[node name="ObstacleA" type="StaticBody2D" parent="." unique_id=664993918 groups=["obstacles"]]
 position = Vector2(655, 543)
 
-[node name="Visual" type="Polygon2D" parent="ObstacleA"]
-polygon = PackedVector2Array(-27, -35, 27, -35, 27, 35, -27, 35)
+[node name="Visual" type="Polygon2D" parent="ObstacleA" unique_id=1549511481]
 color = Color(0.48, 0.3, 0.18, 1)
+polygon = PackedVector2Array(-27, -35, 27, -35, 27, 35, -27, 35)
 
-[node name="Stripe" type="Polygon2D" parent="ObstacleA"]
-polygon = PackedVector2Array(-22, -5, 22, -5, 22, 5, -22, 5)
+[node name="Stripe" type="Polygon2D" parent="ObstacleA" unique_id=805944889]
 color = Color(0.9, 0.58, 0.16, 1)
+polygon = PackedVector2Array(-22, -5, 22, -5, 22, 5, -22, 5)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="ObstacleA"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ObstacleA" unique_id=1186075417]
 shape = SubResource("RectangleShape2D_obstacle")
 
-[node name="ObstacleB" type="StaticBody2D" parent="." groups=["obstacles"]]
+[node name="ObstacleB" type="StaticBody2D" parent="." unique_id=100338390 groups=["obstacles"]]
 position = Vector2(930, 543)
 
-[node name="Visual" type="Polygon2D" parent="ObstacleB"]
-polygon = PackedVector2Array(-27, -35, 27, -35, 27, 35, -27, 35)
+[node name="Visual" type="Polygon2D" parent="ObstacleB" unique_id=354102862]
 color = Color(0.48, 0.3, 0.18, 1)
+polygon = PackedVector2Array(-27, -35, 27, -35, 27, 35, -27, 35)
 
-[node name="Stripe" type="Polygon2D" parent="ObstacleB"]
-polygon = PackedVector2Array(-22, -5, 22, -5, 22, 5, -22, 5)
+[node name="Stripe" type="Polygon2D" parent="ObstacleB" unique_id=36532229]
 color = Color(0.9, 0.58, 0.16, 1)
+polygon = PackedVector2Array(-22, -5, 22, -5, 22, 5, -22, 5)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="ObstacleB"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ObstacleB" unique_id=943199492]
 shape = SubResource("RectangleShape2D_obstacle")
 
-[node name="PlatformA" type="StaticBody2D" parent="." groups=["obstacles"]]
+[node name="PlatformA" type="StaticBody2D" parent="." unique_id=732967687 groups=["obstacles"]]
 position = Vector2(790, 405)
 
-[node name="Visual" type="Polygon2D" parent="PlatformA"]
-polygon = PackedVector2Array(-125, -10, 125, -10, 125, 10, -125, 10)
+[node name="Visual" type="Polygon2D" parent="PlatformA" unique_id=1525518223]
 color = Color(0.2, 0.52, 0.62, 1)
+polygon = PackedVector2Array(-125, -10, 125, -10, 125, 10, -125, 10)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="PlatformA"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlatformA" unique_id=1423328965]
 shape = SubResource("RectangleShape2D_platform")
 one_way_collision = true
 
-[node name="LadderA" type="Area2D" parent="." groups=["ladders"]]
+[node name="LadderA" type="Area2D" parent="." unique_id=2052151676 groups=["ladders"]]
 position = Vector2(735, 493)
 collision_layer = 0
 collision_mask = 0
 
-[node name="LeftRail" type="Polygon2D" parent="LadderA"]
+[node name="LeftRail" type="Polygon2D" parent="LadderA" unique_id=1126753139]
+color = Color(0.78, 0.68, 0.34, 1)
 polygon = PackedVector2Array(-13, -95, -8, -95, -8, 95, -13, 95)
-color = Color(0.78, 0.68, 0.34, 1)
 
-[node name="RightRail" type="Polygon2D" parent="LadderA"]
+[node name="RightRail" type="Polygon2D" parent="LadderA" unique_id=1698016310]
+color = Color(0.78, 0.68, 0.34, 1)
 polygon = PackedVector2Array(8, -95, 13, -95, 13, 95, 8, 95)
-color = Color(0.78, 0.68, 0.34, 1)
 
-[node name="Rungs" type="Polygon2D" parent="LadderA"]
-polygon = PackedVector2Array(-10, -75, 10, -75, 10, -70, -10, -70, -10, -40, 10, -40, 10, -35, -10, -35, -10, -5, 10, -5, 10, 0, -10, 0, -10, 30, 10, 30, 10, 35, -10, 35, -10, 65, 10, 65, 10, 70, -10, 70)
+[node name="Rungs" type="Polygon2D" parent="LadderA" unique_id=151109033]
 color = Color(0.9, 0.8, 0.42, 1)
+polygon = PackedVector2Array(-10, -75, 10, -75, 10, -70, -10, -70, -10, -40, 10, -40, 10, -35, -10, -35, -10, -5, 10, -5, 10, 0, -10, 0, -10, 30, 10, 30, 10, 35, -10, 35, -10, 65, 10, 65, 10, 70, -10, 70)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="LadderA"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LadderA" unique_id=1160509400]
 shape = SubResource("RectangleShape2D_ladder")
 
-[node name="PlatformB" type="StaticBody2D" parent="." groups=["obstacles"]]
+[node name="PlatformB" type="StaticBody2D" parent="." unique_id=1036965156 groups=["obstacles"]]
 position = Vector2(1080, 315)
 
-[node name="Visual" type="Polygon2D" parent="PlatformB"]
-polygon = PackedVector2Array(-125, -10, 125, -10, 125, 10, -125, 10)
+[node name="Visual" type="Polygon2D" parent="PlatformB" unique_id=1739410774]
 color = Color(0.24, 0.46, 0.68, 1)
+polygon = PackedVector2Array(-125, -10, 125, -10, 125, 10, -125, 10)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="PlatformB"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlatformB" unique_id=2053193063]
 shape = SubResource("RectangleShape2D_platform")
 one_way_collision = true
 
-[node name="LadderB" type="Area2D" parent="." groups=["ladders"]]
+[node name="LadderB" type="Area2D" parent="." unique_id=78727937 groups=["ladders"]]
 position = Vector2(1015, 410)
 collision_layer = 0
 collision_mask = 0
 
-[node name="LeftRail" type="Polygon2D" parent="LadderB"]
+[node name="LeftRail" type="Polygon2D" parent="LadderB" unique_id=479190502]
+color = Color(0.78, 0.68, 0.34, 1)
 polygon = PackedVector2Array(-13, -95, -8, -95, -8, 95, -13, 95)
-color = Color(0.78, 0.68, 0.34, 1)
 
-[node name="RightRail" type="Polygon2D" parent="LadderB"]
+[node name="RightRail" type="Polygon2D" parent="LadderB" unique_id=1621654527]
+color = Color(0.78, 0.68, 0.34, 1)
 polygon = PackedVector2Array(8, -95, 13, -95, 13, 95, 8, 95)
-color = Color(0.78, 0.68, 0.34, 1)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="LadderB"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LadderB" unique_id=1699151125]
 shape = SubResource("RectangleShape2D_ladder")
 
-[node name="UI" type="CanvasLayer" parent="."]
+[node name="UI" type="CanvasLayer" parent="." unique_id=1537282522]
 
-[node name="TopPanel" type="PanelContainer" parent="UI"]
+[node name="TopPanel" type="PanelContainer" parent="UI" unique_id=546299714]
 offset_left = 20.0
 offset_top = 16.0
 offset_right = 1260.0
 offset_bottom = 86.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_top")
 
-[node name="TopContent" type="VBoxContainer" parent="UI/TopPanel"]
+[node name="TopContent" type="VBoxContainer" parent="UI/TopPanel" unique_id=1283308739]
 layout_mode = 2
 theme_override_constants/separation = 3
 
-[node name="Help" type="Label" parent="UI/TopPanel/TopContent"]
+[node name="Help" type="Label" parent="UI/TopPanel/TopContent" unique_id=168021271]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.66, 0.92, 0.95, 1)
 theme_override_font_sizes/font_size = 15
 text = "A/D Move   W/Up Jump or Climb   S/Down Climb   J Attack   Space Dash   C Cloak"
 
-[node name="PlayerStatus" type="Label" parent="UI/TopPanel/TopContent"]
+[node name="PlayerStatus" type="Label" parent="UI/TopPanel/TopContent" unique_id=201122768]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.96, 0.8, 0.3, 1)
 theme_override_font_sizes/font_size = 17
 text = "PLAYER"
 
-[node name="VictoryPanel" type="PanelContainer" parent="UI"]
+[node name="VictoryPanel" type="PanelContainer" parent="UI" unique_id=897900460]
 visible = false
 offset_left = 390.0
 offset_top = 245.0
@@ -361,11 +360,11 @@ offset_bottom = 410.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_top")
 
-[node name="VictoryContent" type="VBoxContainer" parent="UI/VictoryPanel"]
+[node name="VictoryContent" type="VBoxContainer" parent="UI/VictoryPanel" unique_id=1853122726]
 layout_mode = 2
 alignment = 1
 
-[node name="VictoryLabel" type="Label" parent="UI/VictoryPanel/VictoryContent"]
+[node name="VictoryLabel" type="Label" parent="UI/VictoryPanel/VictoryContent" unique_id=833494601]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.45, 1, 0.68, 1)
 theme_override_font_sizes/font_size = 24

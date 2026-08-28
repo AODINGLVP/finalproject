@@ -1,8 +1,8 @@
-[gd_resource type="Resource" script_class="BTTreeResource" format=3]
+[gd_resource type="Resource" script_class="BTTreeResource" format=3 uid="uid://qyjkrxjns1a2"]
 
-[ext_resource type="Resource" path="res://behavior_trees/complex_guard_blackboard_schema.tres" id="1_iy026"]
-[ext_resource type="Script" path="res://addons/behavior_tree_editor/bt_node_resource.gd" id="2_6rb3b"]
-[ext_resource type="Script" path="res://addons/behavior_tree_editor/bt_tree_resource.gd" id="3_hm23q"]
+[ext_resource type="Resource" uid="uid://b8qocgh2lt5ov" path="res://behavior_trees/complex_guard_blackboard_schema.tres" id="1_iy026"]
+[ext_resource type="Script" uid="uid://b8o5ywdnkpnh8" path="res://addons/behavior_tree_editor/bt_node_resource.gd" id="2_6rb3b"]
+[ext_resource type="Script" uid="uid://bx4g01fp01uuo" path="res://addons/behavior_tree_editor/bt_tree_resource.gd" id="3_hm23q"]
 
 [sub_resource type="Resource" id="Resource_cs55n"]
 script = ExtResource("2_6rb3b")

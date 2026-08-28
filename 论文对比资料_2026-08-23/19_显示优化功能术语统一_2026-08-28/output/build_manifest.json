@@ -1,0 +1,25 @@
+{
+  "generator": "论文对比资料_2026-08-23/19_显示优化功能术语统一_2026-08-28/tools/build_dissertation.py",
+  "template": {
+    "path": "thesis_draft/chinese/uwthesis.sty",
+    "sha256": "C8C25B361DF8B4DF6E201D1347D006F453A25FDB7261BCCD46E17D0AA74A4BA6"
+  },
+  "sources": [
+    {
+      "path": "论文对比资料_2026-08-23/19_显示优化功能术语统一_2026-08-28/source/论文内容_中文.md",
+      "sha256": "A64B587C28A751D03145739F0FC9EF2D1D6BAE17EC310E416CE8787903A13A07"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "行为树论文_中文_显示优化功能术语统一版_2026-08-28.docx",
+      "bytes": 2165277,
+      "sha256": "BF39A82FD2B69E136AA879B108D462766B237BA5BDF53C88AE0724836F606B3E"
+    },
+    {
+      "path": "行为树论文_中文_显示优化功能术语统一版_2026-08-28.pdf",
+      "bytes": 2350488,
+      "sha256": "0F607C3B56BAFE2750B843D30AF2F3FC6CBE9445AE1003AF94C791E31321C953"
+    }
+  ]
+}

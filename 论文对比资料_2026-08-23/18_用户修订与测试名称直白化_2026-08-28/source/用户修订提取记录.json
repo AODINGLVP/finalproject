@@ -1,0 +1,19 @@
+{
+  "authoritative_input": "source/用户修改原稿_执行系统版_2026-08-28.docx",
+  "authoritative_input_sha256": "2991de7c0b06cf4fea37e3a14ec60097249402b0dd8bfbc765d658eb96137dec",
+  "previous_canonical_source": "../17_执行系统术语统一_2026-08-28/source/论文内容_中文.md",
+  "output_markdown": "source/论文内容_中文.md",
+  "output_markdown_sha256": "ecd7946b9c93d6a825c3b4423337fcd9a006dac588a13981e77e720bca90c2d7",
+  "reference_count": 34,
+  "synchronised_user_changes": [
+    "保留用户对第4章和第5.1节的删改",
+    "删除4.7实验记录与可复现性",
+    "将测试游戏顺延为4.7",
+    "采用用户确认后的智能拖拽重排说明",
+    "将表5.1内部测试名称和范围改成直白表述"
+  ],
+  "ignored_word_field_artifacts": [
+    "表题前自动出现的1表、2表等字段结果",
+    "图题前自动出现的1图、2图等字段结果"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "generator": "论文对比资料_2026-08-23/16_用户前三章修订与引用复核_2026-08-28/tools/build_dissertation.py",
+  "template": {
+    "path": "thesis_draft/chinese/uwthesis.sty",
+    "sha256": "C8C25B361DF8B4DF6E201D1347D006F453A25FDB7261BCCD46E17D0AA74A4BA6"
+  },
+  "sources": [
+    {
+      "path": "论文对比资料_2026-08-23/16_用户前三章修订与引用复核_2026-08-28/source/论文内容_中文.md",
+      "sha256": "76635A51DB98AF7F12F61C87F9A43C403DAD0CA1A32E93CB72177065AF222520"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "行为树论文_中文_用户前三章修订_引用复核版_2026-08-28.docx",
+      "bytes": 2036508,
+      "sha256": "9DC0BA69339995A275EC42D68D802A9AD92DF810F34E2373E1AA7CA8A99970CC"
+    },
+    {
+      "path": "行为树论文_中文_用户前三章修订_引用复核版_2026-08-28.pdf",
+      "bytes": 2358139,
+      "sha256": "D7FB83F42DD8EC4E8EF8FB17A36028E837BD92FFB21901E6577F26CA3C839739"
+    }
+  ]
+}

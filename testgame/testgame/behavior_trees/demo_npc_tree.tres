@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="BTTreeResource" format=3]
+[gd_resource type="Resource" script_class="BTTreeResource" format=3 uid="uid://b5rxb5tqnjv7n"]
 
-[ext_resource type="Script" path="res://addons/behavior_tree_editor/bt_tree_resource.gd" id="1_tree"]
-[ext_resource type="Script" path="res://addons/behavior_tree_editor/bt_node_resource.gd" id="2_node"]
+[ext_resource type="Script" uid="uid://bx4g01fp01uuo" path="res://addons/behavior_tree_editor/bt_tree_resource.gd" id="1_tree"]
+[ext_resource type="Script" uid="uid://b8o5ywdnkpnh8" path="res://addons/behavior_tree_editor/bt_node_resource.gd" id="2_node"]
 
 [sub_resource type="Resource" id="BTNodeResource_root"]
 script = ExtResource("2_node")

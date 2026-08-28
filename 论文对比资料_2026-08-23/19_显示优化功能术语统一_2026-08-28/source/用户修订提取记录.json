@@ -1,0 +1,20 @@
+{
+  "authoritative_input": "source/用户修改原稿_执行系统版_2026-08-28.docx",
+  "authoritative_input_sha256": "2991de7c0b06cf4fea37e3a14ec60097249402b0dd8bfbc765d658eb96137dec",
+  "previous_canonical_source": "../18_用户修订与测试名称直白化_2026-08-28/source/论文内容_中文.md",
+  "output_markdown": "source/论文内容_中文.md",
+  "output_markdown_sha256": "a64b587c28a751d03145739f0fc9ef2d1d6bae17ec310e416ce8787903a13a07",
+  "reference_count": 34,
+  "synchronised_user_changes": [
+    "保留用户对第4章和第5.1节的删改",
+    "删除4.7实验记录与可复现性",
+    "将测试游戏顺延为4.7",
+    "采用用户确认后的智能拖拽重排说明",
+    "将表5.1内部测试名称和范围改成直白表述",
+    "将五项研究功能的统称统一为显示优化功能"
+  ],
+  "ignored_word_field_artifacts": [
+    "表题前自动出现的1表、2表等字段结果",
+    "图题前自动出现的1图、2图等字段结果"
+  ]
+}

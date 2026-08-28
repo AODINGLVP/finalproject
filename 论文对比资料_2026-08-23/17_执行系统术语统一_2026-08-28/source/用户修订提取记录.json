@@ -1,0 +1,21 @@
+{
+  "authoritative_input": "E:\\course pdf\\project\\finalproject\\论文对比资料_2026-08-23\\17_执行系统术语统一_2026-08-28\\source\\用户修改原稿_前三章_2026-08-28.docx",
+  "authoritative_input_sha256": "b4fae6c52f1213c8a07210848de9bb02fc67156a205ce5e6c173eb6f7c9f57a9",
+  "preserved_suffix_source": "E:\\course pdf\\project\\finalproject\\论文对比资料_2026-08-23\\15_移除技术文档引用_34篇_2026-08-28\\source\\论文内容_中文.md",
+  "preserved_suffix_source_sha256": "08c2fdbff72f9013f5e0c1446f8a598905aa1358f95569ccfb2c4427266d7a8d",
+  "output_markdown": "E:\\course pdf\\project\\finalproject\\论文对比资料_2026-08-23\\17_执行系统术语统一_2026-08-28\\source\\论文内容_中文.md",
+  "output_markdown_sha256": "45b49d658d0abdbea591733958876999534ec25087417a1558accc5ec0d052f0",
+  "edited_chapter_3_tables": 4,
+  "reference_count": 34,
+  "non_structural_corrections": [
+    "传统行为树辑器 -> 传统行为树编辑器",
+    "将1.4平台建设段末分号改为句号",
+    "明确2.1节点运行规则描述的是本项目实现",
+    "删除2.2末尾单独的句号段落",
+    "理顺3.1研究重点句并将“他们”改为“它们”",
+    "合并3.2重复的实验对象介绍",
+    "在Godot编辑器中 -> 在 Godot 编辑器中",
+    "Sarkar and Brown (1994) pages 73–84 -> 73–83",
+    "运行时 terminology -> 执行系统"
+  ]
+}

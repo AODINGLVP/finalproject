@@ -1,8 +1,8 @@
-[gd_resource type="Resource" script_class="BTTreeResource" format=3]
+[gd_resource type="Resource" script_class="BTTreeResource" format=3 uid="uid://p1scm0pugg5p"]
 
-[ext_resource type="Resource" path="res://behavior_trees/complex_guard_blackboard_schema.tres" id="1_5t5sh"]
-[ext_resource type="Script" path="res://addons/behavior_tree_editor/bt_node_resource.gd" id="2_yuknd"]
-[ext_resource type="Script" path="res://addons/behavior_tree_editor/bt_tree_resource.gd" id="3_12m20"]
+[ext_resource type="Resource" uid="uid://b8qocgh2lt5ov" path="res://behavior_trees/complex_guard_blackboard_schema.tres" id="1_5t5sh"]
+[ext_resource type="Script" uid="uid://b8o5ywdnkpnh8" path="res://addons/behavior_tree_editor/bt_node_resource.gd" id="2_yuknd"]
+[ext_resource type="Script" uid="uid://bx4g01fp01uuo" path="res://addons/behavior_tree_editor/bt_tree_resource.gd" id="3_12m20"]
 
 [sub_resource type="Resource" id="Resource_mcwxy"]
 script = ExtResource("2_yuknd")
@@ -229,7 +229,7 @@ description = "A complete reaction with recovery frames."
 script = ExtResource("2_yuknd")
 id = 21
 title = "Dodge Right"
-position = Vector2(1920, 2140)
+position = Vector2(1920.0001, 2140)
 parent_id = 20
 description = "Avoid or absorb the incoming strike."
 parameters = {
@@ -483,7 +483,7 @@ script = ExtResource("2_yuknd")
 id = 44
 title = "Obstacle Ahead?"
 node_type = "Condition"
-position = Vector2(4080, 1460)
+position = Vector2(4079.9998, 1460)
 parent_id = 43
 description = "Use the horizontal obstacle sensor."
 parameters = {
@@ -606,7 +606,7 @@ script = ExtResource("2_yuknd")
 id = 55
 title = "6 Ranged Suppression"
 node_type = "Sequence"
-position = Vector2(5700, 1120)
+position = Vector2(5755.2734, 1305.779)
 parent_id = 3
 description = "Fire visible projectiles when the player is beyond melee range."
 
@@ -615,7 +615,7 @@ script = ExtResource("2_yuknd")
 id = 56
 title = "Clear Ranged Shot?"
 node_type = "Condition"
-position = Vector2(5520, 1460)
+position = Vector2(5575.2734, 1645.779)
 parent_id = 55
 description = "Require a detected target at a useful projectile distance."
 parameters = {
@@ -627,7 +627,7 @@ script = ExtResource("2_yuknd")
 id = 57
 title = "Ranged Firing Pattern"
 node_type = "Random Selector"
-position = Vector2(5880, 1460)
+position = Vector2(5935.2744, 1645.779)
 parent_id = 55
 description = "Alternate between quick and carefully aimed shots."
 parameters = {
@@ -639,7 +639,7 @@ script = ExtResource("2_yuknd")
 id = 58
 title = "Ranged Pattern 1"
 node_type = "Sequence"
-position = Vector2(5880, 1800)
+position = Vector2(5935.2744, 1985.7789)
 parent_id = 57
 description = "Aim, telegraph, and release one projectile."
 
@@ -647,7 +647,7 @@ description = "Aim, telegraph, and release one projectile."
 script = ExtResource("2_yuknd")
 id = 59
 title = "Aim Projectile 1"
-position = Vector2(5520, 2140)
+position = Vector2(5575.2734, 2325.7783)
 parent_id = 58
 description = "Face and track the current player position."
 parameters = {
@@ -659,7 +659,7 @@ script = ExtResource("2_yuknd")
 id = 60
 title = "Ranged Telegraph 1"
 node_type = "Wait"
-position = Vector2(5880, 2140)
+position = Vector2(5935.2744, 2325.7788)
 parent_id = 58
 description = "Give the player a readable reaction window."
 parameters = {
@@ -670,7 +670,7 @@ parameters = {
 script = ExtResource("2_yuknd")
 id = 61
 title = "Fire Projectile 1"
-position = Vector2(6240, 2140)
+position = Vector2(6295.276, 2325.7783)
 parent_id = 58
 description = "Spawn a damaging projectile toward the tracked target."
 parameters = {
@@ -716,7 +716,7 @@ script = ExtResource("2_yuknd")
 id = 65
 title = "Pressure Pattern"
 node_type = "Random Selector"
-position = Vector2(6960, 1460)
+position = Vector2(6993.7734, 1370.5552)
 parent_id = 63
 description = "Mix lateral steps with cautious or aggressive advances."
 parameters = {
@@ -728,7 +728,7 @@ script = ExtResource("2_yuknd")
 id = 66
 title = "Pressure Pattern 1"
 node_type = "Sequence"
-position = Vector2(6960, 1800)
+position = Vector2(6978.582, 1737.1355)
 parent_id = 65
 description = "Create a readable approach pattern."
 
@@ -736,7 +736,7 @@ description = "Create a readable approach pattern."
 script = ExtResource("2_yuknd")
 id = 67
 title = "Pressure Reposition 1"
-position = Vector2(6600, 2140)
+position = Vector2(6618.582, 2077.1357)
 parent_id = 66
 description = "Use a lateral step or brief guard."
 parameters = {
@@ -748,7 +748,7 @@ script = ExtResource("2_yuknd")
 id = 68
 title = "Pressure Read 1"
 node_type = "Wait"
-position = Vector2(6960, 2140)
+position = Vector2(6978.582, 2077.1357)
 parent_id = 66
 description = "Briefly reassess the player."
 parameters = {
@@ -759,7 +759,7 @@ parameters = {
 script = ExtResource("2_yuknd")
 id = 69
 title = "Pressure Advance 1"
-position = Vector2(7320, 2140)
+position = Vector2(7338.582, 2077.1357)
 parent_id = 66
 description = "Close distance after repositioning."
 parameters = {
