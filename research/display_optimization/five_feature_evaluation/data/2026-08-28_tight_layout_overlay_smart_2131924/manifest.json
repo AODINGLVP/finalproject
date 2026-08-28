@@ -1,0 +1,1662 @@
+{
+  "created_at_utc": "2026-08-28T02:10:48",
+  "engine": "4.6-stable (official)",
+  "execution_mode": "physical_size_profile_replay_on_one_gpu",
+  "failures": 0,
+  "features": {
+    "auto_spacing": "Smart Drag Reflow",
+    "breadcrumb": "Related Node Focus",
+    "fisheye": "Fisheye Focus",
+    "semantic_zoom": "Adaptive Zoom Detail",
+    "translucent_cards": "Readable Edge Overlay"
+  },
+  "git_commit": "2131924",
+  "gpu": "NVIDIA GeForce RTX 5070 Laptop GPU",
+  "observation_count": 450,
+  "pair_count": 225,
+  "pairs": [
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|031|t1|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|031|t1|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|031|t1|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|031|t1|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|031|t1|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|031|t2|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|031|t2|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|031|t2|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|031|t2|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|031|t2|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|031|t3|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|031|t3|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|031|t3|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|031|t3|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|031|t3|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|061|t1|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|061|t1|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|061|t1|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|061|t1|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|061|t1|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|061|t2|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|061|t2|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|061|t2|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|061|t2|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|061|t2|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|061|t3|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|061|t3|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|061|t3|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|061|t3|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|061|t3|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|121|t1|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|121|t1|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|121|t1|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|121|t1|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|121|t1|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|121|t2|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|121|t2|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|121|t2|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|121|t2|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|121|t2|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|121|t3|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|121|t3|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|121|t3|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|121|t3|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|121|t3|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|241|t1|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|241|t1|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|241|t1|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|241|t1|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|241|t1|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|241|t2|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|241|t2|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|241|t2|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|241|t2|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|241|t2|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|241|t3|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|241|t3|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|241|t3|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|241|t3|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|241|t3|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|364|t1|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|364|t1|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|364|t1|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|364|t1|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|364|t1|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|364|t2|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|364|t2|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|364|t2|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|364|t2|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|364|t2|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|364|t3|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|364|t3|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|364|t3|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|364|t3|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "laptop_15_94|364|t3|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|031|t1|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|031|t1|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|031|t1|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|031|t1|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|031|t1|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|031|t2|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|031|t2|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|031|t2|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|031|t2|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|031|t2|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|031|t3|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|031|t3|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|031|t3|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|031|t3|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|031|t3|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|061|t1|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|061|t1|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|061|t1|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|061|t1|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|061|t1|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|061|t2|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|061|t2|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|061|t2|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|061|t2|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|061|t2|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|061|t3|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|061|t3|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|061|t3|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|061|t3|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|061|t3|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|121|t1|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|121|t1|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|121|t1|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|121|t1|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|121|t1|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|121|t2|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|121|t2|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|121|t2|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|121|t2|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|121|t2|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|121|t3|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|121|t3|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|121|t3|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|121|t3|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|121|t3|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|241|t1|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|241|t1|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|241|t1|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|241|t1|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|241|t1|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|241|t2|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|241|t2|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|241|t2|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|241|t2|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|241|t2|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|241|t3|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|241|t3|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|241|t3|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|241|t3|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|241|t3|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|364|t1|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|364|t1|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|364|t1|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|364|t1|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|364|t1|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|364|t2|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|364|t2|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|364|t2|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|364|t2|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|364|t2|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|364|t3|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|364|t3|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|364|t3|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|364|t3|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "medium_26_96|364|t3|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|031|t1|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|031|t1|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|031|t1|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|031|t1|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|031|t1|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|031|t2|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|031|t2|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|031|t2|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|031|t2|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|031|t2|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|031|t3|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|031|t3|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|031|t3|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|031|t3|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|031|t3|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|061|t1|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|061|t1|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|061|t1|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|061|t1|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|061|t1|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|061|t2|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|061|t2|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|061|t2|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|061|t2|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|061|t2|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|061|t3|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|061|t3|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|061|t3|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|061|t3|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|061|t3|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|121|t1|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|121|t1|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|121|t1|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|121|t1|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|121|t1|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|121|t2|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|121|t2|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|121|t2|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|121|t2|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|121|t2|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|121|t3|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|121|t3|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|121|t3|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|121|t3|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|121|t3|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|241|t1|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|241|t1|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|241|t1|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|241|t1|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|241|t1|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|241|t2|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|241|t2|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|241|t2|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|241|t2|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|241|t2|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|241|t3|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|241|t3|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|241|t3|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|241|t3|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|241|t3|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|364|t1|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|364|t1|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|364|t1|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|364|t1|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|364|t1|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|364|t2|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|364|t2|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|364|t2|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|364|t2|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|364|t2|fisheye"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Smart Drag Reflow",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|364|t3|auto_spacing"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Adaptive Zoom Detail",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|364|t3|semantic_zoom"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Readable Edge Overlay",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|364|t3|translucent_cards"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Related Node Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|364|t3|breadcrumb"
+    },
+    {
+      "effect_valid": true,
+      "feature": "Fisheye Focus",
+      "off_safe": true,
+      "on_safe": true,
+      "pair_id": "large_31_55|364|t3|fisheye"
+    }
+  ],
+  "physical_size_source": "2026-08-23 EDID inventory of three real displays",
+  "quick_mode": false,
+  "renderer": "gl_compatibility",
+  "schema_version": 1,
+  "screen_profiles": [
+    {
+      "area_cm2": 748.0,
+      "canvas": "(1190, 770)",
+      "diagonal_in": 15.9437,
+      "height_cm": 22.0,
+      "key": "laptop_15_94",
+      "model": "BOE0CD1",
+      "width_cm": 34.0
+    },
+    {
+      "area_cm2": 1980.0,
+      "canvas": "(2100, 1155)",
+      "diagonal_in": 26.9574,
+      "height_cm": 33.0,
+      "key": "medium_26_96",
+      "model": "H27T22S",
+      "width_cm": 60.0
+    },
+    {
+      "area_cm2": 2730.0,
+      "canvas": "(2450, 1365)",
+      "diagonal_in": 31.5464,
+      "height_cm": 39.0,
+      "key": "large_31_55",
+      "model": "U32G3X",
+      "width_cm": 70.0
+    }
+  ],
+  "source_sha256": {
+    "res://behavior_trees/arena_commander_364.tres": "e881c96c22376aca2d42ba31af7e2a21aae5e400be44754e23610146beb8f661",
+    "res://behavior_trees/arena_hunter_121.tres": "c046b69ddef7ee97e6c716c3ed4bfda219ad9a6378ea4e9e82fff18477d3bcef",
+    "res://behavior_trees/arena_scout_31.tres": "b774c05e08b7205de8ab989aecd9ebaf1b3acc7ef549cfdc7cc0cf8b2dc3248d",
+    "res://behavior_trees/arena_skirmisher_61.tres": "492c3f8bf15f4cb5754de77f148dfbf3f11cea4487295e18d28f5ffbae3b0f50",
+    "res://behavior_trees/arena_tactician_241.tres": "dc7a13e0703dd92f9a2915413718bd2f313586fb4dfd8fed8b591cebdef7c9ce"
+  },
+  "task_count_per_tree": 3,
+  "tree_profiles": [
+    {
+      "actor": "Scout",
+      "path": "res://behavior_trees/arena_scout_31.tres",
+      "size": 31
+    },
+    {
+      "actor": "Skirmisher",
+      "path": "res://behavior_trees/arena_skirmisher_61.tres",
+      "size": 61
+    },
+    {
+      "actor": "Hunter",
+      "path": "res://behavior_trees/arena_hunter_121.tres",
+      "size": 121
+    },
+    {
+      "actor": "Tactician",
+      "path": "res://behavior_trees/arena_tactician_241.tres",
+      "size": 241
+    },
+    {
+      "actor": "Commander",
+      "path": "res://behavior_trees/arena_commander_364.tres",
+      "size": 364
+    }
+  ]
+}

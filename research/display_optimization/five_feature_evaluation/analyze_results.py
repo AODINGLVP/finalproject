@@ -25,7 +25,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_DATA_DIR = (
     SCRIPT_DIR
     / "data"
-    / "2026-08-26_current_five_features_a87d7ac"
+    / "2026-08-28_tight_layout_overlay_smart_2131924"
 )
 FEATURE_ORDER = [
     "auto_spacing",
@@ -151,6 +151,7 @@ def derive_pairs(data: pd.DataFrame) -> pd.DataFrame:
             frame["off_overlap_pairs"] = off["smart_overlap_pairs"].to_numpy()
             frame["on_overlap_pairs"] = on["smart_overlap_pairs"].to_numpy()
             frame["other_cards_moved"] = on["smart_other_cards_moved"].to_numpy()
+            frame["total_other_move_px"] = on["smart_total_other_move_px"].to_numpy()
             frame["max_other_move_px"] = on["smart_max_other_move_px"].to_numpy()
             frame["far_cards_moved"] = on["smart_far_cards_moved"].to_numpy()
             frame["effect_contract_pass"] = (
@@ -186,6 +187,40 @@ def derive_pairs(data: pd.DataFrame) -> pd.DataFrame:
             ].to_numpy()
             frame["weighted_revealed_edge_px"] = on[
                 "overlay_revealed_edge_weighted_px"
+            ].to_numpy()
+            frame["natural_visible_edges"] = on[
+                "overlay_natural_visible_edges"
+            ].to_numpy()
+            frame["natural_occluded_edges"] = on[
+                "overlay_natural_occluded_edges"
+            ].to_numpy()
+            frame["natural_occlusion_events"] = on[
+                "overlay_natural_occlusion_events"
+            ].to_numpy()
+            frame["natural_occluded_length_px"] = on[
+                "overlay_natural_occluded_length_px"
+            ].to_numpy()
+            frame["natural_occluded_edge_ratio"] = on[
+                "overlay_natural_occluded_edge_ratio"
+            ].to_numpy()
+            frame["natural_occluded_length_ratio"] = on[
+                "overlay_natural_occluded_length_ratio"
+            ].to_numpy()
+            frame["natural_blocking_cards"] = on[
+                "overlay_natural_blocking_cards"
+            ].to_numpy()
+            frame["line_background_color_gap_off"] = off[
+                "overlay_line_background_color_gap"
+            ].to_numpy()
+            frame["line_background_color_gap_on"] = on[
+                "overlay_line_background_color_gap"
+            ].to_numpy()
+            frame["line_background_color_gap_gain"] = (
+                frame["line_background_color_gap_on"]
+                - frame["line_background_color_gap_off"]
+            )
+            frame["line_background_sample_count"] = on[
+                "overlay_line_background_sample_count"
             ].to_numpy()
             frame["protected_text_masks"] = on["overlay_text_mask_count"].to_numpy()
             frame["effect_contract_pass"] = (
@@ -276,9 +311,9 @@ def aggregate_long(paired: pd.DataFrame, group_column: str) -> pd.DataFrame:
                 row["secondary_metric"] = "other_cards_moved"
             else:
                 row["secondary_effect_mean"] = selected[
-                    "controlled_crossing_length_px"
+                    "natural_occluded_edge_ratio"
                 ].mean()
-                row["secondary_metric"] = "controlled_crossing_length_px"
+                row["secondary_metric"] = "natural_occluded_edge_ratio"
             rows.append(row)
     return pd.DataFrame(rows)
 
@@ -309,6 +344,12 @@ def feature_summary(paired: pd.DataFrame) -> pd.DataFrame:
                 f"{subset['other_cards_moved'].min():.0f}–"
                 f"{subset['other_cards_moved'].max():.0f}"
             )
+            row["tertiary_metric"] = "total_other_move_px"
+            row["tertiary_median"] = subset["total_other_move_px"].median()
+            row["tertiary_range"] = (
+                f"{subset['total_other_move_px'].min():.2f}–"
+                f"{subset['total_other_move_px'].max():.2f}"
+            )
         elif feature == "semantic_zoom":
             row["secondary_metric"] = "information_field_reduction_pct"
             row["secondary_median"] = subset[
@@ -319,11 +360,17 @@ def feature_summary(paired: pd.DataFrame) -> pd.DataFrame:
                 f"{subset['information_field_reduction_pct'].max():.2f}"
             )
         elif feature == "translucent_cards":
-            row["secondary_metric"] = "protected_text_masks"
-            row["secondary_median"] = subset["protected_text_masks"].median()
+            row["secondary_metric"] = "natural_occluded_edge_ratio"
+            row["secondary_median"] = subset["natural_occluded_edge_ratio"].median()
             row["secondary_range"] = (
-                f"{subset['protected_text_masks'].min():.0f}–"
-                f"{subset['protected_text_masks'].max():.0f}"
+                f"{subset['natural_occluded_edge_ratio'].min():.4f}–"
+                f"{subset['natural_occluded_edge_ratio'].max():.4f}"
+            )
+            row["tertiary_metric"] = "line_background_color_gap_gain"
+            row["tertiary_median"] = subset["line_background_color_gap_gain"].median()
+            row["tertiary_range"] = (
+                f"{subset['line_background_color_gap_gain'].min():.4f}–"
+                f"{subset['line_background_color_gap_gain'].max():.4f}"
             )
         elif feature == "breadcrumb":
             row["secondary_metric"] = "salience_ratio"
@@ -345,6 +392,8 @@ def feature_summary(paired: pd.DataFrame) -> pd.DataFrame:
 
 def structured_evaluation(paired: pd.DataFrame) -> pd.DataFrame:
     fisheye = paired[paired["feature_key"] == "fisheye"]
+    smart = paired[paired["feature_key"] == "auto_spacing"]
+    overlay = paired[paired["feature_key"] == "translucent_cards"]
     fisheye_min_width = fisheye["on_target_width_px"].min()
     fisheye_overlap_cases = int((fisheye["new_overlap_pairs"] > 0).sum())
     fisheye_hierarchy_cases = int((fisheye["new_hierarchy_violations"] > 0).sum())
@@ -367,7 +416,7 @@ def structured_evaluation(paired: pd.DataFrame) -> pd.DataFrame:
                 "best_use": "拖拽编辑时消除新产生的卡片遮挡",
                 "strongest_context": "所有屏幕和规模；效果由局部碰撞而非画布尺寸决定",
                 "measured_advantage": "45/45 个受控拖拽场景清除全部诱发重叠",
-                "observed_cost": "会连带移动少量邻近卡片，个别分组成员距离拖拽点较远",
+                "observed_cost": f"会连带移动其他卡片；中位数为 {smart['other_cards_moved'].median():.0f} 张，总移动距离中位数为 {smart['total_other_move_px'].median():.1f} px",
                 "recommendation": "直接编辑任务中最有价值，适合默认开启",
             },
             {
@@ -396,8 +445,8 @@ def structured_evaluation(paired: pd.DataFrame) -> pd.DataFrame:
                 "feature_zh": FEATURE_NAMES_ZH["translucent_cards"],
                 "best_use": "查看穿过卡片背景的拥挤连线，同时保护文字区域",
                 "strongest_context": "局部边拥挤，与屏幕尺寸和节点总数关系较弱",
-                "measured_advantage": "背景提供 28% 连线显露代理值，路线与文字掩膜保持不变",
-                "observed_cost": "作用局部且视觉差异较细微，不能减少节点数量或整体拥挤",
+                "measured_advantage": f"自然视口中平均 {overlay['natural_occluded_edges'].mean():.2f} 条可见边被卡片遮挡；受控遮挡中路线与文字掩膜保持不变",
+                "observed_cost": "作用局部且不能减少节点数量或整体拥挤；像素差会受文字和控件位置影响",
                 "recommendation": "保留为情境功能，不把它作为主要优化结论",
             },
         ]
@@ -550,6 +599,13 @@ def write_results_markdown(
     related_screen = screen_frame[screen_frame["feature_key"] == "breadcrumb"].copy()
     related_screen["屏幕"] = related_screen["screen_key"].map(SCREEN_NAMES_ZH)
     fisheye_tree = tree_frame[tree_frame["feature_key"] == "fisheye"].copy()
+    adaptive_tree = tree_frame[tree_frame["feature_key"] == "semantic_zoom"].copy()
+    related_tree = tree_frame[tree_frame["feature_key"] == "breadcrumb"].copy()
+    smart_tree = tree_frame[tree_frame["feature_key"] == "auto_spacing"].copy()
+    smart_screen = screen_frame[screen_frame["feature_key"] == "auto_spacing"].copy()
+    smart_screen["屏幕"] = smart_screen["screen_key"].map(SCREEN_NAMES_ZH)
+    overlay_screen = screen_frame[screen_frame["feature_key"] == "translucent_cards"].copy()
+    overlay_screen["屏幕"] = overlay_screen["screen_key"].map(SCREEN_NAMES_ZH)
 
     lines = [
         "# 当前五项 Display 功能实验结果（中文工作稿）",
@@ -566,7 +622,7 @@ def write_results_markdown(
         "",
         f"自适应缩放细节使总卡片面积平均减少 {adaptive['primary_effect_pct'].mean():.2f}%，中位数减少 {adaptive['primary_effect_pct'].median():.2f}%；信息字段平均减少 {adaptive['information_field_reduction_pct'].mean():.2f}%，中位数减少 {adaptive['information_field_reduction_pct'].median():.2f}%。它没有新增层级遮挡，并在 10/45 个场景中增加了完整位于视口内的卡片，累计增加 {adaptive['fully_visible_card_gain'].sum():.0f} 张。",
         "",
-        f"可读连线覆盖把卡片背景不透明度从 1.00 降到 0.72，因此受控遮挡线段的显露代理值为 28%。45 个场景的遮挡线段中位长度为 {overlay['controlled_crossing_length_px'].median():.2f} px；连接路线保持不变，且每棵树的文字掩膜仍被保留。这个指标只说明线条能够透过背景出现，不能证明用户一定更容易追踪线路。",
+        f"可读连线覆盖把卡片背景不透明度从 1.00 降到 0.72。自然视口扫描中，平均每个案例有 {overlay['natural_occluded_edges'].mean():.2f} 条可见连线被非端点卡片遮挡；受控遮挡中，遮挡线段中位长度为 {overlay['controlled_crossing_length_px'].median():.2f} px。连接路线保持不变，且每棵树的文字掩膜仍被保留。像素采样也被记录，但它会受文字和控件位置影响，因此只作为辅助数据。",
         "",
         f"相关节点聚焦正确淡化了全部 {related['unrelated_nodes'].sum():.0f} 次无关节点实例，相关节点与无关节点的平均不透明度比为 {related['salience_ratio'].median():.2f}:1。视口内保持全亮的节点数量中位数减少 {related['full_bright_view_reduction_pct'].median():.2f}%。该功能没有隐藏或移动节点，所以适合在保留全局位置的同时查看一个关系分支。",
         "",
@@ -598,7 +654,23 @@ def write_results_markdown(
             {"全亮节点减少（%）": "{:.2f}"},
         ),
         "",
-        f"结果表明，小屏幕不是简单地让所有功能都更有优势。Adaptive 和 Fisheye 在 15.94 英寸配置上的相对效果最大：前者用更少面积维持概览，后者把原本很小的目标恢复到至少 {fisheye['on_target_width_px'].min():.0f} px。Related Focus 在中、大屏幕上的全亮节点减少比例更高，因为更大的画布起初同时容纳了更多无关分支。Smart Drag 和 Overlay 是局部操作，其主要比例在三种尺寸下保持相同。",
+        "智能拖拽重排在不同屏幕上的其他节点移动数量：",
+        "",
+        markdown_table(
+            smart_screen.rename(columns={"secondary_effect_mean": "平均移动节点数"}),
+            ["屏幕", "平均移动节点数"],
+            {"平均移动节点数": "{:.2f}"},
+        ),
+        "",
+        "可读连线覆盖在不同屏幕上的自然遮挡比例：",
+        "",
+        markdown_table(
+            overlay_screen.rename(columns={"secondary_effect_mean": "自然遮挡边比例"}),
+            ["屏幕", "自然遮挡边比例"],
+            {"自然遮挡边比例": "{:.4f}"},
+        ),
+        "",
+        f"结果表明，小屏幕不是简单地让所有功能都更有优势。Adaptive 和 Fisheye 在 15.94 英寸配置上的相对效果最大：前者用更少面积维持概览，后者把原本很小的目标恢复到至少 {fisheye['on_target_width_px'].min():.0f} px。Related Focus 在中、大屏幕上的全亮节点减少比例更高，因为更大的画布起初同时容纳了更多无关分支。Smart Drag 的移动节点数量主要由拖动位置和局部分支结构决定。Overlay 则取决于当前视口里是否存在连线穿过卡片，屏幕越大时可见连线更多，自然遮挡案例也可能更多。",
         "",
         "## 4　节点规模下的差异",
         "",
@@ -612,7 +684,31 @@ def write_results_markdown(
             {"宽度增幅（%）": "{:.2f}"},
         ),
         "",
-        "Adaptive 的平均卡片面积减少量在 31、61、121、241 和 364 节点时分别为 33.46%、33.58%、46.07%、57.93% 和 54.67%。Related Focus 的视口全亮节点平均减少量分别为 34.40%、55.63%、68.95%、73.43% 和 59.10%。这些树都是真实游戏树，因此规模增加的同时，分支形状、Decorator 数量和字段内容也会改变；不能把相邻规模的每一个差值都解释成纯粹的节点数量因果效应。",
+        "Adaptive 的平均卡片面积减少量：",
+        "",
+        markdown_table(
+            adaptive_tree.rename(columns={"tree_size": "资源节点数", "primary_effect_mean_pct": "面积减少（%）"}),
+            ["资源节点数", "面积减少（%）"],
+            {"面积减少（%）": "{:.2f}"},
+        ),
+        "",
+        "Related Focus 的视口全亮节点平均减少量：",
+        "",
+        markdown_table(
+            related_tree.rename(columns={"tree_size": "资源节点数", "secondary_effect_mean": "全亮节点减少（%）"}),
+            ["资源节点数", "全亮节点减少（%）"],
+            {"全亮节点减少（%）": "{:.2f}"},
+        ),
+        "",
+        "智能拖拽重排在不同规模下移动的其他节点数量：",
+        "",
+        markdown_table(
+            smart_tree.rename(columns={"tree_size": "资源节点数", "secondary_effect_mean": "平均移动节点数"}),
+            ["资源节点数", "平均移动节点数"],
+            {"平均移动节点数": "{:.2f}"},
+        ),
+        "",
+        "这些树都是真实游戏树，因此规模增加时，节点数量、分支形状和字段内容会一起变化。实验更适合说明插件面对不同规模真实树时的实际表现，而不是证明某个数字只由节点数量单独造成。",
         "",
         "## 5　哪项功能最有价值",
         "",
