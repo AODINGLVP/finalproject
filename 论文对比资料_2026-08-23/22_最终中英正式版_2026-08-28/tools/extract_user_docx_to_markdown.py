@@ -92,6 +92,15 @@ def main() -> None:
 
     doc = Document(str(INPUT_DOCX))
     blocks = list(iter_blocks(doc))
+    cover_title = ""
+    for block in blocks:
+        if isinstance(block, Paragraph):
+            raw = " ".join(block.text.split())
+            if raw:
+                cover_title = raw
+                break
+    if cover_title:
+        metadata = re.sub(r"(?m)^title:.*$", f"title: {cover_title}", metadata)
     output: list[str] = [metadata]
     started = False
     skip_next_figure_caption = False

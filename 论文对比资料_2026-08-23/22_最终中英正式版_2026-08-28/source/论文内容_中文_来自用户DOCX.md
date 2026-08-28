@@ -1,5 +1,5 @@
 ---
-title: Godot 4.6 大型可视化行为树的显示优化与实验评估
+title: 基于godot的可视化行为树插件与显示优化
 author: [作者姓名]
 student_number: [学号]
 degree: 游戏工程理学硕士

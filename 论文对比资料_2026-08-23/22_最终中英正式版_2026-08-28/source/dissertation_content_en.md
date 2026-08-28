@@ -1,5 +1,5 @@
 ---
-title: Display Optimisation and Experimental Evaluation of Large Visual Behaviour Trees in Godot 4.6
+title: A Godot-based Visual Behaviour Tree Plugin and Display Optimisation
 author: [Author Name]
 student_number: [Student Number]
 degree: MSc Games Engineering
@@ -220,7 +220,7 @@ Before carrying out the display experiment, the basic functions of the behaviour
 
 The system consists of five parts: editor plugin, resource model, execution system, debug bridge and test game. The editor plugin runs inside the Godot editor and is responsible for displaying behaviour tree resources as an operable GraphEdit canvas. The resource model stores nodes, parent-child relationships, Decorators, blackboard Schema and node coordinates. The execution system reads the same resource and passes Tick results to the game Actor. The debug bridge sends the current state, failure reasons and blackboard values back to the editor.
 
-![](../figures/extracted/figure_1.png)
+![](../figures/en/figure_4_1_architecture.png)
 
 Figure 4.1 Relationship between the plugin, resources, execution system, debug bridge and test game
 
