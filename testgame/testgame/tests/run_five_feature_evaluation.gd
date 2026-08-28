@@ -62,7 +62,7 @@ const TASK_COUNT := 3
 const LOGICAL_UNITS_PER_CM := 35.0
 const DEFAULT_OUTPUT_DIR := "res://test_results/five_feature_evaluation"
 const EVIDENCE_TREE_SIZE := 241
-const EVIDENCE_SCREEN_KEY := "laptop_15_94"
+const EVIDENCE_SCREEN_KEY := "medium_26_96"
 const EVIDENCE_TASK_INDEX := 1
 const SETTLE_FRAME_COUNT := 2
 
@@ -265,6 +265,7 @@ func _run_smart_drag_state(enabled: bool, targets: Dictionary) -> Dictionary:
 	var overlap := _overlap_metrics()
 	var moved_count := 0
 	var max_move_px := 0.0
+	var total_move_px := 0.0
 	var far_moved_count := 0
 	for graph_node in _graph_nodes():
 		if graph_node.node_resource.id == source.node_resource.id:
@@ -273,6 +274,7 @@ func _run_smart_drag_state(enabled: bool, targets: Dictionary) -> Dictionary:
 		var displacement_px := (graph_node.visual_offset - before).length() * view.graph_edit.zoom
 		if displacement_px > 0.5:
 			moved_count += 1
+			total_move_px += displacement_px
 			max_move_px = maxf(max_move_px, displacement_px)
 			if graph_node.position_offset.distance_to(source.position_offset) * view.graph_edit.zoom > 900.0:
 				far_moved_count += 1
@@ -281,6 +283,7 @@ func _run_smart_drag_state(enabled: bool, targets: Dictionary) -> Dictionary:
 		"smart_overlap_pairs": int(overlap["pairs"]),
 		"smart_overlap_area_px2": float(overlap["area"]),
 		"smart_other_cards_moved": moved_count,
+		"smart_total_other_move_px": total_move_px,
 		"smart_max_other_move_px": max_move_px,
 		"smart_far_cards_moved": far_moved_count,
 		"smart_solver_active": view.drag_auto_spacing_active,
@@ -329,7 +332,12 @@ func _run_overlay_state(enabled: bool, target_id: int, task_index: int) -> Dicti
 	view.set_process(false)
 	view.feature_states["translucent_cards"] = enabled
 	view.graph_edit.zoom = 0.75
-	var fixture: Dictionary = await _prepare_edge_crossing_fixture(task_index)
+	var scan_target := _graph_node(target_id)
+	if scan_target != null:
+		_center_node(scan_target)
+	await _settle()
+	var natural := _measure_natural_edge_occlusion()
+	var fixture: Dictionary = await _prepare_edge_crossing_fixture(target_id, task_index)
 	await _settle()
 	var from_node := _graph_node(int(fixture.get("from_id", -1)))
 	var to_node := _graph_node(int(fixture.get("to_id", -1)))
@@ -350,17 +358,27 @@ func _run_overlay_state(enabled: bool, target_id: int, task_index: int) -> Dicti
 	var crossing_length := 0.0
 	if blocker != null:
 		crossing_length = _polyline_length_inside_rect(
-			route_after, Rect2(blocker.position, blocker.size * blocker.scale)
+			route_after, _card_rect(blocker)
 		)
+	var contrast := await _measure_overlay_contrast(route_after, blocker)
 	var alpha := BTGraphNode.TRANSLUCENT_CARD_ALPHA_FACTOR if enabled else 1.0
 	return {
 		"operation_zoom": view.graph_edit.zoom,
+		"overlay_natural_visible_edges": int(natural["visible_edges"]),
+		"overlay_natural_occluded_edges": int(natural["occluded_edges"]),
+		"overlay_natural_occlusion_events": int(natural["occlusion_events"]),
+		"overlay_natural_occluded_length_px": float(natural["occluded_length_px"]),
+		"overlay_natural_occluded_edge_ratio": float(natural["occluded_edge_ratio"]),
+		"overlay_natural_occluded_length_ratio": float(natural["occluded_length_ratio"]),
+		"overlay_natural_blocking_cards": int(natural["blocking_cards"]),
 		"overlay_from_id": int(fixture.get("from_id", -1)),
 		"overlay_to_id": int(fixture.get("to_id", -1)),
 		"overlay_blocker_id": int(fixture.get("blocker_id", -1)),
 		"overlay_crossing_length_px": crossing_length,
 		"overlay_background_alpha": alpha,
 		"overlay_revealed_edge_weighted_px": crossing_length * (1.0 - alpha),
+		"overlay_line_background_color_gap": float(contrast["mean_gap"]),
+		"overlay_line_background_sample_count": int(contrast["sample_count"]),
 		"overlay_text_mask_count": _count_translucent_text_masks(),
 		"overlay_routes_unchanged": _polylines_equal(route_before, route_after),
 	}
@@ -578,7 +596,7 @@ func _drag_pairs(tree: BTTreeResource) -> Array[Vector2i]:
 	return pairs
 
 
-func _prepare_edge_crossing_fixture(task_index: int) -> Dictionary:
+func _prepare_edge_crossing_fixture(target_id: int, task_index: int) -> Dictionary:
 	var candidates: Array[Dictionary] = []
 	for node in view.current_tree.nodes:
 		if node == null or node.parent_id == -1 or node.decorator_parent_id != -1:
@@ -593,7 +611,7 @@ func _prepare_edge_crossing_fixture(task_index: int) -> Dictionary:
 		for blocker in _graph_nodes():
 			if blocker.node_resource.id == from_node.node_resource.id or blocker.node_resource.id == to_node.node_resource.id:
 				continue
-			var length := _polyline_length_inside_rect(route, Rect2(blocker.position, blocker.size * blocker.scale))
+			var length := _polyline_length_inside_rect(route, _card_rect(blocker))
 			if length > best_length:
 				best_length = length
 				best_blocker_id = blocker.node_resource.id
@@ -603,10 +621,8 @@ func _prepare_edge_crossing_fixture(task_index: int) -> Dictionary:
 			"blocker_id": best_blocker_id,
 			"crossing_length_px": best_length,
 		})
-	candidates.sort_custom(func(left: Dictionary, right: Dictionary): return float(left["crossing_length_px"]) > float(right["crossing_length_px"]))
-	var chosen: Dictionary = candidates[mini(task_index, candidates.size() - 1)]
-	if float(chosen["crossing_length_px"]) > 1.0 and int(chosen["blocker_id"]) != -1:
-		return chosen
+	var preferred := _controlled_overlay_edge_for_target(target_id)
+	var chosen: Dictionary = preferred if not preferred.is_empty() else candidates[mini(task_index, candidates.size() - 1)]
 	# The real tree is still used, but a non-endpoint card receives a temporary
 	# visual-only offset to produce one controlled congestion case. Resource data
 	# and the route remain unchanged in both paired states.
@@ -631,8 +647,66 @@ func _prepare_edge_crossing_fixture(task_index: int) -> Dictionary:
 		await process_frame
 		route = view.graph_edit._route_connection_between(from_node, to_node)
 		chosen["blocker_id"] = blocker.node_resource.id
-		chosen["crossing_length_px"] = _polyline_length_inside_rect(route, Rect2(blocker.position, blocker.size * blocker.scale))
+		chosen["crossing_length_px"] = _polyline_length_inside_rect(route, _card_rect(blocker))
 	return chosen
+
+
+func _controlled_overlay_edge_for_target(target_id: int) -> Dictionary:
+	var target_resource := view.current_tree.find_node(target_id)
+	if target_resource != null and target_resource.parent_id != -1:
+		return {"from_id": target_resource.parent_id, "to_id": target_resource.id, "blocker_id": -1, "crossing_length_px": 0.0}
+	if target_resource != null:
+		for child in view.current_tree.get_children_of(target_resource.id):
+			if child.decorator_parent_id == -1:
+				return {"from_id": target_resource.id, "to_id": child.id, "blocker_id": -1, "crossing_length_px": 0.0}
+	return {}
+
+
+func _measure_natural_edge_occlusion() -> Dictionary:
+	var visible_edges := 0
+	var occluded_edges := 0
+	var occlusion_events := 0
+	var occluded_length := 0.0
+	var visible_length := 0.0
+	var blocking_cards := {}
+	var viewport_rect := Rect2(Vector2.ZERO, view.graph_edit.size)
+	for node in view.current_tree.nodes:
+		if node == null or node.parent_id == -1 or node.decorator_parent_id != -1:
+			continue
+		var from_node := _graph_node(node.parent_id)
+		var to_node := _graph_node(node.id)
+		if from_node == null or to_node == null:
+			continue
+		var route := view.graph_edit._route_connection_between(from_node, to_node)
+		var route_visible_length := _polyline_length_inside_rect(route, viewport_rect)
+		if route_visible_length <= 1.0:
+			continue
+		visible_edges += 1
+		visible_length += route_visible_length
+		var edge_occluded := false
+		for blocker in _graph_nodes():
+			if blocker.node_resource.id == from_node.node_resource.id or blocker.node_resource.id == to_node.node_resource.id:
+				continue
+			var blocker_rect := _card_rect(blocker).intersection(viewport_rect)
+			if blocker_rect.get_area() <= 1.0:
+				continue
+			var blocked_length := _polyline_length_inside_rect(route, blocker_rect)
+			if blocked_length > 8.0:
+				occlusion_events += 1
+				occluded_length += blocked_length
+				blocking_cards[blocker.node_resource.id] = true
+				edge_occluded = true
+		if edge_occluded:
+			occluded_edges += 1
+	return {
+		"visible_edges": visible_edges,
+		"occluded_edges": occluded_edges,
+		"occlusion_events": occlusion_events,
+		"occluded_length_px": occluded_length,
+		"occluded_edge_ratio": float(occluded_edges) / float(visible_edges) if visible_edges > 0 else 0.0,
+		"occluded_length_ratio": occluded_length / visible_length if visible_length > 0.0 else 0.0,
+		"blocking_cards": blocking_cards.size(),
+	}
 
 
 func _measure_common(tree: BTTreeResource, canonical: BTTreeResource) -> Dictionary:
@@ -808,6 +882,10 @@ func _graph_nodes() -> Array[BTGraphNode]:
 	return nodes
 
 
+func _card_rect(graph_node: BTGraphNode) -> Rect2:
+	return Rect2(graph_node.position, graph_node.size * graph_node.scale)
+
+
 func _capture_positions(tree: BTTreeResource) -> Dictionary:
 	var positions := {}
 	for node in tree.nodes:
@@ -857,6 +935,62 @@ func _polyline_length_inside_rect(points: PackedVector2Array, rect: Rect2) -> fl
 	for index in range(points.size() - 1):
 		length += _segment_length_inside_rect(points[index], points[index + 1], rect)
 	return length
+
+
+func _measure_overlay_contrast(route: PackedVector2Array, blocker: BTGraphNode) -> Dictionary:
+	if blocker == null or route.size() < 2 or DisplayServer.get_name() == "headless" or RenderingServer.get_current_rendering_method() == "dummy":
+		return {"mean_gap": 0.0, "sample_count": 0}
+	viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+	RenderingServer.force_draw(false, 0.0)
+	await process_frame
+	var image := viewport.get_texture().get_image()
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	var graph_origin := view.graph_edit.get_global_rect().position
+	var blocker_rect := _card_rect(blocker).grow(-16.0)
+	var gap_sum := 0.0
+	var sample_count := 0
+	for index in range(route.size() - 1):
+		var start := route[index]
+		var finish := route[index + 1]
+		var segment := finish - start
+		var segment_length := segment.length()
+		if segment_length < 1.0:
+			continue
+		var direction := segment / segment_length
+		var normal := Vector2(-direction.y, direction.x)
+		var steps := mini(40, maxi(1, int(segment_length / 4.0)))
+		for step in range(steps + 1):
+			var local_point := start.lerp(finish, float(step) / float(steps))
+			if not blocker_rect.has_point(local_point):
+				continue
+			var line_point := graph_origin + local_point
+			var left_point := graph_origin + local_point + normal * 7.0
+			var right_point := graph_origin + local_point - normal * 7.0
+			if not _image_has_point(image, line_point) or not _image_has_point(image, left_point) or not _image_has_point(image, right_point):
+				continue
+			var left_color := image.get_pixelv(Vector2i(roundi(left_point.x), roundi(left_point.y)))
+			var right_color := image.get_pixelv(Vector2i(roundi(right_point.x), roundi(right_point.y)))
+			if _rgb_gap(left_color, right_color) > 0.16:
+				continue
+			var line_color := image.get_pixelv(Vector2i(roundi(line_point.x), roundi(line_point.y)))
+			var background_gap := (_rgb_gap(line_color, left_color) + _rgb_gap(line_color, right_color)) * 0.5
+			gap_sum += background_gap
+			sample_count += 1
+	return {
+		"mean_gap": gap_sum / float(sample_count) if sample_count > 0 else 0.0,
+		"sample_count": sample_count,
+	}
+
+
+func _image_has_point(image: Image, point: Vector2) -> bool:
+	return point.x >= 0.0 and point.y >= 0.0 and point.x < float(image.get_width()) and point.y < float(image.get_height())
+
+
+func _rgb_gap(left: Color, right: Color) -> float:
+	var dr := left.r - right.r
+	var dg := left.g - right.g
+	var db := left.b - right.b
+	return sqrt(dr * dr + dg * dg + db * db) / sqrt(3.0)
 
 
 func _polyline_midpoint(points: PackedVector2Array) -> Vector2:
@@ -936,6 +1070,16 @@ func _capture_evidence(feature_key: String, enabled: bool) -> void:
 	RenderingServer.force_draw(false, 0.0)
 	await process_frame
 	var image := viewport.get_texture().get_image()
+	var graph_rect := view.graph_edit.get_global_rect()
+	var crop_rect := Rect2i(
+		Vector2i(maxi(0, roundi(graph_rect.position.x)), maxi(0, roundi(graph_rect.position.y))),
+		Vector2i(
+			mini(image.get_width(), roundi(graph_rect.end.x)) - maxi(0, roundi(graph_rect.position.x)),
+			mini(image.get_height(), roundi(graph_rect.end.y)) - maxi(0, roundi(graph_rect.position.y))
+		)
+	)
+	if crop_rect.size.x > 1 and crop_rect.size.y > 1:
+		image = image.get_region(crop_rect)
 	var state := "on" if enabled else "off"
 	var filename := "%s_%s.png" % [feature_key, state]
 	var error := image.save_png(output_dir.path_join("evidence").path_join(filename))
@@ -966,7 +1110,8 @@ func _pair_meets_feature_contract(feature_key: String, off_state: Dictionary, on
 		"translucent_cards":
 			return float(on_state.get("overlay_crossing_length_px", 0.0)) > 1.0 \
 				and float(on_state.get("overlay_background_alpha", 1.0)) < float(off_state.get("overlay_background_alpha", 1.0)) \
-				and float(on_state.get("overlay_revealed_edge_weighted_px", 0.0)) > 0.0 \
+				and int(on_state.get("overlay_line_background_sample_count", 0)) > 0 \
+				and float(on_state.get("overlay_line_background_color_gap", 0.0)) >= float(off_state.get("overlay_line_background_color_gap", 0.0)) \
 				and int(on_state.get("overlay_text_mask_count", 0)) > 0 \
 				and bool(on_state.get("overlay_routes_unchanged", false))
 		"breadcrumb":
@@ -993,13 +1138,16 @@ func _raw_header() -> PackedStringArray:
 		"canvas_cards", "decorators", "graph_canvas_width", "graph_canvas_height", "operation_zoom",
 		"cards_in_viewport", "cards_fully_in_viewport", "card_visible_area_px2", "card_area_px2", "overlap_pairs", "overlap_area_px2", "information_fields",
 		"hierarchy_violations", "resource_positions_unchanged", "topology_unchanged", "execution_order_unchanged",
-		"smart_overlap_pairs", "smart_overlap_area_px2", "smart_other_cards_moved", "smart_max_other_move_px",
+		"smart_overlap_pairs", "smart_overlap_area_px2", "smart_other_cards_moved", "smart_total_other_move_px", "smart_max_other_move_px",
 		"smart_far_cards_moved", "smart_solver_active", "smart_resource_positions_unchanged",
 		"adaptive_detail_level", "adaptive_compact", "adaptive_card_area_px2", "adaptive_cards_in_viewport",
 		"adaptive_cards_fully_in_viewport", "adaptive_card_visible_area_px2",
 		"adaptive_information_fields", "adaptive_overlap_pairs", "adaptive_overlap_area_px2", "adaptive_hierarchy_violations",
-		"overlay_from_id", "overlay_to_id", "overlay_blocker_id", "overlay_crossing_length_px",
-		"overlay_background_alpha", "overlay_revealed_edge_weighted_px", "overlay_text_mask_count", "overlay_routes_unchanged",
+		"overlay_natural_visible_edges", "overlay_natural_occluded_edges", "overlay_natural_occlusion_events",
+		"overlay_natural_occluded_length_px", "overlay_natural_occluded_edge_ratio", "overlay_natural_occluded_length_ratio",
+		"overlay_natural_blocking_cards", "overlay_from_id", "overlay_to_id", "overlay_blocker_id", "overlay_crossing_length_px",
+		"overlay_background_alpha", "overlay_revealed_edge_weighted_px", "overlay_line_background_color_gap",
+		"overlay_line_background_sample_count", "overlay_text_mask_count", "overlay_routes_unchanged",
 		"related_selected_count", "related_expected_count", "related_unrelated_count", "related_correctly_classified",
 		"related_correctly_dimmed", "related_mean_alpha", "related_unrelated_mean_alpha", "related_salience_ratio",
 		"related_full_bright_in_view", "fisheye_controlled_prerequisite", "fisheye_target_width_px",
