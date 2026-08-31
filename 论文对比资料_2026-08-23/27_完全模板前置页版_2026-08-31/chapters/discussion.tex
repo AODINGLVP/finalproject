@@ -1,0 +1,37 @@
+\chapter{Discussion}
+
+\section{Platform correctness}
+
+The tests and playable completion scenario in Table 5.1 show that the current tree resources, editor and execution system can work together. The display experiments also did not change the topology, Decorator ownership, sibling execution order or resource coordinates. Therefore, the area, transparency and target size changes observed later come from the display optimisation functions, rather than from changes to the behaviour tree content.
+
+\section{Explanation of the effect of display optimisation}
+
+\subsection{Optimisation effect under different complex behaviour tree sizes}
+
+Small trees can already keep relatively large cards, so these display optimisation functions are not equally necessary. Table 5.3 shows that the changes of Adaptive, Related and Fisheye are relatively limited in small trees. Smart still has a direct effect, because one mistaken drag can still cause occlusion, but small trees usually do not need to use Fisheye all the time.
+
+After the tree becomes larger, card density and unrelated branches gradually become the main problems. Adaptive first reduces the space occupied by the whole tree in the overview, and Related then makes the selected structure stand out from other branches. The two functions respectively deal with the problems of a too-full canvas and unclear related structure. This is why they are more valuable in medium and large trees.
+
+Fisheye has the most obvious local change in the two largest trees. When Fisheye is disabled, the target has already been scaled very small in the overview. After it is enabled, it recovers to a similar readable width. However, the denser the tree is, the easier the enlarged card blocks nearby content. Therefore, Fisheye is suitable for solving the problem of temporarily seeing a local part clearly.
+
+The effects of Smart and Overlay depend more on local events than on total node count. Smart handles the collision caused by the current drag, and Overlay only has an obvious effect when a line passes through a card. Therefore, even if a tree is large, it cannot be assumed that every drag or every connection will receive the same help. The key lies in node density and occlusion relationships.
+
+\subsection{Optimisation effect under different physical screen sizes}
+
+The screen results show that small screens and large screens need different help. Cards in a small-screen overview are more easily compressed very small, so the relative effects of Adaptive and Fisheye are the most obvious. Adaptive first reduces global occupation, and Fisheye then restores the current local part. They cannot turn a small screen into a large screen, but they can reduce the space limitation when viewing large trees on a small screen.
+
+Large screens can already display more content at the same time, so further shrinking cards or enlarging a single target has a smaller relative change than on small screens. Related Focus has more advantage here, because it does not lose the global position already displayed by the large screen, and only dims unrelated branches. For large screens, this is more suitable for structural checking than continuing to compress all nodes.
+
+Fisheye also shows a direct trade-off. The local recovery on small screens is the most obvious, and new occlusion is also the most common. After the screen becomes larger, the focus is already clearer, and the screen change caused by Fisheye becomes milder. A more reasonable use is to briefly inspect the target in a small-screen overview and then exit Fisheye, rather than treating it as the main layout all the time.
+
+Smart and Overlay do not show obvious screen differences in the current experiment, because they use the same local operation.
+
+\subsection{Value of each function}
+
+From the actual use of this project, if only one function can be chosen to remain enabled, Adaptive is the most suitable. It works continuously when browsing the whole tree, and it can recover full cards after being disabled. Its cost is clear: not all fields can be seen when zoomed out, but the user can recover local details by zooming in or using Fisheye.
+
+The answer is different for specific tasks. Smart is the most direct during dragging and editing, because it handles occlusion that has just been created. Related is the most valuable during structural checking, because it does not move nodes and only keeps the related structure of all selected nodes.
+
+Fisheye has the largest relative change in specific environments. The stronger its magnification is, the more obvious the local occlusion becomes, so it is more suitable as a temporary viewing tool. Overlay can improve the user's understanding of messy structures to a limited extent, but it cannot really solve possible messiness.
+
+Overall, Adaptive is suitable as the basis of the overview. Smart and Related respectively serve editing and structural checking. Fisheye is mainly used to solve local viewing problems, and Overlay can assist the understanding of messy structures.
