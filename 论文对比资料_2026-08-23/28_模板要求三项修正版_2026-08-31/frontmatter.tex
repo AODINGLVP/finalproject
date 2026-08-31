@@ -1,0 +1,65 @@
+% This sets the page numbers to be printed in lowercase roman numerals, starts
+% the page numbering from i, and prohibits any numbering of sectional divisions.
+\frontmatter
+
+% Uncomment a command to generate the title page. The only difference is the
+% crest artwork used. The default is the official crest provided to me by the
+% university brand officer; however, I happen to think it's the least visually
+% appealing option... Variations 1 and 2 are both solid choices; 1 is probably
+% the more "sedate" option (it appears on the top of the Warwick Arts Centre
+% Building) while 2 is more "fun" feeling. I happened to find monochrome
+% versions of the official crest and variation 1, with "mono" suffix on names.
+% Variation 3 is interesting, as it is an image of the crest as it appeared on
+% the original letters patent granting the University its arms. It is a
+% modified version of a file from the Wikimedia Commons:
+% https://commons.wikimedia.org/wiki/File:University_of_Warwick_Coat_of_Arms.jpg
+% \titlepage % uses crests/official
+% \titlepage[crests/officialmono]
+% \titlepage[crests/variation1]
+% \titlepage[crests/variation1mono]
+% \titlepage[crests/variation2]
+\titlepage[crests/variation3]
+
+% Generate table of contents.
+\tableofcontents
+% Uncomment this to generate list of figures.
+\clearforchapter\listoffigures
+% Generate list of tables because the dissertation contains numbered tables.
+\clearforchapter\listoftables
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\frontchapter{Declaration}
+This thesis is submitted to the University of Warwick in support of my application for the degree of \thequalification. It has been composed by myself and has not been submitted in any previous application for any degree.
+% if parts previously used uncomment and edit the following
+% (apart from the background material in sections XXX which was previously submitted for YYY degree).
+The work presented (including data generated and data analysis) was carried out by the author.
+% if there are exceptions uncomment and edit the following
+% except in the cases outlined below:
+% List of data provided and/or analysis carried out by collaborators.
+
+
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\frontchapter{Acknowledgments}
+I would like to thank my dissertation supervisor, Sean, for his guidance, feedback and support during this project. His suggestions helped me clarify the direction of the work and improve both the project implementation and the dissertation writing. I am also grateful to Thomas, the programme leader, for his support during my MSc study, and to Professor Kurt for his advice in the dissertation module and related guidance. I would also like to thank my family and friends for their encouragement and support during the development of the project and the writing of this dissertation.
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\frontchapter{Abstract}
+This project developed a visual behaviour tree plugin for Godot 4.6 and placed the main research focus on the display problems of large behaviour trees. When a traditional behaviour tree editor grows larger, it occupies a large canvas, and dragging, connections and unrelated branches can also interfere with observation at the same time. To deal with these problems, the current project implemented five display optimisation functions: Smart Drag Reflow, Adaptive Zoom Detail, Readable Edge Overlay, Related Node Focus and Fisheye Focus.
+
+To verify the influence of these functions on developers in actual development, the project used five real behaviour trees with different node counts to build a game with a certain level of complexity, and tested it under three common screen sizes. By testing behaviour trees with different node counts and screens with different sizes, the project compared the actual optimisation effect of each improved function. It also introduced the project developer's structured usage evaluation of each function.
+
+The results show that Adaptive Zoom Detail has a relatively stable effect across different tree sizes and screen sizes, so it is the most suitable general display optimisation function. Smart Drag Reflow can handle overlap caused by node movement, and Related Node Focus can highlight the structural range of selected nodes. Fisheye Focus is more obvious on small screens and large behaviour trees, but stronger local magnification also increases some node overlap. Readable Edge Overlay can improve line segments blocked by node cards, but it mainly applies to local connection problems.
+
+All function tests met the preset success conditions, and did not change the behaviour tree structure, saved coordinates or sibling execution order. The experiment shows that these functions can improve some measurable display and editing states of large behaviour trees, and also shows that different functions are suitable for different development environments.
+
+Keywords: behaviour tree; Godot; node-link editor; semantic zoom; focus and context; graph layout; game artificial intelligence
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This prints the list of abbreviations, which are declared in abbreviations.tex
+% This uses the acro package, and note that by default abbreviations will only
+% be printed in the list if they are actually used in text.
+%\printacronyms

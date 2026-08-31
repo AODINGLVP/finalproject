@@ -1,0 +1,78 @@
+% Template for University of Warwick Thesis
+% Created by Samuel A. Maloney in 2023/2024
+% Inspired by template from M Hadley and S Royle in Overleaf Gallery
+
+% Check the "Presentation of thesis" information here:
+% https://warwick.ac.uk/services/dc/submission/gtehdr/
+
+% This file has been adapted to contain the current dissertation text while
+% preserving the supplied Games Engineering dissertation template structure.
+
+\RequirePackage[l2tabu,orthodox]{nag}
+\documentclass[11pt,a4paper,oneside,extrafontsizes]{memoir}
+\usepackage[margin=4cm]{uwthesis}
+\usepackage[backend=biber,style=nature,doi=true]{biblatex}
+\usepackage{silence}
+\WarningFilter{nameref}{The definition of \label has changed!}
+\usepackage{multirow}
+\usepackage[hidelinks]{hyperref}
+\usepackage[nameinlink,noabbrev]{cleveref}
+
+% Additional packages used by this dissertation content
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\setsecnumdepth{subsubsection}
+\settocdepth{subsubsection}
+\sloppy
+
+\addbibresource{references.bib}
+
+\DeclareSourcemap{
+    \maps[datatype=bibtex]{
+        \map{
+            \step[fieldsource=doi,final]
+            \step[fieldset=issn,null]
+            \step[fieldset=isbn,null]
+            \step[fieldset=url,null]
+        }
+        \map{
+            \step[fieldsource=doi, match=\regexp{\{\\_\}}, replace=\regexp{_}]
+        }
+    }
+}
+\setcounter{biburlnumpenalty}{9000}
+
+\title{A Godot-based Visual Behaviour Tree Plugin and Display Optimisation}
+\author{Jiachen Lyu}
+\date{September 2026}
+\qualification{MSc Games Engineering}
+\department{Warwick Manufacturing Group}
+\studentnumber{5613244}
+
+
+\input{abbreviations}
+
+\begin{document}
+
+\input{frontmatter}
+
+\mainmatter
+
+\input{chapters/introduction}
+\input{chapters/literaturereview}
+\input{chapters/methodology}
+\input{chapters/method}
+\input{chapters/results}
+\input{chapters/discussion}
+\input{chapters/conclusion}
+
+\begingroup
+\setlength{\emergencystretch}{2em}
+\hbadness 10000\relax
+\printbibliography
+\endgroup
+
+\end{document}
