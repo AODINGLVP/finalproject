@@ -1,0 +1,169 @@
+\chapter{Research method}
+
+\section{Research strategy}
+
+This research first confirms that the Godot 4.6 behaviour tree plugin can be edited and run normally, and then tests the display optimisation functions used for large behaviour trees. The research focus is how much effect these display optimisation functions can produce under different conditions, and which conditions they are more suitable for.
+
+The test is divided into two parts. The first part compares the actual effect of single display optimisation functions under different conditions. Under the same behaviour tree, screen size and operation target, the program records the results before and after the function is enabled, so as to judge whether each display optimisation function reaches its expected effect and how its effect differs under different node scales and screen sizes. The second part is that the project developer directly uses these display optimisation functions and records what each function helps with, what problems it has, and under what conditions it is suitable, according to the same set of questions. Since this part only involves the project developer, it can only be used as a supplement to usage experience and cannot represent the opinions of other game developers.
+
+\section{Experimental behaviour trees}
+
+The experiment uses five real behaviour trees from the current playable game, with node counts of 31, 61, 121, 241 and 364. They represent different scales and complexity levels from small to large.
+
+Table 3.1 Behaviour tree sizes and main game behaviours used in the experiment
+
+\begin{center}
+
+\begin{longtable}{@{}p{0.184\textwidth} p{0.736\textwidth}@{}}
+\caption{Behaviour tree sizes and main game behaviours used in the experiment}\label{tab:experiment-tree-sizes}\\
+\toprule
+\textbf{Node count} & \textbf{Main game behaviours included in the tree} \\
+\midrule
+\endfirsthead
+\multicolumn{2}{l}{\itshape continued}\\
+\toprule
+\textbf{Node count} & \textbf{Main game behaviours included in the tree} \\
+\midrule
+\endhead
+31 & Evade, directional melee, direct chase, return to guard position, patrol and idle \\
+61 & Low-health retreat and healing, evade, directional melee, jump over obstacles, mid-range movement, chase, search last known player position, return and patrol \\
+121 & Retreat and healing, defence, melee, jump over obstacles, ladder climbing, ranged attack, mid-range movement, chase, search, return, patrol and idle \\
+241 & Includes the main behaviours of the 121-node tree, and provides more recovery, defence, melee, ranged attack, chase, search, patrol and idle options \\
+364 & Includes the above main behaviours, and adds defensive counterattack, continuous melee, combined obstacle traversal, moving shooting and multi-route chase tactical combinations \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+These behaviour trees gradually increase from simpler decisions to complex decisions with many branches. They can be used to observe whether display optimisation functions produce different effects as the tree becomes larger. The experiment uses the same method on each tree, and compares the screen changes before and after enabling the display optimisation functions. The five trees are not only different in size, but also different in internal structure. Therefore, the experiment can compare their actual display effect, but cannot simply attribute every result difference to the increase in node count. However, they can reflect the actual performance of the plugin when real game behaviour trees expand from small to large.
+
+\section{Screen size configuration}
+
+The experiment sets three screen sizes, approximately 16 inches, 27 inches and 32 inches. In addition to the behaviour tree canvas, the plugin window also contains toolbars, menus and other interface content, so the area that can actually display and edit nodes is smaller. When judging whether a node is inside the screen, the experiment uses the actual editing area.
+
+Table 3.2 Three screen sizes and their corresponding editing areas
+
+\begin{center}
+
+\begin{longtable}{@{}p{0.189\textwidth} p{0.153\textwidth} p{0.142\textwidth} p{0.212\textwidth} p{0.224\textwidth}@{}}
+\caption{Three screen sizes and their corresponding editing areas}\label{tab:screen-configs}\\
+\toprule
+\textbf{Screen condition} & \textbf{Physical size} & \textbf{Screen size} & \textbf{Plugin window size} & \textbf{Actual editing area} \\
+\midrule
+\endfirsthead
+\multicolumn{5}{l}{\itshape continued}\\
+\toprule
+\textbf{Screen condition} & \textbf{Physical size} & \textbf{Screen size} & \textbf{Plugin window size} & \textbf{Actual editing area} \\
+\midrule
+\endhead
+Small screen & 34 x 22 cm & 15.94 inches & 1190 x 770 & 858 x 642 \\
+Medium screen & 60 x 33 cm & 26.96 inches & 2100 x 1155 & 1768 x 1027 \\
+Large screen & 70 x 39 cm & 31.55 inches & 2450 x 1365 & 2118 x 1237 \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+Screens of different sizes can display different numbers of nodes. On a small screen, a large behaviour tree needs to be scaled down further to see the whole structure. On a larger screen, more nodes can be displayed at the same time, but a large behaviour tree may still exceed the editing area.
+
+The experiment uses the same behaviour trees and test operations under the three screen conditions, in order to compare whether screen size affects the effect of display optimisation functions.
+
+\section{Experimental method for display optimisation functions}
+
+The experiment tests each display optimisation function separately. Each test uses the same behaviour tree, the same screen condition and the same test object. It first records the result when the function is disabled, and then records the result after the function is enabled. This can directly show the change brought by the function.
+
+Before each test starts, the program restores the canvas to the same initial state, so that node movement, opacity or zoom changes caused by the previous test do not affect the next result. After a function is enabled, the program waits for the screen to finish updating and then records data.
+
+In general, the program first orders the nodes from left to right according to their horizontal position on the canvas, and then selects three nodes at about 22\%, 50\% and 78\% positions. These three nodes are roughly located on the left, middle and right of the behaviour tree. The root node and nodes that cannot produce an effective experimental effect are not selected. The same target nodes are used for all screen conditions and for the before-and-after comparison of each function.
+
+Table 3.3 Experimental method and comparison content for the display optimisation functions
+
+\begin{center}
+
+\begin{longtable}{@{}p{0.191\textwidth} p{0.364\textwidth} p{0.364\textwidth}@{}}
+\caption{Experimental method and comparison content for the display optimisation functions}\label{tab:display-experiment-methods}\\
+\toprule
+\textbf{Function} & \textbf{Experimental method} & \textbf{Comparison content} \\
+\midrule
+\endfirsthead
+\multicolumn{3}{l}{\itshape continued}\\
+\toprule
+\textbf{Function} & \textbf{Experimental method} & \textbf{Comparison content} \\
+\midrule
+\endhead
+Smart Drag Reflow & The test first selects two adjacent child nodes under the same parent, and one of them is a leaf node with no children. The program drags the leaf node near the position of the other node to actively create node occlusion. When the function is disabled, the occlusion is kept. When the function is enabled, surrounding nodes are allowed to avoid it automatically. Both tests use exactly the same drag path. & Compare whether occlusion is removed, how many surrounding nodes move, how far these nodes move, and whether distant branches are affected. \\
+Adaptive Zoom Detail & Under the same overview zoom ratio, the fixed target node is moved to the centre of the screen. When the function is disabled, all nodes still show full cards. After the function is enabled, nodes reduce secondary text and shrink cards according to the zoom ratio. & Compare the total area occupied by all nodes, the number of displayed text fields, the number of nodes fully displayed in the editing area, and whether the problem of a parent node moving below a child node appears. \\
+Readable Edge Overlay & Three parent-child connections that are easily blocked by other nodes are selected from the behaviour tree. If the original layout does not contain a suitable case, the program temporarily moves a node card that is not at either end of the connection to form the same occlusion scene. When the function is disabled, the card background is fully opaque. After it is enabled, the background opacity is reduced to 72\%, but the text remains opaque. & Compare whether the connection blocked by a node can be displayed, while checking whether node text remains clear and whether the original route of the connection changes. \\
+Related Node Focus & The first two test cases each select one fixed node, and the third case selects two fixed nodes at the same time. When the function is disabled, only the normal selected state is kept. After it is enabled, selected nodes use a white border, parent and child nodes use a yellow border, sibling nodes use a green border, and other nodes and connections are dimmed. & Compare whether unrelated nodes are correctly dimmed, whether related nodes use the correct borders, whether the number of prominent nodes on the screen is reduced, and whether node positions remain unchanged. \\
+Fisheye Focus & Fisheye is mainly used for zoomed-out behaviour trees, so Adaptive Zoom is kept both when Fisheye is disabled and enabled. The program fixes the mouse position on the target node. The disabled state does not enlarge nodes, while the enabled state enlarges the target and nearby nodes. & Compare how much the target node is enlarged, how much text information is restored, whether distant nodes shrink and dim, and whether new node occlusion appears after magnification. \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+The first four functions do not enable other experimental functions in the disabled state. Fisheye Focus is the only exception, because it needs to be used in a zoomed-out overview screen. Therefore, the fisheye experiment compares the difference between "Adaptive Zoom only" and "Adaptive Zoom plus Fisheye Focus".
+
+Each display optimisation function is compared across five behaviour trees, three screen sizes and three fixed test cases. Therefore, each display optimisation function contains 45 before-and-after comparisons. All display optimisation functions together form 225 comparisons. Since each comparison contains one disabled record and one enabled record, there are 450 experimental records in total.
+
+\section{Data processing and judgement criteria}
+
+During data processing, disabled and enabled records with the same screen size, behaviour tree size and test case are paired, and the difference and change ratio before and after enabling the function are calculated. The results are organised by display optimisation function, behaviour tree size and screen size, and report the mean, median, change range and number of cases that meet the preset criteria.
+
+Table 3.4 Main metrics and success criteria for the display optimisation functions
+
+\begin{center}
+
+\begin{longtable}{@{}p{0.191\textwidth} p{0.364\textwidth} p{0.364\textwidth}@{}}
+\caption{Main metrics and success criteria for the display optimisation functions}\label{tab:display-metrics-criteria}\\
+\toprule
+\textbf{Function} & \textbf{Main metrics} & \textbf{Experimental success criteria} \\
+\midrule
+\endfirsthead
+\multicolumn{3}{l}{\itshape continued}\\
+\toprule
+\textbf{Function} & \textbf{Main metrics} & \textbf{Experimental success criteria} \\
+\midrule
+\endhead
+Smart Drag Reflow & Overlap area, number of automatically moved nodes and movement range & Remove at least 95\% of the overlap area, and move no more than 24 other nodes automatically \\
+Adaptive Zoom Detail & Total node area, number of displayed fields and parent-child node position & Node area or field count is reduced, and parent-child vertical relationship errors must not increase \\
+Readable Edge Overlay & Display of occluded connections, text display and connection route & The occluded connection can be partly displayed, node text remains clear, and the original connection route is unchanged \\
+Related Node Focus & Dimming ratio of unrelated nodes and display state of related nodes & All unrelated nodes are correctly dimmed, and selected and related nodes remain clear \\
+Fisheye Focus & Target node width, displayed fields and local adjustment range & The target node increases by at least 5\% and shows more fields, and automatic adjustment does not exceed 8 nearby nodes \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+All experiments also need to ensure that the behaviour tree itself is not affected by display optimisation functions, including node count, connection relationship, execution order and saved position. After a function is disabled, node size, opacity, border and temporary position changes must also recover. The experiment must not have errors or abnormal stops while running.
+
+Fisheye Focus is mainly used to view local content, so it does not require the whole canvas to have no overlap at all times. The new overlap it causes is recorded and explained separately in the results and discussion.
+
+\section{Structured developer evaluation}
+
+After the automated experiment is completed, the project developer directly uses these display optimisation functions in the Godot editor. Since the evaluator is also the developer who uses behaviour trees to make the game, the evaluation is carried out from the perspective of actually viewing and editing behaviour trees.
+
+The evaluation covers the five behaviour trees and three screen sizes. In each condition, the developer completes viewing or editing operations related to the function and records feedback after actual use.
+
+The evaluation content includes:
+
+\begin{itemize}[leftmargin=*]
+\item what operation the function mainly helps complete;
+\end{itemize}
+
+\begin{itemize}[leftmargin=*]
+\item whether it is easier to view or edit the behaviour tree after enabling it;
+\end{itemize}
+
+\begin{itemize}[leftmargin=*]
+\item what problems appear during use;
+\end{itemize}
+
+\begin{itemize}[leftmargin=*]
+\item what behaviour tree size the function is more suitable for;
+\end{itemize}
+
+\begin{itemize}[leftmargin=*]
+\item what screen size the function is more suitable for;
+\end{itemize}
+
+These feedback records are used together with the automated experiment data. The automated experiment explains what changes happened on the screen, while the developer evaluation explains whether these changes are helpful in actual use and what usage problems they may bring. Finally, the results of both parts are used to judge what kind of use environment each function is more suitable for.
+
+\section{Plugin function validation}
+
+Before carrying out the display experiment, the basic functions of the behaviour tree plugin need to be validated. The validation content includes whether nodes can execute correctly, whether node creation, connection and editing work normally, whether behaviour trees can be saved and reloaded correctly, and whether behaviour trees can control enemies in the game to complete the planned behaviours. This validation is only used to confirm that the experimental platform works normally.

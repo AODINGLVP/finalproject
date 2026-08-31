@@ -1,0 +1,15 @@
+\chapter{Conclusion}
+
+This project completed a Godot 4.6 visual behaviour tree plugin and improved the display and editing problems of large behaviour trees. The plugin supports behaviour tree resource creation, connection, editing, saving and reloading, and also implements the execution system, blackboard, Decorator and Live Debug functions. Through these functions, behaviour trees can truly control enemies in the game.
+
+This dissertation tested five display optimisation functions: Smart Drag Reflow, Adaptive Zoom Detail, Readable Edge Overlay, Related Node Focus and Fisheye Focus. The experiment used five real game behaviour trees of different sizes and compared the changes before and after enabling functions under three screen size conditions.
+
+The experimental results show that the five display optimisation functions can all produce effects on their own targets, and they do not change behaviour tree structure, saved coordinates or sibling execution order. Among them, Adaptive Zoom Detail has the most stable effect and is suitable as a basic function enabled for a long time. Smart Drag Reflow is more suitable for node editing. Related Node Focus is more suitable for checking the structure where the selected node is located. Readable Edge Overlay mainly solves local connection occlusion. Fisheye Focus is most obvious on small screens and large behaviour trees, but it is also more likely to bring local occlusion, so it is more suitable as a temporary viewing tool.
+
+Overall, display optimisation functions are more valuable in large behaviour trees. After node count increases, canvas occupation, unrelated branches and local occlusion affect viewing and editing more. Small screens rely more on Adaptive Zoom Detail and Fisheye Focus to compensate for insufficient space. Large screens are more suitable for using Related Node Focus, which reduces interference from unrelated branches while retaining the global structure.
+
+This project still has some limitations. The structured developer evaluation comes from the project developer and lacks universality. The experiment uses the five real behaviour trees in this project. They can reflect the actual performance under this project scenario, but they cannot cover all types of game AI behaviour trees.
+
+Future work can continue in two directions. More developers can be invited to conduct real use tests, recording their time, errors and subjective evaluation when completing locating, editing and debugging tasks. These display optimisation functions can also be tested on more types of game behaviour trees, to observe whether they are still suitable for more complex projects or projects with larger structural differences.
+
+In summary, this project implemented a Godot visual behaviour tree plugin that can be used in a real game scenario, and the experiment shows that the display optimisation functions in the project can improve the developer's viewing and editing process.
